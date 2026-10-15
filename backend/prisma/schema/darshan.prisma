@@ -1,0 +1,21 @@
+// Live-darshan YouTube status, pushed via WebSub (see youtubeWebSubService.ts)
+// rather than polled. Deliberately separate from the catalogue `Temple` model
+// (temple.prisma) — the slugs don't line up 1:1 and darshan channels don't
+// have the catalogue's required fields (location/state/deity/priceFrom etc).
+model DarshanChannel {
+  id   String @id @default(cuid())
+  slug String @unique
+  name String
+
+  youtubeChannelId   String  @default("") @map("youtube_channel_id")
+  currentLiveVideoId String? @map("current_live_video_id")
+  isLive             Boolean @default(false) @map("is_live")
+  lastCheckedAt      DateTime? @map("last_checked_at")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  @@index([youtubeChannelId])
+  @@index([isLive])
+  @@map("darshan_channels")
+}

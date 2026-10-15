@@ -1,40 +1,25 @@
-import dns from "dns";
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import mongoose from "mongoose";
 import axios from "axios";
 import interpretationRoutes from "./routes/interpretationRoutes.js";
 import compatibilityRoutes from "./routes/compatibilityRoutes.js";
 import birthChartRoutes from "./routes/birthChartRoutes.js";
 import nameAnalysisRoutes from "./routes/nameAnalysisRoutes.js";
 import innerVoiceRoutes from "./routes/innerVoiceRoutes.js";
-import darshanRoutes from "./routes/darshanRoutes.js";
+import darshanRoutes from "./modules/darshan/darshan.public.route.js";
 import authRoutes from "./modules/auth/auth.route.js";
 import adminRoutes from "./modules/admin/admin.route.js";
 import publicTempleRoutes from "./modules/puja/puja.public.route.js";
 import publicChadhawaRoutes from "./modules/chadhawa/chadhawa.public.route.js";
 import publicShopRoutes from "./modules/shop/shop.public.route.js";
 import { errorHandler } from "./middleware/errorHandler.js";
-import { startDarshanRefreshLoop } from "./services/darshanRefreshService.js";
+import { startDarshanRefreshLoop } from "./modules/darshan/darshan.refresh.js";
 
 dotenv.config();
 
-// Opt-in only: some local/router DNS resolvers refuse SRV queries from
-// Node's resolver (c-ares) even though the OS resolver handles them fine,
-// which breaks mongodb+srv:// lookups with "querySrv ECONNREFUSED".
-// Reproduced on this dev machine's network; not assumed to apply elsewhere,
-// so it only activates when MONGODB_DNS_SERVERS is explicitly set.
-if (process.env.MONGODB_DNS_SERVERS) {
-  dns.setServers(
-    process.env.MONGODB_DNS_SERVERS.split(",").map((s) => s.trim()),
-  );
-}
-
 const app = express();
 const PORT = process.env.PORT || 5001;
-const MONGODB_URI =
-  process.env.MONGODB_URI || "mongodb://localhost:27017/astrology";
 
 // Middleware
 const EXPLICIT_ALLOWED_ORIGINS = [
@@ -586,21 +571,9 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     .json({ success: false, error: err.message || "Internal Server Error" });
 });
 
-// Start server (MongoDB optional — server runs without it)
-async function startServer() {
-  // Without this, a query issued while disconnected silently queues for up
-  // to 10s (Mongoose's default bufferTimeoutMS) before failing — turning
-  // every request into a slow, confusing 500 instead of an immediate,
-  // diagnosable error.
-  mongoose.set("bufferCommands", false);
-
-  try {
-    await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 5000 });
-    console.log("✓ MongoDB connected");
-    startDarshanRefreshLoop();
-  } catch (error) {
-    console.warn("⚠ MongoDB not available — running without database:", error);
-  }
+// Start server
+function startServer() {
+  startDarshanRefreshLoop();
 
   app.listen(PORT, () => {
     console.log(`✓ Server running on http://localhost:${PORT}`);
