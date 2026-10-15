@@ -7,6 +7,7 @@ if (!document.head.querySelector("link[href*='Cinzel']")) document.head.appendCh
 
 const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || "openai/gpt-oss-120b";
 
 const SYSTEM_PROMPT = `You are a Vedic scripture scholar. When given a situation, find the most relevant verse.
 Return ONLY a JSON object with exactly these keys (all required, no nulls):
@@ -29,7 +30,7 @@ async function callAI(userMsg) {
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROQ_API_KEY}` },
     body: JSON.stringify({
-      model: "llama-3.3-70b-versatile",
+      model: GROQ_MODEL,
       temperature: 0.7,
       max_tokens: 1500,
       response_format: { type: "json_object" },
@@ -233,7 +234,8 @@ export default function InnerVoiceWisdom() {
       if (!data || Object.keys(data).length === 0) throw new Error("Empty response from AI");
       setResult(data);
     } catch(e) {
-      setError(e.message || "Could not retrieve wisdom. Please try again.");
+      console.error("[Shloka Wisdom] request failed:", e);
+      setError("Could not retrieve wisdom right now. Please try again in a moment.");
     } finally {
       setLoading(false);
     }

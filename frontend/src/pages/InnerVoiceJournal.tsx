@@ -7,18 +7,19 @@ if (!document.head.querySelector("link[href*='Cinzel']")) document.head.appendCh
 
 const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || "openai/gpt-oss-120b";
 
 async function callAI(system, user, maxTokens = 800) {
   try {
     const res = await fetch(GROQ_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROQ_API_KEY}` },
-      body: JSON.stringify({ model: "llama-3.3-70b-versatile", temperature: 0.7, max_tokens: maxTokens, response_format: { type: "json_object" }, messages: [{ role: "system", content: system }, { role: "user", content: user }] }),
+      body: JSON.stringify({ model: GROQ_MODEL, temperature: 0.7, max_tokens: maxTokens, response_format: { type: "json_object" }, messages: [{ role: "system", content: system }, { role: "user", content: user }] }),
     });
     const d = await res.json();
     if (d.error) throw new Error(d.error.message);
     return JSON.parse(d.choices?.[0]?.message?.content || "{}");
-  } catch { return {}; }
+  } catch (e) { console.error("[Karma Journal] AI request failed:", e); return {}; }
 }
 
 const DASH_SYSTEM = `You are a Vedic karma AI. Return ONLY valid JSON:

@@ -1,7 +1,21 @@
 import { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import VoiceConsultation from "../components/VoiceConsultation";
 import { API_BASE_URL } from "@/lib/api";
+import CosmicOverlay from "@/components/ai-guru/CosmicOverlay";
+import GuruSidebar, { type GuruTab } from "@/components/ai-guru/GuruSidebar";
+import GuruTopHeader from "@/components/ai-guru/GuruTopHeader";
+import GuruTabs from "@/components/ai-guru/GuruTabs";
+import GuruProgressBar from "@/components/ai-guru/GuruProgressBar";
+import HeroWelcome from "@/components/ai-guru/HeroWelcome";
+import TrustStats from "@/components/ai-guru/TrustStats";
+import CategoryCards from "@/components/ai-guru/CategoryCards";
+import AnalysisTimeline from "@/components/ai-guru/AnalysisTimeline";
+import SuggestedQuestions from "@/components/ai-guru/SuggestedQuestions";
+import GuruConversation from "@/components/ai-guru/GuruConversation";
+import GuruChatInput from "@/components/ai-guru/GuruChatInput";
+import LanguageControls from "@/components/ai-guru/LanguageControls";
+import { detectLanguage, buildLanguageDirective, type InputLanguageChoice, type ReplyLanguageChoice } from "@/components/ai-guru/languages";
 
 const fl = document.createElement("link"); fl.rel = "stylesheet";
 fl.href = "https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap";
@@ -9,6 +23,10 @@ if (!document.head.querySelector("link[href*='Cinzel']")) document.head.appendCh
 
 const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+// Configurable so a deprecated/renamed model doesn't require a code change —
+// set VITE_GROQ_MODEL to override. "llama-3.3-70b-versatile" was retired by
+// Groq; openai/gpt-oss-120b is the current large json_mode-capable model.
+const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || "openai/gpt-oss-120b";
 
 const PANDIT_CONSULTATION_SYSTEM = `You are Pandit Rameshwar Ji, a revered Jyotish Acharya and Vedic astrologer with 40 years of experience in temples, Vedic scriptures, and spiritual healing. You speak like a wise, calm elder — deeply compassionate, never preachy, with the authority of a true Pandit Ji.
 
@@ -151,7 +169,7 @@ async function callConsultation(messages) {
   const res = await fetch(GROQ_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROQ_API_KEY}` },
-    body: JSON.stringify({ model: "llama-3.3-70b-versatile", temperature: 0.7, max_tokens: 1000, response_format: { type: "json_object" }, messages }),
+    body: JSON.stringify({ model: GROQ_MODEL, temperature: 0.7, max_tokens: 1000, response_format: { type: "json_object" }, messages }),
   });
   const data = await res.json();
   if (data.error) throw new Error(data.error.message);
@@ -167,7 +185,7 @@ async function callDiagnosis(conversationHistory) {
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROQ_API_KEY}` },
     body: JSON.stringify({
-      model: "llama-3.3-70b-versatile", temperature: 0.6, max_tokens: 4000,
+      model: GROQ_MODEL, temperature: 0.6, max_tokens: 4000,
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: PANDIT_DIAGNOSIS_SYSTEM },
@@ -1137,13 +1155,16 @@ export default function InnerVoiceChat(){
   const [downloading,setDownloading]=useState(false);
   const [activePanel,setActivePanel]=useState(null);
   const [sidebarOpen,setSidebarOpen]=useState(false);
+  const [suggestionPulse,setSuggestionPulse]=useState(false);
+  const [inputLanguage,setInputLanguage]=useState<InputLanguageChoice>("auto");
+  const [replyLanguage,setReplyLanguage]=useState<ReplyLanguageChoice>("same");
   const [savedMantras,setSavedMantras]=useState(()=>{try{return JSON.parse(localStorage.getItem("iv_saved_mantras")||"[]");}catch{return [];}});
   const [chatSessions,setChatSessions]=useState(()=>{try{return JSON.parse(localStorage.getItem("iv_chat_sessions")||"[]");}catch{return [];}});
-  const bottomRef=useRef(null),textareaRef=useRef(null),recognitionRef=useRef(null);
+  const bottomRef=useRef(null),textareaRef=useRef(null),recognitionRef=useRef(null),mainScrollRef=useRef(null);
   const profile=(()=>{try{return JSON.parse(localStorage.getItem("iv_profile")||"null");}catch{return null;}})();
 
   useEffect(()=>{const s=document.createElement("style");s.textContent=CSS;document.head.appendChild(s);return()=>document.head.removeChild(s);},[]);
-  useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth"});},[messages,loading]);
+  useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth",block:"end"});},[messages,loading]);
 
   useEffect(()=>{
     const SELECTORS=["footer","[class*='footer' i]","[class*='Footer']","[id*='footer' i]","[class*='navbar' i]","[class*='NavBar']","[class*='nav-bar' i]","[id*='navbar' i]","nav:not(.ivc-sb nav)"];
@@ -1176,17 +1197,20 @@ export default function InnerVoiceChat(){
 
   const send=async(text)=>{
     const msg=text.trim();if(!msg||loading)return;
-    setInput("");if(textareaRef.current)textareaRef.current.style.height="52px";
+    setInput("");if(textareaRef.current)textareaRef.current.style.height="24px";
     setMessages(prev=>[...prev,{role:"user",content:msg}]);
     setLoading(true);
     try{
       const history=buildHistory();
-      const data=await callConsultation([{role:"system",content:PANDIT_CONSULTATION_SYSTEM},...history,{role:"user",content:msg}]);
+      const detected=detectLanguage(msg);
+      const languageDirective=buildLanguageDirective(inputLanguage,replyLanguage,detected);
+      const data=await callConsultation([{role:"system",content:PANDIT_CONSULTATION_SYSTEM},{role:"system",content:languageDirective},...history,{role:"user",content:msg}]);
       setMessages(prev=>[...prev,{role:"guru",content:data}]);
       if(data.progress)setProgress(data.progress);
       if(data.readyForDiagnosis)setReadyForDiagnosis(true);
     }catch(e){
-      setMessages(prev=>[...prev,{role:"guru",content:{type:"gathering",message:`I encountered an error: ${e.message}. Please try again.`}}]);
+      console.error("[AI Guru] Consultation request failed:",e);
+      setMessages(prev=>[...prev,{role:"guru",content:{type:"gathering",message:"Sorry, Guru Ji is temporarily unavailable. Please try again in a moment."}}]);
     }finally{setLoading(false);}
   };
 
@@ -1208,6 +1232,23 @@ export default function InnerVoiceChat(){
   const handleFollowUp=(prompt)=>{setActiveTab("consultation");setTimeout(()=>send(prompt),100);};
   const onKeyDown=(e)=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send(input);}};
 
+  // ChatGPT-style suggestion pick: populate the composer, focus it, put the
+  // caret at the end — never auto-send. User still decides when to send.
+  const handleSuggestionSelect=(text)=>{
+    setInput(text);
+    requestAnimationFrame(()=>{
+      const ta=textareaRef.current;
+      if(!ta)return;
+      autoResize();
+      ta.focus();
+      const len=text.length;
+      ta.setSelectionRange(len,len);
+      ta.scrollIntoView({behavior:"smooth",block:"nearest"});
+    });
+    setSuggestionPulse(true);
+    setTimeout(()=>setSuggestionPulse(false),300);
+  };
+
   const toggleVoice=()=>{
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
     if(!SR){alert("Voice input requires Chrome or Edge browser.");return;}
@@ -1220,145 +1261,179 @@ export default function InnerVoiceChat(){
   };
 
   const togglePanel=(name)=>setActivePanel(prev=>prev===name?null:name);
-  const newConversation=()=>{setMessages([]);setProgress(0);setReadyForDiagnosis(false);setReport(null);setActiveTab("consultation");setSidebarOpen(false);};
+
+  // Starts a clean consultation in place — no reload, no navigation. The
+  // conversation that's ending is already tracked in chatSessions (the
+  // effect below keeps that in sync as messages arrive), so nothing extra
+  // needs saving here. The active tab is left as-is per spec: if the user
+  // triggers this from the sidebar while on Voice/Report, we don't yank
+  // them into Consultation Mode.
+  const newConversation=()=>{
+    setMessages([]);
+    setInput("");
+    setProgress(0);
+    setReadyForDiagnosis(false);
+    setReport(null);
+    setSuggestionPulse(false);
+    setSidebarOpen(false);
+    setInputLanguage("auto");
+    setReplyLanguage("same");
+    if(textareaRef.current)textareaRef.current.style.height="24px";
+    requestAnimationFrame(()=>{
+      mainScrollRef.current?.scrollTo({top:0,behavior:"smooth"});
+      textareaRef.current?.focus();
+    });
+  };
+
+  const handleTabChange=(tab)=>{
+    setActiveTab(tab);
+    setSidebarOpen(false);
+    if(tab==="report" && !report && !generatingReport && readyForDiagnosis){
+      generateReport();
+    }
+  };
 
   return(
-    <div className="ivc-app">
+    <div className="relative flex h-screen w-full overflow-hidden bg-[#09090B] font-['Inter'] text-white">
       <style>{CSS}</style>
-      <StarCanvas/>
-      <div className="ivc-layout">
-        <aside className={`ivc-sb${sidebarOpen?" open":""}`}>
-          <div className="ivc-sb-head">
-            <Link to="/inner-voice" className="ivc-sb-back">← Inner Voice</Link>
-            <button className="ivc-new-btn" onClick={newConversation}>✦ New Conversation</button>
-          </div>
-          <div className="ivc-sb-scroll">
-            <div className="ivc-sb-section">Navigation</div>
-            <div className="ivc-sb-item" onClick={newConversation}><span className="ivc-sb-item-icon">💬</span><span className="ivc-sb-item-txt">New Conversation</span></div>
-            <div className={`ivc-sb-item${activePanel==="saved"?" active":""}`} onClick={()=>togglePanel("saved")}><span className="ivc-sb-item-icon">📿</span><span className="ivc-sb-item-txt">Saved Mantras {savedMantras.length>0?`(${savedMantras.length})`:""}</span></div>
-            <div className={`ivc-mantras-panel${activePanel==="saved"?" visible":""}`}>
-              {savedMantras.length===0?<div className="ivc-no-saved">No saved mantras yet.<br/>Tap 🔖 Save on any mantra.</div>
-                :savedMantras.map(m=><div key={m.id} className="ivc-mantra-saved-item"><span style={{fontSize:16}}>📿</span><div><div className="ivc-msi-name">{m.transliteration||m.sanskrit||"Mantra"}</div><div className="ivc-msi-meta">{m.purpose||""} · {m.date}</div></div></div>)}
-            </div>
-            <div className={`ivc-sb-item${activePanel==="recent"?" active":""}`} onClick={()=>togglePanel("recent")}><span className="ivc-sb-item-icon">🕐</span><span className="ivc-sb-item-txt">Recent Chats</span></div>
-            <div className={`ivc-recent-panel${activePanel==="recent"?" visible":""}`}>
-              {chatSessions.length===0?<div className="ivc-no-saved">No recent chats yet.</div>
-                :chatSessions.map(s=><div key={s.id} className="ivc-recent-item"><span style={{fontSize:14}}>🕐</span><span className="ivc-recent-txt">{s.text}</span></div>)}
-            </div>
-            <div className="ivc-sb-item" onClick={()=>alert("Settings coming soon")}><span className="ivc-sb-item-icon">⚙️</span><span className="ivc-sb-item-txt">Settings</span></div>
-          </div>
-          <div className="ivc-sb-foot">
-            <div className="ivc-profile">
-              <div className="ivc-profile-av">🙏</div>
-              <div style={{minWidth:0}}><div className="ivc-profile-name">{profile?.name||"Seeker"}</div><div className="ivc-profile-sub">{profile?.sign||"Vedic Guidance"}</div></div>
-            </div>
-          </div>
-        </aside>
-
-        {sidebarOpen&&<div style={{position:"fixed",inset:0,zIndex:99,background:"rgba(0,0,0,.5)"}} onClick={()=>setSidebarOpen(false)}/>}
-
-        <main className="ivc-main">
-          <header className="ivc-header">
-            <button className="ivc-mob-menu" onClick={()=>setSidebarOpen(!sidebarOpen)}>☰</button>
-            <div className="ivc-hdr-av">🧘</div>
-            <div style={{flex:1}}><div className="ivc-hdr-name">AI Guru</div><div className="ivc-hdr-sub">Pandit Rameshwar Ji · 40 years of Jyotish experience</div></div>
-            <div className="ivc-online"><span className="ivc-online-dot"/>Online</div>
-          </header>
-
-          <div className="ivc-tabs">
-            <div className={`ivc-tab${activeTab==="consultation"?" active":""}`} onClick={()=>setActiveTab("consultation")}>💬 Consultation Mode</div>
-            <div className={`ivc-tab${activeTab==="voice"?" active":""}`} onClick={()=>setActiveTab("voice")}>🎤 Voice Consultation</div>
-            <div className={`ivc-tab${activeTab==="report"?" active":""}`} onClick={()=>{
-              setActiveTab("report");
-              // Auto-generate if we have messages but no report yet
-              // Only auto-generate if Pandit Ji determined the consultation is ready
-              if(!report && !generatingReport && readyForDiagnosis){
-                generateReport();
-              }
-            }}>
-              📋 Diagnosis & Remedy Report
-              {report&&<span className="ivc-tab-badge">Ready</span>}
-              {generatingReport&&<span className="ivc-tab-badge" style={{background:"rgba(188,106,77,.2)",borderColor:"rgba(188,106,77,.35)",color:"#BC6A4D"}}>Generating...</span>}
-            </div>
-          </div>
-
-          {activeTab==="consultation"&&(
-            <>
-              {progress>0&&(
-                <div className="ivc-progress-bar-wrap">
-                  <div className="ivc-progress-label"><span className="ivc-progress-title">Spiritual Assessment Progress</span><span className="ivc-progress-pct">{progress}% Complete</span></div>
-                  <div className="ivc-progress-track"><div className="ivc-progress-fill" style={{width:`${progress}%`}}/></div>
-                  {readyForDiagnosis&&<button className="ivc-gen-report-btn" onClick={generateReport}>✨ Generate Diagnosis Report</button>}
-                </div>
-              )}
-              <div className="ivc-chat">
-                {messages.length===0&&(
-                  <div className="ivc-welcome">
-                    <div className="ivc-w-om">🕉</div>
-                    <h2 className="ivc-w-title">Namaste, {profile?.name||"Seeker"}</h2>
-                    <p className="ivc-w-sub">Whatever trouble weighs on your soul — speak openly. Pandit Ji will understand your situation fully before prescribing the right path.</p>
-                    <div className="ivc-w-grid">
-                      {SUGGESTIONS.map((s,i)=><div key={i} className="ivc-suggest" onClick={()=>send(s.sub)}><div className="ivc-sug-title">{s.title}</div><div className="ivc-sug-sub">{s.sub}</div></div>)}
-                    </div>
-                  </div>
-                )}
-                {messages.map((msg,i)=>(
-                  <div key={i} className={`ivc-msg${msg.role==="user"?" user":""}`}>
-                    <div className={`ivc-av ${msg.role==="user"?"user":"guru"}`}>{msg.role==="user"?"🙏":"🧘"}</div>
-                    <div className="ivc-bwrap">
-                      {msg.role==="user"
-                        ?<div className="ivc-user-bbl"><div className="ivc-user-txt">{msg.content}</div></div>
-                        :<div className="ivc-guru-bbl"><div className="ivc-guru-txt">{msg.content?.message||msg.content?.guidance||"..."}</div></div>}
-                    </div>
-                  </div>
-                ))}
-                {loading&&<div className="ivc-typing"><div className="ivc-av guru">🧘</div><div className="ivc-typing-bbl"><div className="ivc-dots"><div className="ivc-dot"/><div className="ivc-dot"/><div className="ivc-dot"/></div></div></div>}
-                <div ref={bottomRef}/>
-              </div>
-              <div className="ivc-inp-area">
-                <div className="ivc-inp-wrap">
-                  <textarea ref={textareaRef} className="ivc-inp-box"
-                    placeholder={listening?"Listening... speak now":"Tell Pandit Ji what is troubling you — Hindi, English, or Hinglish"}
-                    value={input} onChange={e=>{setInput(e.target.value);autoResize();}} onKeyDown={onKeyDown} rows={1}/>
-                  <div className="ivc-inp-btns">
-                    <button className={`ivc-voice-inp-btn${listening?" listening":""}`} onClick={toggleVoice}>{listening?"🔴":"🎙️"}</button>
-                    <button className="ivc-send-btn" onClick={()=>send(input)} disabled={!input.trim()||loading}>{loading?"⏳":"↑"}</button>
-                  </div>
-                </div>
-                <div className="ivc-inp-hint">Enter to send · Shift+Enter for new line · 🎙️ for voice</div>
-              </div>
-            </>
-          )}
-
-          {activeTab==="voice"&&(
-            <VoiceConsultation />
-          )}
-
-          {activeTab==="report"&&(
-            <div className="ivc-report">
-              {generatingReport?(
-                <div className="ivc-report-generating">
-                  <div className="ivc-gen-spinner"/>
-                  <div className="ivc-gen-txt">Preparing Your Diagnosis</div>
-                  <div className="ivc-gen-sub">Analysing planetary influences, karmic patterns, and prescribing remedies...</div>
-                </div>
-              ):report?(
-                <DiagnosisReport report={report} onSaveMantra={saveMantra} onBookPuja={()=>alert("Puja booking coming soon!")} userName={profile?.name} onAskFollowUp={handleFollowUp} onDownload={handleDownloadPDF} downloading={downloading}/>
-              ):(
-                <div className="ivc-report-empty">
-                  <div className="ivc-report-empty-icon" style={{fontSize:72,marginBottom:20,filter:"drop-shadow(0 0 30px rgba(188,106,77,.4))"}}>🕉</div>
-                  <div className="ivc-report-empty-title">Begin Your Consultation</div>
-                  <div className="ivc-report-empty-sub">Share your life challenge with Pandit Ji in the Consultation tab. After a few exchanges, your complete Vedic Diagnosis Report — with remedies, mantras, planetary analysis, and a PDF — will be generated automatically.</div>
-                  <div style={{display:"flex",gap:12,flexWrap:"wrap",justifyContent:"center",marginTop:8}}>
-                    <button className="ivc-report-start-btn" onClick={()=>setActiveTab("consultation")}>💬 Start Consultation</button>
-                    {readyForDiagnosis&&<button className="ivc-report-start-btn" style={{background:"linear-gradient(135deg,rgba(188,106,77,.25),rgba(188,106,77,.18))",borderColor:"rgba(188,106,77,.5)"}} onClick={generateReport}>✨ Generate Report Now</button>}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </main>
+      <div className="pointer-events-none absolute inset-0">
+        <StarCanvas/>
+        <CosmicOverlay/>
       </div>
+
+      <GuruSidebar
+        activeTab={activeTab as GuruTab}
+        onTabChange={handleTabChange}
+        onNewConsultation={newConversation}
+        chatSessions={chatSessions}
+        savedMantras={savedMantras}
+        activePanel={activePanel}
+        onTogglePanel={togglePanel}
+        profile={profile}
+        open={sidebarOpen}
+        onClose={()=>setSidebarOpen(false)}
+      />
+
+      <main className="relative z-10 flex min-w-0 flex-1 flex-col">
+        <GuruTopHeader onOpenSidebar={()=>setSidebarOpen(true)} />
+        <GuruTabs
+          activeTab={activeTab as GuruTab}
+          onChange={handleTabChange}
+          reportReady={!!report}
+          reportGenerating={generatingReport}
+        />
+
+        {activeTab==="consultation"&&(
+          <>
+            {progress>0&&(
+              <GuruProgressBar progress={progress} readyForDiagnosis={readyForDiagnosis} onGenerateReport={generateReport} />
+            )}
+            {/* Single-column conversation, ChatGPT/Claude-style: welcome
+                content OR the message thread, never both, never split
+                across a side panel. */}
+            <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+              <div ref={mainScrollRef} className="flex-1 overflow-y-auto px-4 py-6 md:px-8">
+                <div className="mx-auto flex max-w-3xl flex-col gap-8">
+                  <AnimatePresence mode="wait">
+                    {messages.length===0 ? (
+                      <motion.div key="welcome" className="flex flex-col gap-8">
+                        <motion.div
+                          className="flex flex-col gap-8"
+                          initial={{opacity:0,y:-20,scale:0.98}}
+                          animate={{opacity:1,y:0,scale:1}}
+                          exit={{opacity:0,y:-20,scale:0.98}}
+                          transition={{duration:0.3,ease:"easeInOut"}}
+                        >
+                          <TrustStats/>
+                          <HeroWelcome name={profile?.name||"Seeker"} />
+                        </motion.div>
+                        <CategoryCards suggestions={SUGGESTIONS} onSelect={handleSuggestionSelect} />
+                        <motion.div
+                          initial={{opacity:0,y:-15}}
+                          animate={{opacity:1,y:0}}
+                          exit={{opacity:0,y:-15}}
+                          transition={{duration:0.25,delay:0.15,ease:"easeInOut"}}
+                        >
+                          <AnalysisTimeline/>
+                        </motion.div>
+                        <motion.div
+                          initial={{opacity:0,y:-10}}
+                          animate={{opacity:1,y:0}}
+                          exit={{opacity:0,y:-10}}
+                          transition={{duration:0.25,delay:0.2,ease:"easeInOut"}}
+                        >
+                          <SuggestedQuestions onSelectSuggestion={handleSuggestionSelect} />
+                        </motion.div>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="conversation"
+                        initial={{opacity:0,y:30,scale:0.98,filter:"blur(4px)"}}
+                        animate={{opacity:1,y:0,scale:1,filter:"blur(0px)"}}
+                        exit={{opacity:0}}
+                        transition={{duration:0.3,ease:"easeInOut"}}
+                      >
+                        <GuruConversation ref={bottomRef} messages={messages} loading={loading} />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
+              <div className="border-t border-white/[0.08] bg-[#09090B]/95 px-4 py-4 backdrop-blur-xl md:px-8">
+                <div className="mx-auto max-w-3xl">
+                  <LanguageControls
+                    inputLanguage={inputLanguage}
+                    onInputLanguageChange={setInputLanguage}
+                    replyLanguage={replyLanguage}
+                    onReplyLanguageChange={setReplyLanguage}
+                  />
+                  <GuruChatInput
+                    ref={textareaRef}
+                    value={input}
+                    onChange={(v)=>{setInput(v);autoResize();}}
+                    onSend={()=>send(input)}
+                    onKeyDown={onKeyDown}
+                    listening={listening}
+                    onToggleVoice={toggleVoice}
+                    loading={loading}
+                    glowPulse={suggestionPulse}
+                  />
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {activeTab==="voice"&&(
+          <div className="flex-1 overflow-y-auto">
+            <VoiceConsultation />
+          </div>
+        )}
+
+        {activeTab==="report"&&(
+          <div className="ivc-report">
+            {generatingReport?(
+              <div className="ivc-report-generating">
+                <div className="ivc-gen-spinner"/>
+                <div className="ivc-gen-txt">Preparing Your Diagnosis</div>
+                <div className="ivc-gen-sub">Analysing planetary influences, karmic patterns, and prescribing remedies...</div>
+              </div>
+            ):report?(
+              <DiagnosisReport report={report} onSaveMantra={saveMantra} onBookPuja={()=>alert("Puja booking coming soon!")} userName={profile?.name} onAskFollowUp={handleFollowUp} onDownload={handleDownloadPDF} downloading={downloading}/>
+            ):(
+              <div className="ivc-report-empty">
+                <div className="ivc-report-empty-icon" style={{fontSize:72,marginBottom:20,filter:"drop-shadow(0 0 30px rgba(188,106,77,.4))"}}>🕉</div>
+                <div className="ivc-report-empty-title">Begin Your Consultation</div>
+                <div className="ivc-report-empty-sub">Share your life challenge with Pandit Ji in the Consultation tab. After a few exchanges, your complete Vedic Diagnosis Report — with remedies, mantras, planetary analysis, and a PDF — will be generated automatically.</div>
+                <div style={{display:"flex",gap:12,flexWrap:"wrap",justifyContent:"center",marginTop:8}}>
+                  <button className="ivc-report-start-btn" onClick={()=>setActiveTab("consultation")}>💬 Start Consultation</button>
+                  {readyForDiagnosis&&<button className="ivc-report-start-btn" style={{background:"linear-gradient(135deg,rgba(188,106,77,.25),rgba(188,106,77,.18))",borderColor:"rgba(188,106,77,.5)"}} onClick={generateReport}>✨ Generate Report Now</button>}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </main>
     </div>
   );
 }

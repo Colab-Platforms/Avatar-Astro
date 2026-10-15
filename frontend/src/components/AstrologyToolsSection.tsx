@@ -9,7 +9,7 @@ import ToolCard from "./ToolCard";
  * display styling used elsewhere on the page.
  */
 const AstrologyToolsSection = () => (
-  <section className="relative w-full py-24 md:py-28">
+  <section className="relative w-full pt-12 pb-24 md:pt-16 md:pb-28">
     <div className="container relative z-10 mx-auto px-4 md:px-6">
       <motion.div
         initial={{ opacity: 0, y: 24 }}

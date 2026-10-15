@@ -7,6 +7,7 @@ if (!document.head.querySelector("link[href*='Cinzel']")) document.head.appendCh
 
 const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || "openai/gpt-oss-120b";
 
 const SYSTEM_PROMPT = `You are Pandit Rameshwar Ji, a revered Vedic astrologer with 40 years of experience.
 Analyze the seeker's situation and return ONLY a valid JSON object with EXACTLY these keys (all required):
@@ -41,7 +42,7 @@ async function callAI(userMsg) {
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROQ_API_KEY}` },
     body: JSON.stringify({
-      model: "llama-3.3-70b-versatile",
+      model: GROQ_MODEL,
       temperature: 0.7,
       max_tokens: 1500,
       response_format: { type: "json_object" },
@@ -568,7 +569,7 @@ export default function InnerVoice() {
       const data = await callAI(text);
       if (!data || !Object.keys(data).length) throw new Error("Empty response. Please try again.");
       setResult(data);
-    } catch(e) { setError(e.message || "Could not read your karma. Please try again."); }
+    } catch(e) { console.error("[Karma Diagnosis] request failed:", e); setError("Could not read your karma right now. Please try again in a moment."); }
     finally { setLoading(false); }
   };
 

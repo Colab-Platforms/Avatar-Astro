@@ -11,12 +11,6 @@ const stats = [
   { icon: MapPinned, value: "60+", label: "Countries" },
 ];
 
-const avatarGradients = [
-  "linear-gradient(135deg, #f2b877, #bc6a4d)",
-  "linear-gradient(135deg, #8fb8e8, #4a6ea8)",
-  "linear-gradient(135deg, #d9a8e0, #9a5fb0)",
-];
-
 const Hero = () => {
   const sceneRef = useRef<HTMLDivElement>(null);
   const mvX = useMotionValue(0);
@@ -39,7 +33,7 @@ const Hero = () => {
   };
 
   return (
-    <section className="relative w-full min-h-screen overflow-hidden pt-28 pb-16 lg:pt-24 lg:pb-0 flex items-start lg:items-center">
+    <section className="relative w-full overflow-hidden pt-28 pb-6 lg:pt-32 lg:pb-0 flex items-start">
       <Stars />
 
       <div className="container relative z-10 mx-auto px-4 md:px-6">
@@ -51,26 +45,6 @@ const Hero = () => {
             transition={{ duration: 0.7, ease: "easeOut" }}
             className="text-center lg:text-left"
           >
-            {/* Online badge */}
-            <div className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 mb-8 backdrop-blur-sm">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-              </span>
-              <span className="font-['Inter'] text-sm text-white/70">
-                1,240 astrologers online now
-              </span>
-              <div className="flex -space-x-2 ml-1">
-                {avatarGradients.map((g, i) => (
-                  <span
-                    key={i}
-                    className="w-5 h-5 rounded-full border-2 border-[#081426]"
-                    style={{ background: g }}
-                  />
-                ))}
-              </div>
-            </div>
-
             {/* Heading */}
             <h1 className="font-['Inter'] normal-case font-bold tracking-tight leading-[1.08] text-4xl sm:text-5xl xl:text-6xl mb-6">
               <span className="block text-white">AI Astrology for</span>

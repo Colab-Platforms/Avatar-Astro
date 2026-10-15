@@ -8,6 +8,7 @@ import { API_BASE_URL } from "@/lib/api";
 // ── API ──────────────────────────────────────────────────────────────────────
 const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || "openai/gpt-oss-120b";
 
 // Sarvam AI TTS — routed through /api/tts serverless function (no CORS issues).
 export const TTS_PROVIDER = "sarvam" as const;
@@ -124,7 +125,7 @@ async function translateText(text: string, targetLang: Language): Promise<string
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${GROQ_API_KEY}` },
       body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
+        model: GROQ_MODEL,
         temperature: 0.3,
         max_tokens: 400,
         messages: [
@@ -513,7 +514,7 @@ export default function VoiceConsultation() {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${GROQ_API_KEY}` },
         body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
+          model: GROQ_MODEL,
           temperature: 0.75,
           max_tokens: 380,
           messages: [{ role: "system", content: VOICE_SYSTEM_PROMPT }, ...history],

@@ -2,25 +2,28 @@ import "dotenv/config";
 import { Resend } from "resend";
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-if (!RESEND_API_KEY) {
-  throw new Error(
-    "RESEND_API_KEY is required in backend environment variables.",
-  );
-}
-
 const FROM_EMAIL = process.env.SMTP_FROM_EMAIL;
-if (!FROM_EMAIL) {
-  throw new Error(
-    "SMTP_FROM_EMAIL is required in backend environment variables and must be a verified sender on Resend.",
+const APP_NAME = process.env.APP_NAME || "Astro";
+
+if (!RESEND_API_KEY || !FROM_EMAIL) {
+  console.warn(
+    "[mailer] RESEND_API_KEY/SMTP_FROM_EMAIL not set — email sending is disabled.",
   );
 }
-
-const resend = new Resend(RESEND_API_KEY);
-const APP_NAME = process.env.APP_NAME || "Astro";
 
 // Exported so other modules (e.g. counselling notifications) can reuse the
 // same Resend client/sender identity instead of creating their own.
+const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
 export { resend, FROM_EMAIL, APP_NAME };
+
+function requireMailerConfig(): { client: Resend; fromEmail: string } {
+  if (!resend || !FROM_EMAIL) {
+    throw new Error(
+      "Email sending is disabled: RESEND_API_KEY and SMTP_FROM_EMAIL must be set in backend environment variables.",
+    );
+  }
+  return { client: resend, fromEmail: FROM_EMAIL };
+}
 
 //send OTP email via Resend
 export const sendOtpEmail = async (
@@ -40,9 +43,10 @@ export const sendOtpEmail = async (
       : "Use the OTP below to complete your login.";
 
   console.log(`[Resend] Sending OTP email (${type}) to: ${email}`);
+  const { client, fromEmail } = requireMailerConfig();
   try {
-    const { data, error } = await resend.emails.send({
-      from: `${APP_NAME} <${FROM_EMAIL}>`,
+    const { data, error } = await client.emails.send({
+      from: `${APP_NAME} <${fromEmail}>`,
       to: email,
       subject,
       html: `
@@ -95,9 +99,10 @@ export const sendOtpEmail = async (
 export const sendPasswordResetEmail = async (email: string, token: string) => {
   const resetUrl = `${process.env.FRONTEND_URL || "http://localhost:3000"}/reset-password?token=${token}`;
   console.log(`[Resend] Sending password reset email to: ${email}`);
+  const { client, fromEmail } = requireMailerConfig();
   try {
-    const { data, error } = await resend.emails.send({
-      from: `${APP_NAME} <${FROM_EMAIL}>`,
+    const { data, error } = await client.emails.send({
+      from: `${APP_NAME} <${fromEmail}>`,
       to: email,
       subject: `Reset your ${APP_NAME} password`,
       html: `

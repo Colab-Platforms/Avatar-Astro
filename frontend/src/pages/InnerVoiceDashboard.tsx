@@ -8,6 +8,7 @@ if (!document.head.querySelector("link[href*='Cinzel']")) document.head.appendCh
 
 const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || "openai/gpt-oss-120b";
 
 const CSS = `
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -193,7 +194,7 @@ export default function InnerVoiceDashboard() {
         method:"POST",
         headers:{"Content-Type":"application/json","Authorization":`Bearer ${GROQ_API_KEY}`},
         body:JSON.stringify({
-          model:"llama-3.3-70b-versatile", temperature:0.7, max_tokens:1000,
+          model:GROQ_MODEL, temperature:0.7, max_tokens:1000,
           response_format:{type:"json_object"},
           messages:[
             {role:"system",content:"You are a Vedic astrology karma calculator. Return ONLY valid JSON."},
@@ -205,7 +206,8 @@ export default function InnerVoiceDashboard() {
       if(data.error) throw new Error(data.error.message);
       const parsed=JSON.parse(data.choices?.[0]?.message?.content||"{}");
       setAiData(parsed);
-    } catch {
+    } catch (e) {
+      console.error("[Karma Dashboard] AI scoring failed, using fallback data:", e);
       setAiData({composite:62,natalBase:28,transitBonus:5,behaviorBase:29,scoreMessage:"Your karma shows moderate alignment. Complete your daily remedies to elevate your score.",currentDasha:"Consult Pandit Ji for your current dasha reading.",transitAlerts:[{planet:"Saturn",event:"Saturn's transit requires patience and discipline",impact:"neutral",tip:"Perform Shani Puja on Saturday"},{planet:"Jupiter",event:"Jupiter blesses your dharmic efforts",impact:"positive",tip:"Wear yellow, donate to education"}],radarData:[{subject:"Dharma",value:6},{subject:"Artha",value:5},{subject:"Kama",value:4},{subject:"Moksha",value:7},{subject:"Karma",value:6},{subject:"Seva",value:5}]});
     } finally { setLoadingAI(false); }
   };
