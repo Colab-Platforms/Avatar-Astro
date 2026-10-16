@@ -1,10 +1,12 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Users, MapPin, Clock, Send, Heart, Globe, ExternalLink, BellRing, Radio } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import DevotionLayout from '@/components/DevotionLayout';
 import { liveTemples, samplePrayers, formatViewers, type PrayerMessage } from '@/data/liveStreams';
-import { apiService, type DarshanTempleStatus } from '@/lib/api';
+import { useDarshanTemple } from '@/hooks/useDarshanTemple';
+import { useDarshanTemples } from '@/hooks/useDarshanTemples';
+import { useDarshanLiveEvents } from '@/hooks/useDarshanLiveEvents';
 
 // ── Prayer wall ────────────────────────────────────────────────────────────────
 const PrayerWall = ({ templeId }: { templeId: string }) => {
@@ -437,55 +439,19 @@ const DarshanDetail = () => {
   // only thing that talks to the YouTube Data API. Until it resolves (or if
   // it fails), we never fall back to a hardcoded videoId — we just show the
   // offline state, per the "never show a broken player" requirement.
-  const [liveStatus, setLiveStatus]         = useState<DarshanTempleStatus | null>(null);
-  const [statusLoaded, setStatusLoaded]     = useState(false);
-  const [othersLiveSlugs, setOthersLiveSlugs] = useState<Set<string>>(new Set());
+  // Updates arrive via useDarshanLiveEvents' SSE push straight into the
+  // TanStack Query cache — no polling.
+  useDarshanLiveEvents();
+  const { data: liveStatus, isLoading: statusLoading } = useDarshanTemple(slug);
+  const statusLoaded = !statusLoading;
+
+  const { data: allStatuses } = useDarshanTemples();
+  const othersLiveSlugs = useMemo(
+    () => new Set((allStatuses ?? []).filter(t => t.isLive).map(t => t.slug)),
+    [allStatuses],
+  );
 
   useEffect(() => { window.scrollTo(0, 0); }, [slug]);
-
-  // Polls the backend every 60s so a temple that goes live (or switches to a
-  // new broadcast) updates without a page refresh. State is only replaced
-  // when isLive or currentLiveVideoId actually changed — an unchanged poll
-  // result reuses the previous object reference so React skips the re-render
-  // (and, downstream, LiveEmbedPlayer's key={liveVideoId} doesn't remount).
-  useEffect(() => {
-    if (!slug) return;
-    setStatusLoaded(false);
-    setLiveStatus(null);
-    let cancelled = false;
-
-    const poll = (isInitial: boolean) => {
-      apiService.getDarshanTemple(slug)
-        .then(res => {
-          if (cancelled || !res.success || !res.data) return;
-          const next = res.data;
-          setLiveStatus(prev => {
-            if (prev && prev.isLive === next.isLive && prev.currentLiveVideoId === next.currentLiveVideoId) {
-              return prev;
-            }
-            return next;
-          });
-        })
-        .catch(() => { /* keep last known status on a transient poll failure */ })
-        .finally(() => { if (!cancelled && isInitial) setStatusLoaded(true); });
-    };
-
-    poll(true);
-    const intervalId = window.setInterval(() => poll(false), 60000);
-
-    return () => { cancelled = true; window.clearInterval(intervalId); };
-  }, [slug]);
-
-  useEffect(() => {
-    let cancelled = false;
-    apiService.getDarshanTemples()
-      .then(res => {
-        if (cancelled || !res.success || !res.data) return;
-        setOthersLiveSlugs(new Set(res.data.filter(t => t.isLive).map(t => t.slug)));
-      })
-      .catch(() => { /* "Also Live Now" simply shows nothing on failure */ });
-    return () => { cancelled = true; };
-  }, []);
 
   const isLive       = statusLoaded && !!liveStatus?.isLive;
   const liveVideoId   = liveStatus?.currentLiveVideoId ?? null;

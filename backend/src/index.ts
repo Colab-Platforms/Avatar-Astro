@@ -29,7 +29,7 @@ const EXPLICIT_ALLOWED_ORIGINS = [
   "http://127.0.0.1:3000",
   "http://localhost:8081",
   "http://192.168.1.126:8081",
-  "https://avatar-astro33.vercel.app",
+  "https://avatar-astro.vercel.app",
 ];
 // This project's actual Vite dev port (see frontend/vite.config.ts) — kept
 // in addition to the explicit list above since that's what's really running.
@@ -434,12 +434,10 @@ Return ONLY valid JSON (no markdown, no fences):
     res.json({ success: true, data: result });
   } catch (err: any) {
     console.error("Tarot reading error:", err.response?.data || err.message);
-    res
-      .status(500)
-      .json({
-        success: false,
-        error: err.response?.data?.error?.message || err.message,
-      });
+    res.status(500).json({
+      success: false,
+      error: err.response?.data?.error?.message || err.message,
+    });
   }
 });
 
@@ -447,12 +445,10 @@ Return ONLY valid JSON (no markdown, no fences):
 app.post("/api/palm-reading", async (req: Request, res: Response) => {
   const { imageBase64, imageType, fingerprint } = req.body;
   if (!imageBase64 || !imageType) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        error: "imageBase64 and imageType are required",
-      });
+    return res.status(400).json({
+      success: false,
+      error: "imageBase64 and imageType are required",
+    });
   }
 
   const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
@@ -547,12 +543,10 @@ Return ONLY valid JSON, no markdown fences, no extra text. Use this exact struct
     res.json({ success: true, data: result });
   } catch (err: any) {
     console.error("Palm reading error:", err.response?.data || err.message);
-    res
-      .status(500)
-      .json({
-        success: false,
-        error: err.response?.data?.error?.message || err.message,
-      });
+    res.status(500).json({
+      success: false,
+      error: err.response?.data?.error?.message || err.message,
+    });
   }
 });
 

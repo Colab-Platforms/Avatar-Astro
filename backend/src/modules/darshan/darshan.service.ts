@@ -54,18 +54,20 @@ class DarshanService {
     return prisma.darshanChannel.findFirst({ where: { youtubeChannelId } });
   }
 
-  async markLive(id: string, videoId: string): Promise<void> {
-    await prisma.darshanChannel.update({
+  async markLive(id: string, videoId: string): Promise<DarshanChannelDTO> {
+    const channel = await prisma.darshanChannel.update({
       where: { id },
       data: { isLive: true, currentLiveVideoId: videoId, lastCheckedAt: new Date() },
     });
+    return toDTO(channel);
   }
 
-  async markOffline(id: string): Promise<void> {
-    await prisma.darshanChannel.update({
+  async markOffline(id: string): Promise<DarshanChannelDTO> {
+    const channel = await prisma.darshanChannel.update({
       where: { id },
       data: { isLive: false, currentLiveVideoId: null, lastCheckedAt: new Date() },
     });
+    return toDTO(channel);
   }
 
   async touchLastChecked(id: string): Promise<void> {

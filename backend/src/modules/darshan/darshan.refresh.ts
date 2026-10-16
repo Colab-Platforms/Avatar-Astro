@@ -1,6 +1,7 @@
 import DarshanService from "./darshan.service.js";
 import { getVideoLiveStatus } from "./darshan.youtube.js";
 import { startWebSubRenewalLoop, stopWebSubRenewalLoop } from "./darshan.websub.js";
+import { broadcastDarshanStatus } from "./darshan.events.js";
 
 const darshanService = new DarshanService();
 
@@ -26,7 +27,8 @@ async function refreshStaleLiveChannels(): Promise<void> {
       const stillLive = status.isLive && status.embeddable;
 
       if (!stillLive) {
-        await darshanService.markOffline(channel.id);
+        const updated = await darshanService.markOffline(channel.id);
+        broadcastDarshanStatus(updated);
         console.log(`[darshan] "${channel.slug}" stream ended`);
       } else {
         await darshanService.touchLastChecked(channel.id);

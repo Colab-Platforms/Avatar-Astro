@@ -9,6 +9,10 @@ const router = Router();
 router.get("/temples", darshanController.listTemples);
 router.get("/temples/:slug", darshanController.getTempleBySlug);
 
+// Live status push stream — the frontend subscribes to this instead of
+// polling /temples for changes.
+router.get("/events", darshanController.streamEvents);
+
 // WebSub (PubSubHubbub) push endpoint — YouTube's hub calls this directly,
 // both to verify the subscription (GET) and to deliver notifications (POST).
 // The POST body is an Atom XML feed, not JSON, so it needs its own text

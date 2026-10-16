@@ -1,11 +1,11 @@
 # Premium Astrology Backend
 
-Node.js Express backend for the Premium Astrology Web Application, built with TypeScript and MongoDB.
+Node.js Express backend for the Premium Astrology Web Application, built with TypeScript, Prisma, and PostgreSQL (Neon).
 
 ## Prerequisites
 
 - Node.js 16+ 
-- MongoDB 4.4+
+- PostgreSQL (e.g. a Neon database)
 - npm or yarn
 
 ## Installation
@@ -24,7 +24,7 @@ cp .env.example .env
 ```env
 PORT=5000
 NODE_ENV=development
-MONGODB_URI=mongodb://localhost:27017/premium-astrology-app
+DATABASE_URL=postgresql://user:password@host/dbname
 JWT_SECRET=your_jwt_secret_key_here
 JWT_EXPIRE=7d
 CORS_ORIGIN=http://localhost:3000
@@ -66,9 +66,8 @@ npm test
 backend/
 ├── src/
 │   ├── config/           # Configuration files
-│   │   ├── environment.ts
-│   │   └── database.ts
-│   ├── models/           # MongoDB models
+│   │   └── environment.ts
+│   ├── modules/          # Feature modules (auth, admin, puja, chadhawa, shop, darshan — Prisma-backed)
 │   ├── routes/           # API routes
 │   ├── controllers/       # Route controllers
 │   ├── middleware/        # Express middleware
@@ -109,7 +108,7 @@ backend/
 |----------|-------------|---------|
 | `PORT` | Server port | 5000 |
 | `NODE_ENV` | Environment (development/production) | development |
-| `MONGODB_URI` | MongoDB connection string | mongodb://localhost:27017/premium-astrology-app |
+| `DATABASE_URL` | PostgreSQL (Neon) connection string | — |
 | `JWT_SECRET` | JWT signing secret | your_jwt_secret_key_here_change_in_production |
 | `JWT_EXPIRE` | JWT expiration time | 7d |
 | `CORS_ORIGIN` | CORS allowed origin | http://localhost:3000 |

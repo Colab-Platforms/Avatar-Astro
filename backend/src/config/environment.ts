@@ -10,10 +10,6 @@ export const config = {
   isDevelopment: process.env.NODE_ENV === 'development',
   isProduction: process.env.NODE_ENV === 'production',
 
-  // Database
-  mongodb: {
-    uri: process.env.MONGODB_URI},
-
   // JWT
   jwt: {
     secret: process.env.JWT_SECRET || 'your_jwt_secret_key_here_change_in_production',
@@ -28,7 +24,7 @@ export const config = {
 
 // Validate required environment variables
 export const validateConfig = (): void => {
-  const requiredVars = ['MONGODB_URI', 'JWT_SECRET'];
+  const requiredVars = ['JWT_SECRET'];
   
   if (config.isProduction) {
     const missingVars = requiredVars.filter(
