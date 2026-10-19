@@ -1,0 +1,1775 @@
+╭─── Claude Code v2.1.212 ─────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting        │
+│            Welcome back Avatar Learning!           │ started                 │
+│                                                    │ Run /init to create a … │
+│                       ▐▛███▜▌                      │ ─────────────────────── │
+│                      ▝▜█████▛▘                     │ What's new              │
+│                        ▘▘ ▝▝                       │ `/fork` now copies you… │
+│    Sonnet 5 · Claude Pro ·                         │ Added `claude auto-mod… │
+│    avatarlearning@avatarindia.com's Organization   │ Added a session-wide l… │
+│           ~\astro\avatar-astro33\backend           │ /release-notes for more │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+
+❯ read the codebase and tell me what is currently using mongodb here??          
+
+  Searched for 4 patterns, read 2 files (ctrl+o to expand)
+
+● MongoDB (via Mongoose) is the only database used in this project, in backend/.
+  Here's the breakdown:
+
+  Connection setup
+  - backend/src/index.ts — connects directly via mongoose.connect(MONGODB_URI, 
+  ...) at server startup (defaults to mongodb://localhost:27017/astrology); DB
+  is treated as optional (server still runs without it).
+  - backend/src/config/database.ts — a separate
+  connectDatabase()/disconnectDatabase() helper, also Mongoose-based.
+  - backend/src/config/environment.ts — holds config.mongodb.uri.
+  - backend/.env.example / MONGODB_SETUP.md — document the MONGODB_URI env var
+  and setup steps.
+
+  Models (Mongoose schemas) — backend/src/models/
+  - User.ts
+  - Horoscope.ts
+  - Kundali.ts
+  - Temple.ts
+
+  Modules/services that query via Mongoose models
+  - modules/auth/auth.service.ts
+  - modules/admin/admin.services.ts
+  - modules/puja/puja.service.ts
+  - modules/chadhawa/chadhawa.service.ts
+  - modules/shop/shop.service.ts (the shop feature you connected recently)
+  - controllers/birthDataController.ts
+
+  Other
+  - scripts/seedTemples.ts — a seed script for temple data.
+  - Tests (authController.test.ts, birthDataController.test.ts, User.test.ts)
+  mock/exercise the Mongoose models.
+  - package.json — mongoose@^7.5.0 is the only DB driver dependency; no
+  Prisma/Postgres/MySQL present.
+
+  So: everything data-persistence-related (auth, admin, temples, chadhawa, shop,
+  horoscope/kundali/birth-data) runs on a single MongoDB instance through
+  Mongoose — there's no other database in the stack.
+
+✻ Cooked for 20s
+
+❯ wtf are you telling? i have made authentication using neon database with      
+  prisma and also whole admin panel for adding temple details and all is been   
+  made and stored in neon? so why the fuck are you telling that it is not used  
+  here and only mongodb is used?                                                
+
+  Searched for 2 patterns, read 1 file (ctrl+o to expand)
+
+● You're right, I missed it — my apologies. There's a Prisma + Neon (Postgres)
+  setup in this repo that I didn't surface properly. Let me correct the record.
+
+  Searched for 3 patterns, read 1 file (ctrl+o to expand)
+
+● My earlier search was wrong, and I apologize for that. Here's the correction:
+
+  Auth and admin are actually on Prisma + Postgres (Neon), not MongoDB.
+
+  - backend/prisma.ts — sets up PrismaClient with PrismaPg adapter, reading
+  DATABASE_URL (this is your Neon connection string).
+  - backend/prisma/schema/schema.prisma — datasource db { provider = 
+  "postgresql" }.
+  - backend/src/modules/auth/auth.service.ts — entirely Prisma-based:
+  prisma.user, prisma.session, prisma.otpVerification,
+  prisma.passwordResetToken, prisma.role, transactions via prisma.$transaction.
+  No Mongoose/Mongo usage in this file at all — I misread the earlier grep
+  output.
+  - backend/src/modules/admin/admin.services.ts — also Prisma (prisma.user).
+  - backend/src/modules/puja/puja.service.ts, chadhawa.service.ts,
+  shop.service.ts — also import prisma from @root/prisma.js (temples, chadhawa
+  offerings, shop products/admin panel all live in Postgres via Prisma).
+  - backend/prisma/seeds/*.ts (pujaTemples.ts, chadhawaOfferings.ts,
+  shopProducts.ts, makeadmin.ts) — seed scripts for the Prisma/Postgres DB.
+  - package.json has both @prisma/client/@prisma/adapter-pg and mongoose as
+  dependencies, plus prisma generate/migrate scripts.
+
+  What's still on MongoDB (via Mongoose):
+  - backend/src/models/User.ts, Horoscope.ts, Kundali.ts, Temple.ts — these look
+  like an older/separate model set.
+  - backend/src/config/database.ts + backend/src/index.ts's
+  mongoose.connect(...) call at startup.
+  - backend/src/controllers/birthDataController.ts.
+  - backend/src/scripts/seedTemples.ts (legacy, separate from
+  prisma/seeds/pujaTemples.ts).
+
+  So the repo currently runs two databases side by side: Prisma/Neon Postgres
+  for auth, admin, temples, chadhawa, and shop; and a separate Mongoose/MongoDB
+  setup for horoscope/kundali/birth-data and a legacy Temple model. I jumped to
+  "only MongoDB" from an incomplete grep instead of actually reading the service
+  files — that was careless given how central auth/admin are. Want me to check
+  whether the Mongo-based Temple.ts model is now dead code since temples moved
+  to Prisma?
+
+✻ Cooked for 24s
+
+※ recap: We're auditing avatar-astro33's database setup: auth, admin, temples, chadhawa, and shop actually use Prisma/Neon Postgres, while horoscope, kundali, birth-data use MongoDB. Next: check if the old Mongo Temple model is now dead code. (disable recaps in /config)
+
+❯ so read the whole codebase properly and tell me where are mongodb things used 
+  and how can we shift the things from mongo to neon?? Tell me properly         
+
+  Searched for 6 patterns, read 14 files (ctrl+o to expand)
+
+● I reread the whole backend carefully this time — no more half-answers. Here's
+  the full picture.
+
+  Where MongoDB is actually used
+
+  Only one real feature touches Mongo, and it's unrelated to
+  auth/admin/shop/temple-catalogue:
+
+  Darshan live-status tracker (/api/darshan/temples) — tracks whether a temple's
+  YouTube channel is currently live-streaming:
+  - backend/src/models/Temple.ts — Mongoose schema: name, slug, 
+  youtubeChannelId, currentLiveVideoId, isLive, lastCheckedAt
+  - backend/src/controllers/darshanController.ts — listTemples, getTempleBySlug
+  - backend/src/routes/darshanRoutes.ts — mounted at /api/darshan in index.ts
+  (confirmed: this route is live)
+  - backend/src/services/darshanRefreshService.ts — background loop, polls
+  YouTube API every 15 min, writes back to this Mongo collection
+  - backend/src/scripts/seedTemples.ts — seeds this Mongo collection from
+  config/temples.json
+  - backend/src/index.ts — mongoose.connect(...) at startup only to support this
+  (server runs fine if Mongo is down)
+
+  Note: this Mongo Temple is a different concept from your Prisma Temple model
+  (which holds location/deity/description/priceFrom/images/pujas/chadhawas — the
+  real temple-catalogue data for shop/puja/chadhawa). Same name, two unrelated
+  tables, two databases. That's the actual mess.
+
+  Dead legacy Mongo code (not wired to the running app at all)
+
+  I checked index.ts's app.use(...) calls — these routes are never mounted, so
+  this code is unreachable from any request:
+  - models/User.ts (Mongoose User) + controllers/authController.ts +
+  routes/authRoutes.ts — old auth, fully replaced by your Prisma auth.service.ts
+  - controllers/kundaliController.ts + routes/kundaliRoutes.ts +
+  utils/kundaliCalculation.ts + models/Kundali.ts — birth-chart generator, not
+  mounted
+  - controllers/birthDataController.ts + routes/birthDataRoutes.ts — birth data
+  save/get against Mongo User, not mounted
+  - models/Horoscope.ts — not referenced by any controller at all, fully
+  orphaned
+  - config/database.ts — a connectDatabase() helper that's never called anywhere
+  (index.ts connects directly instead)
+  - Tests exercising all of the above (authController.test.ts,
+  birthDataController.test.ts, User.test.ts, birthDataRoutes.test.ts)
+
+  So the real scope of "move off Mongo" is small: one feature (darshan 
+  live-status) plus a pile of dead code.
+
+  Migration plan
+
+  1. Fold darshan fields into the existing Prisma Temple model
+  (backend/prisma/schema/temple.prisma) — add youtubeChannelId,
+  currentLiveVideoId, isLive, lastCheckedAt as optional columns, instead of
+  keeping a second "Temple" concept.
+  2. Run prisma migrate dev to add the columns in Neon.
+  3. Rewrite darshanController.ts, darshanRefreshService.ts, seedTemples.ts to
+  use prisma.temple.findMany/findUnique/update instead of the Mongoose model.
+  4. One-off script to copy existing documents from the Mongo temples collection
+  into the corresponding Postgres rows (match by slug).
+  5. Delete: models/Temple.ts, models/User.ts, models/Kundali.ts,
+  models/Horoscope.ts, config/database.ts, the dead controllers/routes/tests
+  listed above, the mongoose.connect call and mongodb config in environment.ts,
+  MONGODB_URI from .env, and the mongoose dependency from package.json.
+
+  Want me to go ahead and do this (schema change + migration + rewiring the
+  darshan code + deleting the dead files), or do you want to review/trim that
+  dead-code list first?
+
+✻ Cogitated for 1m 26s
+
+❯ ok but before doing this tell me if there is any better approach then polling 
+  here? Like i didn't understand what you told about polling and youtube        
+  properly... So explain me it proeprly and tell if better approach is there    
+  and if yes then what and how?                                                 
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● Good question — the polling approach the current code uses is both expensive
+  and sluggish. Let me break down what's actually happening and the better
+  options.
+
+  What the current code does
+
+  services/youtubeLiveService.ts calls search.list?eventType=live to ask YouTube
+  "is this channel live right now?" That's the only way to ask that question
+  directly via the Data API — but it costs 100 quota units per call, out of a
+  default daily quota of 10,000 units.
+
+  Your refresh loop (darshanRefreshService.ts) runs every 15 minutes = 96
+  times/day. For just one temple, that's 96 × 100 = 9,600 units/day — almost
+  your entire daily quota consumed checking one channel. With multiple temples,
+  you blow through the quota before the day is half over. That's literally why
+  the code has the "skip refresh if already checked recently" guard and warns
+  about dev-server restarts burning quota — it's working around a fundamentally
+  expensive polling design, not a bug.
+
+  It's also slow: a stream going live is only detected up to 15 minutes late,
+  because you're polling on a timer instead of being told immediately.
+
+  Better approach: push notifications instead of polling
+
+  YouTube channels support WebSub (PubSubHubbub) — you subscribe once to a
+  channel's feed via Google's hub, and whenever that channel publishes or
+  updates a video (including a livestream going live), Google POSTs a 
+  notification to a callback URL you host. No quota cost for the notification
+  itself, and it arrives in seconds, not up to 15 minutes late.
+
+  Flow:
+  1. Subscribe each temple's channel: POST 
+  https://pubsubhubbub.appspot.com/subscribe with your callback URL and the
+  channel's feed topic. Subscriptions lease for a few days, so you re-subscribe
+  periodically (a cheap cron, no API quota involved).
+  2. When a video is published/updated, Google POSTs an Atom XML payload
+  containing the videoId to your callback endpoint.
+  3. You confirm it's actually live + embeddable with
+  videos.list?part=liveStreamingDetails,status&id=<videoId> — only 1 quota unit,
+  and only when something actually happened.
+  4. Detecting when the stream ends still needs a cheap check — but only on the
+  one videoId you know is live, not a channel-wide search. You can either poll
+  that single video every minute or two (1 unit each — trivial) or rely on the
+  fact that YouTube also fires a WebSub update when the broadcast's status
+  changes.
+
+  Net effect: quota cost drops from ~100/check to ~1/check, and status updates
+  go from "up to 15 min late" to "near real-time."
+
+  Trade-off: this needs a public HTTPS endpoint Google can reach (fine in
+  production; for local dev you'd need something like ngrok, or just skip WebSub
+  in dev and fall back to polling).
+
+  Simpler fallback if you don't want a public webhook yet
+
+  If adding a public callback endpoint is more infra than you want right now,
+  there's a cheaper polling substitute: use playlistItems.list on the channel's
+  uploads playlist (~1-5 units) to get the most recent video, then check that
+  single video's liveBroadcastContent field via videos.list (1 unit). That
+  assumes the live stream is always the channel's most recent upload — true for
+  most temple darshan channels. This isn't push-based, but it cuts the cost by
+  ~95%, so you could poll every 1-2 minutes instead of 15, for the same quota
+  budget, no webhook required.
+
+  My recommendation: start with the cheap-polling fix (quick, no new infra) now,
+  and move to WebSub later if you want true real-time updates and are OK
+  hosting a public webhook.
+
+  Want me to implement the cheap-polling version now, and should I still go
+  ahead with the Mongo→Neon migration plan from before (folding darshan's temple
+  fields into the Prisma Temple model)?
+
+✻ Baked for 54s
+
+❯ /export video                                                                 
+  ⎿  Conversation exported to: C:\Users\USER\astro\avatar-astro33\video.txt
+
+❯ and what it meant by subscribing?                                             
+  Like how will things work? explain properly                                   
+● Let me walk through exactly what "subscribing" means here mechanically, since
+  it's a different model than a normal API call.
+
+  The model: hub, topic, subscriber
+
+  WebSub (formerly PubSubHubbub) has three parties:
+  - Topic — the thing you want updates about. For a YouTube channel, that's a
+  URL like https://www.youtube.com/xml/feeds/videos.xml?channel_id=UCxxxxxxxx
+  (an Atom feed of that channel's videos).
+  - Hub — a middleman server that YouTube uses to broadcast updates. For YouTube
+  it's always https://pubsubhubbub.appspot.com/subscribe.
+  - Subscriber — you (your backend), which wants to be notified when the topic
+  changes.
+
+  Instead of you repeatedly asking YouTube "anything new?", you tell the hub
+  once: "when this topic changes, POST the update to this URL of mine." The hub
+  then does the polling/watching on YouTube's internal side (their problem, not
+  your quota), and pushes to you.
+
+  Step by step
+
+  1. You expose a callback endpoint on your backend, e.g. POST 
+  https://yourdomain.com/api/darshan/youtube-webhook. This must be publicly
+  reachable over HTTPS (Google's servers need to hit it from the internet — this
+  is why local dev needs ngrok or similar).
+
+  2. You send a subscription request to the hub:
+  POST https://pubsubhubbub.appspot.com/subscribe
+  Content-Type: application/x-www-form-urlencoded
+
+  hub.callback=https://yourdomain.com/api/darshan/youtube-webhook
+  hub.topic=https://www.youtube.com/xml/feeds/videos.xml?channel_id=UCxxxxxxxx
+  hub.verify=sync
+  hub.mode=subscribe
+  hub.lease_seconds=432000
+  (one request per temple's channel)
+
+  3. The hub verifies you actually own that callback URL (so random people can't
+  subscribe your server to spam). It does this by sending your own endpoint a
+  GET request like:
+  GET https://yourdomain.com/api/darshan/youtube-webhook?hub.mode=subscribe&hub.
+  topic=...&hub.challenge=abc123&hub.lease_seconds=432000
+  Your endpoint must respond with HTTP 200 and the exact hub.challenge value 
+  echoed back in the response body. That's the whole handshake — it just proves
+  you control that URL. Once that round-trip succeeds, the subscription is
+  active.
+
+  4. From then on, whenever that channel's feed changes (new video published, or
+  an existing video's metadata changes — which includes a stream transitioning
+  to "live"), the hub POSTs an Atom XML payload to your callback URL,
+  unprompted:
+  <feed xmlns="http://www.w3.org/2005/Atom" 
+  xmlns:yt="http://www.youtube.com/xml/schemas/2015">
+    <entry>
+      <yt:videoId>dQw4w9WgXcQ</yt:videoId>
+      <yt:channelId>UCxxxxxxxx</yt:channelId>
+      <title>Live Darshan</title>
+      <published>...</published>
+      <updated>...</updated>
+    </entry>
+  </feed>
+  Your webhook handler parses out videoId, then does the cheap confirm call
+  (videos.list?part=liveStreamingDetails,status&id=<videoId>, 1 quota unit) to
+  check it's actually liveBroadcastContent: "live" and embeddable, and writes
+  isLive=true, currentLiveVideoId to your DB right then. No polling loop
+  involved — this handler just sits there and reacts when invoked.
+
+  5. The subscription expires after hub.lease_seconds (you can request up to a
+  few days). Before it expires, you re-send the same subscribe request to renew
+  — a trivial cron job, no YouTube Data API quota cost since it talks to the
+  hub, not the Data API.
+
+  6. Detecting "stream ended": WebSub doesn't give you a distinct "went offline"
+  event — but when a live broadcast ends, YouTube typically updates that
+  video's entry again (title/metadata change), which re-fires a notification to
+  you. As a safety net, you can still do a cheap videos.list check (1 unit) on
+  the currently-known-live videoId every minute or two, instead of channel-wide
+  search.list (100 units) — way cheaper even as a fallback.
+
+  Why this is better than what you have
+
+  Right now your server initiates every check ("poll"). With WebSub, Google's
+  hub initiates the check, and only tells you something when there's actually
+  something to tell — you stop paying the 100-unit search.list tax entirely, and
+  you find out within seconds instead of up to 15 minutes late.
+
+  The catch for your setup
+
+  This only works if your backend has a stable public HTTPS URL reachable from
+  Google's servers. If you're deployed (not just local dev), this is
+  straightforward. If you're still mostly developing locally, you'd need a
+  tunnel (ngrok, Cloudflare Tunnel) during dev, or just keep the cheap-polling
+  fallback for local and switch to WebSub in production.
+
+  Want me to implement the cheap-polling fallback first (no infra changes
+  needed) and leave WebSub as a documented follow-up for when you're deployed?
+
+✻ Baked for 23s
+
+❯ no, directly implement it, like i have deployed bacnkend on render already at 
+  https://avatar-astro33-backend.onrender.com.. so now implement exactly what   
+  you mentioned properly, also don't run migration or any prisma related        
+  command as i will run that manually                                           
+
+  Searched for 2 patterns, read 6 files (ctrl+o to expand)
+
+● Good, nothing else depends on the old functions, so this is a clean swap. Let
+  me implement everything now.
+
+● Write(prisma\schema\darshan.prisma)
+  ⎿  Wrote 21 lines to prisma\schema\darshan.prisma
+       1 // Live-darshan YouTube status, pushed via WebSub (see youtubeWe
+       2 // rather than polled. Deliberately separate from the catalogue 
+         `Temple` model
+         nnels don't
+       4 // have the catalogue's required fields (location/state/deity/pr
+       5 model DarshanChannel {
+       6   id   String @id @default(cuid())
+       8   name String
+       9 
+         id")
+     … +15 lines (ctrl+o to expand)
+
+● Write(src\services\youtubeLiveService.ts)
+  ⎿  User rejected write to src\services\youtubeLiveService.ts
+      1 import axios from 'axios';
+      2 
+      3 const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
+      4 
+      5 export interface VideoLiveStatus {
+      6   isLive: boolean;
+      7   embeddable: boolean;
+      8   channelId: string | null;
+      9 }
+     … +27 lines
+
+● Write(src\services\youtubeWebSubService.ts)
+  ⎿  User rejected write to src\services\youtubeWebSubService.ts
+       1 import axios from 'axios';
+       2 import prisma from '@root/prisma.js';
+       3 
+       4 const HUB_URL = 'https://pubsubhubbub.appspot.com/subscribe';
+       5 // YouTube's hub caps leases around 5 days; we ask for 4 and ren
+         ew with a day
+       6 // to spare so a subscription never silently lapses.
+       7 const LEASE_SECONDS = 60 * 60 * 24 * 4;
+       8 
+       9 function topicUrl(channelId: string): string {
+      10   return `https://www.youtube.com/xml/feeds/videos.xml?channel_i
+         d=${channelId}`;
+     … +66 lines
+
+● Write(src\controllers\darshanWebhookController.ts)
+  ⎿  User rejected write to src\controllers\darshanWebhookController.ts
+       1 import { Request, Response } from 'express';
+       2 import prisma from '@root/prisma.js';
+       3 import { getVideoLiveStatus } from '../services/youtubeLiveServi
+         ce.js';
+       4 
+       5 /**
+       6  * GET /api/darshan/websub/callback
+       7  * WebSub's verification handshake: whenever we (re-)subscribe t
+         o a channel,
+       8  * the hub calls back here to confirm we actually control this U
+         RL before
+       9  * activating the subscription. Echoing hub.challenge back is th
+         e entire
+      10  * protocol — see https://pubsubhubbub.appspot.com docs.
+     … +61 lines
+
+✻ Cooked for 3m 20s
+
+❯ i want you to follow modular approach like everything in modules folder like  
+  for auth and all                                                              
+
+  Searched for 8 patterns, read 9 files (ctrl+o to expand)
+
+● Now I have the full convention. Let me build this as a proper modules/darshan
+  module and remove the old scattered files.
+
+● Write(src\modules\darshan\darshan.types.ts)
+  ⎿  Wrote 14 lines to src\modules\darshan\darshan.types.ts
+       1 export interface DarshanChannelDTO {
+       2   name: string;
+       3   slug: string;
+       4   youtubeChannelId: string;
+       5   currentLiveVideoId: string | null;
+       6   isLive: boolean;
+       7   lastCheckedAt: Date | null;
+       8 }
+       9 
+      10 export interface VideoLiveStatus {
+     … +4 lines (ctrl+o to expand)
+
+● Write(src\modules\darshan\darshan.service.ts)
+  ⎿  Wrote 89 lines to src\modules\darshan\darshan.service.ts
+       1 import prisma from "@root/prisma.js";
+       2 import { ApiError } from "@/utils/ApiError.js";
+       3 import STATUS_CODES from "@/utils/statusCodes.js";
+       4 import type { DarshanChannelDTO } from "./darshan.types.js";
+       5 
+       6 const toDTO = (channel: {
+       7   name: string;
+       8   slug: string;
+       9   youtubeChannelId: string;
+      10   currentLiveVideoId: string | null;
+     … +88 lines (ctrl+o to expand)
+
+● Write(src\modules\darshan\darshan.youtube.ts)
+  ⎿  Wrote 34 lines to src\modules\darshan\darshan.youtube.ts
+       1 import axios from "axios";
+       3 
+       4 const YOUTUBE_API_BASE = "https://www.googleapis.com/youtube/v3"
+       5 
+       6 /**
+         eddable
+       8  * status via videos.list?part=snippet,status. Used by the WebSu
+       9  * (to confirm a push notification is really a live broadcast be
+         fore trusting
+         roadcast that
+     … +30 lines (ctrl+o to expand)
+
+● Write(src\modules\darshan\darshan.websub.ts)
+  ⎿  Wrote 81 lines to src\modules\darshan\darshan.websub.ts
+      1 import axios from "axios";
+      2 import DarshanService from "./darshan.service.js";
+      3 
+      4 const darshanService = new DarshanService();
+      5 
+      6 const HUB_URL = "https://pubsubhubbub.appspot.com/subscribe";
+      7 // YouTube's hub caps leases around 5 days; we ask for 4 and rene
+        w with a day
+      8 // to spare so a subscription never silently lapses.
+      9 const LEASE_SECONDS = 60 * 60 * 24 * 4;
+     … +82 lines (ctrl+o to expand)
+
+● Now the refresh/safety-net loop, controller, and route files.
+
+● Write(src\modules\darshan\darshan.refresh.ts)
+  ⎿  Wrote 68 lines to src\modules\darshan\darshan.refresh.ts
+       1 import DarshanService from "./darshan.service.js";
+       2 import { getVideoLiveStatus } from "./darshan.youtube.js";
+       3 import { startWebSubRenewalLoop, stopWebSubRenewalLoop } from ".
+       4 
+       5 const darshanService = new DarshanService();
+       6 
+       7 let liveCheckTimer: NodeJS.Timeout | null = null;
+       9 /**
+      10  * Safety net for detecting when a broadcast ends: WebSub pushes
+          us the
+     … +72 lines (ctrl+o to expand)
+
+● Write(src\modules\darshan\darshan.controller.ts)  ⎿  Wrote 98 lines to src\modules\darshan\darshan.controller.ts
+       1 import { Request, Response } from "express";
+       3 import { getVideoLiveStatus } from "./darshan.youtube.js";
+       4 
+       5 const darshanService = new DarshanService();
+       7 // Response envelope kept as { success, data/error } (not the mo
+         dule
+         ntend's
+       9 // ApiService already depends on this exact shape for the darsha
+         n endpoints
+         mples).
+     … +114 lines (ctrl+o to expand)
+
+● Write(src\modules\darshan\darshan.public.route.ts)
+  ⎿  Wrote 23 lines to src\modules\darshan\darshan.public.route.ts
+       1 import express, { Router } from "express";
+       2 import * as darshanController from "./darshan.controller.js";
+       3 
+         e temple
+       5 // reads are consumed directly by the frontend, and the websub/*
+          routes are
+       6 // called by Google's WebSub hub, not by any client of ours.
+       8 
+       9 router.get("/temples", darshanController.listTemples);
+      10 router.get("/temples/:slug", darshanController.getTempleBySlug);
+     … +20 lines (ctrl+o to expand)
+
+● Now the Prisma seed script (matching the prisma/seeds/ convention), updating
+  index.ts to wire the new module, and deleting the old scattered files.
+
+● Write(prisma\seeds\darshanChannels.ts)
+  ⎿  Wrote 42 lines to prisma\seeds\darshanChannels.ts
+       1 /**
+       2  * Seeds/updates the DarshanChannel table from src/config/temple
+       3  * Safe to re-run any time — upserts by slug, so editing a chann
+         elId in the
+       4  * JSON file and re-running this script updates the DB without d
+       5  * records or touching any application code.
+       6  *
+       7  * Usage: npm run db:seed:darshan   (from backend/)
+       9 
+      10 import "dotenv/config";
+     … +42 lines (ctrl+o to expand)
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(src\index.ts)
+  ⎿  Added 2 lines, removed 17 lines
+       1 -import dns from "dns";                                         
+       1  import express, { Request, Response, NextFunction } from "expre
+          ss";
+       2  import cors from "cors";
+       3  import dotenv from "dotenv";
+       5 -import mongoose from "mongoose";                               
+       4  import axios from "axios";
+       5  import interpretationRoutes from "./routes/interpretationRoutes
+          .js";
+       6  import compatibilityRoutes from "./routes/compatibilityRoutes.j
+          s";
+       7  import birthChartRoutes from "./routes/birthChartRoutes.js";
+       8  import nameAnalysisRoutes from "./routes/nameAnalysisRoutes.js"
+          ;
+       9  import innerVoiceRoutes from "./routes/innerVoiceRoutes.js";
+      12 -import darshanRoutes from "./routes/darshanRoutes.js";         
+      10 +import darshanRoutes from "./modules/darshan/darshan.public.rou
+         +te.js";                                                        
+      11  import authRoutes from "./modules/auth/auth.route.js";
+      12  import adminRoutes from "./modules/admin/admin.route.js";
+      13  import publicTempleRoutes from "./modules/puja/puja.public.rout
+          e.js";
+      14  import publicChadhawaRoutes from "./modules/chadhawa/chadhawa.p
+          ublic.route.js";
+      15  import publicShopRoutes from "./modules/shop/shop.public.route.
+          js";
+      16  import { errorHandler } from "./middleware/errorHandler.js";
+      19 -import { startDarshanRefreshLoop } from "./services/darshanRefr
+         -eshService.js";                                                
+      17 +import { startDarshanRefreshLoop } from "./modules/darshan/dars
+         +han.refresh.js";                                               
+      18  
+      19  dotenv.config();
+      20  
+      23 -// Opt-in only: some local/router DNS resolvers refuse SRV quer
+         -ies from                                                       
+      24 -// Node's resolver (c-ares) even though the OS resolver handles
+         - them fine,                                                    
+      25 -// which breaks mongodb+srv:// lookups with "querySrv ECONNREFU
+         -SED".                                                          
+      26 -// Reproduced on this dev machine's network; not assumed to app
+         -ly elsewhere,                                                  
+      27 -// so it only activates when MONGODB_DNS_SERVERS is explicitly 
+         -set.                                                           
+      28 -if (process.env.MONGODB_DNS_SERVERS) {                         
+      29 -  dns.setServers(                                              
+      30 -    process.env.MONGODB_DNS_SERVERS.split(",").map((s) => s.tri
+         -m()),                                                          
+      31 -  );                                                           
+      32 -}                                                              
+      33 -                                                               
+      21  const app = express();
+      22  const PORT = process.env.PORT || 5001;
+      36 -const MONGODB_URI =                                            
+      37 -  process.env.MONGODB_URI || "mongodb://localhost:27017/astrolo
+         -gy";                                                           
+      23  
+      24  // Middleware
+      25  const EXPLICIT_ALLOWED_ORIGINS = [
+
+● Now update the server startup block to drop the Mongo connection:
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(src\index.ts)
+  ⎿  Added 3 lines, removed 15 lines
+      571      .json({ success: false, error: err.message || "Internal Se
+           rver Error" });
+      572  });
+      573  
+      574 -// Start server (MongoDB optional — server runs without it)   
+      575 -async function startServer() {                                
+      576 -  // Without this, a query issued while disconnected silently 
+          -queues for up                                                 
+      577 -  // to 10s (Mongoose's default bufferTimeoutMS) before failin
+          -g — turning                                                   
+      578 -  // every request into a slow, confusing 500 instead of an im
+          -mediate,                                                      
+      579 -  // diagnosable error.                                       
+      580 -  mongoose.set("bufferCommands", false);                      
+      574 +// Start server                                               
+      575 +function startServer() {                                      
+      576 +  startDarshanRefreshLoop();                                  
+      577  
+      582 -  try {                                                       
+      583 -    await mongoose.connect(MONGODB_URI, { serverSelectionTimeo
+          -utMS: 5000 });                                                
+      584 -    console.log("✓ MongoDB connected");                       
+      585 -    startDarshanRefreshLoop();                                
+      586 -  } catch (error) {                                           
+      587 -    console.warn("⚠ MongoDB not available — running without da
+          -tabase:", error);                                             
+      588 -  }                                                           
+      589 -                                                              
+      578    app.listen(PORT, () => {
+      579      console.log(`✓ Server running on http://localhost:${PORT}`
+           );
+      580      console.log(`✓ API available at http://localhost:${PORT}/a
+           pi`);
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● Good, that's fine as a plain sync call. Now let's delete the old scattered
+  darshan files and verify nothing else references them.
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● Good — only the old files reference each other, nothing live points to them
+  anymore. Safe to delete.
+
+  Searched for 1 pattern, ran 1 shell command (ctrl+o to expand)
+
+● Clean. Now update package.json's script to point at the new Prisma seed
+  instead of the deleted Mongo one.
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(package.json)
+  ⎿  Added 1 line, removed 1 line
+      10      "build": "tsc && tsc-alias",
+      11      "start": "node dist/src/index.js",
+      12      "lint": "eslint src --ext .ts",
+      13 -    "seed:temples": "tsx src/scripts/seedTemples.ts",          
+      13      "db:seed": "tsx prisma/seeds/index.ts",
+      14      "db:seed:puja": "tsx prisma/seeds/pujaTemples.ts",
+      15      "db:seed:chadhawa": "tsx prisma/seeds/chadhawaOfferings.ts"
+          ,
+      16      "db:seed:shop": "tsx prisma/seeds/shopProducts.ts",
+      17 +    "db:seed:darshan": "tsx prisma/seeds/darshanChannels.ts",  
+      18      "db:generate": "prisma generate",
+      19      "db:migrate": "prisma migrate dev",
+      20      "db:deploy": "prisma migrate deploy"
+
+● Now let's update .env.example to add the new env vars and drop the now-unused
+  darshan-polling one.
+
+● Update(.env.example)
+  ⎿  Added 8 lines, removed 2 lines
+      31  
+      32  # YouTube Data API v3 (Live Darshan)
+      33  YOUTUBE_API_KEY=your_youtube_data_api_v3_key_here
+      34 -# How often the background service re-checks temple live status
+      35 -DARSHAN_REFRESH_INTERVAL_MINUTES=15                            
+      34 +# Publicly reachable HTTPS base URL of this backend — required 
+         +so YouTube's                                                   
+      35 +# WebSub (PubSubHubbub) hub can push "channel went live" notifi
+         +cations to                                                     
+      36 +# /api/darshan/websub/callback instead of us polling for them. 
+      37 +BACKEND_PUBLIC_URL=https://avatar-astro33-backend.onrender.com 
+      38 +# Safety-net poll interval (seconds) for channels currently mar
+         +ked live, to                                                   
+      39 +# catch "stream ended" (WebSub doesn't reliably push that event
+         +). Cheap: 1                                                    
+      40 +# YouTube quota unit per currently-live channel per check.     
+      41 +DARSHAN_LIVE_CHECK_INTERVAL_SECONDS=120                        
+      42  # Cloudinary (admin temple image uploads — server-side only, ne
+          ver exposed to the frontend)
+      43  CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+      44  CLOUDINARY_API_KEY=your_cloudinary_api_key
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(.env.example)
+  ⎿  Added 5 lines, removed 1 line
+       2  PORT=5000
+       3  NODE_ENV=development
+       4  
+       5 -# MongoDB Configuration                                        
+       5 +# MongoDB Configuration — legacy only. The live darshan feature
+         + now runs on                                                   
+       6 +# Prisma/Postgres (DATABASE_URL, set separately). This is kept 
+         +only because                                                   
+       7 +# a few unwired legacy files (src/models/User.ts, Kundali.ts, H
+         +oroscope.ts,                                                   
+       8 +# authController.ts, kundaliController.ts, birthDataController.
+         +ts) still                                                      
+       9 +# import mongoose; none of their routes are mounted in index.ts
+         +.                                                              
+      10  MONGODB_URI=mongodb://localhost:27017/astrology
+      11  # For MongoDB Atlas: mongodb+srv://username:password@cluster.mo
+          ngodb.net/astrology
+      12  
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● Clean. Now let's double check the final darshan.public.route.ts registration
+  and confirm the whole module compiles logically by reviewing cross-file
+  consistency (field names from Prisma schema vs service usage).
+
+  Read 1 file (ctrl+o to expand)
+
+● That looks right and matches the module pattern used by
+  auth/puja/chadhawa/shop.
+
+  What I built
+
+  Everything now lives in backend/src/modules/darshan/, following the same shape
+  as auth/puja/chadhawa:
+
+  - darshan.types.ts — DarshanChannelDTO, VideoLiveStatus
+  - darshan.service.ts — Prisma-backed DarshanService class (list/get for public
+  reads, plus helpers for the subscriber/webhook/safety-poll)
+  - darshan.youtube.ts — the cheap (1-quota-unit) videos.list check
+  - darshan.websub.ts — subscribes/renews with YouTube's PubSubHubbub hub
+  - darshan.refresh.ts — orchestrates startup: kicks off WebSub subscriptions +
+  the lightweight "is it still live" safety poll (replaces the old 15-min
+  search.list scan)
+  - darshan.controller.ts — public reads + the WebSub GET/POST handlers (kept
+  the { success, data } response shape here specifically, since
+  frontend/src/lib/api.ts's DarshanTempleStatus/getDarshanTemples already
+  depends on that exact envelope — not the module convention's
+  sendResponse/{status,...} shape)
+  - darshan.public.route.ts — mounted at /api/darshan, same as before, plus
+  /websub/callback
+
+  Schema: added backend/prisma/schema/darshan.prisma with a standalone
+  DarshanChannel model — kept separate from the catalogue Temple model since
+  their slugs don't line up 1:1 (e.g. Mongo had somnath, the catalogue has
+  somnath-temple) and the catalogue model requires fields
+  (location/deity/priceFrom) that darshan channels don't have.
+
+  Seed: moved to backend/prisma/seeds/darshanChannels.ts (run via new npm run 
+  db:seed:darshan), replacing the deleted scripts/seedTemples.ts.
+
+  Deleted (superseded, nothing else referenced them):
+  controllers/darshanController.ts, routes/darshanRoutes.ts,
+  services/darshanRefreshService.ts, services/youtubeLiveService.ts,
+  models/Temple.ts, scripts/seedTemples.ts.
+
+  index.ts: now imports the new module, and the Mongo connection/dns workaround
+  block is gone entirely — darshan was the only thing that ever needed it.
+
+  Env: added BACKEND_PUBLIC_URL (set this to
+  https://avatar-astro33-backend.onrender.com on Render) and
+  DARSHAN_LIVE_CHECK_INTERVAL_SECONDS (default 120s) to .env.example; removed
+  the old DARSHAN_REFRESH_INTERVAL_MINUTES.
+
+  What you need to do
+
+  1. Run npx prisma generate / prisma migrate dev yourself (as requested, I
+  didn't touch these).
+  2. Set BACKEND_PUBLIC_URL=https://avatar-astro33-backend.onrender.com in
+  Render's env vars.
+  3. Run npm run db:seed:darshan once against Neon to populate darshan_channels
+  from config/temples.json.
+  4. The MONGODB_URI env var is now only exercised by dead, unmounted legacy
+  files (old auth/kundali/birthdata code) — safe to leave for now; nothing live
+  needs it.
+
+  Want me to also clean up those dead legacy Mongo files (models/User.ts,
+  Kundali.ts, Horoscope.ts, authController.ts, etc.) now, or leave that for
+  later?
+
+✻ Sautéed for 2m 59s
+
+※ recap: We're moving the live-darshan temple feature off MongoDB onto Neon/Prisma with WebSub push notifications instead of polling; I've built the whole modular backend code. Next: you run prisma generate/migrate and set BACKEND_PUBLIC_URL on Render. (disable recaps in /config)
+
+❯ i want to check and test first locally so can i just add url of cloudflared   
+  by exposing backend url? Will that work and seen in frontend? like i don't    
+  need to add something like /api/webhook with cloudflare link or only          
+  cloudflare link ? Also before this i need to run prisma commands and seed     
+  file or will it work?                                                         
+● Order matters here — the Prisma schema change has to exist before any of this
+  code can run, since prisma.darshanChannel doesn't exist until you
+  generate/migrate. So:
+
+  Correct order
+
+  1. npx prisma generate (or prisma migrate dev — migrate also generates) —
+  creates the darshan_channels table and the DarshanChannel Prisma Client types.
+  Without this, the darshan module won't even compile/run.
+  2. npm run db:seed:darshan — populates darshan_channels from
+  config/temples.json.
+  3. Start the backend locally (npm run dev), with YOUTUBE_API_KEY set.
+  4. Start the tunnel: cloudflared tunnel --url http://localhost:5000 (use
+  whatever port your backend actually listens on locally). It prints something
+  like https://random-words-1234.trycloudflare.com.
+  5. Set BACKEND_PUBLIC_URL=https://random-words-1234.trycloudflare.com in your
+  local .env, then restart the backend so it picks it up.
+
+  Answering your actual question
+
+  Just the bare Cloudflare URL — no /api/... path, and nothing to touch in the 
+  frontend.
+
+  - BACKEND_PUBLIC_URL should be exactly the tunnel's base URL
+  (https://random-words-1234.trycloudflare.com), nothing appended. The code
+  itself builds the full callback path — see darshan.websub.ts:
+  return `${base.replace(/\/$/, "")}/api/darshan/websub/callback`;
+  - If you put /api/darshan/websub/callback (or anything else) into the env var
+  yourself, it'll get double-appended and break.
+  - This never touches the frontend at all. BACKEND_PUBLIC_URL is a
+  server-side-only value used to tell Google's WebSub hub where to push
+  notifications. The frontend keeps talking to your backend exactly as it
+  already does (via VITE_API_URL/localhost) — it has no concept of WebSub, the
+  hub, or the tunnel. You don't need to "see" the Cloudflare URL anywhere in
+  frontend code.
+
+  What happens once it's running
+
+  On startup, startDarshanRefreshLoop() auto-calls subscribeAllChannels(), which
+  POSTs a subscribe request to pubsubhubbub.appspot.com for every temple that
+  has a youtubeChannelId. The hub then does a verification GET to your tunnel
+  URL → forwarded to your local backend → your verifyWebSubCallback handler
+  echoes the challenge back. Watch your backend logs for:
+  [darshan] WebSub subscribed: <slug>
+  That confirms the handshake succeeded for each channel.
+
+  One gotcha for local testing
+
+  cloudflared tunnel --url ... (a "quick tunnel") gives you a new random URL 
+  every time you restart it. If you restart the tunnel, the old subscription is
+  now pointing at a dead URL — you'd need to update BACKEND_PUBLIC_URL and
+  restart the backend again to re-subscribe with the new URL. That's a dev-only
+  inconvenience; in production on Render your URL is stable so this isn't an
+  issue there.
+
+  Want me to also walk through how to manually trigger a test POST to
+  /websub/callback with a fake Atom payload, so you can confirm the handler
+  logic works without waiting for a real temple to actually go live?
+
+✻ Crunched for 28s
+
+❯ can you give me one channel which is actually live and verify if it works?    
+
+● Fetch(https://www.youtube.com/channel/UCKGvJDh7g_Kzocbwy7aKicA/live)
+  ⎿  Received 1.2MB (200 OK)
+
+● Fetch(https://www.youtube.com/channel/UCS2Y83GD-fc7qqgNW5uj41g/live)
+  ⎿  Received 1.2MB (200 OK)
+
+● I tried fetching a couple of likely always-on darshan channels directly, but
+  YouTube's pages are a JS-rendered SPA — the raw HTML I get back has no
+  player/live-badge info, so I can't reliably tell you "yes, this one's live
+  right now" that way. I don't want to guess and have you waste a test cycle on
+  a channel that isn't actually live.
+
+  Better approach: use your own YOUTUBE_API_KEY to ask YouTube directly — this
+  is the same call your code relies on, so it doubles as confirming your key
+  works. Run this for any channel ID from config/temples.json (swap in the key
+  and ID):
+
+  curl "https://www.googleapis.com/youtube/v3/search?key=YOUR_YOUTUBE_API_KEY&ch
+  annelId=UCKGvJDh7g_Kzocbwy7aKicA&eventType=live&type=video&part=id,snippet"
+
+  If it's live, items will be non-empty with a videoId. If items: [], it's not
+  live right now.
+
+  Channels worth trying first since these run continuous/near-24x7 darshan
+  streams historically (not guaranteed, but good odds):
+  - Shirdi Sai Baba: UCKGvJDh7g_Kzocbwy7aKicA
+  - Tirupati Balaji (SVBC): UCS2Y83GD-fc7qqgNW5uj41g
+  - ISKCON Vrindavan: UCAA6IsLVfbHrP1I_lzxv09Q
+
+  Want to run that curl for a couple of these and paste me the output? I'll
+  confirm which one is actually live right now, and then we can point your local
+  test setup at that specific channel.
+
+✻ Worked for 45s
+
+❯ ok what if i go on one random live stream video on youtube and can i then use 
+  that for testing if it works? like can i get the id and change it in neon     
+  for time being and check?                                                     
+
+● Yes, that works — and it's actually a cleaner test than hunting for a
+  "guaranteed live" channel. But there's one timing nuance worth knowing before
+  you do it.
+
+  Getting the right ID
+
+  You need the channel ID (UC...), not the video ID — that's what drives both
+  the subscription topic and the webhook's channel lookup. Don't scrape it from
+  the page; pull it straight from the API with the video ID from the URL
+  (youtube.com/watch?v=VIDEOID):
+
+  curl "https://www.googleapis.com/youtube/v3/videos?key=YOUR_YOUTUBE_API_KEY&id
+  =VIDEOID&part=snippet"
+  → look at items[0].snippet.channelId. Keep the videoId handy too — you'll need
+  it in step 4.
+
+  Updating Neon
+
+  Pick any existing row (e.g. one with an empty youtube_channel_id, like
+  mahakaleshwar) and swap it temporarily via Neon's SQL editor:
+  UPDATE darshan_channels SET youtube_channel_id = 'UCxxxxxxxxxxxxxxxx' WHERE
+  slug = 'mahakaleshwar';
+
+  The gap you should know about
+
+  Your backend only calls subscribeAllChannels() on startup (and then every ~4
+  days). So after the DB update, restart the backend so it picks up the new
+  channel ID and sends the subscribe request. Watching the logs for:
+  [darshan] WebSub subscribed: mahakaleshwar
+  confirms the hub's verification GET reached your tunnel successfully — that
+  tests the subscription mechanics end-to-end, regardless of whether the stream
+  is live.
+
+  But: WebSub only pushes notifications for new publish/update events after
+  you've subscribed. If the stream was already live before you subscribed,
+  Google's hub won't necessarily re-send a notification for something that was
+  "published" earlier — so you might subscribe successfully and then just...
+  wait, with nothing arriving, even though the stream is genuinely live. That's
+  not a bug in your code, just how push notifications work (they're not a
+  poll-on-demand).
+
+  The reliable way to test the actual webhook logic
+
+  Don't wait on the real push — simulate it yourself with the real
+  videoId/channelId you already have, hitting your own local endpoint directly:
+
+  curl -X POST http://localhost:5000/api/darshan/websub/callback \
+    -H "Content-Type: application/atom+xml" \
+    --data '<feed xmlns="http://www.w3.org/2005/Atom" 
+  xmlns:yt="http://www.youtube.com/xml/schemas/2015">
+    <entry>
+      <yt:videoId>VIDEOID</yt:videoId>
+      <yt:channelId>UCxxxxxxxxxxxxxxxx</yt:channelId>
+    </entry>
+  </feed>'
+
+  This exercises your real handler: it extracts videoId, calls the real
+  videos.list check with your YOUTUBE_API_KEY, confirms it's actually live, and
+  writes isLive/currentLiveVideoId to the mahakaleshwar row in Neon — no tunnel
+  or real Google push needed for this part. Then check:
+  GET http://localhost:5000/api/darshan/temples/mahakaleshwar
+  and you should see isLive: true with that video ID.
+
+  That gives you two independent confirmations: the tunnel+subscription path
+  (via the restart/logs), and the actual webhook-to-DB logic (via the curl
+  simulation) — without depending on lucky push timing.
+
+✻ Sautéed for 39s
+
+※ recap: Goal: migrate the YouTube live-darshan feature off MongoDB to Neon/Prisma with a WebSub-based module. Everything's implemented in modules/darshan; next you run the Prisma migrate/generate and seed commands yourself, then test locally via a Cloudflare tunnel. (disable recaps in /config)
+
+❯ so the flow is like when any video is going live then it sends the request to 
+  our backend url then it changes the readings in db and then according to ui   
+  is shown right?                                                               
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● Your understanding is mostly right, but there's one gap: the UI isn't pushed
+  updates — it still has to ask. Here's the precise flow:
+
+  1. Video goes live on a tracked temple's YouTube channel.
+  2. Google's WebSub hub notices and POSTs to your backend
+  (/api/darshan/websub/callback) — this is the "push" part, replacing the old
+  polling.
+  3. Your backend's webhook handler verifies it with one cheap videos.list call
+  (confirms it's actually live + embeddable, not just trusting the notification
+  blindly), then writes isLive: true + the video ID to the darshan_channels row 
+  in Neon.
+  4. The frontend shows it only the next time it asks the backend — I just
+  checked DarshanPage.tsx: it calls getDarshanTemples() once in a useEffect with
+  no setInterval, so it fetches once on page load/mount, not continuously. So
+  concretely: a user who already has the Darshan page open won't see a temple
+  flip to "live" in real time — they'd need to reload the page (or navigate to
+  it fresh) after step 3 has happened, for the fetch to pick up the new DB
+  value.
+
+  So the chain is: YouTube → WebSub push → your webhook → Neon write → frontend 
+  reads it on its next page load/fetch, not YouTube → live browser update. If
+  you want the badge to flip live for someone already sitting on the page,
+  that'd need the frontend to poll on an interval (e.g. every 30-60s) or a
+  websocket/SSE push from your backend — neither exists right now. Want me to
+  add a polling interval to DarshanPage.tsx so open tabs pick up status changes
+  without a manual refresh?
+
+✻ Churned for 16s
+
+❯ no, if i setup tanstack query and change the whole fetching thing then we can 
+  use it's benefit avoiding polling? Or can we use SSE(Server side event) ? I   
+  don't wnat polling                                                            
+  Also i will be integrating tanstack anyways later for caching and all         
+
+● Good instinct to ask — but TanStack Query by itself doesn't solve this. Its
+  refetchInterval option is polling, just client-managed instead of a raw
+  setInterval. It's great for caching, deduping requests, and
+  refetch-on-focus/reconnect, but none of that is "push" — the client still has
+  to ask.
+
+  SSE is the right tool here, and it pairs really well with what you've already 
+  built. Your webhook handler (handleWebSubNotification) already knows the exact
+  moment a temple's live status changes — that's the only place state actually
+  changes. Instead of (or in addition to) writing to Neon, it can also broadcast
+  an SSE event to any connected browser tabs at that instant. No polling
+  anywhere in the chain: YouTube → WebSub push → your backend → SSE push →
+  browser, fully event-driven end to end.
+
+  The two aren't competing, though — they compose:
+  - TanStack Query manages the initial fetch, caching, retries, loading states —
+  your normal data layer.
+  - SSE is just the trigger that tells the query cache "this is stale, go get
+  it" the instant something changes, via queryClient.invalidateQueries(...) (or
+  setQueryData directly if the SSE payload carries the new value) inside the
+  EventSource.onmessage handler.
+
+  So concretely: when you wire up TanStack Query later, add one SSE endpoint on
+  the backend (e.g. GET /api/darshan/events, held open per client) that the
+  webhook handler writes to on every status change, and one small hook on the
+  frontend (useEffect opening an EventSource, calling
+  queryClient.invalidateQueries(['darshan-temples']) on message) to connect
+  them.
+
+  Want me to implement the SSE endpoint in the darshan module now (so it's ready
+  when you wire up TanStack Query), or hold off until you're doing the TanStack
+  migration itself so it's one pass instead of two?
+
+✻ Crunched for 23s
+
+❯ i guess tanstack is already installed and setup, it's just it has not been    
+  applied everywhere                                                            
+  So you implement the SSE part and wire it properly                            
+  And use proper standard code                                                  
+  Like tanstack query, zustand, modular approach in backend and all             
+  Don't change any other functionality                                          
+
+  Searched for 6 patterns, read 5 files (ctrl+o to expand)
+
+● Now I'll wire this up properly — backend SSE broadcasting + frontend TanStack
+  Query hooks, replacing the existing 60s poll in DarshanDetail.tsx and the
+  one-shot fetch in DarshanPage.tsx. No other functionality changes.
+
+● Write(src\modules\darshan\darshan.events.ts)
+  ⎿  Wrote 12 lines to src\modules\darshan\darshan.events.ts
+       1 import { EventEmitter } from "node:events";
+       2 import type { DarshanChannelDTO } from "./darshan.types.js";
+       3 
+       5 
+       6 export const darshanEvents = new EventEmitter();
+       7 // Unbounded on purpose — one listener per connected SSE client,
+          not a leak.
+       9 
+      10 export function broadcastDarshanStatus(channel: DarshanChannelDT
+         O): void {
+     … +4 lines (ctrl+o to expand)
+
+● Now update darshan.service.ts so markLive/markOffline return the updated DTO
+  (needed to broadcast):
+● Update(src\modules\darshan\darshan.service.ts)
+  ⎿  Added 6 lines, removed 4 lines
+      54      return prisma.darshanChannel.findFirst({ where: { youtubeCh
+          annelId } });
+      55    }
+      56  
+      57 -  async markLive(id: string, videoId: string): Promise<void> { 
+      58 -    await prisma.darshanChannel.update({                       
+      57 +  async markLive(id: string, videoId: string): Promise<DarshanC
+         +hannelDTO> {                                                   
+      58 +    const channel = await prisma.darshanChannel.update({       
+      59        where: { id },
+      60        data: { isLive: true, currentLiveVideoId: videoId, lastCh
+          eckedAt: new Date() },
+      61      });
+      62 +    return toDTO(channel);                                     
+      63    }
+      64  
+      64 -  async markOffline(id: string): Promise<void> {               
+      65 -    await prisma.darshanChannel.update({                       
+      65 +  async markOffline(id: string): Promise<DarshanChannelDTO> {  
+      66 +    const channel = await prisma.darshanChannel.update({       
+      67        where: { id },
+      68        data: { isLive: false, currentLiveVideoId: null, lastChec
+          kedAt: new Date() },
+      69      });
+      70 +    return toDTO(channel);                                     
+      71    }
+      72  
+      73    async touchLastChecked(id: string): Promise<void> {
+
+● Now update darshan.controller.ts to broadcast on webhook updates, and add the
+  SSE streamEvents handler:
+
+● Update(src\modules\darshan\darshan.controller.ts)
+  ⎿  Added 2 lines
+      1  import { Request, Response } from "express";
+      2  import DarshanService from "./darshan.service.js";
+      3  import { getVideoLiveStatus } from "./darshan.youtube.js";
+      4 +import { darshanEvents, DARSHAN_STATUS_EVENT, broadcastDarshanSt
+        +atus } from "./darshan.events.js";                              
+      5 +import type { DarshanChannelDTO } from "./darshan.types.js";    
+      6  
+      7  const darshanService = new DarshanService();
+      8  
+
+● Update(src\modules\darshan\darshan.controller.ts)
+  ⎿  Added 31 lines
+      35    }
+      36  };
+      37  
+      38 +// ── Live status stream (Server-Sent Events) ─────────────────
+         +────────────────                                               
+      39 +                                                               
+      40 +/**                                                            
+      41 + * GET /api/darshan/events                                     
+      42 + * Pushes every live-status change to connected browsers the in
+         +stant it                                                       
+      43 + * happens (WebSub notification or the stale-live safety poll f
+         +lipping a                                                      
+      44 + * channel offline) — the frontend patches its TanStack Query c
+         +ache directly                                                  
+      45 + * from these events instead of polling this endpoint or /templ
+         +es.                                                            
+      46 + */                                                            
+      47 +export const streamEvents = (req: Request, res: Response): void
+         + => {                                                          
+      48 +  res.writeHead(200, {                                         
+      49 +    "Content-Type": "text/event-stream",                       
+      50 +    "Cache-Control": "no-cache",                               
+      51 +    Connection: "keep-alive",                                  
+      52 +  });                                                          
+      53 +  res.flushHeaders();                                          
+      54 +                                                               
+      55 +  const send = (channel: DarshanChannelDTO) => {               
+      56 +    res.write(`data: ${JSON.stringify(channel)}\n\n`);         
+      57 +  };                                                           
+      58 +  darshanEvents.on(DARSHAN_STATUS_EVENT, send);                
+      59 +                                                               
+      60 +  // Keeps the connection open through idle-timeout proxies (e.
+         +g. Render).                                                    
+      61 +  const heartbeat = setInterval(() => res.write(": ping\n\n"), 
+         +30000);                                                        
+      62 +                                                               
+      63 +  req.on("close", () => {                                      
+      64 +    clearInterval(heartbeat);                                  
+      65 +    darshanEvents.off(DARSHAN_STATUS_EVENT, send);             
+      66 +  });                                                          
+      67 +};                                                             
+      68 +                                                               
+      69  // ── YouTube WebSub (PubSubHubbub) webhook ───────────────────
+          ────────────────
+      70  
+      71  /**
+
+● Update(src\modules\darshan\darshan.controller.ts)
+  ⎿  Added 4 lines, removed 5 lines
+      118        if (!channel) continue; // notification for a channel we
+            don't track
+      119  
+      120        const isLive = status.isLive && status.embeddable;
+      121 -      if (isLive) {                                           
+      122 -        await darshanService.markLive(channel.id, videoId);   
+      123 -      } else {                                                
+      124 -        await darshanService.markOffline(channel.id);         
+      125 -      }                                                       
+      121 +      const updated = isLive                                  
+      122 +        ? await darshanService.markLive(channel.id, videoId)  
+      123 +        : await darshanService.markOffline(channel.id);       
+      124 +      broadcastDarshanStatus(updated);                        
+      125        console.log(`[darshan] WebSub update: ${channel.slug} is
+           Live=${isLive}`);
+      126      }
+      127    } catch (err: any) {
+
+● Now update darshan.refresh.ts to broadcast when the safety-net poll detects a
+  stream ended:
+
+● Update(src\modules\darshan\darshan.refresh.ts)
+  ⎿  Added 1 line
+      1  import DarshanService from "./darshan.service.js";
+      2  import { getVideoLiveStatus } from "./darshan.youtube.js";
+      3  import { startWebSubRenewalLoop, stopWebSubRenewalLoop } from ".
+         /darshan.websub.js";
+      4 +import { broadcastDarshanStatus } from "./darshan.events.js";   
+      5  
+      6  const darshanService = new DarshanService();
+      7  
+
+● Update(src\modules\darshan\darshan.refresh.ts)
+  ⎿  Added 2 lines, removed 1 line
+      27        const stillLive = status.isLive && status.embeddable;
+      28  
+      29        if (!stillLive) {
+      30 -        await darshanService.markOffline(channel.id);          
+      30 +        const updated = await darshanService.markOffline(channe
+         +l.id);                                                         
+      31 +        broadcastDarshanStatus(updated);                       
+      32          console.log(`[darshan] "${channel.slug}" stream ended`)
+          ;
+      33        } else {
+      34          await darshanService.touchLastChecked(channel.id);
+
+● Now register the SSE route:
+
+● Update(src\modules\darshan\darshan.public.route.ts)
+  ⎿  Added 4 lines
+       9  router.get("/temples", darshanController.listTemples);
+      10  router.get("/temples/:slug", darshanController.getTempleBySlug)
+          ;
+      11  
+      12 +// Live status push stream — the frontend subscribes to this in
+         +stead of                                                       
+      13 +// polling /temples for changes.                               
+      14 +router.get("/events", darshanController.streamEvents);         
+      15 +                                                               
+      16  // WebSub (PubSubHubbub) push endpoint — YouTube's hub calls th
+          is directly,
+      17  // both to verify the subscription (GET) and to deliver notific
+          ations (POST).
+      18  // The POST body is an Atom XML feed, not JSON, so it needs its
+           own text
+
+● Backend's done. Now the frontend: three new hooks, then rewiring the two
+  pages.
+
+● Write(~\astro\avatar-astro33\frontend\src\hooks\useDarshanTemples.ts)
+  ⎿  Wrote 21 lines to ..\frontend\src\hooks\useDarshanTemples.ts
+       1 import { useQuery } from '@tanstack/react-query';
+       2 import { apiService } from '@/lib/api';
+       4 export const DARSHAN_TEMPLES_QUERY_KEY = ['darshan', 'temples'] 
+         as const;
+       5 
+       7  * Live status for every temple. staleTime: Infinity because upd
+         ates arrive
+       8  * via useDarshanLiveEvents' SSE push, which patches this query'
+       9  * directly — there's nothing to gain from a background refetch.
+      10  */
+     … +15 lines (ctrl+o to expand)
+
+● Write(~\astro\avatar-astro33\frontend\src\hooks\useDarshanTemple.ts)
+  ⎿  Wrote 18 lines to ..\frontend\src\hooks\useDarshanTemple.ts
+       1 import { useQuery } from '@tanstack/react-query';
+       2 import { apiService } from '@/lib/api';
+       3 
+         ', 'temple', slug] as const;
+       5 
+       6 /** Live status for a single temple. See useDarshanTemples for t
+         he staleTime rationale. */
+       8   return useQuery({
+       9     queryKey: darshanTempleQueryKey(slug ?? 'none'),
+      10     queryFn: async () => {
+     … +11 lines (ctrl+o to expand)
+
+● Write(~\astro\avatar-astro33\frontend\src\hooks\useDarshanLiveEvents.ts)
+  ⎿  Wrote 29 lines to ..\frontend\src\hooks\useDarshanLiveEvents.ts
+       1 import { useEffect } from 'react';
+       3 import { API_BASE_URL, type DarshanTempleStatus } from '@/lib/ap
+         i';
+       4 import { DARSHAN_TEMPLES_QUERY_KEY } from './useDarshanTemples';
+       6 
+       7 /**
+         s stream and
+       9  * patches the TanStack Query cache directly on every push — no 
+         polling.
+         on drops.
+     … +25 lines (ctrl+o to expand)
+
+● Now rewire DarshanPage.tsx:
+
+● Update(~\astro\avatar-astro33\frontend\src\pages\AvatarLive\DarshanPage.tsx)
+  ⎿  Added 3 lines, removed 2 lines
+       1 -import { useState, useEffect } from 'react';                   
+       1 +import { useState, useMemo } from 'react';                     
+       2  import { Link } from 'react-router-dom';
+       3  import { Search, Users, MapPin, Play, ArrowRight } from 'lucide
+          -react';
+       4  import { motion } from 'framer-motion';
+       5  import DevotionLayout from '@/components/DevotionLayout';
+       6  import { liveTemples as staticTemples, streamCategories, format
+          Viewers, type StreamCategory, type LiveTemple } from '@/data/li
+          veStreams';
+       7 -import { apiService } from '@/lib/api';                        
+       7 +import { useDarshanTemples } from '@/hooks/useDarshanTemples'; 
+       8 +import { useDarshanLiveEvents } from '@/hooks/useDarshanLiveEve
+         +nts';                                                          
+       9  
+      10  // ── Temple card ─────────────────────────────────────────────
+          ───────────────────
+      11  const TempleCard = ({ temple, index }: { temple: LiveTemple; in
+          dex: number }) => (
+
+● Update(~\astro\avatar-astro33\frontend\src\pages\AvatarLive\DarshanPage.tsx)
+  ⎿  Added 14 lines, removed 15 lines
+      113  const DarshanPage = () => {
+      114    const [query, setQuery]    = useState('');
+      115    const [active, setActive]  = useState<StreamCategory | 'All'
+           >('All');
+      116 +                                                              
+      117 +  // Live status is pushed from the backend over SSE (see useD
+          +arshanLiveEvents)                                             
+      118 +  // straight into the TanStack Query cache that useDarshanTem
+          +ples reads —                                                  
+      119 +  // no polling involved.                                     
+      120 +  useDarshanLiveEvents();                                     
+      121 +  const { data: statuses } = useDarshanTemples();             
+      122 +                                                              
+      123    // Static content (name, description, timings, images...) st
+           ays local;
+      124    // only `isLive` is overlaid from the backend, which is the 
+           sole source
+      125    // of truth for YouTube live status.
+      119 -  const [liveTemples, setLiveTemples] = useState<LiveTemple[]>
+          -(staticTemples);                                              
+      126 +  const liveTemples: LiveTemple[] = useMemo(() => {           
+      127 +    if (!statuses) return staticTemples;                      
+      128 +    const statusBySlug = new Map(statuses.map(t => [t.slug, t.
+          +isLive]));                                                    
+      129 +    return staticTemples.map(t =>                             
+      130 +      statusBySlug.has(t.slug) ? { ...t, isLive: statusBySlug.
+          +get(t.slug)! } : t                                            
+      131 +    );                                                        
+      132 +  }, [statuses]);                                             
+      133  
+      121 -  useEffect(() => {                                           
+      122 -    let cancelled = false;                                    
+      123 -    apiService.getDarshanTemples()                            
+      124 -      .then(res => {                                          
+      125 -        if (cancelled || !res.success || !res.data) return;   
+      126 -        const statusBySlug = new Map(res.data.map(t => [t.slug
+          -, t.isLive]));                                                
+      127 -        setLiveTemples(prev => prev.map(t =>                  
+      128 -          statusBySlug.has(t.slug) ? { ...t, isLive: statusByS
+          -lug.get(t.slug)! } : t                                        
+      129 -        ));                                                   
+      130 -      })                                                      
+      131 -      .catch(() => { /* keep static fallback data on failure *
+          -/ });                                                         
+      132 -    return () => { cancelled = true; };                       
+      133 -  }, []);                                                     
+      134 -                                                              
+      134    const featured = liveTemples.find(t => t.isLive) ?? liveTemp
+           les[0];
+      135  
+      136    const filtered = liveTemples.filter(t => {
+
+● Now DarshanDetail.tsx — replace the manual 60s poll and the one-shot "others
+  live" fetch:
+
+● Update(~\astro\avatar-astro33\frontend\src\pages\AvatarLive\DarshanDetail.tsx)
+  ⎿  Added 4 lines, removed 2 lines
+       1 -import { useState, useRef, useEffect } from 'react';           
+       1 +import { useState, useRef, useEffect, useMemo } from 'react';  
+       2  import { useParams, Link } from 'react-router-dom';
+       3  import { ArrowLeft, Users, MapPin, Clock, Send, Heart, Globe, E
+          xternalLink, BellRing, Radio } from 'lucide-react';
+       4  import { motion, AnimatePresence } from 'framer-motion';
+       5  import DevotionLayout from '@/components/DevotionLayout';
+       6  import { liveTemples, samplePrayers, formatViewers, type Prayer
+          Message } from '@/data/liveStreams';
+       7 -import { apiService, type DarshanTempleStatus } from '@/lib/api
+         -';                                                             
+       7 +import { useDarshanTemple } from '@/hooks/useDarshanTemple';   
+       8 +import { useDarshanTemples } from '@/hooks/useDarshanTemples'; 
+       9 +import { useDarshanLiveEvents } from '@/hooks/useDarshanLiveEve
+         +nts';                                                          
+      10  
+      11  // ── Prayer wall ─────────────────────────────────────────────
+          ───────────────────
+      12  const PrayerWall = ({ templeId }: { templeId: string }) => {
+
+● Update(~\astro\avatar-astro33\frontend\src\pages\AvatarLive\DarshanDetail.tsx)
+  ⎿  Added 11 lines, removed 47 lines
+      439    // only thing that talks to the YouTube Data API. Until it r
+           esolves (or if
+      440    // it fails), we never fall back to a hardcoded videoId — we
+            just show the
+      441    // offline state, per the "never show a broken player" requi
+           rement.
+      442 -  const [liveStatus, setLiveStatus]         = useState<Darshan
+          -TempleStatus | null>(null);                                   
+      443 -  const [statusLoaded, setStatusLoaded]     = useState(false);
+      444 -  const [othersLiveSlugs, setOthersLiveSlugs] = useState<Set<s
+          -tring>>(new Set());                                           
+      442 +  // Updates arrive via useDarshanLiveEvents' SSE push straigh
+          +t into the                                                    
+      443 +  // TanStack Query cache — no polling.                       
+      444 +  useDarshanLiveEvents();                                     
+      445 +  const { data: liveStatus, isLoading: statusLoading } = useDa
+          +rshanTemple(slug);                                            
+      446 +  const statusLoaded = !statusLoading;                        
+      447  
+      448 +  const { data: allStatuses } = useDarshanTemples();          
+      449 +  const othersLiveSlugs = useMemo(                            
+      450 +    () => new Set((allStatuses ?? []).filter(t => t.isLive).ma
+          +p(t => t.slug)),                                              
+      451 +    [allStatuses],                                            
+      452 +  );                                                          
+      453 +                                                              
+      454    useEffect(() => { window.scrollTo(0, 0); }, [slug]);
+      455  
+      448 -  // Polls the backend every 60s so a temple that goes live (o
+          -r switches to a                                               
+      449 -  // new broadcast) updates without a page refresh. State is o
+          -nly replaced                                                  
+      450 -  // when isLive or currentLiveVideoId actually changed — an u
+          -nchanged poll                                                 
+      451 -  // result reuses the previous object reference so React skip
+          -s the re-render                                               
+      452 -  // (and, downstream, LiveEmbedPlayer's key={liveVideoId} doe
+          -sn't remount).                                                
+      453 -  useEffect(() => {                                           
+      454 -    if (!slug) return;                                        
+      455 -    setStatusLoaded(false);                                   
+      456 -    setLiveStatus(null);                                      
+      457 -    let cancelled = false;                                    
+      458 -                                                              
+      459 -    const poll = (isInitial: boolean) => {                    
+      460 -      apiService.getDarshanTemple(slug)                       
+      461 -        .then(res => {                                        
+      462 -          if (cancelled || !res.success || !res.data) return; 
+      463 -          const next = res.data;                              
+      464 -          setLiveStatus(prev => {                             
+      465 -            if (prev && prev.isLive === next.isLive && prev.cu
+          -rrentLiveVideoId === next.currentLiveVideoId) {               
+      466 -              return prev;                                    
+      467 -            }                                                 
+      468 -            return next;                                      
+      469 -          });                                                 
+      470 -        })                                                    
+      471 -        .catch(() => { /* keep last known status on a transien
+          -t poll failure */ })                                          
+      472 -        .finally(() => { if (!cancelled && isInitial) setStatu
+          -sLoaded(true); });                                            
+      473 -    };                                                        
+      474 -                                                              
+      475 -    poll(true);                                               
+      476 -    const intervalId = window.setInterval(() => poll(false), 6
+          -0000);                                                        
+      477 -                                                              
+      478 -    return () => { cancelled = true; window.clearInterval(inte
+          -rvalId); };                                                   
+      479 -  }, [slug]);                                                 
+      480 -                                                              
+      481 -  useEffect(() => {                                           
+      482 -    let cancelled = false;                                    
+      483 -    apiService.getDarshanTemples()                            
+      484 -      .then(res => {                                          
+      485 -        if (cancelled || !res.success || !res.data) return;   
+      486 -        setOthersLiveSlugs(new Set(res.data.filter(t => t.isLi
+          -ve).map(t => t.slug)));                                       
+      487 -      })                                                      
+      488 -      .catch(() => { /* "Also Live Now" simply shows nothing o
+          -n failure */ });                                              
+      489 -    return () => { cancelled = true; };                       
+      490 -  }, []);                                                     
+      491 -                                                              
+      456    const isLive       = statusLoaded && !!liveStatus?.isLive;
+      457    const liveVideoId   = liveStatus?.currentLiveVideoId ?? null
+           ;
+      458  
+  ⎿  Found 8 new diagnostic issues in 1 file (ctrl+o to expand)
+
+  Searched for 2 patterns, read 1 file (ctrl+o to expand)
+  ⎿  Found 12 new diagnostic issues in 1 file (ctrl+o to expand)
+
+● Good — those diagnostics were stale (pre-edit snapshot); the files are already
+  clean. Let's confirm with a fresh lint/typecheck pass on both frontend and
+  backend to be sure everything compiles correctly.
+  Ran 3 shell commands (ctrl+o to expand)
+
+● Both frontend and backend typecheck clean. I also noticed @prisma/client
+  already has DarshanChannel generated — looks like you already ran prisma 
+  generate (or migrate dev) since we last talked. Good, but double check:
+  generate only creates the TypeScript client; if you haven't also run prisma 
+  migrate dev (or applied a migration to Neon), the darshan_channels table
+  itself won't exist in the actual database yet, and db:seed:darshan will fail.
+
+  What's wired up now
+
+  Backend (modules/darshan/):
+  - darshan.events.ts — a small EventEmitter broadcast hub
+  - darshan.service.ts — markLive/markOffline now return the updated DTO instead
+  of void
+  - darshan.controller.ts — new GET /api/darshan/events SSE handler; the webhook
+  handler now calls broadcastDarshanStatus(...) right after writing to Neon
+  - darshan.refresh.ts — the safety-net "did it go offline" poll also broadcasts
+  when it flips a channel
+  - darshan.public.route.ts — registered /events
+
+  Frontend:
+  - hooks/useDarshanTemples.ts, useDarshanTemple.ts — TanStack Query, staleTime:
+  Infinity (no background refetching — the SSE push is the only thing that
+  updates these)
+  - hooks/useDarshanLiveEvents.ts — opens one EventSource to /darshan/events and
+  writes incoming updates straight into both query caches via setQueryData
+  - DarshanPage.tsx — dropped the one-shot fetch/useState, now
+  useDarshanTemples() + useDarshanLiveEvents()
+  - DarshanDetail.tsx — dropped the 60s setInterval poll entirely, now
+  useDarshanTemple(slug) + the shared useDarshanTemples() (which also dedupes
+  the network call with DarshanPage — same query key, same cache) +
+  useDarshanLiveEvents()
+
+  No polling left anywhere in this flow. I left Zustand out — there's no genuine
+  piece of cross-component client-only state here (the live status is server
+  state, which is exactly what TanStack Query's cache already is); introducing a
+  store on top would just duplicate that cache for no benefit. Say so if you
+  had a specific piece of state in mind for it.
+
+  One more Render-side note: SSE needs a long-lived connection — confirm
+  Render's plan/proxy doesn't impose a hard response timeout shorter than your
+  traffic pattern (free tier has historically been fine for this, just flagging
+  it).
+
+✻ Baked for 3m 51s
+
+※ recap: Migrating the darshan live-status feature off polling to SSE push with TanStack Query is done and typechecks clean. Next: confirm you've run prisma migrate (not just generate) so the darshan_channels table actually exists in Neon, then test locally. (disable recaps in /config)
+
+❯ so there is no mongodb used now?                                              
+  ⎿  ⧉ Selected 2 lines from ..\frontend\package.json in Neovim
+
+  Searched for 5 patterns, ran 3 shell commands (ctrl+o to expand)
+
+● Correct — MongoDB is no longer connected to or used by anything that actually 
+  runs. We removed the mongoose.connect() call from index.ts entirely when we
+  migrated the darshan feature (the only live consumer of Mongo) to Prisma/Neon.
+
+  What's left is dead code that still mentions mongoose but is never executed,
+  since nothing imports or mounts it:
+  - models/User.ts, models/Kundali.ts, models/Horoscope.ts
+  - controllers/authController.ts, birthDataController.ts, kundaliController.ts
+  - routes/authRoutes.ts, birthDataRoutes.ts, kundaliRoutes.ts
+  - config/database.ts
+  - 3 test files exercising the above
+
+  None of these routes are in index.ts's app.use(...) list — I confirmed that
+  back when we first mapped this out. The mongoose package itself is still in
+  package.json only because these dead files still import it.
+
+  So functionally: zero MongoDB traffic, zero connection attempts, at runtime.
+  MONGODB_URI in .env is now a no-op unless something restores one of those
+  unmounted routes. Want me to delete that dead code and drop the mongoose
+  dependency now, or hold off in case you still want to revive any of it (the
+  old auth/kundali/birth-data logic) ported onto Prisma instead?
+
+✻ Sautéed for 55s
+
+❯ yes remove it                                                                 
+
+  Searched for 5 patterns, read 2 files (ctrl+o to expand)
+
+● Good, no dependency on the Mongoose Horoscope model at all — confirmed safe to
+  delete it without touching horoscopeController.ts/horoscopeRoutes.ts. Now
+  let's delete the dead Mongo files precisely.
+
+  Searched for 1 pattern, ran 1 shell command (ctrl+o to expand)
+
+● All clear. Now remove mongoose from package.json, strip the mongodb config out
+  of environment.ts, and clean up .env.example.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(src\config\environment.ts)
+  ⎿  Removed 4 lines
+      10    isDevelopment: process.env.NODE_ENV === 'development',
+      11    isProduction: process.env.NODE_ENV === 'production',
+      12  
+      13 -  // Database                                                  
+      14 -  mongodb: {                                                   
+      15 -    uri: process.env.MONGODB_URI},                             
+      16 -                                                               
+      13    // JWT
+      14    jwt: {
+      15      secret: process.env.JWT_SECRET || 'your_jwt_secret_key_here
+          _change_in_production',
+
+● Update(src\config\environment.ts)
+  ⎿  Added 1 line, removed 1 line
+      24  
+      25  // Validate required environment variables
+      26  export const validateConfig = (): void => {
+      27 -  const requiredVars = ['MONGODB_URI', 'JWT_SECRET'];          
+      27 +  const requiredVars = ['JWT_SECRET'];                         
+      28    
+      29    if (config.isProduction) {
+      30      const missingVars = requiredVars.filter(
+
+● Update(.env.example)
+  ⎿  Removed 16 lines
+       2  PORT=5000
+       3  NODE_ENV=development
+       4  
+       5 -# MongoDB Configuration — legacy only. The live darshan feature
+         - now runs on                                                   
+       6 -# Prisma/Postgres (DATABASE_URL, set separately). This is kept 
+         -only because                                                   
+       7 -# a few unwired legacy files (src/models/User.ts, Kundali.ts, H
+         -oroscope.ts,                                                   
+       8 -# authController.ts, kundaliController.ts, birthDataController.
+         -ts) still                                                      
+       9 -# import mongoose; none of their routes are mounted in index.ts
+         -.                                                              
+      10 -MONGODB_URI=mongodb://localhost:27017/astrology                
+      11 -# For MongoDB Atlas: mongodb+srv://username:password@cluster.mo
+         -ngodb.net/astrology                                            
+      12 -                                                               
+      13 -# Optional. Leave unset by default — most environments don't ne
+         -ed this.                                                       
+      14 -# Only set it if connecting fails with "querySrv ECONNREFUSED  
+      15 -# _mongodb._tcp.<cluster>.mongodb.net": some local/router DNS r
+         -esolvers                                                       
+      16 -# refuse SRV queries from Node's resolver even though the OS re
+         -solver                                                         
+      17 -# handles them fine, which breaks mongodb+srv:// connection str
+         -ings.                                                          
+      18 -# Comma-separated list of DNS servers to use instead, e.g.:    
+      19 -# MONGODB_DNS_SERVERS=8.8.8.8,1.1.1.1                          
+      20 -                                                               
+       5  # JWT Configuration
+       6  JWT_SECRET=your_jwt_secret_key_here_change_in_production
+       7  JWT_EXPIRE=7d
+
+● Now let's confirm nothing is broken — full backend typecheck plus a final
+  sweep for any stray MONGODB/mongoose references anywhere in the repo.
+
+  Searched for 1 pattern, ran 1 shell command (ctrl+o to expand)
+
+● Typecheck's clean. One stray mention left in backend/README.md — let me fix
+  that too for accuracy.
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+● Update(README.md)
+  ⎿  Added 2 lines, removed 2 lines
+       1  # Premium Astrology Backend
+       2  
+       3 -Node.js Express backend for the Premium Astrology Web Applicati
+         -on, built with TypeScript and MongoDB.                         
+       3 +Node.js Express backend for the Premium Astrology Web Applicati
+         +on, built with TypeScript, Prisma, and PostgreSQL (Neon).      
+       4  
+       5  ## Prerequisites
+       6  
+       7  - Node.js 16+ 
+       8 -- MongoDB 4.4+                                                 
+       8 +- PostgreSQL (e.g. a Neon database)                            
+       9  - npm or yarn
+      10  
+      11  ## Installation
+
+● Update(README.md)
+  ⎿  Added 1 line, removed 1 line
+      24  ```env
+      25  PORT=5000
+      26  NODE_ENV=development
+      27 -MONGODB_URI=mongodb://localhost:27017/premium-astrology-app    
+      27 +DATABASE_URL=postgresql://user:password@host/dbname            
+      28  JWT_SECRET=your_jwt_secret_key_here
+      29  JWT_EXPIRE=7d
+      30  CORS_ORIGIN=http://localhost:3000
+
+● Update(README.md)
+  ⎿  Added 2 lines, removed 3 lines
+      66  backend/
+      67  ├── src/
+      68  │   ├── config/           # Configuration files
+      69 -│   │   ├── environment.ts                                     
+      70 -│   │   └── database.ts                                        
+      71 -│   ├── models/           # MongoDB models                     
+      69 +│   │   └── environment.ts                                     
+      70 +│   ├── modules/          # Feature modules (auth, admin, puja,
+         + chadhawa, shop, darshan — Prisma-backed)                      
+      71  │   ├── routes/           # API routes
+      72  │   ├── controllers/       # Route controllers
+      73  │   ├── middleware/        # Express middleware
+
+● Update(README.md)
+  ⎿  Added 1 line, removed 1 line
+      108  |----------|-------------|---------|
+      109  | `PORT` | Server port | 5000 |
+      110  | `NODE_ENV` | Environment (development/production) | developm
+           ent |
+      111 -| `MONGODB_URI` | MongoDB connection string | mongodb://localh
+          -ost:27017/premium-astrology-app |                             
+      111 +| `DATABASE_URL` | PostgreSQL (Neon) connection string | — |  
+      112  | `JWT_SECRET` | JWT signing secret | your_jwt_secret_key_here
+           _change_in_production |
+      113  | `JWT_EXPIRE` | JWT expiration time | 7d |
+      114  | `CORS_ORIGIN` | CORS allowed origin | http://localhost:3000 
+           |
+
+● MongoDB is fully gone now.
+
+  What was removed
+
+  - Models: User.ts, Kundali.ts, Horoscope.ts
+  - Controllers: authController.ts, birthDataController.ts, kundaliController.ts
+  - Routes: authRoutes.ts, birthDataRoutes.ts, kundaliRoutes.ts
+  - Config: config/database.ts (the unused
+  connectDatabase()/disconnectDatabase() helper), the mongodb block in
+  config/environment.ts
+  - Tests: authController.test.ts, birthDataController.test.ts, User.test.ts,
+  birthDataRoutes.test.ts
+  - utils/kundaliCalculation.ts (only consumer was the deleted
+  kundaliController.ts)
+  - The mongoose npm dependency (npm uninstall mongoose — lockfile updated)
+  - MONGODB_URI/MONGODB_DNS_SERVERS from .env.example, and the MONGODB_URI
+  requirement from environment.ts's validateConfig()
+  - Stale README references, swapped for the real Prisma/Neon setup
+
+  What I checked before deleting
+
+  - models/Horoscope.ts had zero consumers anywhere (fully orphaned)
+  - horoscopeController.ts/horoscopeRoutes.ts don't touch Mongoose at all (use
+  astroApiService instead) — left untouched
+  - middleware/auth.ts and config/environment.ts are JWT helpers, not
+  Mongo-specific, and still have a live consumer (horoscopeRoutes.ts) — kept
+  - Backend typechecks clean after every deletion step
+
+  MongoDB has no footprint left in this repo — no package, no connection, no
+  models, no routes referencing it. Your MONGODB_URI env var on Render is now
+  safe to remove whenever you want, nothing reads it anymore.
+
+✻ Churned for 2m 58s

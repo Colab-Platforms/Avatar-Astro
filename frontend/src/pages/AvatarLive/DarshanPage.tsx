@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Users, MapPin, Play, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import DevotionLayout from '@/components/DevotionLayout';
 import { liveTemples as staticTemples, streamCategories, formatViewers, type StreamCategory, type LiveTemple } from '@/data/liveStreams';
-import { apiService } from '@/lib/api';
+import { useDarshanTemples } from '@/hooks/useDarshanTemples';
+import { useDarshanLiveEvents } from '@/hooks/useDarshanLiveEvents';
 
 // ── Temple card ────────────────────────────────────────────────────────────────
 const TempleCard = ({ temple, index }: { temple: LiveTemple; index: number }) => (
@@ -112,24 +113,23 @@ const TempleCard = ({ temple, index }: { temple: LiveTemple; index: number }) =>
 const DarshanPage = () => {
   const [query, setQuery]    = useState('');
   const [active, setActive]  = useState<StreamCategory | 'All'>('All');
+
+  // Live status is pushed from the backend over SSE (see useDarshanLiveEvents)
+  // straight into the TanStack Query cache that useDarshanTemples reads —
+  // no polling involved.
+  useDarshanLiveEvents();
+  const { data: statuses } = useDarshanTemples();
+
   // Static content (name, description, timings, images...) stays local;
   // only `isLive` is overlaid from the backend, which is the sole source
   // of truth for YouTube live status.
-  const [liveTemples, setLiveTemples] = useState<LiveTemple[]>(staticTemples);
-
-  useEffect(() => {
-    let cancelled = false;
-    apiService.getDarshanTemples()
-      .then(res => {
-        if (cancelled || !res.success || !res.data) return;
-        const statusBySlug = new Map(res.data.map(t => [t.slug, t.isLive]));
-        setLiveTemples(prev => prev.map(t =>
-          statusBySlug.has(t.slug) ? { ...t, isLive: statusBySlug.get(t.slug)! } : t
-        ));
-      })
-      .catch(() => { /* keep static fallback data on failure */ });
-    return () => { cancelled = true; };
-  }, []);
+  const liveTemples: LiveTemple[] = useMemo(() => {
+    if (!statuses) return staticTemples;
+    const statusBySlug = new Map(statuses.map(t => [t.slug, t.isLive]));
+    return staticTemples.map(t =>
+      statusBySlug.has(t.slug) ? { ...t, isLive: statusBySlug.get(t.slug)! } : t
+    );
+  }, [statuses]);
 
   const featured = liveTemples.find(t => t.isLive) ?? liveTemples[0];
 

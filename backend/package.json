@@ -10,11 +10,11 @@
     "build": "tsc && tsc-alias",
     "start": "node dist/src/index.js",
     "lint": "eslint src --ext .ts",
-    "seed:temples": "tsx src/scripts/seedTemples.ts",
     "db:seed": "tsx prisma/seeds/index.ts",
     "db:seed:puja": "tsx prisma/seeds/pujaTemples.ts",
     "db:seed:chadhawa": "tsx prisma/seeds/chadhawaOfferings.ts",
     "db:seed:shop": "tsx prisma/seeds/shopProducts.ts",
+    "db:seed:darshan": "tsx prisma/seeds/darshanChannels.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy"
@@ -42,7 +42,6 @@
     "google-auth-library": "^11.0.0",
     "joi": "^18.2.3",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^7.5.0",
     "multer": "^2.2.0",
     "resend": "^6.18.1"
   },
