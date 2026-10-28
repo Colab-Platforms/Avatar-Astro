@@ -1,6 +1,10 @@
 import { Router, Request, Response } from "express";
+import { createRateLimiter } from "../utils/rateLimit.js";
 
 const router = Router();
+
+// This AI endpoint is not called by the current Compatibility page; keep it from being used as an open, uncapped AI relay.
+router.use(createRateLimiter({ windowMs: 60_000, max: 10 }));
 
 router.post("/analyze", async (req: Request, res: Response) => {
   try {
@@ -62,7 +66,8 @@ Respond ONLY with valid JSON (no markdown, no explanation) in exactly this struc
     const data = await response.json() as any;
 
     if (data.error) {
-      return res.status(500).json({ error: data.error.message });
+      console.error("Compatibility provider error");
+      return res.status(502).json({ error: "The reading service is unavailable right now" });
     }
 
     const raw = data.choices?.[0]?.message?.content || "";

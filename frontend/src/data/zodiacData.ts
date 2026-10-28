@@ -4,6 +4,8 @@ export interface ZodiacSign {
   dates: string;
   element: 'Fire' | 'Earth' | 'Air' | 'Water';
   ruling: string;
+  /** Traditional (pre-1781) ruler, shown when it differs from the modern ruler in `ruling`. */
+  traditionalRuling?: string;
   traits: string[];
   strengths: string[];
   weaknesses: string[];
@@ -110,6 +112,7 @@ export const zodiacSigns: ZodiacSign[] = [
     dates: 'Oct 23 - Nov 21',
     element: 'Water',
     ruling: 'Pluto',
+    traditionalRuling: 'Mars',
     traits: ['Resourceful', 'Brave', 'Passionate', 'Stubborn'],
     strengths: ['Determination', 'Loyalty', 'Intuition'],
     weaknesses: ['Jealousy', 'Secretiveness', 'Resentfulness'],
@@ -149,6 +152,7 @@ export const zodiacSigns: ZodiacSign[] = [
     dates: 'Jan 20 - Feb 18',
     element: 'Air',
     ruling: 'Uranus',
+    traditionalRuling: 'Saturn',
     traits: ['Progressive', 'Original', 'Independent', 'Humanitarian'],
     strengths: ['Innovation', 'Vision', 'Humanitarianism'],
     weaknesses: ['Aloofness', 'Rebelliousness', 'Unpredictability'],
@@ -162,6 +166,7 @@ export const zodiacSigns: ZodiacSign[] = [
     dates: 'Feb 19 - Mar 20',
     element: 'Water',
     ruling: 'Neptune',
+    traditionalRuling: 'Jupiter',
     traits: ['Compassionate', 'Artistic', 'Intuitive', 'Gentle'],
     strengths: ['Empathy', 'Creativity', 'Wisdom'],
     weaknesses: ['Escapism', 'Idealism', 'Martyrdom'],

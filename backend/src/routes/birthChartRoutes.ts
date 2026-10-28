@@ -1,6 +1,10 @@
 import { Router, Request, Response } from "express";
+import { createRateLimiter } from "../utils/rateLimit.js";
 
 const router = Router();
+
+// These AI endpoints are not called by the current Birth Chart page; keep them from being used as an open, uncapped AI relay.
+router.use(createRateLimiter({ windowMs: 60_000, max: 10 }));
 
 // ── POST /api/birthchart/analyze ─────────────────────────────────────────────
 router.post("/analyze", async (req: Request, res: Response) => {
@@ -88,7 +92,7 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
     });
 
     const data = await response.json() as any;
-    if (data.error) return res.status(500).json({ error: data.error.message });
+    if (data.error) { console.error("Birth chart provider error"); return res.status(502).json({ error: "The reading service is unavailable right now" }); }
 
     const raw = data.choices?.[0]?.message?.content || "";
     const clean = raw.replace(/```json|```/g, "").trim();
@@ -144,7 +148,7 @@ Question: "${question}"`;
     });
 
     const data = await response.json() as any;
-    if (data.error) return res.status(500).json({ error: data.error.message });
+    if (data.error) { console.error("Birth chart provider error"); return res.status(502).json({ error: "The reading service is unavailable right now" }); }
 
     const answer = data.choices?.[0]?.message?.content || "";
     return res.json({ answer });
