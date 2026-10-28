@@ -147,6 +147,10 @@ function buildMounts(
   ];
 }
 
+/** Classical hand-shape thresholds: palm width ÷ length at/above this is a "square" palm; mean finger ÷ palm length at/above this is "long" fingers. */
+export const SQUARE_PALM_MIN = 0.85;
+export const LONG_FINGERS_MIN = 0.78;
+
 function clamp01(v: number) {
   return Math.max(0, Math.min(1, v));
 }
@@ -172,8 +176,8 @@ function computeGeometry(landmarks: HandLandmarks, palmLength: number, palmWidth
 
   // Classical palmistry hand-shape classification, driven by real measured ratios.
   let handType: HandType;
-  const squarePalm = palmWidthToLengthRatio >= 0.85;
-  const longFingers = avgFingerRatio >= 0.78;
+  const squarePalm = palmWidthToLengthRatio >= SQUARE_PALM_MIN;
+  const longFingers = avgFingerRatio >= LONG_FINGERS_MIN;
   if (squarePalm && !longFingers) handType = "Earth";
   else if (squarePalm && longFingers) handType = "Air";
   else if (!squarePalm && longFingers) handType = "Water";

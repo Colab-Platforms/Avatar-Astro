@@ -8,6 +8,8 @@ import birthChartRoutes from "./routes/birthChartRoutes.js";
 import nameAnalysisRoutes from "./routes/nameAnalysisRoutes.js";
 import innerVoiceRoutes from "./routes/innerVoiceRoutes.js";
 import aiProxyRoutes from "./routes/aiProxyRoutes.js";
+import tarotRoutes from "./routes/tarotRoutes.js";
+import { createRateLimiter } from "./utils/rateLimit.js";
 import darshanRoutes from "./modules/darshan/darshan.public.route.js";
 import authRoutes from "./modules/auth/auth.route.js";
 import adminRoutes from "./modules/admin/admin.route.js";
@@ -61,6 +63,7 @@ app.use(
 );
 // Mounted before the global 20mb body parser: it applies its own 250kb limit.
 app.use("/api/ai", aiProxyRoutes);
+app.use("/api/tarot", tarotRoutes);
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true, limit: "20mb" }));
 
@@ -340,116 +343,12 @@ app.post("/api/tts", async (req: Request, res: Response) => {
   }
 });
 
-// ── Tarot Reading ────────────────────────────────────────────────────────────
-app.post("/api/tarot/reading", async (req: Request, res: Response) => {
-  const { mode, question, cards } = req.body;
-  if (!mode || !cards || !Array.isArray(cards)) {
-    return res
-      .status(400)
-      .json({ success: false, error: "mode and cards are required" });
-  }
-
-  const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-  if (!OPENROUTER_API_KEY) {
-    return res
-      .status(500)
-      .json({ success: false, error: "OPENROUTER_API_KEY not configured" });
-  }
-
-  const cardList = (cards as any[])
-    .map(
-      (c, i) =>
-        `Card ${i + 1}: ${c.name} — ${c.meaning} (Keywords: ${c.keywords?.join(", ")})`,
-    )
-    .join("\n");
-
-  const timelinePrompt = `You are a master tarot reader blending Vedic wisdom, Jungian psychology, and cosmic astrology. The seeker is asking about: ${question || "their life path"}.
-
-Their 5-card Life Timeline spread:
-${cardList}
-
-Return ONLY valid JSON (no markdown, no fences) with this exact structure:
-{
-  "currentLifeStage": "2-3 sentence description of where the seeker is right now in their life journey",
-  "mainOpportunity": "2-3 sentences describing the biggest opening available to them",
-  "hiddenChallenge": "2-3 sentences about the hidden obstacle or pattern affecting them",
-  "nextMajorTurningPoint": "2-3 sentences about the pivotal shift approaching in the next 3-6 months",
-  "recommendedAction": "1-2 sentences of specific, actionable spiritual guidance",
-  "spiritualGuidance": "2-3 sentences of deeper cosmic or karmic wisdom for this seeker",
-  "probabilityScore": 78,
-  "timelineNarrative": [
-    {"position": "Past Energy", "card": "${(cards[0] as any)?.name}", "insight": "2-3 sentences connecting this card's energy to how the seeker's past has shaped their now"},
-    {"position": "Current Energy", "card": "${(cards[1] as any)?.name}", "insight": "2-3 sentences about what this card reveals about the seeker's current reality"},
-    {"position": "Hidden Influence", "card": "${(cards[2] as any)?.name}", "insight": "2-3 sentences about the unseen force or pattern operating behind the scenes"},
-    {"position": "Next 6 Months", "card": "${(cards[3] as any)?.name}", "insight": "2-3 sentences about what to expect and prepare for in the near future"},
-    {"position": "Future Potential", "card": "${(cards[4] as any)?.name}", "insight": "2-3 sentences about the highest possible outcome if the seeker aligns with their path"}
-  ],
-  "overallMessage": "3-4 powerful sentences synthesizing the entire reading into one cohesive spiritual message"
-}`;
-
-  const karmaPrompt = `You are a master karmic guide who reads the soul's patterns through tarot. The seeker has drawn these 3 Karma Mirror cards:
-${cardList}
-
-Return ONLY valid JSON (no markdown, no fences):
-{
-  "currentKarmaTheme": "2-3 sentences naming and describing the central karmic pattern at play",
-  "rootCause": "2-3 sentences tracing this pattern to its deeper source — past conditioning, beliefs, or soul lessons",
-  "lifeAreasAffected": ["Career", "Love", "Health"],
-  "energyScore": 68,
-  "karmaBlockScore": 72,
-  "spiritualGrowthScore": 61,
-  "dailyAction": "One specific daily practice to shift the karmic pattern",
-  "weeklyAction": "One deeper weekly action for healing and integration",
-  "spiritualPractice": "A specific meditation, mantra, or ritual aligned with the Healing Path card",
-  "recommendedHabit": "One new habit to cultivate for long-term karmic clearing",
-  "reflectionQuestion": "A powerful introspective question for the seeker to sit with",
-  "positiveAffirmation": "A personalized affirmation based on the Healing Path card energy",
-  "cardInsights": [
-    {"position": "Current Karma", "card": "${(cards[0] as any)?.name}", "insight": "2-3 sentences about what karmic energy this card reveals"},
-    {"position": "Hidden Blockage", "card": "${(cards[1] as any)?.name}", "insight": "2-3 sentences revealing the unconscious block"},
-    {"position": "Healing Path", "card": "${(cards[2] as any)?.name}", "insight": "2-3 sentences describing the path of healing and integration"}
-  ]
-}`;
-
-  try {
-    const response = await axios.post(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        model: "google/gemma-3-27b-it",
-        max_tokens: 2000,
-        messages: [
-          {
-            role: "user",
-            content: mode === "timeline" ? timelinePrompt : karmaPrompt,
-          },
-        ],
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": "http://localhost:8081",
-          "X-Title": "Spiritual AI Tarot Reading",
-        },
-      },
-    );
-
-    const text = response.data.choices[0].message.content || "";
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("Could not parse JSON from AI response");
-    const result = JSON.parse(jsonMatch[0]);
-    res.json({ success: true, data: result });
-  } catch (err: any) {
-    console.error("Tarot reading error:", err.response?.data || err.message);
-    res.status(500).json({
-      success: false,
-      error: err.response?.data?.error?.message || err.message,
-    });
-  }
-});
-
 // ── Palm Reading ────────────────────────────────────────────────────────────
-app.post("/api/palm-reading", async (req: Request, res: Response) => {
+// Note: the current Palm Reading page analyses the photo in the browser and does not call this endpoint.
+// It is kept (and locked down) because it forwards an image to a paid vision model.
+const PALM_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const PALM_MAX_BASE64_CHARS = 8_000_000; // ~6 MB of image data
+app.post("/api/palm-reading", createRateLimiter({ windowMs: 60_000, max: 5 }), async (req: Request, res: Response) => {
   const { imageBase64, imageType, fingerprint } = req.body;
   if (!imageBase64 || !imageType) {
     return res.status(400).json({
@@ -457,12 +356,18 @@ app.post("/api/palm-reading", async (req: Request, res: Response) => {
       error: "imageBase64 and imageType are required",
     });
   }
+  if (typeof imageType !== "string" || !PALM_IMAGE_TYPES.has(imageType)) {
+    return res.status(400).json({ success: false, error: "Unsupported image type" });
+  }
+  if (typeof imageBase64 !== "string" || imageBase64.length > PALM_MAX_BASE64_CHARS || !/^[A-Za-z0-9+/]+={0,2}$/.test(imageBase64)) {
+    return res.status(400).json({ success: false, error: "Invalid or too large image" });
+  }
 
   const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
   if (!OPENROUTER_API_KEY) {
     return res
       .status(500)
-      .json({ success: false, error: "OPENROUTER_API_KEY not configured" });
+      .json({ success: false, error: "The reading service is not configured" });
   }
 
   const seedNum = fingerprint
@@ -549,10 +454,10 @@ Return ONLY valid JSON, no markdown fences, no extra text. Use this exact struct
     const result = JSON.parse(jsonMatch[0]);
     res.json({ success: true, data: result });
   } catch (err: any) {
-    console.error("Palm reading error:", err.response?.data || err.message);
-    res.status(500).json({
+    console.error("Palm reading error:", err.message);
+    res.status(502).json({
       success: false,
-      error: err.response?.data?.error?.message || err.message,
+      error: "The reading service is unavailable right now",
     });
   }
 });

@@ -6,6 +6,7 @@ import { TarotCard, ALL_CARDS, MAJOR_ARCANA, shuffleDeck, getCategoryCardImage }
 import { TarotLandingScene } from '../components/tarot/TarotLandingScene';
 import { useBackOverride } from '../context/NavigationContext';
 import { API_BASE_URL } from '@/lib/api';
+import TarotEducation from '../components/tarot/TarotEducation';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Phase = 'landing' | 'opening' | 'shuffling' | 'mode' | 'question' | 'spread' | 'revealing' | 'reading';
@@ -18,15 +19,11 @@ interface AIReading {
   nextMajorTurningPoint?: string;
   recommendedAction?: string;
   spiritualGuidance?: string;
-  probabilityScore?: number;
   timelineNarrative?: { position: string; card: string; insight: string }[];
   overallMessage?: string;
   currentKarmaTheme?: string;
   rootCause?: string;
   lifeAreasAffected?: string[];
-  energyScore?: number;
-  karmaBlockScore?: number;
-  spiritualGrowthScore?: number;
   dailyAction?: string;
   weeklyAction?: string;
   spiritualPractice?: string;
@@ -218,44 +215,6 @@ const Particles = ({ count = 40 }: { count?: number }) => {
           boxShadow: `0 0 ${p.size * 2}px rgba(188,106,77,0.7)`,
         }} />
       ))}
-    </div>
-  );
-};
-
-// ─── Score Circle ─────────────────────────────────────────────────────────────
-const ScoreCircle = ({ score, label, color = '#BC6A4D' }: { score: number; label: string; color?: string }) => {
-  const [displayed, setDisplayed] = useState(0);
-  const r = 40;
-  const circ = 2 * Math.PI * r;
-  const offset = circ - (displayed / 100) * circ;
-
-  useEffect(() => {
-    let frame: number;
-    let current = 0;
-    const step = () => {
-      current += (score - current) * 0.06;
-      if (Math.abs(current - score) < 0.5) { setDisplayed(score); return; }
-      setDisplayed(Math.round(current));
-      frame = requestAnimationFrame(step);
-    };
-    frame = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(frame);
-  }, [score]);
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-      <div style={{ position: 'relative', width: 100, height: 100 }}>
-        <svg width="100" height="100" viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)' }}>
-          <circle cx="50" cy="50" r={r} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="7" />
-          <circle cx="50" cy="50" r={r} fill="none" stroke={color} strokeWidth="7"
-            strokeDasharray={circ} strokeDashoffset={offset}
-            strokeLinecap="round" style={{ filter: `drop-shadow(0 0 8px ${color})` }} />
-        </svg>
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-          <span style={{ fontSize: '24px', fontWeight: 'bold', color, fontFamily: 'Iceland, sans-serif' }}>{displayed}</span>
-        </div>
-      </div>
-      <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'center', fontFamily: 'Iceland, sans-serif' }}>{label}</span>
     </div>
   );
 };
@@ -554,7 +513,6 @@ const QuestionSelectScene = ({ onSelect }: { onSelect: (q: string) => void }) =>
 
       <svg style={{position:'absolute',bottom:0,left:0,width:'100%',height:'32%',pointerEvents:'none',zIndex:1}} preserveAspectRatio="none">
         <defs><linearGradient id="qsMtW" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#0a0530" stopOpacity="0.5"/><stop offset="100%" stopColor="#030818" stopOpacity="0.95"/></linearGradient></defs>
-        <path d="M0,100% L0,55% L8%,22% L18%,52% L30%,12% L42%,48% L50%,28% L58%,48% L70%,12% L82%,52% L92%,22% L100%,55% L100%,100% Z" fill="#040316" opacity="0.82"/>
         <rect x="0" y="68%" width="100%" height="32%" fill="url(#qsMtW)"/>
       </svg>
 
@@ -985,7 +943,7 @@ const CardSpreadScene = ({ numCards, positions, question, onComplete }: { numCar
           </span>
         </h2>
         <p style={{ color: 'rgba(222,222,232,0.65)', fontSize: '14px', marginTop: '14px', fontFamily: "'Lato',sans-serif", letterSpacing: '0.02em', fontStyle: 'italic' }}>
-          Hover over each card · Trust your instinct · Let your next path reveal itself
+          Tap each card for its meaning · Take what resonates · Leave the rest
         </p>
       </motion.div>
 
@@ -1334,46 +1292,6 @@ const ResultCard: React.FC<{
   );
 };
 
-/** Large glowing copper ring — replaces the boxed probability panel */
-const ProbabilityRing: React.FC<{ score: number; delay: number }> = ({ score, delay }) => {
-  const [displayed, setDisplayed] = useState(0);
-  const r = 76;
-  const circ = 2 * Math.PI * r;
-  const offset = circ - (displayed / 100) * circ;
-
-  useEffect(() => {
-    let frame: number;
-    let current = 0;
-    const step = () => {
-      current += (score - current) * 0.06;
-      if (Math.abs(current - score) < 0.5) { setDisplayed(score); return; }
-      setDisplayed(Math.round(current));
-      frame = requestAnimationFrame(step);
-    };
-    frame = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(frame);
-  }, [score]);
-
-  return (
-    <motion.div initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay, duration: 0.6 }}
-      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={{ position: 'relative', width: 184, height: 184 }}>
-        <div style={{ position: 'absolute', inset: -18, borderRadius: '50%', background: 'radial-gradient(circle, rgba(188,106,77,0.32) 0%, transparent 70%)', filter: 'blur(6px)' }} />
-        <svg width="184" height="184" viewBox="0 0 184 184" style={{ position: 'relative', transform: 'rotate(-90deg)' }}>
-          <circle cx="92" cy="92" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="4" />
-          <circle cx="92" cy="92" r={r} fill="none" stroke="#BC6A4D" strokeWidth="4"
-            strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
-            style={{ filter: 'drop-shadow(0 0 10px rgba(188,106,77,0.85))' }} />
-        </svg>
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <span style={{ fontSize: 44, fontWeight: 700, color: '#FFFFFF', fontFamily: "'Astra','Iceland',sans-serif", lineHeight: 1 }}>{displayed}</span>
-          <span style={{ fontSize: 14, letterSpacing: '1px', color: '#BC6A4D', textTransform: 'uppercase', fontFamily: "'Astra','Iceland',sans-serif", marginTop: 8, whiteSpace: 'nowrap' }}>Path Probability</span>
-        </div>
-      </div>
-    </motion.div>
-  );
-};
-
 const DetailRow: React.FC<{ label: string; value: string }> = ({ label, value }) => (
   <div style={{ marginBottom: 16 }}>
     <p style={{ margin: '0 0 4px', fontSize: 14, letterSpacing: '1.5px', color: 'rgba(255,255,255,0.8)', textTransform: 'uppercase', fontFamily: "'Astra','Iceland',sans-serif" }}>{label}</p>
@@ -1505,7 +1423,7 @@ const TimelineReadingDisplay = ({
           <span style={{ color: '#BC6A4D' }}>Timeline</span>
         </h1>
         <p style={{ margin: 0, fontSize: 18, fontStyle: 'italic', color: 'rgba(255,255,255,0.65)', fontFamily: "'Lato',sans-serif" }}>
-          Hover over each card · Trust your instinct · Let your next path reveal itself
+          Tap each card for its meaning · Take what resonates · Leave the rest
         </p>
       </motion.div>
 
@@ -1523,10 +1441,6 @@ const TimelineReadingDisplay = ({
           </div>
         )}
       </AnimatePresence>
-
-      <div style={{ zIndex: 10, marginBottom: 90 }}>
-        <ProbabilityRing score={reading.probabilityScore ?? 75} delay={0.15 + cards.length * 0.12 + 0.2} />
-      </div>
 
       {/* ── Overall Reading ────────────────────────────────────────────── */}
       {reading.overallMessage && (
@@ -1546,13 +1460,13 @@ const TimelineReadingDisplay = ({
 
       {/* ── Six insight cards, 3×2 with a sacred divider between the rows ── */}
       <div className="trd-insight-grid" style={{ zIndex: 10, width: '100%', maxWidth: 1000, marginBottom: 90 }}>
-        <InsightGridCard icon={<Sprout size={18} />}  title="What This Means For You" value={reading.currentLifeStage}     delay={0} />
+        <InsightGridCard icon={<Sprout size={18} />}  title="Where You Are Now" value={reading.currentLifeStage}     delay={0} />
         <InsightGridCard icon={<Sparkles size={18} />} title="What's Helping You"      value={reading.mainOpportunity}     delay={0.08} />
         <InsightGridCard icon={<EyeOff size={18} />}  title="What's Blocking You"     value={reading.hiddenChallenge}     delay={0.16} />
         <SacredDivider />
-        <InsightGridCard icon={<Star size={18} />}    title="What's Coming Next"      value={reading.nextMajorTurningPoint} delay={0.24} />
-        <InsightGridCard icon={<Zap size={18} />}     title="What To Do Right Now"    value={reading.recommendedAction}   delay={0.32} />
-        <InsightGridCard icon={<Flame size={18} />}   title="Guidance For This Week"  value={reading.spiritualGuidance}   delay={0.4} />
+        <InsightGridCard icon={<Star size={18} />}    title="A Theme To Prepare For"      value={reading.nextMajorTurningPoint} delay={0.24} />
+        <InsightGridCard icon={<Zap size={18} />}     title="A Step You Could Take"    value={reading.recommendedAction}   delay={0.32} />
+        <InsightGridCard icon={<Flame size={18} />}   title="Reflective Guidance"  value={reading.spiritualGuidance}   delay={0.4} />
       </div>
 
       {/* ── Card-by-card story ─────────────────────────────────────────── */}
@@ -1593,6 +1507,7 @@ const TimelineReadingDisplay = ({
         </div>
       )}
 
+      <ReadingNote />
       <ResetButton onReset={onReset} />
 
       <style>{`
@@ -1652,7 +1567,7 @@ const TimelineReadingDisplay = ({
   );
 };
 
-// ─── Karma Mirror Reading Display ─────────────────────────────────────────────
+// ─── Karma Mirror™ Reading Display ─────────────────────────────────────────────
 const KarmaMirrorDisplay = ({
   cards, positions, reading, onReset,
 }: { cards: TarotCard[]; positions: string[]; reading: AIReading; onReset: () => void }) => {
@@ -1745,14 +1660,6 @@ const KarmaMirrorDisplay = ({
         </motion.div>
       )}
 
-      {/* ── Score circles ──────────────────────────────────────────────── */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.62 }}
-        style={{ display: 'flex', gap: '36px', justifyContent: 'center', flexWrap: 'wrap', padding: '32px', background: 'linear-gradient(135deg,rgba(188,106,77,0.07) 0%,rgba(188,106,77,0.02) 100%)', border: '1px solid rgba(188,106,77,0.16)', borderRadius: '20px', marginBottom: '40px', position: 'relative', zIndex: 10 }}>
-        <ScoreCircle score={reading.energyScore ?? 65}          label="Your Energy"       color="#BC6A4D" />
-        <ScoreCircle score={reading.karmaBlockScore ?? 70}      label="Karma Block Level" color="#FF7043" />
-        <ScoreCircle score={reading.spiritualGrowthScore ?? 58} label="Growth Potential"  color="#4DB6AC" />
-      </motion.div>
-
       {/* ── Action Plan ────────────────────────────────────────────────── */}
       <div style={{ marginBottom: '40px', position: 'relative', zIndex: 10 }}>
         <h3 style={{ fontFamily: 'Iceland, sans-serif', fontSize: '24px', letterSpacing: '4px', color: '#BC6A4D', textTransform: 'uppercase', marginBottom: '22px', textAlign: 'center' }}>
@@ -1818,10 +1725,17 @@ const KarmaMirrorDisplay = ({
         </div>
       )}
 
+      <ReadingNote />
       <ResetButton onReset={onReset} />
     </div>
   );
 };
+
+const ReadingNote = () => (
+  <p style={{ position: 'relative', zIndex: 10, maxWidth: 560, margin: '0 auto 32px', padding: '0 20px', textAlign: 'center', fontSize: 15, lineHeight: 1.7, fontStyle: 'italic', color: 'rgba(255,255,255,0.6)', fontFamily: "'Lato',sans-serif" }}>
+    This reading is AI-written reflection based on the cards you drew. It is not a prediction or professional advice.
+  </p>
+);
 
 // ─── Reset button ─────────────────────────────────────────────────────────────
 const ResetButton = ({ onReset }: { onReset: () => void }) => (
@@ -1898,6 +1812,8 @@ const TarotExperience = () => {
   const [selectedCards, setSelectedCards] = useState<TarotCard[]>([]);
   const [reading, setReading] = useState<AIReading | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [readingError, setReadingError] = useState<string | null>(null);
+  const isLoadingRef = useRef(false);
 
   const positions = mode === 'timeline' ? TIMELINE_POSITIONS : KARMA_POSITIONS;
   const numCards = mode === 'timeline' ? 5 : 3;
@@ -1908,38 +1824,68 @@ const TarotExperience = () => {
     opening:  'landing',
     shuffling: 'opening',
     mode:     'landing',
-    question: 'mode',
-    spread:   mode === 'timeline' ? 'question' : 'mode',
+    question: 'landing',
+    spread:   mode === 'timeline' ? 'question' : 'landing',
     revealing: 'spread',
     reading:  'spread',
   };
 
   const targetPhase = phaseBackMap[phase] ?? null;
   useBackOverride(
-    targetPhase !== null ? () => setPhase(targetPhase) : null,
+    targetPhase !== null ? () => {
+      if (phase === 'reading') { cancelReading(); setReading(null); }
+      setPhase(targetPhase);
+    } : null,
     [phase, mode],
   );
 
+  // One in-flight request at a time; leaving the reading screen cancels it so a stale reply
+  // can never be shown for a different set of cards.
+  const abortRef = useRef<AbortController | null>(null);
+  useEffect(() => () => abortRef.current?.abort(), []);
+
   const fetchReading = useCallback(async (cards: TarotCard[], modeArg: Mode, q: string) => {
+    if (isLoadingRef.current) return; // ignore duplicate submissions
+    const controller = new AbortController();
+    abortRef.current = controller;
+    isLoadingRef.current = true;
     setIsLoading(true);
+    setReadingError(null);
+    setReading(null);
     try {
       const res = await fetch(`${API_BASE_URL}/tarot/reading`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode: modeArg, question: q, cards: cards.map(c => ({ name: c.name, meaning: c.meaning, keywords: c.keywords, symbol: c.symbol })) }),
+        // Only card names are sent — the server supplies positions and does not trust client card text.
+        body: JSON.stringify({ mode: modeArg, question: q, cards: cards.map(c => c.name) }),
+        signal: controller.signal,
       });
-      const data = await res.json();
-      if (data.success) setReading(data.data);
-      else setReading(generateFallbackReading(modeArg, cards));
-    } catch {
-      setReading(generateFallbackReading(modeArg, cards));
+      const data = await res.json().catch(() => null);
+      if (controller.signal.aborted) return;
+      if (res.ok && data?.success && data.data) setReading(data.data);
+      else setReadingError(res.status === 429 ? 'Too many readings requested. Please wait a minute and try again.' : "We couldn't create your reading just now. Your cards are still here — please try again.");
+    } catch (e) {
+      if (controller.signal.aborted) return;
+      console.error('[Tarot] reading request failed:', e);
+      setReadingError("We couldn't reach the reading service. Check your connection and try again.");
     } finally {
-      setIsLoading(false);
+      if (abortRef.current === controller) {
+        isLoadingRef.current = false;
+        setIsLoading(false);
+      }
     }
+  }, []);
+
+  const cancelReading = useCallback(() => {
+    abortRef.current?.abort();
+    isLoadingRef.current = false;
+    setIsLoading(false);
+    setReadingError(null);
   }, []);
 
   const handleCardSpreadComplete = useCallback((cards: TarotCard[]) => {
     setSelectedCards(cards);
+    setReading(null);
     setPhase('revealing');
   }, []);
 
@@ -1949,13 +1895,13 @@ const TarotExperience = () => {
   }, [mode, selectedCards, question, fetchReading]);
 
   const handleReset = useCallback(() => {
+    cancelReading();
     setPhase('landing');
     setMode(null);
     setQuestion('');
     setSelectedCards([]);
     setReading(null);
-    setIsLoading(false);
-  }, []);
+  }, [cancelReading]);
 
   return (
     <div style={{ minHeight: '100vh', background: 'transparent', position: 'relative' }}>
@@ -2012,49 +1958,43 @@ const TarotExperience = () => {
             )}
           </motion.div>
         )}
+
+        {phase === 'reading' && !reading && !isLoading && readingError && (
+          <motion.div key="reading-error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
+            <ReadingError
+              message={readingError}
+              cards={selectedCards}
+              onRetry={() => mode && fetchReading(selectedCards, mode, question)}
+              onReset={handleReset}
+            />
+          </motion.div>
+        )}
       </AnimatePresence>
+
+      {(phase === 'landing' || (phase === 'reading' && reading && !isLoading)) && (
+        <div style={{ background: '#071327' }}>
+          <TarotEducation />
+        </div>
+      )}
     </div>
   );
 };
 
-// ─── Fallback reading generator ───────────────────────────────────────────────
-function generateFallbackReading(mode: Mode, cards: TarotCard[]): AIReading {
-  if (mode === 'timeline') {
-    return {
-      currentLifeStage: `You stand at a threshold of transformation, embodied by the energy of ${cards[1]?.name}.`,
-      mainOpportunity: `${cards[3]?.name} opens a doorway of significant growth and aligned action in the coming months.`,
-      hiddenChallenge: `${cards[2]?.name} reveals a hidden pattern that quietly shapes your experience. Acknowledge it with compassion.`,
-      nextMajorTurningPoint: `Around the energy of ${cards[3]?.name}, a significant pivotal shift arrives — prepare your heart and mind.`,
-      recommendedAction: 'Take one courageous step aligned with your highest truth each day, without waiting for perfect conditions.',
-      spiritualGuidance: 'The cosmos supports those who act from love rather than fear. Trust the path unfolding before you.',
-      probabilityScore: 72 + Math.floor(Math.random() * 20),
-      timelineNarrative: cards.map((c, i) => ({
-        position: TIMELINE_POSITIONS[i],
-        card: c.name,
-        insight: c.meaning,
-      })),
-      overallMessage: `Your reading reveals a soul in beautiful motion. ${cards[0]?.meaning} Trust this journey — it leads exactly where you are meant to go.`,
-    };
-  }
-  return {
-    currentKarmaTheme: `${cards[0]?.keywords[0]} — a pattern asking for your loving attention and conscious healing.`,
-    rootCause: `Past experiences have created ${cards[0]?.keywords[1]?.toLowerCase() ?? 'limiting'} patterns. Awareness is the first act of liberation.`,
-    lifeAreasAffected: ['Career', 'Relationships', 'Inner Peace'],
-    energyScore: 55 + Math.floor(Math.random() * 30),
-    karmaBlockScore: 50 + Math.floor(Math.random() * 35),
-    spiritualGrowthScore: 60 + Math.floor(Math.random() * 25),
-    dailyAction: 'Begin each morning with 5 minutes of conscious breath awareness before any digital input.',
-    weeklyAction: `Journal on this question: Where in my ${cards[1]?.keywords[0]?.toLowerCase() ?? 'life'} am I resisting what the soul already accepts?`,
-    spiritualPractice: `The energy of ${cards[2]?.name} invites a practice of ${cards[2]?.keywords[2]?.toLowerCase() ?? 'stillness and reflection'}.`,
-    recommendedHabit: 'Create one act of self-kindness each day that costs nothing but your willingness to receive it.',
-    reflectionQuestion: `What would I do today if I truly believed I deserved the healing that ${cards[2]?.name} is offering me?`,
-    positiveAffirmation: `I release what no longer serves my soul. I walk forward in the full light of ${cards[2]?.keywords[0]?.toLowerCase() ?? 'healing and grace'}.`,
-    cardInsights: cards.map((c, i) => ({
-      position: KARMA_POSITIONS[i],
-      card: c.name,
-      insight: c.meaning,
-    })),
-  };
-}
+// ─── Error state (no made-up reading is ever shown when the service fails) ──────
+const ReadingError = ({ message, cards, onRetry, onReset }: { message: string; cards: TarotCard[]; onRetry: () => void; onReset: () => void }) => (
+  <div role="alert" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', background: '#071327', textAlign: 'center' }}>
+    <div style={{ display: 'flex', gap: 10, marginBottom: 28, flexWrap: 'wrap', justifyContent: 'center' }}>
+      {cards.map(c => (
+        <span key={c.id} style={{ padding: '6px 14px', border: '1px solid rgba(188,106,77,0.4)', borderRadius: 20, color: '#E8B79A', fontFamily: "'Astra','Iceland',sans-serif", fontSize: 15 }}>{c.name}</span>
+      ))}
+    </div>
+    <h2 style={{ margin: '0 0 12px', color: '#fff', fontFamily: "'Astra','Iceland',sans-serif", fontSize: 'clamp(24px,4vw,34px)', letterSpacing: 2 }}>Your reading couldn&apos;t be created</h2>
+    <p style={{ margin: '0 0 32px', maxWidth: 460, color: 'rgba(255,255,255,0.75)', fontFamily: "'Lato',sans-serif", fontSize: 17, lineHeight: 1.7 }}>{message}</p>
+    <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
+      <button onClick={onRetry} style={{ padding: '14px 32px', background: '#BC6A4D', border: 'none', borderRadius: 4, color: '#050510', fontFamily: "'Astra','Iceland',sans-serif", letterSpacing: 3, fontSize: 15, textTransform: 'uppercase', cursor: 'pointer', fontWeight: 700 }}>Try Again</button>
+      <button onClick={onReset} style={{ padding: '14px 32px', background: 'transparent', border: '1px solid rgba(188,106,77,0.5)', borderRadius: 4, color: 'rgba(255,255,255,0.85)', fontFamily: "'Astra','Iceland',sans-serif", letterSpacing: 3, fontSize: 15, textTransform: 'uppercase', cursor: 'pointer' }}>Start Over</button>
+    </div>
+  </div>
+);
 
 export default TarotExperience;

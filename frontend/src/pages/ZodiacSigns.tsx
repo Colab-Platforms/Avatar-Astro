@@ -491,6 +491,7 @@ import { ArrowRight, Flame, Mountain, Wind, Droplets } from 'lucide-react';
 import { zodiacSigns, ZodiacSign } from '@/data/zodiacData';
 import ZodiacCard from '@/components/ZodiacCard';
 import ElementSelector from '@/components/astrology/ElementSelector';
+import ZodiacEducation from '@/components/ZodiacEducation';
 
 // Import zodiac line-art images
 import ariesImg from '@/assets/zodiac/aries.png';
@@ -550,6 +551,8 @@ const ZodiacSigns = () => {
   const rotationRef = useRef<gsap.core.Tween | null>(null);
   const autoIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const inactivityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // Pending 'advance to next sign' timer, so a user click can cancel it instead of racing it.
+  const autoAdvanceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Tracks index into zodiacSigns[] for clockwise stepping (avoids stale closure)
   const autoIndexRef = useRef(0);
   const isAnimatingRef = useRef(false);
@@ -592,7 +595,7 @@ const ZodiacSigns = () => {
       isAnimatingRef.current = true;
       setIsAnimating(true);
 
-      setTimeout(() => {
+      autoAdvanceTimeoutRef.current = setTimeout(() => {
         const nextIndex = (autoIndexRef.current + 1) % 12;
         autoIndexRef.current = nextIndex;
         setSelectedSign(zodiacSigns[nextIndex]);
@@ -605,6 +608,10 @@ const ZodiacSigns = () => {
       if (autoIntervalRef.current) clearInterval(autoIntervalRef.current);
     };
   }, [isAutoMode]);
+
+  useEffect(() => () => {
+    if (autoAdvanceTimeoutRef.current) clearTimeout(autoAdvanceTimeoutRef.current);
+  }, []);
 
   // Reset inactivity timeout
   const resetInactivityTimeout = useCallback(() => {
@@ -619,7 +626,8 @@ const ZodiacSigns = () => {
   // Handle sign click — pause auto, jump to sign, resume after inactivity
   const handleSignClick = useCallback((sign: ZodiacSign) => {
     setIsAutoMode(false);
-    if (isAnimatingRef.current) return;
+    // A click always wins: cancel any auto-advance that is mid-transition so it can't overwrite this selection.
+    if (autoAdvanceTimeoutRef.current) clearTimeout(autoAdvanceTimeoutRef.current);
 
     isAnimatingRef.current = true;
     setIsAnimating(true);
@@ -712,7 +720,10 @@ const ZodiacSigns = () => {
               The Twelve Zodiac Signs
             </h1>
             <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto">
-              Explore the unique characteristics, traits, and cosmic energies of each zodiac sign in the celestial wheel
+              Explore the traditional traits, elements and symbolism of each zodiac sign. Tap a sign on the wheel to read about it.
+            </p>
+            <p className="text-muted-foreground/80 text-sm max-w-2xl mx-auto mt-3">
+              Dates shown are the commonly used Western (tropical) Sun-sign ranges.
             </p>
           </div>
 
@@ -863,6 +874,8 @@ const ZodiacSigns = () => {
                       <button
                         key={sign.name}
                         onClick={() => handleSignClick(sign)}
+                        aria-label={`Show ${sign.name}, ${sign.dates}`}
+                        aria-pressed={isSelected}
                         className="zodiac-wheel-btn absolute -translate-x-1/2 -translate-y-1/2 focus:outline-none"
                         style={{ left: `${x}%`, top: `${y}%` }}
                       >
@@ -956,6 +969,8 @@ const ZodiacSigns = () => {
             ))
           }
         </div>
+
+        <ZodiacEducation />
       </div>
     </div>
   );

@@ -1,39 +1,31 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { PalmAnalysisResult, PalmLineId } from "@/lib/palmAnalysis";
+import type { PalmAnalysisResult } from "@/lib/palmAnalysis";
 
 // ─── Phase timeline ────────────────────────────────────────────────────────
-// The underlying detection (MediaPipe + geometry) already finished before
-// this component mounts — this is a deliberate ~5s choreographed reveal of
-// the *real* computed result, not a progress bar hiding actual computation.
+// The underlying detection (MediaPipe hand landmarks + measured proportions)
+// already finished before this component mounts. This is a short choreographed
+// reveal of those real landmarks. It does not trace palm lines: the tool does
+// not detect lines, so none are drawn and no step claims to read them.
 interface Phase { key: string; duration: number; message: string }
 const PHASES: Phase[] = [
-  { key: "detect", duration: 600, message: "Detecting Palm..." },
-  { key: "edges", duration: 550, message: "Finding Palm Edges..." },
-  { key: "mesh", duration: 450, message: "Mapping Palm Structure..." },
-  { key: "life", duration: 650, message: "Reading Life Line..." },
-  { key: "heart", duration: 550, message: "Analyzing Heart Line..." },
-  { key: "head", duration: 500, message: "Analyzing Head Line..." },
-  { key: "fate", duration: 450, message: "Tracing Fate Line..." },
-  { key: "minor", duration: 400, message: "Identifying Palm Shape..." },
-  { key: "mounts", duration: 450, message: "Calculating Mount Positions..." },
-  { key: "final", duration: 500, message: "Generating Personality Report..." },
-  { key: "future", duration: 550, message: "Predicting Your Future Timeline..." },
-  { key: "ready", duration: 400, message: "Preparing Final Reading..." },
+  { key: "detect", duration: 600, message: "Detecting your hand..." },
+  { key: "edges", duration: 550, message: "Locating the palm outline..." },
+  { key: "mesh", duration: 450, message: "Mapping hand landmarks..." },
+  { key: "life", duration: 650, message: "Measuring finger lengths..." },
+  { key: "heart", duration: 550, message: "Measuring palm width and length..." },
+  { key: "head", duration: 500, message: "Measuring thumb angle..." },
+  { key: "fate", duration: 450, message: "Checking left or right hand..." },
+  { key: "minor", duration: 400, message: "Classifying hand shape..." },
+  { key: "mounts", duration: 450, message: "Preparing your hand-shape reading..." },
+  { key: "final", duration: 500, message: "Preparing your hand-shape reading..." },
+  { key: "future", duration: 550, message: "Almost ready..." },
+  { key: "ready", duration: 400, message: "Ready" },
 ];
 const CUM: number[] = (() => {
   let acc = 0;
   return PHASES.map((p) => { const start = acc; acc += p.duration; return start; });
 })();
 const TOTAL_MS = CUM[CUM.length - 1] + PHASES[PHASES.length - 1].duration;
-
-const LINE_ORDER: PalmLineId[] = ["life", "heart", "head", "fate", "sun"];
-const LINE_PHASE_START: Record<PalmLineId, number> = {
-  life: CUM[3], heart: CUM[4], head: CUM[5], fate: CUM[6], sun: CUM[7],
-};
-const LINE_PHASE_DUR: Record<PalmLineId, number> = {
-  life: PHASES[3].duration, heart: PHASES[4].duration, head: PHASES[5].duration,
-  fate: PHASES[6].duration, sun: PHASES[7].duration * 0.6,
-};
 
 interface MeshPoint { x: number; y: number }
 interface MeshEdge { a: MeshPoint; b: MeshPoint }
@@ -195,44 +187,6 @@ export function ScanSequence({ imageUrl, result, onComplete }: ScanSequenceProps
             ))}
           </g>
         )}
-
-        {/* Live line tracing — real computed paths, revealed via stroke-dashoffset */}
-        {LINE_ORDER.map((id) => {
-          const line = result.lines[id];
-          return (
-            <path
-              key={id}
-              d={line.path}
-              fill="none"
-              stroke={line.color}
-              strokeWidth={id === "sun" ? 1.6 : 2.2}
-              strokeLinecap="round"
-              vectorEffect="non-scaling-stroke"
-              style={{
-                filter: `drop-shadow(0 0 4px ${line.color})`,
-                strokeDasharray: line.length,
-                strokeDashoffset: line.length,
-                animation: `ss-draw-${id} ${LINE_PHASE_DUR[id]}ms ease forwards ${LINE_PHASE_START[id]}ms`,
-              }}
-            />
-          );
-        })}
-        <style>{`
-          ${LINE_ORDER.map((id) => `@keyframes ss-draw-${id}{to{stroke-dashoffset:0}}`).join("\n")}
-        `}</style>
-
-        {/* Minor marks */}
-        {result.minorMarks.map((m, i) => (
-          <path key={i} d={m.path} fill="none" stroke="#e8b23f" strokeWidth={1.2} strokeLinecap="round" vectorEffect="non-scaling-stroke"
-            style={{ opacity: 0, filter: "drop-shadow(0 0 3px #e8b23f)", animation: `ss-fade-in 0.3s ease forwards ${CUM[7] + i * 60}ms` }} />
-        ))}
-
-        {/* Mount pulses */}
-        {phaseIndex >= 8 && result.mounts.map((m, i) => (
-          <circle key={m.name} cx={m.point.x} cy={m.point.y} r={0.012} fill="none" stroke="#e8b23f" strokeWidth={1}
-            vectorEffect="non-scaling-stroke"
-            style={{ animation: `ss-mount-pulse 900ms ease-out ${i * 80}ms 2` }} />
-        ))}
 
         {/* Sacred geometry */}
         <g className="ss-sacred" style={{ transformOrigin: `${center.x}px ${center.y}px` }}>
