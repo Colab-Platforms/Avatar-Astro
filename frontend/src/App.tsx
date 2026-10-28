@@ -28,6 +28,7 @@ import TarotExperience from "./pages/TarotExperience";
 import SolarSystem from "./pages/SolarSystem";
 import NotFound from "./pages/NotFound";
 import CosmicBackground from "./components/CosmicBackground";
+import HideOnHome from "./components/HideOnHome";
 import { PublicRoute } from "./routes/PublicRoute";
 import { GoogleOnboardingRoute } from "./routes/ProtectedRoute";
 import { AdminRoute } from "./routes/AdminRoute";
@@ -67,6 +68,8 @@ const PujaPage      = lazy(() => import("./pages/Puja/index"));
 const PujaDetail    = lazy(() => import("./pages/Puja/PujaDetail"));
 const ChadhawaPage  = lazy(() => import("./pages/Chadhawa/index"));
 const ChadhawaDetail = lazy(() => import("./pages/Chadhawa/ChadhawaDetail"));
+const RatnaJyotish = lazy(() => import("./pages/RatnaJyotish"));
+const RatnaJyotishResult = lazy(() => import("./pages/RatnaJyotishResult"));
 const ShopPage      = lazy(() => import("./pages/Shop/index"));
 const ShopDetail    = lazy(() => import("./pages/Shop/ShopDetail"));
 const AvatarLivePage   = lazy(() => import("./pages/AvatarLive/index"));
@@ -298,6 +301,28 @@ const AnimatedRoutes = () => {
           }
         />
         <Route
+          path="/ratna-jyotish"
+          element={
+            <PageTransition>
+              <Suspense fallback={<LazyFallback />}>
+                <RatnaJyotish />
+              </Suspense>
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/ratna-jyotish/result"
+          element={
+            <PageTransition>
+              <Suspense fallback={<LazyFallback />}>
+                <RatnaJyotishResult />
+              </Suspense>
+            </PageTransition>
+          }
+        />
+        {/* Legacy alias: old gemstone-calculator links keep working. */}
+        <Route path="/gemstone-calculator" element={<Navigate to="/ratna-jyotish" replace />} />
+        <Route
           path="/shop"
           element={
             <PageTransition>
@@ -505,7 +530,7 @@ const App = () => {
             path="*"
             element={
               <>
-                <CosmicBackground />
+                <HideOnHome><CosmicBackground /></HideOnHome>
                 <NavigationProvider>
                   <Layout>
                     <AnimatedRoutes />

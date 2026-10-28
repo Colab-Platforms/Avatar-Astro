@@ -17,6 +17,9 @@ export default {
         display: ["Iceland", "sans-serif"],
         body: ["Iceland", "sans-serif"],
         astra: ["Astra", "Iceland", "sans-serif"],
+        // Homepage light theme: Cinzel is already loaded site-wide (index.css @import).
+        "home-serif": ["Cinzel", "Georgia", "serif"],
+        "home-sans": ["DM Sans", "system-ui", "sans-serif"],
       },
       // Bumped up from Tailwind's stock scale — sitewide text was reading too
       // small across nav, cards, labels, and body copy. Line-heights keep
@@ -32,6 +35,18 @@ export default {
         "4xl": ["2.625rem", { lineHeight: "2.875rem" }],    // 42px (Tailwind default: 36px)
       },
       colors: {
+        // Homepage theme (parchment, gerua, antique gold). Mirrors the --mb-* variables in index.css.
+        home: {
+          parchment: "#EFE5D7", //   page background  (--mb-background)
+          ivory: "#FAF7F1", //       cards, navbar, footer  (--mb-surface)
+          gerua: "#8C3F18", //       primary actions, links, accents  (--mb-primary)
+          "gerua-dark": "#713214", // primary hover  (--mb-primary-hover)
+          ink: "#27231F", //         warm charcoal text  (--mb-text)
+          muted: "#645B52", //       secondary text  (--mb-text-muted)
+          gold: "#B99A64", //        decoration only (2.1-2.5:1), never text  (--mb-gold)
+          line: "#D9CABA", //        borders  (--mb-border)
+          navy: "#1C2740", //        artwork only  (--mb-cosmic-navy)
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

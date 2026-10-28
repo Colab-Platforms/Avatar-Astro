@@ -1,7 +1,7 @@
 export interface AstrologyTool {
   title: string;
   description: string;
-  /** Path under /public — swap these files for final artwork, no code changes needed. */
+  /** Path under /public. */
   image: string;
   button: string;
   path: string;
@@ -9,26 +9,30 @@ export interface AstrologyTool {
 
 export const tools: AstrologyTool[] = [
   {
-    title: "AI Tarot Reading",
-    description:
-      "Receive AI-powered tarot guidance for love, career, finance, and life's important decisions.",
-    image: "/placeholders/tarot-card.webp",
-    button: "Try Now",
-    path: "/tarot",
-  },
-  {
     title: "Birth Chart",
     description:
       "Enter your birth date to see your Sun sign, Life Path number and a written profile of traditional themes.",
     image: "/placeholders/Birth-Chart.webp",
+      "Generate your complete birth chart with detailed astrological insights.",
+    image: "/images/tools/birth-chart.jpg",
     button: "Generate",
     path: "/birth-chart",
+  },
+  {
+    title: "AI Tarot Reading",
+    description:
+      "Receive AI-powered tarot guidance for love, career, finance, and life's important decisions.",
+    image: "/images/tools/tarot.jpg",
+    button: "Try Now",
+    path: "/tarot",
   },
   {
     title: "Compatibility",
     description:
       "Compare two Sun signs to see how their elements and aspects traditionally fit together.",
     image: "/placeholders/Compatibility.webp",
+      "Discover relationship compatibility using advanced astrology matching.",
+    image: "/images/tools/compatibility.jpg",
     button: "Check Now",
     path: "/compatibility",
   },
@@ -37,6 +41,8 @@ export const tools: AstrologyTool[] = [
     description:
       "Upload a palm photo or use your camera to find your hand shape: Earth, Air, Water or Fire.",
     image: "/placeholders/Palm-Reading.webp",
+      "Upload your palm and receive an AI-generated palm analysis.",
+    image: "/images/tools/palm-reading.jpg",
     button: "Analyze",
     path: "/palm-reading",
   },

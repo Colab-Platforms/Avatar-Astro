@@ -10,36 +10,33 @@ interface DevotionCardProps {
 
 const DevotionCard = ({ index }: DevotionCardProps) => (
   <motion.div
-    initial={{ opacity: 0, y: 40 }}
+    initial={{ opacity: 0, y: 28 }}
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true, amount: 0.2 }}
-    transition={{ duration: 0.6, delay: index * 0.1, ease: "easeOut" }}
-    whileHover={{ y: -8 }}
-    className="group relative flex flex-col rounded-2xl overflow-hidden border border-[#ffaa50]/[0.18] shadow-[0_8px_30px_rgba(0,0,0,0.35)] transition-[border-color,box-shadow] duration-300 hover:border-[#ffaa50]/60 hover:shadow-[0_8px_30px_rgba(0,0,0,0.35),0_0_32px_rgba(232,147,95,0.22)] p-6"
-    style={{ background: "linear-gradient(180deg, rgba(13,28,52,0.7) 0%, rgba(5,11,24,0.85) 100%)" }}
+    transition={{ duration: 0.5, delay: index * 0.07, ease: "easeOut" }}
+    className="hl-card group relative flex h-full flex-col overflow-hidden p-4"
   >
-    <h3 className="font-['Inter'] font-bold text-lg text-white mb-4">{devotionFeature.title}</h3>
+    <div className="mb-1 flex items-center">
+      <h3 className="hl-serif text-xl font-semibold normal-case leading-tight tracking-[0.03em] text-home-ink">
+        {devotionFeature.title}
+      </h3>
+    </div>
+    <p className="mb-2 font-home-sans text-[0.9rem] leading-[1.45] text-home-muted">{devotionFeature.description}</p>
 
-    <div className="grid grid-cols-3 gap-2.5 mb-5">
+    <div className="mb-3 grid auto-rows-fr grid-cols-2 gap-2 min-[460px]:grid-cols-3">
       {devotionFeature.items.map((item) => (
         <Link
           key={item.label}
           to={item.path}
-          className="group/item flex flex-col items-center justify-center gap-2 rounded-xl border border-[#e8935f]/25 bg-black/25 px-2 py-3.5 text-center transition-colors duration-300 hover:border-[#e8935f]/60 hover:bg-[#e8935f]/[0.08]"
+          className="flex min-h-[60px] flex-col items-center justify-center gap-1 rounded-lg border border-home-line bg-home-parchment/50 px-1.5 py-2 text-center transition-colors duration-300 hover:border-home-gerua/50 hover:bg-home-parchment motion-reduce:transition-none"
         >
-          <item.icon className="w-5 h-5 text-[#e8935f]" strokeWidth={1.75} />
-          <span className="font-['Inter'] text-[11px] leading-tight text-white/75">
-            {item.label}
-          </span>
+          <item.icon className="h-[18px] w-[18px] text-home-gerua" strokeWidth={1.75} aria-hidden="true" />
+          <span className="font-home-sans text-[0.8125rem] leading-tight text-home-ink">{item.label}</span>
         </Link>
       ))}
     </div>
 
-    <FeatureButton
-      to={devotionFeature.buttonPath}
-      label={devotionFeature.buttonLabel}
-      className="mt-auto self-start"
-    />
+    <FeatureButton to={devotionFeature.buttonPath} label={devotionFeature.buttonLabel} className="mt-auto self-start" />
   </motion.div>
 );
 

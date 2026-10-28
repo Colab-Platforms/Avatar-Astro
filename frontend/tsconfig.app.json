@@ -22,9 +22,10 @@
     "noImplicitAny": false,
     "noFallthroughCasesInSwitch": false,
 
-    "baseUrl": ".",
+    /* No "baseUrl": TS 6 deprecates it, and with "bundler" resolution "paths"
+       resolve relative to this file anyway. */
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src"]
