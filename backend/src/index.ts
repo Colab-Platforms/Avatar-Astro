@@ -13,6 +13,7 @@ import adminRoutes from "./modules/admin/admin.route.js";
 import publicTempleRoutes from "./modules/puja/puja.public.route.js";
 import publicChadhawaRoutes from "./modules/chadhawa/chadhawa.public.route.js";
 import publicShopRoutes from "./modules/shop/shop.public.route.js";
+import gemstoneRoutes from "./modules/gemstone/gemstone.route.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { startDarshanRefreshLoop } from "./modules/darshan/darshan.refresh.js";
 
@@ -280,6 +281,9 @@ app.use("/api/chadhawa", publicChadhawaRoutes);
 
 // Public Shop catalogue (read-only, no auth)
 app.use("/api/shop", publicShopRoutes);
+
+// Ratna Jyotish (stateless gemstone calculator)
+app.use("/api/gemstone-calculator", gemstoneRoutes);
 
 // AI routes
 app.use("/api/interpretation", interpretationRoutes);

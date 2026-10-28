@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import Layout from "./components/Layout";
 import { NavigationProvider } from "./context/NavigationContext";
@@ -67,6 +67,8 @@ const PujaPage      = lazy(() => import("./pages/Puja/index"));
 const PujaDetail    = lazy(() => import("./pages/Puja/PujaDetail"));
 const ChadhawaPage  = lazy(() => import("./pages/Chadhawa/index"));
 const ChadhawaDetail = lazy(() => import("./pages/Chadhawa/ChadhawaDetail"));
+const RatnaJyotish = lazy(() => import("./pages/RatnaJyotish"));
+const RatnaJyotishResult = lazy(() => import("./pages/RatnaJyotishResult"));
 const ShopPage      = lazy(() => import("./pages/Shop/index"));
 const ShopDetail    = lazy(() => import("./pages/Shop/ShopDetail"));
 const AvatarLivePage   = lazy(() => import("./pages/AvatarLive/index"));
@@ -295,6 +297,28 @@ const AnimatedRoutes = () => {
             </PageTransition>
           }
         />
+        <Route
+          path="/ratna-jyotish"
+          element={
+            <PageTransition>
+              <Suspense fallback={<LazyFallback />}>
+                <RatnaJyotish />
+              </Suspense>
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/ratna-jyotish/result"
+          element={
+            <PageTransition>
+              <Suspense fallback={<LazyFallback />}>
+                <RatnaJyotishResult />
+              </Suspense>
+            </PageTransition>
+          }
+        />
+        {/* Legacy alias: old gemstone-calculator links keep working. */}
+        <Route path="/gemstone-calculator" element={<Navigate to="/ratna-jyotish" replace />} />
         <Route
           path="/shop"
           element={

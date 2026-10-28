@@ -1,0 +1,59 @@
+@keyframes ratna-spin { to { transform: rotate(360deg); } }
+@keyframes ratna-pulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(242, 183, 5, 0.35)); }
+  50% { transform: scale(1.06); filter: drop-shadow(0 0 22px rgba(242, 183, 5, 0.7)); }
+}
+@keyframes ratna-twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.95; } }
+
+.ratna-ring { animation: ratna-spin 28s linear infinite; }
+.ratna-ring-rev { animation-direction: reverse; animation-duration: 20s; }
+.ratna-orbit { animation: ratna-spin 9s linear infinite; }
+.ratna-pulse { animation: ratna-pulse 3.2s ease-in-out infinite; }
+.ratna-star { animation: ratna-twinkle 3.5s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ratna-ring, .ratna-orbit, .ratna-pulse, .ratna-star { animation: none; }
+  .ratna-star { opacity: 0.6; }
+}
+
+/* Shared form + result styling (navy / antique gold) */
+.ratna-input {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 10px;
+  border: 1px solid rgba(212, 166, 74, 0.35);
+  background: rgba(8, 20, 38, 0.75);
+  padding: 0 14px;
+  color: #f4ecd8;
+  font-size: 1.05rem;
+  color-scheme: dark;
+}
+.ratna-input:focus { outline: 2px solid #d4a64a; outline-offset: 1px; }
+.ratna-input:disabled { opacity: 0.45; cursor: not-allowed; }
+.ratna-input[aria-invalid="true"] { border-color: #ff8a80; }
+.ratna-card {
+  border: 1px solid rgba(212, 166, 74, 0.28);
+  background: rgba(10, 24, 46, 0.72);
+  border-radius: 16px;
+  backdrop-filter: blur(6px);
+}
+.ratna-btn {
+  min-height: 52px;
+  border-radius: 12px;
+  padding: 0 28px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #1a1204;
+  background: linear-gradient(135deg, #f0d58a, #d4a64a);
+}
+.ratna-btn:hover:not(:disabled) { filter: brightness(1.08); }
+.ratna-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.ratna-btn:focus-visible, .ratna-link:focus-visible { outline: 2px solid #fff2c4; outline-offset: 2px; }
+.ratna-btn-ghost {
+  min-height: 48px;
+  border-radius: 12px;
+  padding: 0 22px;
+  border: 1px solid rgba(212, 166, 74, 0.5);
+  color: #f0d58a;
+}
+.ratna-btn-ghost:hover { background: rgba(212, 166, 74, 0.12); }

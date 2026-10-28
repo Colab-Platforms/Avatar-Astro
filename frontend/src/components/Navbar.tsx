@@ -24,6 +24,7 @@ const astrologyTools = [
   { name: "Compatibility",    path: "/compatibility" },
   { name: "Palm Reading",     path: "/palm-reading" },
   { name: "AI Destiny Report", path: "/name-destiny-report" },
+  { name: "Ratna Jyotish",    path: "/ratna-jyotish" },
 ];
 
 const innerVoiceLinks = [
