@@ -10,41 +10,38 @@ interface AIGuruCardProps {
 
 const AIGuruCard = ({ index }: AIGuruCardProps) => (
   <motion.div
-    initial={{ opacity: 0, y: 40 }}
+    initial={{ opacity: 0, y: 28 }}
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true, amount: 0.2 }}
-    transition={{ duration: 0.6, delay: index * 0.1, ease: "easeOut" }}
-    whileHover={{ y: -8 }}
-    className="group relative flex flex-col rounded-2xl overflow-hidden border border-[#ffaa50]/[0.18] shadow-[0_8px_30px_rgba(0,0,0,0.35)] transition-[border-color,box-shadow] duration-300 hover:border-[#ffaa50]/60 hover:shadow-[0_8px_30px_rgba(0,0,0,0.35),0_0_32px_rgba(232,147,95,0.22)] p-6"
-    style={{ background: "linear-gradient(180deg, rgba(13,28,52,0.7) 0%, rgba(5,11,24,0.85) 100%)" }}
+    transition={{ duration: 0.5, delay: index * 0.07, ease: "easeOut" }}
+    className="hl-card group relative flex h-full flex-col overflow-hidden p-4"
   >
-    <h3 className="font-['Inter'] font-bold text-lg text-white mb-2">{aiGuruFeature.title}</h3>
-    <p className="font-['Inter'] text-sm text-white/55 leading-relaxed mb-4">
-      {aiGuruFeature.description}
-    </p>
+    <div className="mb-1 flex items-center">
+      <h3 className="hl-serif text-xl font-semibold normal-case leading-tight tracking-[0.03em] text-home-ink">
+        {aiGuruFeature.title}
+      </h3>
+    </div>
+    <p className="mb-2 font-home-sans text-[0.9rem] leading-[1.45] text-home-muted">{aiGuruFeature.description}</p>
 
-    <div className="relative aspect-[16/10] overflow-hidden rounded-xl mb-4">
+    <div className="hl-img-zoom mb-2 h-[110px] w-full overflow-hidden rounded-lg">
       <img
         src={aiGuruFeature.image}
-        alt={aiGuruFeature.title}
-        className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+        alt={aiGuruFeature.imageAlt}
+        width={960}
+        height={274}
+        className="h-full w-full object-cover"
         loading="lazy"
+        decoding="async"
       />
     </div>
 
-    <div className="flex items-center gap-2 rounded-full border border-white/15 bg-black/25 px-4 py-2.5 mb-5">
-      <span className="flex-1 font-['Inter'] text-sm text-white/40 truncate">
-        {aiGuruFeature.inputPlaceholder}
-      </span>
-      <Mic className="w-4 h-4 text-white/50 shrink-0" />
-      <Send className="w-4 h-4 text-[#e8935f] shrink-0" />
+    <div className="mb-3 flex h-9 items-center gap-2 rounded-full border border-home-line bg-home-parchment/60 px-4" aria-hidden="true">
+      <span className="flex-1 truncate font-home-sans text-[0.9rem] text-home-muted">{aiGuruFeature.inputPlaceholder}</span>
+      <Mic className="h-4 w-4 shrink-0 text-home-muted" />
+      <Send className="h-4 w-4 shrink-0 text-home-gerua" />
     </div>
 
-    <FeatureButton
-      to={aiGuruFeature.buttonPath}
-      label={aiGuruFeature.buttonLabel}
-      className="mt-auto self-start"
-    />
+    <FeatureButton to={aiGuruFeature.buttonPath} label={aiGuruFeature.buttonLabel} className="mt-auto self-start" />
   </motion.div>
 );
 

@@ -35,46 +35,35 @@ const faqs = [
 ];
 
 const FaqSection = () => (
-  <section className="relative z-10 w-full py-16 md:py-24">
+  <section className="hl-section relative z-10 w-full border-t border-home-line" aria-labelledby="home-faq-h">
     <div className="container relative mx-auto px-4 md:px-6">
-      <div className="grid lg:grid-cols-2 gap-10 lg:gap-16">
+      <div className="grid gap-10 lg:grid-cols-[0.8fr_1.3fr] lg:gap-16">
         <div className="text-center lg:text-left">
-          <p className="font-['Inter'] text-xs font-semibold tracking-[0.25em] uppercase text-[#e8935f] mb-3">
-            Questions, Answered
-          </p>
-          <h2 className="font-['Inter'] font-bold tracking-tight leading-tight text-4xl sm:text-5xl text-white">
-            Start Your Journey
-            <br />
-            With <span className="text-[#e8935f]">Clarity.</span>
+          <p className="hl-eyebrow mb-3">Questions, Answered</p>
+          <h2 id="home-faq-h" className="hl-serif text-3xl font-bold leading-tight text-home-ink sm:text-4xl md:text-[2.5rem]">
+            Start Your Journey With <span className="text-home-gerua">Clarity.</span>
           </h2>
         </div>
 
-        <AccordionPrimitive.Root
-          type="single"
-          collapsible
-          defaultValue="faq-0"
-          className="w-full"
-        >
+        <AccordionPrimitive.Root type="single" collapsible defaultValue="faq-0" className="w-full space-y-3">
           {faqs.map((faq, i) => (
             <AccordionPrimitive.Item
               key={faq.question}
               value={`faq-${i}`}
-              className="border-b border-white/10 group"
+              className="group rounded-2xl border border-home-line bg-home-ivory transition-colors data-[state=open]:border-home-gerua/40"
             >
               <AccordionPrimitive.Header>
-                <AccordionPrimitive.Trigger className="flex w-full items-center justify-between gap-4 py-5 text-left">
-                  <span className="font-['Inter'] font-semibold text-white text-base sm:text-lg">
+                <AccordionPrimitive.Trigger className="flex w-full items-center justify-between gap-4 rounded-2xl px-5 py-4 text-left">
+                  <span className="font-home-sans text-base font-semibold text-home-ink sm:text-lg">
                     {faq.question}
                   </span>
-                  <span
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-colors duration-300 group-data-[state=open]:border-transparent group-data-[state=open]:bg-[#e8935f] border-white/15 text-white/70 group-data-[state=open]:text-[#1a0f08]"
-                  >
-                    <Plus className="w-4 h-4 transition-transform duration-300 group-data-[state=open]:rotate-45" />
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-home-line text-home-ink transition-colors duration-300 group-data-[state=open]:border-transparent group-data-[state=open]:bg-home-gerua group-data-[state=open]:text-home-ivory">
+                    <Plus className="h-4 w-4 transition-transform duration-300 group-data-[state=open]:rotate-45" />
                   </span>
                 </AccordionPrimitive.Trigger>
               </AccordionPrimitive.Header>
               <AccordionPrimitive.Content className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
-                <p className="font-['Inter'] text-white/55 text-sm sm:text-base leading-relaxed pb-5 pr-12">
+                <p className="px-5 pb-5 pr-14 font-home-sans text-sm leading-relaxed text-home-muted sm:text-base">
                   {faq.answer}
                 </p>
               </AccordionPrimitive.Content>

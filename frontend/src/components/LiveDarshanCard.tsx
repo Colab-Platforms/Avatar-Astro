@@ -9,47 +9,41 @@ interface LiveDarshanCardProps {
 
 const LiveDarshanCard = ({ index }: LiveDarshanCardProps) => (
   <motion.div
-    initial={{ opacity: 0, y: 40 }}
+    initial={{ opacity: 0, y: 28 }}
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true, amount: 0.2 }}
-    transition={{ duration: 0.6, delay: index * 0.1, ease: "easeOut" }}
-    whileHover={{ y: -8 }}
-    className="group relative flex flex-col rounded-2xl overflow-hidden border border-[#ffaa50]/[0.18] shadow-[0_8px_30px_rgba(0,0,0,0.35)] transition-[border-color,box-shadow] duration-300 hover:border-[#ffaa50]/60 hover:shadow-[0_8px_30px_rgba(0,0,0,0.35),0_0_32px_rgba(232,147,95,0.22)] p-6"
-    style={{ background: "linear-gradient(180deg, rgba(13,28,52,0.7) 0%, rgba(5,11,24,0.85) 100%)" }}
+    transition={{ duration: 0.5, delay: index * 0.07, ease: "easeOut" }}
+    className="hl-card group relative flex h-full flex-col overflow-hidden p-4"
   >
-    <div className="flex items-center gap-2.5 mb-2">
-      <h3 className="font-['Inter'] font-bold text-lg text-white">{liveDarshanFeature.title}</h3>
-      <span className="inline-flex items-center gap-1 rounded-full bg-red-600 px-2 py-0.5 font-['Inter'] text-[10px] font-bold tracking-wide text-white">
-        <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+    <div className="mb-1 flex items-center gap-2">
+      <h3 className="hl-serif text-xl font-semibold normal-case leading-tight tracking-[0.03em] text-home-ink">
+        {liveDarshanFeature.title}
+      </h3>
+      <span className="inline-flex items-center gap-1 rounded-full bg-home-gerua px-2 py-0.5 font-home-sans text-[10px] font-bold tracking-wide text-home-ivory">
+        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-home-gold motion-reduce:animate-none" aria-hidden="true" />
         {liveDarshanFeature.liveLabel}
       </span>
     </div>
-    <p className="font-['Inter'] text-sm text-white/55 leading-relaxed mb-4">
-      {liveDarshanFeature.description}
-    </p>
+    <p className="mb-2 font-home-sans text-[0.9rem] leading-[1.45] text-home-muted">{liveDarshanFeature.description}</p>
 
-    <div className="relative aspect-[16/10] overflow-hidden rounded-xl mb-3">
+    <div className="hl-img-zoom mb-2 h-[110px] w-full overflow-hidden rounded-lg">
       <img
         src={liveDarshanFeature.image}
         alt={liveDarshanFeature.title}
-        className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+        className="h-full w-full object-cover object-[50%_42%]"
         loading="lazy"
       />
     </div>
 
-    <div className="grid grid-cols-3 gap-2 mb-5">
+    <div className="mb-3 grid grid-cols-3 gap-2">
       {liveDarshanFeature.thumbnails.map((thumb, i) => (
-        <div key={i} className="aspect-square overflow-hidden rounded-lg border border-white/10">
+        <div key={i} className="h-9 overflow-hidden rounded-md border border-home-line">
           <img src={thumb} alt="" className="h-full w-full object-cover" loading="lazy" />
         </div>
       ))}
     </div>
 
-    <FeatureButton
-      to={liveDarshanFeature.buttonPath}
-      label={liveDarshanFeature.buttonLabel}
-      className="mt-auto self-start"
-    />
+    <FeatureButton to={liveDarshanFeature.buttonPath} label={liveDarshanFeature.buttonLabel} className="mt-auto self-start" />
   </motion.div>
 );
 
