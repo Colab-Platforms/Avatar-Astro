@@ -61,46 +61,61 @@ describe("homepage content and structure", () => {
     }
   });
 
-  it("hero: full-viewport video with a poster, the same actions, and ink copy", () => {
+  it("hero: two columns, a framed solar-system video, a gerua headline highlight and the same actions", () => {
     const { container } = renderAt("/");
     expect(screen.getByRole("link", { name: /Start Free Reading/ })).toHaveAttribute("href", "/birth-chart");
     expect(screen.getByRole("link", { name: "Explore Tools" })).toHaveAttribute("href", "/zodiac");
     const hero = screen.getByRole("heading", { level: 1 }).closest("section")!;
-    expect(hero.getAttribute("style")).toContain("100svh");
+    expect(hero.getAttribute("style")).toBeNull(); // no longer a 100svh video backdrop
+    expect(hero.querySelector(".lg\\:grid-cols-\\[1\\.05fr_1fr\\]")).not.toBeNull();
     const video = container.querySelector("video")!;
     expect(video.getAttribute("src")).toBe("/images/temples/Solar_system.mp4");
     expect(video.getAttribute("poster")).toBe("/images/hero/solar-system-poster.jpg");
-    expect(video.closest("[aria-hidden='true']")).not.toBeNull();
-    // the washes that keep the copy readable are cream, never navy
-    const washes = [...hero.querySelectorAll("[aria-hidden='true']")].map((e) => e.getAttribute("style") ?? "").join(" ");
-    expect(washes).toMatch(/255,\s?243,\s?236/);
-    expect(washes).not.toMatch(/2,\s?11,\s?31|#020B1F/i);
+    expect(video.getAttribute("aria-hidden")).toBe("true");
+    expect(video.parentElement!.className).toContain("rounded-[1.75rem]");
+    expect(screen.getByText("Every Moment of").className).toContain("text-home-gerua");
+    // nothing dark behind the copy: the old navy / cream washes are gone
+    expect(hero.innerHTML).not.toMatch(/2,\s?11,\s?31|#020B1F|255,\s?243,\s?236/i);
   });
 
-  it("Astrology Tools: the four photo cards, in order, each with its route", () => {
+  it("Astrology Tools: every tool renders in data order, led by the four photo cards, each with its route", () => {
     renderAt("/");
     const section = sectionOf(/Astrology\s+Tools/);
     expect(screen.getAllByRole("heading", { level: 2, name: /Astrology\s+Tools/ })).toHaveLength(1); // one section only
     const titles = [...section.querySelectorAll(".hl-card h3")].map((h) => h.textContent);
-    expect(titles).toEqual(["Birth Chart", "AI Tarot Reading", "Compatibility", "Palm Reading"]);
-    expect(tools).toHaveLength(4);
+    expect(titles).toEqual(tools.map((t) => t.title)); // follows tools.ts, whatever it contains
+    expect(titles.slice(0, 4)).toEqual(["Birth Chart", "AI Tarot Reading", "Compatibility", "Palm Reading"]);
+    for (const tool of tools.slice(0, 4)) {
+      expect(tool.image).toMatch(/^\/images\/tools\/.+\.jpg$/); // the photo cards
+    }
     for (const tool of tools) {
       const card = screen.getByRole("heading", { level: 3, name: tool.title }).closest(".hl-card") as HTMLElement;
       const img = within(card).getByRole("img", { name: tool.title });
-      expect(img.getAttribute("src")).toMatch(/^\/images\/tools\/.+\.jpg$/);
+      expect(img.getAttribute("src")).toBe(tool.image);
       expect(within(card).getByText(tool.description)).toBeInTheDocument();
       expect(within(card).getByRole("link", { name: new RegExp(tool.button) })).toHaveAttribute("href", tool.path);
-      expect(card.querySelector(".h-\\[140px\\]")).not.toBeNull(); // compact 140px image band
+      expect(card.querySelector(".h-48")).not.toBeNull(); // large, consistent image area
     }
   });
 
-  it("tool grid: 1 column, 2 from 640px, 4 from 1200px, inside a 6xl container", () => {
+  it("tool grid: 1 column, 2 from 768px, 3 from 1280px, inside a 6xl container", () => {
     renderAt("/");
     const grid = sectionOf(/Astrology\s+Tools/).querySelector(".grid")!;
     expect(grid.className).toContain("grid-cols-1");
-    expect(grid.className).toContain("sm:grid-cols-2");
-    expect(grid.className).toContain("min-[1200px]:grid-cols-4");
+    expect(grid.className).toContain("md:grid-cols-2");
+    expect(grid.className).toContain("xl:grid-cols-3");
     expect(grid.className).toContain("max-w-6xl");
+    expect(grid.className).not.toMatch(/grid-cols-4/);
+  });
+
+  it("tool cards are plain ivory surfaces: no pastel tone classes anywhere on the homepage", () => {
+    const { container } = renderAt("/");
+    for (const t of tools) {
+      const card = screen.getByRole("heading", { level: 3, name: t.title }).closest(".hl-card") as HTMLElement;
+      expect(card.className).not.toMatch(/hl-tone/);
+    }
+    expect(container.querySelector("[class*='hl-tone']")).toBeNull();
+    expect(css).not.toMatch(/\.hl-tone-/);
   });
 
   it("Featured carousel: four slides, arrows wrap, dots jump, one slide visible at a time", () => {
@@ -245,14 +260,23 @@ describe("homepage-only light theme scoping", () => {
     expect(other.getByTestId("stars")).toBeInTheDocument();
   });
 
-  it("navbar and footer are both cream on '/' and keep their dark look elsewhere", () => {
+  it("the gerua navbar and footer are shared by every route", () => {
     const home = renderAt("/");
-    expect(document.querySelector("nav")!.getAttribute("style")).toContain("rgba(255, 243, 236");
-    expect(document.querySelector("footer")!.getAttribute("style")).toContain("rgb(255, 243, 236)");
+    expect(document.querySelector("nav")!.className).toContain("navbar-gerua");
+    expect(document.querySelector("footer")!.getAttribute("style")).toContain("rgb(128, 48, 3)");
     home.unmount();
     renderAt("/about", <p>about</p>);
-    expect(document.querySelector("nav")!.getAttribute("style")).toBeNull();
-    expect(document.querySelector("footer")!.getAttribute("style")).toContain("rgba(5, 11, 24");
+    expect(document.querySelector("nav")!.className).toContain("navbar-gerua");
+    expect(document.querySelector("footer")!.getAttribute("style")).toContain("rgb(128, 48, 3)");
+  });
+
+  it("gerua navbar tokens: gerua bar, ivory type, antique-gold accent, ivory dropdowns", () => {
+    const block = css.slice(css.indexOf("nav.navbar-gerua {"));
+    for (const decl of ["--nav-bg: #8C3F18;", "--nav-fg: #FAF7F1;", "--nav-accent: #F3D8AA;", "--nav-menu-bg: #FAF7F1;", "--nav-menu-text: #27231F;"]) {
+      expect(block, decl).toContain(decl);
+    }
+    // the bar's colours are page-independent: the nav never sets a page background
+    expect(css).not.toMatch(/\.navbar-gerua[^{]*\{[^}]*\bbody\b/);
   });
 
   it("navigation keeps all links on the homepage", () => {
@@ -277,29 +301,32 @@ describe("homepage-only light theme scoping", () => {
 });
 
 describe("no dark sections remain", () => {
-  it("the footer is cream, with ink text, white social tiles and a rust submit button", () => {
+  it("the footer is gerua with cream type, translucent cream tiles, a cream input and an orange submit button", () => {
     const footer = src("components/Footer.tsx");
-    const home = footer.slice(footer.indexOf("const t = home"), footer.indexOf("    : {"));
-    expect(home).toContain("bg: '#FFF3EC'");
-    expect(home).toContain("head: '#121212'");
-    expect(home).toContain("submit: 'bg-[#D05F2F]");
-    expect(home).toContain("logo: '#D05F2F'");
-    expect(home).toMatch(/chip: '[^']*bg-white[^']*text-\[#121212\]/);
+    expect(footer).toContain("background: '#803003'");
+    expect(footer).toContain("color: '#F5E9D6'");
+    expect(footer).toContain("bg-[#F5E9D6] px-[18px] text-[15px] text-[#301607]");
+    expect(footer).toContain("placeholder:text-[#6B4A30]");
+    expect(footer).toContain("bg-[#E58A45] text-[#301607]");
+    expect(footer).toContain("hover:text-[#E58A45]");
+    expect(footer).toContain("bg-[#F5E9D6]/10");
+    // no leftover dark / navy / per-route palette
+    expect(footer).not.toMatch(/5, 11, 24|#081426|#020B1F|const t = |#FAF7F1|#8C3F18/);
   });
 
-  it("Solar System is a centred cream card with the unchanged CTA", () => {
+  it("Solar System is a centred ivory card with the unchanged CTA", () => {
     renderAt("/");
     const section = sectionOf(/Explore the\s+Solar System/);
     const card = section.firstElementChild as HTMLElement;
     expect(card.className).toContain("max-w-4xl");
-    expect(card.className).toContain("bg-home-card");
+    expect(card.className).toContain("bg-home-ivory");
     expect(card.className).not.toMatch(/bg-home-(ink|foot)/);
     expect(section.getAttribute("style")).toBeNull();
     expect(within(section).getByRole("link", { name: /Launch Solar System/ })).toHaveAttribute("href", "/solar-system");
     expect(section.querySelectorAll("img")).toHaveLength(0); // the design has no imagery here
   });
 
-  it("every section sits directly on the cream page: no tinted band, no inline dark background", () => {
+  it("every section sits directly on the parchment page: no tinted band, no inline dark background", () => {
     const { container } = renderAt("/");
     expect(container.querySelectorAll("main .hl-alt")).toHaveLength(0);
     expect(css).not.toMatch(/\.hl-alt\s*\{/);
@@ -307,10 +334,11 @@ describe("no dark sections remain", () => {
     for (const st of inline) expect(st).not.toMatch(/#0[0-9a-f]{5}|#1[0-9a-f]{5}/i);
   });
 
-  it("carousel arrows are rust", () => {
+  it("carousel arrows are gerua with ivory icons", () => {
     renderAt("/");
     for (const name of ["Previous sign", "Next sign", "Previous featured tool", "Next featured tool"]) {
-      expect(screen.getByRole("button", { name }).className, name).toContain("bg-home-rust");
+      expect(screen.getByRole("button", { name }).className, name).toContain("bg-home-gerua");
+      expect(screen.getByRole("button", { name }).className, name).toContain("text-home-ivory");
     }
     expect(src("components/ZodiacWheelSection.tsx")).not.toContain("mixBlendMode");
   });
@@ -338,12 +366,10 @@ describe("layout matches the design", () => {
     expect(css).toMatch(/@media \(min-width: 1024px\) and \(max-width: 1279px\) \{\s*\.home-light nav \.lg\\:flex \{ gap: 0\.75rem; \}\s*\.home-light nav \.lg\\:flex :is\(a, button\) \{ font-size: 0\.9rem; \}/);
   });
 
-  it("the footer lines up with the page container on '/' and is unchanged elsewhere", () => {
+  it("the footer lines up with the page container on '/' and keeps its wider layout elsewhere", () => {
     const footer = src("components/Footer.tsx");
-    expect(footer).toContain("wrap: 'max-w-[1400px]'");
-    expect(footer).toContain("pad: 'px-6'");
-    expect(footer).toContain("wrap: 'max-w-[1600px]'");
-    expect(footer).toContain("pad: 'px-6 md:px-12 lg:px-[72px]'");
+    expect(footer).toContain("home ? 'max-w-[1400px]' : 'max-w-[1600px]'");
+    expect(footer).toContain("home ? 'px-6' : 'px-6 md:px-12 lg:px-[72px]'");
   });
 
   it("UI text is DM Sans, headings Cinzel, the logo Uncial Antiqua (all loaded)", () => {
@@ -358,35 +384,39 @@ describe("layout matches the design", () => {
   });
 });
 
-describe("approved palette", () => {
+describe("parchment / gerua / gold palette", () => {
   const tailwind = readFileSync(resolve(process.cwd(), "tailwind.config.ts"), "utf8");
   const homeBlock = css.slice(css.indexOf(".home-light {"), css.indexOf(":where(.home-light) h1"));
-  const CORE: Record<string, string> = { "--mb-rust": "#D05F2F", "--mb-ink": "#121212", "--mb-orange": "#FE9F30", "--mb-cream": "#FFF3EC" };
+  const TOKENS: Record<string, string> = {
+    "--mb-background": "#EFE5D7", "--mb-surface": "#FAF7F1", "--mb-primary": "#8C3F18", "--mb-primary-hover": "#713214",
+    "--mb-text": "#27231F", "--mb-text-muted": "#645B52", "--mb-gold": "#B99A64", "--mb-border": "#D9CABA", "--mb-cosmic-navy": "#1C2740",
+  };
 
-  it("defines exactly the four approved brand tokens, scoped to .home-light", () => {
-    for (const [name, hex] of Object.entries(CORE)) expect(homeBlock).toContain(`${name}: ${hex};`);
+  it("defines exactly the nine specified tokens, scoped to .home-light", () => {
+    for (const [name, hex] of Object.entries(TOKENS)) expect(homeBlock).toContain(`${name}: ${hex};`);
     const beforeScope = css.slice(0, css.indexOf(".home-light {"));
-    expect(beforeScope).not.toMatch(/--mb-(rust|ink|orange|cream)/);
+    expect(beforeScope).not.toMatch(/--mb-(background|surface|primary|text|gold|border|cosmic)/);
   });
 
   it("Tailwind home.* tokens match the CSS variables", () => {
-    const hex = { cream: "#FFF3EC", ink: "#121212", rust: "#D05F2F", orange: "#FE9F30" };
-    for (const [k, v] of Object.entries(hex)) expect(tailwind).toContain(`${k}: "${v}"`);
-  });
-
-  it("derives every other tone from the four colours (mixes/opacity), not new brand hues", () => {
-    for (const v of ["--mb-rust-deep", "--mb-card", "--mb-muted", "--mb-line"]) {
-      expect(homeBlock).toMatch(new RegExp(`${v}: color-mix\\(`));
+    const pairs: Record<string, string> = { parchment: "#EFE5D7", ivory: "#FAF7F1", gerua: "#8C3F18", "gerua-dark": "#713214", ink: "#27231F", muted: "#645B52", gold: "#B99A64", line: "#D9CABA", navy: "#1C2740" };
+    for (const [k, v] of Object.entries(pairs)) {
+      const key = k.includes("-") ? `"${k}"` : k; // hyphenated keys are quoted in the config
+      expect(tailwind, k).toContain(`${key}: "${v}"`);
     }
   });
 
-  it("no homepage source still uses the superseded palettes", () => {
-    const old = ["#F8F3EB", "#EFE4D5", "#FFFCF7", "#B95638", "#98432D", "#E8B8A4", "#E8C4BF", "#E9CF78", "#C8A24A", "#211B18", "#64564D", "#E1D2C1", "#C7A46A", "#081426", "#020B1F", "home-peach", "home-blush", "home-butter", "home-gold", "home-terracotta", "brand-accent"];
+  it("cosmic navy is not used as any homepage background", () => {
+    expect(css.slice(css.indexOf("HOMEPAGE LIGHT THEME"))).not.toMatch(/background[^;]*var\(--mb-cosmic-navy\)/);
+    const files = ["pages/Index.tsx", "components/hero/Hero.tsx", "components/ToolCard.tsx", "components/AstrologyToolsSection.tsx", "components/SolarSystemSection.tsx", "components/FeatureShowcase.tsx", "components/FeaturedCarousel.tsx", "components/LiveDarshanCard.tsx", "components/AIGuruCard.tsx", "components/DevotionCard.tsx", "components/ZodiacWheelSection.tsx", "components/HomeBlogSection.tsx", "components/WhyAstrologySection.tsx", "components/FaqSection.tsx", "components/Footer.tsx"];
+    for (const f of files) expect(src(f), f).not.toMatch(/bg-home-navy|#1C2740/);
+  });
+
+  it("no homepage source still uses the superseded rust-orange, indigo-purple or earlier palettes", () => {
+    const old = ["#5136BC", "#8754D9", "#EDEBFF", "#E7E6F0", "#252B72", "#202950", "#FFFCF8", "#5B6380", "#F8F7FC", "#D05F2F", "#121212", "#FE9F30", "#FFF3EC", "#A14C28", "#F2CAB7", "#54514F", "#F8F3EB", "#EFE4D5", "#FFFCF7", "#B95638", "#98432D", "#E9CF78", "#C7A46A", "#081426", "#020B1F", "home-purple", "home-violet", "home-lavender", "home-indigo", "home-peach", "home-mint", "home-pink", "home-mist", "home-rust", "home-orange", "home-cream", "home-deep", "home-card", "hl-gradient", "hl-tone", "brand-accent", "--mb-ivory", "--mb-purple", "--mb-violet", "--mb-rust", "--mb-orange", "--mb-cream"];
     const files = ["pages/Index.tsx", "components/Footer.tsx", "components/hero/Hero.tsx", "components/ToolCard.tsx", "components/AstrologyToolsSection.tsx", "components/SolarSystemSection.tsx", "components/FeatureShowcase.tsx", "components/FeaturedCarousel.tsx", "components/LiveDarshanCard.tsx", "components/AIGuruCard.tsx", "components/DevotionCard.tsx", "components/FeatureButton.tsx", "components/ZodiacWheelSection.tsx", "components/HomeBlogSection.tsx", "components/WhyAstrologySection.tsx", "components/FaqSection.tsx"];
     const themeCss = css.slice(css.indexOf("HOMEPAGE LIGHT THEME"));
-    for (const f of files) {
-      for (const o of old) expect(src(f), `${f} -> ${o}`).not.toContain(o);
-    }
+    for (const f of files) for (const o of old) expect(src(f), `${f} -> ${o}`).not.toContain(o);
     for (const o of old) expect(themeCss, o).not.toContain(o);
   });
 });
@@ -402,46 +432,49 @@ describe("motion and contrast", () => {
     expect(src("components/hero/Hero.tsx")).toContain("autoPlay={!reduceMotion}");
   });
 
-  // Same mixing the CSS performs, so the asserted ratios are the ones users get.
-  const channel = (hex: string, i: number) => parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16);
-  const mix = (a: string, b: string, t: number) =>
-    "#" + [0, 1, 2].map((i) => Math.round(channel(a, i) * t + channel(b, i) * (1 - t)).toString(16).padStart(2, "0")).join("").toUpperCase();
   const lum = (hex: string) => {
-    const [r, g, b] = [0, 1, 2].map((i) => channel(hex, i) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+    const ch = (i: number) => parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16) / 255;
+    const [r, g, b] = [0, 1, 2].map(ch).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
     return 0.2126 * r + 0.7152 * g + 0.0722 * b;
   };
   const ratio = (a: string, b: string) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
-  const RUST = "#D05F2F", INK = "#121212", ORANGE = "#FE9F30", CREAM = "#FFF3EC";
-  const DEEP = mix(RUST, INK, 0.75), MUTED = mix(INK, CREAM, 0.72);
+  const PARCHMENT = "#EFE5D7", IVORY = "#FAF7F1", GERUA = "#8C3F18", GERUA_DARK = "#713214", INK = "#27231F", MUTED = "#645B52", GOLD = "#B99A64";
 
-  it("derived colours equal the values hard-coded in Tailwind", () => {
-    expect(DEEP).toBe("#A14C28");
-    expect(MUTED).toBe("#54514F");
-  });
-
-  it("every text/background pairing used on the homepage meets WCAG AA (4.5:1)", () => {
-    expect(ratio(INK, CREAM)).toBeGreaterThan(7); // body text
-    expect(ratio(MUTED, CREAM)).toBeGreaterThanOrEqual(4.5); // secondary text
-    expect(ratio(DEEP, CREAM)).toBeGreaterThanOrEqual(4.5); // small accent text / eyebrows
-    expect(ratio(INK, RUST)).toBeGreaterThanOrEqual(4.5); // primary button label
-    expect(ratio(INK, ORANGE)).toBeGreaterThanOrEqual(4.5); // button hover
-    expect(ratio(INK, CREAM)).toBeGreaterThan(7); // footer headings and links
-    expect(ratio(MUTED, CREAM)).toBeGreaterThanOrEqual(4.5); // footer copyright
-    expect(ratio(RUST, CREAM)).toBeGreaterThanOrEqual(3); // large wordmark / headings only
-  });
-
-  it("hero copy stays readable even if the video frame behind the wash were pure black", () => {
-    // the wash is cream at >= 0.78 under the text (0.88 on phones); worst case = that cream over black
-    for (const alpha of [0.78, 0.88, 0.95]) {
-      const worst = mix(CREAM, "#000000", alpha);
-      expect(ratio(INK, worst), `alpha ${alpha}`).toBeGreaterThanOrEqual(7);
-      expect(ratio(mix(INK, worst, 0.85), worst), `ink/85 alpha ${alpha}`).toBeGreaterThanOrEqual(4.5);
+  it("charcoal, muted text and gerua meet AA (4.5:1) on both surfaces", () => {
+    for (const [name, bg] of Object.entries({ parchment: PARCHMENT, ivory: IVORY })) {
+      expect(ratio(INK, bg), `ink on ${name}`).toBeGreaterThanOrEqual(7);
+      expect(ratio(MUTED, bg), `muted on ${name}`).toBeGreaterThanOrEqual(4.5);
+      expect(ratio(GERUA, bg), `gerua on ${name}`).toBeGreaterThanOrEqual(4.5);
+      expect(ratio(GERUA_DARK, bg), `gerua hover on ${name}`).toBeGreaterThanOrEqual(4.5);
     }
   });
 
-  it("documents the pairings that do NOT reach 4.5:1 and keeps them to large text/graphics", () => {
-    expect(ratio(RUST, CREAM)).toBeLessThan(4.5);
-    expect(ratio(CREAM, RUST)).toBeLessThan(4.5); // why the primary button uses ink text
-    expect(ratio(ORANGE, CREAM)).toBeLessThan(3); // why orange is never used as text on cream
+  it("ivory text on the gerua button meets AA, including the hover shade", () => {
+    expect(ratio(IVORY, GERUA)).toBeGreaterThanOrEqual(4.5);
+    expect(ratio(IVORY, GERUA_DARK)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("footer text pairs: cream, input text and placeholder meet AA; orange is a 3:1 hover accent with an underline cue", () => {
+    const CREAM = "#F5E9D6", FG = "#803003", ORANGE = "#E58A45", BROWN = "#301607";
+    expect(ratio(CREAM, FG)).toBeGreaterThanOrEqual(7);
+    expect(ratio(BROWN, CREAM)).toBeGreaterThanOrEqual(7);
+    expect(ratio("#6B4A30", CREAM)).toBeGreaterThanOrEqual(4.5); // placeholder
+    expect(ratio(BROWN, ORANGE)).toBeGreaterThanOrEqual(4.5); // submit icon
+    expect(ratio(ORANGE, FG)).toBeGreaterThanOrEqual(3); // hover/focus indicator
+  });
+
+  it("navbar text pairs meet AA: ivory and antique gold on gerua, charcoal and rust on the ivory dropdown", () => {
+    const GOLD_SOFT = "#F3D8AA";
+    expect(ratio(IVORY, GERUA)).toBeGreaterThanOrEqual(4.5);
+    expect(ratio(GOLD_SOFT, GERUA)).toBeGreaterThanOrEqual(4.5);
+    expect(ratio(GERUA, GOLD_SOFT)).toBeGreaterThanOrEqual(4.5); // sign-in hover
+    expect(ratio(INK, IVORY)).toBeGreaterThanOrEqual(7);
+    expect(ratio(GERUA, IVORY)).toBeGreaterThanOrEqual(4.5);
+    expect(ratio(MUTED, IVORY)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("documents why antique gold is decoration only", () => {
+    expect(ratio(GOLD, PARCHMENT)).toBeLessThan(3);
+    expect(ratio(GOLD, IVORY)).toBeLessThan(3);
   });
 });

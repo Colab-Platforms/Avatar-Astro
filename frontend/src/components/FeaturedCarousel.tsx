@@ -4,7 +4,7 @@ import { featuredSlides } from "@/data/features";
 import FeatureButton from "./FeatureButton";
 
 const arrowCls =
-  "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-home-rust bg-home-rust text-home-ink transition-colors duration-300 hover:border-home-orange hover:bg-home-orange focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-home-ink motion-reduce:transition-none";
+  "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-home-gerua bg-home-gerua text-home-ivory transition-colors duration-300 hover:border-home-gold hover:bg-home-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-home-ink motion-reduce:transition-none";
 
 /** Four-slide featured-tool carousel: arrows wrap around, dots jump to a slide, no auto-advance. */
 const FeaturedCarousel = () => {
@@ -40,7 +40,7 @@ const FeaturedCarousel = () => {
                   }`}
                 >
                   <div className="text-center md:text-left">
-                    <span className="mb-1 inline-block font-home-sans text-[0.75rem] font-bold uppercase tracking-[0.2em] text-home-deep">
+                    <span className="mb-1 inline-block font-home-sans text-[0.75rem] font-bold uppercase tracking-[0.2em] text-home-gerua">
                       {slide.badge}
                     </span>
                     <h3 className="hl-serif mb-1.5 text-[1.625rem] font-semibold normal-case leading-tight tracking-[0.03em] text-home-ink">
@@ -52,7 +52,7 @@ const FeaturedCarousel = () => {
                     <FeatureButton to={slide.buttonPath} label={slide.buttonLabel} />
                   </div>
 
-                  <div className="mx-auto w-full max-w-[240px] overflow-hidden rounded-xl border border-home-line shadow-[0_8px_22px_rgba(208,95,47,0.16)]">
+                  <div className="mx-auto w-full max-w-[240px] overflow-hidden rounded-xl border border-home-line shadow-[0_8px_22px_rgba(140,63,24,0.16)]">
                     <div className="aspect-[4/3] w-full">
                       <img
                         src={slide.image}
@@ -69,7 +69,7 @@ const FeaturedCarousel = () => {
                   <ul className="grid grid-cols-1 gap-x-6 gap-y-1.5 sm:grid-cols-2 md:col-span-2 lg:col-span-1 lg:grid-cols-1">
                     {slide.checklist.map((item) => (
                       <li key={item} className="flex items-start gap-2 font-home-sans text-[0.9rem] leading-snug text-home-ink/85">
-                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-home-rust" aria-hidden="true" />
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-home-gerua" aria-hidden="true" />
                         {item}
                       </li>
                     ))}
@@ -96,7 +96,7 @@ const FeaturedCarousel = () => {
             >
               <span
                 className={`block h-1.5 rounded-full transition-all duration-300 motion-reduce:transition-none ${
-                  i === index ? "w-5 bg-home-rust" : "w-1.5 bg-home-ink/20 hover:bg-home-ink/40"
+                  i === index ? "w-5 bg-home-gerua" : "w-1.5 bg-home-gerua/25 hover:bg-home-gerua/50"
                 }`}
               />
             </button>

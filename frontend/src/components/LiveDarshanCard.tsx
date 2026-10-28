@@ -19,8 +19,8 @@ const LiveDarshanCard = ({ index }: LiveDarshanCardProps) => (
       <h3 className="hl-serif text-xl font-semibold normal-case leading-tight tracking-[0.03em] text-home-ink">
         {liveDarshanFeature.title}
       </h3>
-      <span className="inline-flex items-center gap-1 rounded-full bg-home-ink px-2 py-0.5 font-home-sans text-[10px] font-bold tracking-wide text-home-cream">
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-home-orange motion-reduce:animate-none" aria-hidden="true" />
+      <span className="inline-flex items-center gap-1 rounded-full bg-home-gerua px-2 py-0.5 font-home-sans text-[10px] font-bold tracking-wide text-home-ivory">
+        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-home-gold motion-reduce:animate-none" aria-hidden="true" />
         {liveDarshanFeature.liveLabel}
       </span>
     </div>

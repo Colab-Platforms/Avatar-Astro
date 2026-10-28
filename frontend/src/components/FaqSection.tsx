@@ -41,7 +41,7 @@ const FaqSection = () => (
         <div className="text-center lg:text-left">
           <p className="hl-eyebrow mb-3">Questions, Answered</p>
           <h2 id="home-faq-h" className="hl-serif text-3xl font-bold leading-tight text-home-ink sm:text-4xl md:text-[2.5rem]">
-            Start Your Journey With <span className="text-home-rust">Clarity.</span>
+            Start Your Journey With <span className="text-home-gerua">Clarity.</span>
           </h2>
         </div>
 
@@ -50,14 +50,14 @@ const FaqSection = () => (
             <AccordionPrimitive.Item
               key={faq.question}
               value={`faq-${i}`}
-              className="group rounded-2xl border border-home-line bg-home-card transition-colors data-[state=open]:border-home-rust/40"
+              className="group rounded-2xl border border-home-line bg-home-ivory transition-colors data-[state=open]:border-home-gerua/40"
             >
               <AccordionPrimitive.Header>
                 <AccordionPrimitive.Trigger className="flex w-full items-center justify-between gap-4 rounded-2xl px-5 py-4 text-left">
                   <span className="font-home-sans text-base font-semibold text-home-ink sm:text-lg">
                     {faq.question}
                   </span>
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-home-line text-home-ink transition-colors duration-300 group-data-[state=open]:border-transparent group-data-[state=open]:bg-home-rust group-data-[state=open]:text-home-ink">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-home-line text-home-ink transition-colors duration-300 group-data-[state=open]:border-transparent group-data-[state=open]:bg-home-gerua group-data-[state=open]:text-home-ivory">
                     <Plus className="h-4 w-4 transition-transform duration-300 group-data-[state=open]:rotate-45" />
                   </span>
                 </AccordionPrimitive.Trigger>

@@ -35,10 +35,10 @@ const AIGuruCard = ({ index }: AIGuruCardProps) => (
       />
     </div>
 
-    <div className="mb-3 flex h-9 items-center gap-2 rounded-full border border-home-line bg-home-cream px-4" aria-hidden="true">
+    <div className="mb-3 flex h-9 items-center gap-2 rounded-full border border-home-line bg-home-parchment/60 px-4" aria-hidden="true">
       <span className="flex-1 truncate font-home-sans text-[0.9rem] text-home-muted">{aiGuruFeature.inputPlaceholder}</span>
       <Mic className="h-4 w-4 shrink-0 text-home-muted" />
-      <Send className="h-4 w-4 shrink-0 text-home-rust" />
+      <Send className="h-4 w-4 shrink-0 text-home-gerua" />
     </div>
 
     <FeatureButton to={aiGuruFeature.buttonPath} label={aiGuruFeature.buttonLabel} className="mt-auto self-start" />

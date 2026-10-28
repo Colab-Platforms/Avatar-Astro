@@ -14,10 +14,10 @@ const ToolCard = ({ tool, index }: ToolCardProps) => (
     initial={{ opacity: 0, y: 28 }}
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true, amount: 0.2 }}
-    transition={{ duration: 0.5, delay: (index % 4) * 0.07, ease: "easeOut" }}
-    className="hl-card group relative flex h-full flex-col overflow-hidden"
+    transition={{ duration: 0.5, delay: (index % 3) * 0.07, ease: "easeOut" }}
+    className="hl-card group relative flex h-full flex-col overflow-hidden p-3"
   >
-    <div className="hl-img-zoom relative h-[140px] shrink-0 overflow-hidden">
+    <div className="hl-img-zoom relative h-48 shrink-0 overflow-hidden rounded-xl sm:h-52">
       <img
         src={tool.image}
         alt={tool.title}
@@ -29,11 +29,11 @@ const ToolCard = ({ tool, index }: ToolCardProps) => (
       />
     </div>
 
-    <div className="flex flex-1 flex-col p-4">
-      <h3 className="hl-serif mb-1 text-base font-semibold normal-case tracking-[0.04em] text-home-ink">
+    <div className="flex flex-1 flex-col px-2 pb-2 pt-4">
+      <h3 className="hl-serif mb-1.5 text-lg font-semibold normal-case tracking-[0.03em] text-home-ink">
         {tool.title}
       </h3>
-      <p className="mb-3 line-clamp-3 font-home-sans text-[0.875rem] leading-[1.45] text-home-muted">
+      <p className="mb-4 line-clamp-3 font-home-sans text-[0.9rem] leading-[1.5] text-home-muted">
         {tool.description}
       </p>
 

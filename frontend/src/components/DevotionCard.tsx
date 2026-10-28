@@ -28,9 +28,9 @@ const DevotionCard = ({ index }: DevotionCardProps) => (
         <Link
           key={item.label}
           to={item.path}
-          className="flex min-h-[60px] flex-col items-center justify-center gap-1 rounded-lg border border-home-line bg-gradient-to-b from-home-card to-home-orange/15 px-1.5 py-2 text-center transition-colors duration-300 hover:border-home-rust/60 hover:from-home-orange/10 hover:to-home-orange/30 motion-reduce:transition-none"
+          className="flex min-h-[60px] flex-col items-center justify-center gap-1 rounded-lg border border-home-line bg-home-parchment/50 px-1.5 py-2 text-center transition-colors duration-300 hover:border-home-gerua/50 hover:bg-home-parchment motion-reduce:transition-none"
         >
-          <item.icon className="h-[18px] w-[18px] text-home-rust" strokeWidth={1.75} aria-hidden="true" />
+          <item.icon className="h-[18px] w-[18px] text-home-gerua" strokeWidth={1.75} aria-hidden="true" />
           <span className="font-home-sans text-[0.8125rem] leading-tight text-home-ink">{item.label}</span>
         </Link>
       ))}

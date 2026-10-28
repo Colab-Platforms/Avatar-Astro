@@ -35,18 +35,17 @@ export default {
         "4xl": ["2.625rem", { lineHeight: "2.875rem" }],    // 42px (Tailwind default: 36px)
       },
       colors: {
-        // Homepage theme. Four approved brand colours; everything else is a
-        // mix/opacity of those four (see .home-light in index.css).
+        // Homepage theme (parchment, gerua, antique gold). Mirrors the --mb-* variables in index.css.
         home: {
-          cream: "#FFF3EC", // --mb-cream  main background
-          ink: "#121212", //   --mb-ink    typography
-          rust: "#D05F2F", //  --mb-rust   primary actions, borders, large accents
-          orange: "#FE9F30", // --mb-orange secondary highlights (never small text on cream: 1.9:1)
-          // derived (mixes of the four above)
-          deep: "#A14C28", //  rust 75% + ink 25%   text-safe accent (5.4:1 on cream)
-          card: "#FFFAF6", //  lighter surface
-          muted: "#54514F", // ink 72% on cream     secondary text (7.2:1)
-          line: "#F2CAB7", //  rust 28% on cream    borders
+          parchment: "#EFE5D7", //   page background  (--mb-background)
+          ivory: "#FAF7F1", //       cards, navbar, footer  (--mb-surface)
+          gerua: "#8C3F18", //       primary actions, links, accents  (--mb-primary)
+          "gerua-dark": "#713214", // primary hover  (--mb-primary-hover)
+          ink: "#27231F", //         warm charcoal text  (--mb-text)
+          muted: "#645B52", //       secondary text  (--mb-text-muted)
+          gold: "#B99A64", //        decoration only (2.1-2.5:1), never text  (--mb-gold)
+          line: "#D9CABA", //        borders  (--mb-border)
+          navy: "#1C2740", //        artwork only  (--mb-cosmic-navy)
         },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

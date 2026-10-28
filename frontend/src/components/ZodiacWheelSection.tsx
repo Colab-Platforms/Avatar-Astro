@@ -39,7 +39,7 @@ const prefersReducedMotion = () =>
   typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 const arrowCls =
-  'flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-home-rust bg-home-rust text-home-ink transition-all duration-300 hover:scale-110 hover:border-home-orange hover:bg-home-orange motion-reduce:transition-none motion-reduce:hover:scale-100';
+  'flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-home-gerua bg-home-gerua text-home-ivory transition-all duration-300 hover:scale-110 hover:border-home-gold hover:bg-home-gold motion-reduce:transition-none motion-reduce:hover:scale-100';
 
 export const ZodiacWheelSection = () => {
   const navigate = useNavigate();
@@ -84,7 +84,7 @@ export const ZodiacWheelSection = () => {
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
         <div
           className="absolute left-1/2 top-1/2 h-[560px] w-[560px] max-w-full -translate-x-1/2 -translate-y-1/2 rounded-full blur-[140px]"
-          style={{ background: 'rgba(254,159,48,0.16)' }}
+          style={{ background: 'rgba(185,154,100,0.14)' }}
         />
       </div>
 
@@ -97,7 +97,7 @@ export const ZodiacWheelSection = () => {
             style={{ fontSize: 'clamp(28px, 4.6vw, 50px)' }}
           >
             <span className="block text-home-ink md:inline">THE TWELVE </span>
-            <span className="block text-home-rust md:inline">ZODIAC SIGNS</span>
+            <span className="block text-home-gerua md:inline">ZODIAC SIGNS</span>
           </h2>
           <p className="font-home-sans text-base tracking-wide text-home-muted md:text-[18.5px]">
             Explore the cosmic wisdom of each celestial sign
@@ -130,8 +130,8 @@ export const ZodiacWheelSection = () => {
                     onClick={!isCenter ? () => paginate(offset > 0 ? 1 : -1) : undefined}
                     className={`flex items-center justify-center rounded-2xl border ${
                       isCenter
-                        ? 'border-home-rust/70 bg-home-card shadow-[0_12px_28px_rgba(208,95,47,0.22)]'
-                        : 'border-home-line bg-home-card'
+                        ? 'border-home-gerua/60 bg-home-ivory shadow-[0_12px_28px_rgba(140,63,24,0.2)]'
+                        : 'border-home-line bg-home-parchment'
                     }`}
                     style={{
                       position: 'absolute',
@@ -156,8 +156,8 @@ export const ZodiacWheelSection = () => {
                         height: '92%',
                         objectFit: 'contain',
                         userSelect: 'none',
-                        // Slate engraving → warm sepia ink so it reads on cream
-                        filter: 'sepia(0.45) saturate(1.5) contrast(1.6) brightness(0.78)',
+                        // Slate engraving, deepened toward indigo so it reads on light cards
+                        filter: 'saturate(1.3) contrast(1.55) brightness(0.72)',
                       }}
                     />
                   </motion.div>
@@ -197,7 +197,7 @@ export const ZodiacWheelSection = () => {
                 {current.traits.slice(0, 4).map((trait, i) => (
                   <span
                     key={i}
-                    className="inline-flex h-11 items-center rounded-full border border-home-rust/40 bg-home-orange/20 px-4 font-home-sans text-sm text-home-ink"
+                    className="inline-flex h-11 items-center rounded-full border border-home-gerua/25 bg-home-parchment px-4 font-home-sans text-sm text-home-ink"
                     style={{ letterSpacing: '0.08em' }}
                   >
                     {trait}
@@ -231,7 +231,7 @@ export const ZodiacWheelSection = () => {
                 style={{
                   width: i === currentIndex ? 24 : 6,
                   height: 6,
-                  background: i === currentIndex ? '#D05F2F' : 'rgba(18,18,18,0.2)',
+                  background: i === currentIndex ? '#8C3F18' : 'rgba(140,63,24,0.2)',
                 }}
               />
             </button>

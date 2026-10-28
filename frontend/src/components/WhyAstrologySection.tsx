@@ -13,15 +13,15 @@ const WhyAstrologySection = () => (
         <div className="text-center lg:text-left">
           <p className="hl-eyebrow mb-3">Understand Astrology</p>
           <h2 id="home-why-h" className="hl-serif text-3xl font-bold leading-tight text-home-ink sm:text-4xl md:text-[2.5rem]">
-            Why do <span className="text-home-rust">You</span> need astrology?
+            Why do <span className="text-home-gerua">You</span> need astrology?
           </h2>
           <div
             aria-hidden="true"
-            className="mx-auto mt-6 h-1.5 w-24 rounded-full bg-gradient-to-r from-home-orange to-home-rust lg:mx-0"
+            className="mx-auto mt-6 h-1.5 w-24 rounded-full bg-gradient-to-r from-home-gerua to-home-gold lg:mx-0"
           />
         </div>
 
-        <div className="space-y-5 border-home-orange font-home-sans text-base leading-relaxed text-home-muted lg:border-l-2 lg:pl-10">
+        <div className="space-y-5 border-home-gold font-home-sans text-base leading-relaxed text-home-muted lg:border-l-2 lg:pl-10">
           {paragraphs.map((p, i) => (
             <p key={i} className={i === 0 ? "text-lg text-home-ink" : undefined}>
               {p}

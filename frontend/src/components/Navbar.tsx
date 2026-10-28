@@ -376,16 +376,15 @@ const Navbar = () => {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+      className={`navbar-gerua fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         isDevotionPage
-          ? 'py-4 border-b border-[#E8DED0]'
+          ? 'py-4 border-b'
           : isHome
-            ? 'py-3 border-b border-[#F2CAB7] backdrop-blur-md'
+            ? 'py-3 border-b'
             : scrolled
             ? 'glass-card py-3'
             : 'py-5 bg-transparent'
       }`}
-      style={isDevotionPage ? { background: '#F8F4EC' } : isHome ? { background: 'rgba(255,243,236,0.97)' } : undefined}
     >
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex items-center justify-between">

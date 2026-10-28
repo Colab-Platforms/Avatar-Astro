@@ -24,8 +24,8 @@ const socialIcons = [
 ];
 
 /**
- * Shared footer. On the homepage it uses the warm terracotta palette; on every
- * other route it keeps its original dark navy look. The layout is fluid for both.
+ * Shared footer, gerua on every route. Only the content width differs: the homepage
+ * lines up with its 1400px container, other routes keep the wider original layout.
  */
 const Footer = () => {
   const [email, setEmail] = useState('');
@@ -36,45 +36,18 @@ const Footer = () => {
     setEmail('');
   };
 
-  const t = home
-    ? {
-        bg: '#FFF3EC',
-        text: '#121212',
-        head: '#121212',
-        dim: '#54514F', // ink 72% on cream (7:1)
-        rule: '#F2CAB7', // rust 28% on cream
-        hover: 'hover:text-[#D05F2F] hover:underline hover:decoration-[#FE9F30] hover:decoration-2 hover:underline-offset-4',
-        chip: 'border border-[#F2CAB7] bg-white text-[#121212] hover:border-[#D05F2F] hover:text-[#D05F2F]',
-        submit: 'bg-[#D05F2F] text-[#121212] hover:bg-[#FE9F30]',
-        logo: '#D05F2F',
-        panel: 'border-[#F2CAB7] bg-white/60',
-        ring: 'focus-visible:ring-[#D05F2F]',
-        input: 'border border-[#F2CAB7]',
-        wrap: 'max-w-[1400px]',
-        pad: 'px-6',
-      }
-    : {
-        bg: 'rgba(5, 11, 24, 0.96)',
-        text: '#FFFFFF',
-        dim: 'rgba(255,255,255,0.6)',
-        rule: 'rgba(255,255,255,0.08)',
-        hover: 'hover:text-[#BC6A4D]',
-        chip: 'bg-white/[0.08] hover:bg-[#BC6A4D]',
-        submit: 'bg-[#BC6A4D] text-white hover:opacity-90',
-        logo: '#BC6A4D',
-        panel: 'border-white/[0.04] bg-white/[0.02]',
-        head: 'rgba(255,255,255,0.6)',
-        ring: 'focus-visible:ring-[#BC6A4D]',
-        input: 'border-none',
-        wrap: 'max-w-[1600px]',
-        pad: 'px-6 md:px-12 lg:px-[72px]',
-      };
+  const wrap = home ? 'max-w-[1400px]' : 'max-w-[1600px]';
+  const pad = home ? 'px-6' : 'px-6 md:px-12 lg:px-[72px]';
+  const rule = 'rgba(245, 233, 214, 0.22)'; // translucent cream
+  const dim = 'rgba(245, 233, 214, 0.85)'; // cream at 85% (5.8:1 on gerua)
+  const ring = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E58A45] focus-visible:ring-offset-2 focus-visible:ring-offset-[#803003]';
+  const linkCls = `w-fit rounded-sm text-base font-medium transition-colors duration-200 md:text-lg hover:text-[#E58A45] hover:underline hover:decoration-1 hover:underline-offset-4 ${ring}`;
 
   const colHead = 'mb-5 text-base font-semibold uppercase tracking-[0.1em] md:text-lg';
 
   return (
-    <footer style={{ background: t.bg, color: t.text, ...(home ? { borderTop: `1px solid ${t.rule}` } : {}) }} className="w-full">
-      <div className={`mx-auto w-full pb-10 pt-14 ${t.pad} ${t.wrap}`}>
+    <footer style={{ background: '#803003', color: '#F5E9D6' }} className="w-full">
+      <div className={`mx-auto w-full pb-10 pt-14 ${pad} ${wrap}`}>
         <div className="mb-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr_1.3fr] lg:gap-14">
           {/* Intro */}
           <div>
@@ -85,10 +58,10 @@ const Footer = () => {
 
           {/* Explore */}
           <nav aria-label="Explore">
-            <p className={colHead} style={{ color: t.head }}>Explore</p>
+            <p className={colHead} style={{ color: '#F5E9D6' }}>Explore</p>
             <div className="flex flex-col gap-4">
               {exploreLinks.map((link) => (
-                <Link key={link.path} to={link.path} className={`w-fit text-base font-medium transition-colors md:text-lg ${t.hover}`}>
+                <Link key={link.path} to={link.path} className={linkCls}>
                   {link.label}
                 </Link>
               ))}
@@ -97,10 +70,10 @@ const Footer = () => {
 
           {/* Resources */}
           <nav aria-label="Resources">
-            <p className={colHead} style={{ color: t.head }}>Resources</p>
+            <p className={colHead} style={{ color: '#F5E9D6' }}>Resources</p>
             <div className="flex flex-col gap-4">
               {resourceLinks.map((link) => (
-                <Link key={link.path} to={link.path} className={`w-fit text-base font-medium transition-colors md:text-lg ${t.hover}`}>
+                <Link key={link.path} to={link.path} className={linkCls}>
                   {link.label}
                 </Link>
               ))}
@@ -109,21 +82,21 @@ const Footer = () => {
 
           {/* Social + newsletter */}
           <div className="sm:col-span-2 lg:col-span-1">
-            <p className={colHead} style={{ color: t.head }}>Social</p>
-            <div className={`mb-8 flex w-fit gap-3 rounded-2xl border p-4 ${t.panel}`}>
+            <p className={colHead} style={{ color: '#F5E9D6' }}>Social</p>
+            <div className={`mb-8 flex w-fit gap-3 rounded-2xl border border-[#F5E9D6]/20 bg-[#F5E9D6]/5 p-4`}>
               {socialIcons.map(({ Icon, href, label }) => (
                 <a
                   key={label}
                   href={href}
                   aria-label={label}
-                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] transition-colors ${t.chip}`}
+                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] transition-colors duration-200 border border-[#F5E9D6]/30 bg-[#F5E9D6]/10 text-[#F5E9D6] hover:border-[#E58A45] hover:text-[#E58A45] ${ring}`}
                 >
                   <Icon size={20} />
                 </a>
               ))}
             </div>
 
-            <p className="mb-3 text-base md:text-lg" style={{ color: t.dim }}>
+            <p className="mb-3 text-base md:text-lg" style={{ color: dim }}>
               Subscribe to our newsletter
             </p>
             <form onSubmit={handleNewsletter} className="flex w-full max-w-sm items-center gap-2.5">
@@ -134,12 +107,12 @@ const Footer = () => {
                 placeholder="Enter your email"
                 aria-label="Email address"
                 required
-                className={`h-11 min-w-0 flex-1 rounded-full bg-white px-[18px] text-[15px] text-[#111] outline-none placeholder:text-[#8a8a8a] focus-visible:ring-2 ${t.ring} ${t.input}`}
+                className={`h-11 min-w-0 flex-1 rounded-full border border-[#F5E9D6] bg-[#F5E9D6] px-[18px] text-[15px] text-[#301607] outline-none placeholder:text-[#6B4A30] ${ring}`}
               />
               <button
                 type="submit"
                 aria-label="Subscribe"
-                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors ${t.submit}`}
+                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors duration-200 bg-[#E58A45] text-[#301607] hover:bg-[#F5E9D6] ${ring}`}
               >
                 <ArrowRight size={18} />
               </button>
@@ -147,7 +120,7 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="pt-8" style={{ borderTop: `1px solid ${t.rule}` }}>
+        <div className="pt-8" style={{ borderTop: `1px solid ${rule}` }}>
           <p
             aria-hidden="true"
             className="mb-3 uppercase leading-none"
@@ -155,12 +128,12 @@ const Footer = () => {
               fontFamily: "'ASTRA', 'Iceland', 'Orbitron', sans-serif",
               fontSize: 'clamp(40px, 9vw, 90px)',
               letterSpacing: '0.115em',
-              color: t.logo,
+              color: '#F5E9D6',
             }}
           >
             SPIRITUAL
           </p>
-          <p className="text-sm" style={{ color: t.dim }}>
+          <p className="text-sm" style={{ color: dim }}>
             2024 Celestial. All rights reserved.
           </p>
         </div>
