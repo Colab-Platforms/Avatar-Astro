@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Astra&family=Iceland&family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700&family=Lato:ital,wght@0,300;0,400;0,700;1,300&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Astra&family=Iceland&family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700&family=Lato:ital,wght@0,300;0,400;0,700;1,300&family=DM+Sans:wght@400;500;600;700&family=Uncial+Antiqua&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -1176,4 +1176,160 @@
 @keyframes ndr-btn-glow {
   0%, 100% { box-shadow: 0 0 0 hsl(var(--gold) / 0); }
   50% { box-shadow: 0 0 32px hsl(var(--gold) / 0.5); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   HOMEPAGE LIGHT THEME — approved palette: Rust · Ink · Orange · Cream
+   Scoped to .home-light, which <Layout> applies ONLY on "/". Other routes keep
+   their existing styling. Nothing else is a brand colour: every other tone below
+   is a mix or opacity of these four (contrast ratios are asserted in home.test.tsx).
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+body.home-light-body { background: #FFF3EC; }
+
+.home-light {
+  /* The four approved brand colours */
+  --mb-rust: #D05F2F;
+  --mb-ink: #121212;
+  --mb-orange: #FE9F30;
+  --mb-cream: #FFF3EC;
+
+  /* Derived from the four (mixes / opacity only) */
+  --mb-rust-deep: color-mix(in srgb, var(--mb-rust) 75%, var(--mb-ink));   /* text-safe accent, 5.4:1 on cream */
+  --mb-card: color-mix(in srgb, #fff 55%, var(--mb-cream));                /* lighter surface */
+  --mb-muted: color-mix(in srgb, var(--mb-ink) 72%, var(--mb-cream));      /* secondary text, 7.2:1 */
+  --mb-line: color-mix(in srgb, var(--mb-rust) 28%, var(--mb-cream));      /* borders */
+
+  /* Re-map the shared HSL tokens so Navbar/Footer utilities (text-foreground,
+     border-border, ring-offset-background…) adapt automatically. */
+  --background: 23 100% 96%;
+  --foreground: 0 0% 7%;
+  --card: 22 100% 98%;
+  --card-foreground: 0 0% 7%;
+  --muted: 24 100% 93%;
+  --muted-foreground: 20 3% 32%;
+  --border: 20 70% 82%;
+  --input: 20 70% 82%;
+
+  background: var(--mb-cream);
+  color: var(--mb-ink);
+}
+
+/* Headings: sentence case, no wide tracking (global base forces uppercase Iceland). */
+:where(.home-light) h1, :where(.home-light) h2, :where(.home-light) h3, :where(.home-light) h4 {
+  text-transform: none;
+  letter-spacing: -0.01em;
+  font-family: "DM Sans", system-ui, sans-serif;
+}
+.home-light .hl-serif { font-family: Cinzel, Georgia, serif; letter-spacing: 0; }
+
+/* Between 1024 and 1279px the nine nav items (DM Sans is wider than the old nav font) need
+   tighter spacing and a slightly smaller size to stay on one row. */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .home-light nav .lg\:flex { gap: 0.75rem; }
+  .home-light nav .lg\:flex :is(a, button) { font-size: 0.9rem; }
+}
+
+/* ── Navbar (shared component; every rule here is inside .home-light) ── */
+.home-light .glass-card {
+  background: var(--mb-card);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--mb-line);
+  box-shadow: 0 12px 34px rgba(208, 95, 47, 0.16);
+}
+/* The site-wide accent #BC6A4D is 3.7:1 on cream; nav text uses the 5.4:1 deep rust,
+   while the logo, active underline and sign-in outline use the exact brand rust. */
+.home-light nav [class~="text-[#BC6A4D]"] { color: var(--mb-rust-deep); }
+.home-light nav [class~="hover:text-[#BC6A4D]"]:hover { color: var(--mb-rust-deep); }
+.home-light nav a[href="/"].group [class~="text-[#BC6A4D]"] { color: var(--mb-rust); }
+.home-light nav [class~="bg-[#BC6A4D]"] { background-color: var(--mb-rust); }
+.home-light nav [class~="text-[#2C1810]/60"],
+.home-light nav [class~="text-[#2C1810]/70"] { color: var(--mb-ink); }
+.home-light nav [class~="border-[#BC6A4D]/40"] { border-color: var(--mb-rust); }
+.home-light nav [class~="bg-[#BC6A4D]/10"] { background-color: color-mix(in srgb, var(--mb-rust) 10%, transparent); }
+.home-light nav [class~="bg-[#BC6A4D]/10"]:hover { background-color: var(--mb-rust); color: var(--mb-ink); }
+/* Navbar typography to match the page (DM Sans links, Uncial Antiqua wordmark). */
+.home-light nav .font-astra,
+.home-light nav .font-display,
+.home-light nav .font-body { font-family: "DM Sans", system-ui, sans-serif; letter-spacing: 0.01em; }
+.home-light nav a[href="/"].group .font-display { font-family: "Uncial Antiqua", Georgia, serif; letter-spacing: 0.04em; }
+/* Top-level hover: orange underline accent */
+.home-light nav .lg\:flex > a:hover,
+.home-light nav .lg\:flex > div > button:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--mb-orange);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 7px;
+}
+.home-light nav [role="menuitem"]:hover,
+.home-light nav [role="menuitem"]:focus-visible { background-color: color-mix(in srgb, var(--mb-orange) 22%, transparent); }
+
+/* The Live dropdown is authored with inline colours (red LIVE badge, brown text);
+   re-point them to the approved palette on the homepage only. */
+.home-light nav [style*="color: rgb(229, 57, 53)"] { color: var(--mb-rust-deep) !important; }
+.home-light nav [style*="background: rgb(229, 57, 53)"] { background: var(--mb-rust) !important; }
+.home-light nav [style*="color: rgb(188, 106, 77)"] { color: var(--mb-rust-deep) !important; }
+.home-light nav [style*="color: rgb(44, 24, 16)"] { color: var(--mb-ink) !important; }
+.home-light nav [style*="color: rgba(44, 24, 16"] { color: var(--mb-muted) !important; }
+
+/* Visible keyboard focus everywhere on the homepage */
+.home-light a:focus-visible,
+.home-light button:focus-visible,
+.home-light [role="button"]:focus-visible {
+  outline: 2px solid var(--mb-ink);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+/* ── Shared building blocks ── */
+.hl-eyebrow {
+  font: 700 0.8125rem/1 "DM Sans", system-ui, sans-serif;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--mb-rust-deep);
+}
+.hl-section { padding: 3.5rem 0; }
+@media (min-width: 768px) { .hl-section { padding: 5rem 0; } }
+
+.hl-card {
+  background: var(--mb-card);
+  border: 1px solid var(--mb-line);
+  border-radius: 1.25rem;
+  box-shadow: 0 1px 2px rgba(18, 18, 18, 0.04), 0 8px 24px rgba(208, 95, 47, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.hl-card:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--mb-rust) 55%, transparent);
+  box-shadow: 0 2px 4px rgba(18, 18, 18, 0.05), 0 16px 36px rgba(208, 95, 47, 0.18);
+}
+
+/* Primary: rust fill with ink text (4.8:1; cream text on this rust is only 3.6:1). Hover: orange. */
+.hl-btn, .hl-btn-ghost {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  min-height: 46px; padding: 0 1.5rem; border-radius: 999px;
+  font: 700 0.9375rem/1 "DM Sans", system-ui, sans-serif;
+  transition: background 0.25s ease, color 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.hl-btn { background: var(--mb-rust); color: var(--mb-ink); box-shadow: 0 6px 18px rgba(208, 95, 47, 0.32); }
+.hl-btn:hover { background: var(--mb-orange); transform: translateY(-1px); box-shadow: 0 8px 22px rgba(254, 159, 48, 0.4); }
+.hl-btn:active, .hl-btn-ghost:active { transform: translateY(0) scale(0.98); }
+.hl-btn-sm { min-height: 36px; padding: 0 1rem; font-size: 0.9rem; gap: 0.375rem; }
+/* Secondary: transparent, ink text, rust border */
+.hl-btn-ghost { color: var(--mb-ink); border: 1.5px solid var(--mb-rust); background: transparent; }
+.hl-btn-ghost:hover { background: color-mix(in srgb, var(--mb-orange) 28%, transparent); border-color: var(--mb-rust); }
+
+.hl-btn-ghost.hl-btn-sm { font-size: 0.875rem; }
+.hl-img-zoom img { transition: transform 0.6s ease; }
+.hl-card:hover .hl-img-zoom img { transform: scale(1.05); }
+
+/* Soft fade-and-rise for selected sections. Content is visible without it. */
+@keyframes hl-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+.hl-rise { animation: hl-rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hl-rise { animation: none; }
+  .hl-card, .hl-card:hover, .hl-btn, .hl-btn:hover, .hl-img-zoom img, .hl-card:hover .hl-img-zoom img {
+    transition: none; transform: none;
+  }
 }

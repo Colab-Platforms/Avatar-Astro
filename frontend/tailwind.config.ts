@@ -17,6 +17,9 @@ export default {
         display: ["Iceland", "sans-serif"],
         body: ["Iceland", "sans-serif"],
         astra: ["Astra", "Iceland", "sans-serif"],
+        // Homepage light theme: Cinzel is already loaded site-wide (index.css @import).
+        "home-serif": ["Cinzel", "Georgia", "serif"],
+        "home-sans": ["DM Sans", "system-ui", "sans-serif"],
       },
       // Bumped up from Tailwind's stock scale — sitewide text was reading too
       // small across nav, cards, labels, and body copy. Line-heights keep
@@ -32,6 +35,19 @@ export default {
         "4xl": ["2.625rem", { lineHeight: "2.875rem" }],    // 42px (Tailwind default: 36px)
       },
       colors: {
+        // Homepage theme. Four approved brand colours; everything else is a
+        // mix/opacity of those four (see .home-light in index.css).
+        home: {
+          cream: "#FFF3EC", // --mb-cream  main background
+          ink: "#121212", //   --mb-ink    typography
+          rust: "#D05F2F", //  --mb-rust   primary actions, borders, large accents
+          orange: "#FE9F30", // --mb-orange secondary highlights (never small text on cream: 1.9:1)
+          // derived (mixes of the four above)
+          deep: "#A14C28", //  rust 75% + ink 25%   text-safe accent (5.4:1 on cream)
+          card: "#FFFAF6", //  lighter surface
+          muted: "#54514F", // ink 72% on cream     secondary text (7.2:1)
+          line: "#F2CAB7", //  rust 28% on cream    borders
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

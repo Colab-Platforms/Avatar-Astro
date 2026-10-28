@@ -4,6 +4,7 @@ import RatnaEmblem from "@/features/ratna/RatnaEmblem";
 import RatnaLoader from "@/features/ratna/RatnaLoader";
 import LocationPicker from "@/features/ratna/LocationPicker";
 import { ratnaApi } from "@/features/ratna/api";
+import { MIN_LOADER_MS } from "@/features/ratna/loaderTiming";
 import { clearResult, saveResult } from "@/features/ratna/storage";
 import type { PlaceResult } from "@/features/ratna/types";
 import "@/features/ratna/ratna.css";
@@ -32,6 +33,16 @@ const RatnaJyotish = () => {
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const inFlight = useRef(false);
+  const mounted = useRef(true);
+  const minTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      clearTimeout(minTimer.current);
+    };
+  }, []);
 
   useEffect(() => {
     document.title = `${RATNA_TITLE} | My Bhagya`;
@@ -63,9 +74,12 @@ const RatnaJyotish = () => {
 
     inFlight.current = true;
     clearResult(); // never show an old result for new inputs
+    const startedAt = Date.now();
     setLoading(true);
-    try {
-      const result = await ratnaApi.calculate({
+
+    // Settle either way so success and failure share the minimum loader time.
+    const outcome = await ratnaApi
+      .calculate({
         dateOfBirth: date,
         timeOfBirth: timeUnknown ? null : time,
         timeUnknown,
@@ -77,17 +91,30 @@ const RatnaJyotish = () => {
           longitude: place.longitude,
           timezone: place.timezone,
         },
+      })
+      .then(
+        (result) => ({ kind: "ok" as const, result }),
+        (error: unknown) => ({ kind: "error" as const, error }),
+      );
+
+    const remaining = MIN_LOADER_MS - (Date.now() - startedAt);
+    if (remaining > 0) {
+      await new Promise<void>((resolve) => {
+        minTimer.current = setTimeout(resolve, remaining);
       });
-      saveResult(result);
-      navigate("/ratna-jyotish/result", { state: { result } });
-    } catch (err) {
+    }
+    inFlight.current = false;
+    if (!mounted.current) return;
+
+    if (outcome.kind === "ok") {
+      saveResult(outcome.result);
+      navigate("/ratna-jyotish/result", { state: { result: outcome.result } });
+    } else {
       setApiError(
-        (err as Error)?.message ||
+        (outcome.error as Error)?.message ||
           "We could not complete the calculation. Please check your details and try again.",
       );
       setLoading(false); // back to the form with inputs preserved
-    } finally {
-      inFlight.current = false;
     }
   };
 

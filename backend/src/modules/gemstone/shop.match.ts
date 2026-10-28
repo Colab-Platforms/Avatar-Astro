@@ -110,7 +110,7 @@ export const matchShop = (
 
   const chartLinked: MatchedProduct[] = [];
   if (stone.rudrakshaMukhi) {
-    const reason = `In one common convention, the ${stone.rudrakshaMukhi}-mukhi Rudraksha is linked to ${stone.planet}, your Lagna lord. Traditions differ on this map.`;
+    const reason = `In one common convention, the ${stone.rudrakshaMukhi}-mukhi Rudraksha is linked to ${stone.planet}, the planet traditionally associated with ${stone.name}. Traditions differ on this map, and this is not an individual prescription.`;
     chartLinked.push(
       ...take(
         products.filter(

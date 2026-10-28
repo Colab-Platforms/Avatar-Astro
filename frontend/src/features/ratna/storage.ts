@@ -4,16 +4,19 @@ import type { RatnaResult } from "./types";
 // calculation starts. Never put birth details in the URL.
 const KEY = "ratna-jyotish:result";
 
+// Results saved by an older build (no `primary`) are ignored, never half-rendered.
 const looksLikeResult = (v: unknown): v is RatnaResult => {
   const r = v as RatnaResult | null;
   return (
     !!r &&
     typeof r === "object" &&
-    (r.status === "complete" || r.status === "limited") &&
+    (r.status === "complete" || r.status === "date_based") &&
     !!r.birth &&
     !!r.method &&
     !!r.explanation &&
-    (r.status === "limited" || !!r.recommendation)
+    !!r.primary?.stone?.key &&
+    Array.isArray(r.primary.stone.themes) &&
+    (r.status === "complete" ? !!r.recommendation : !!r.dateBased)
   );
 };
 

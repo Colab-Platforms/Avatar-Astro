@@ -362,7 +362,8 @@ const Navbar = () => {
   useEffect(() => { setIsOpen(false); }, [location.pathname]);
 
   const isDevotionPage = ['/puja', '/chadhawa', '/shop', '/avatar-live'].some(p => location.pathname.startsWith(p));
-  const lightNav       = isDevotionPage;
+  const isHome         = location.pathname === '/';
+  const lightNav       = isDevotionPage || isHome;
 
   const desktopLinkCls = (active: boolean) =>
     `relative font-astra text-sm font-semibold tracking-wider transition-colors duration-300 ${
@@ -378,11 +379,13 @@ const Navbar = () => {
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         isDevotionPage
           ? 'py-4 border-b border-[#E8DED0]'
-          : scrolled
+          : isHome
+            ? 'py-3 border-b border-[#F2CAB7] backdrop-blur-md'
+            : scrolled
             ? 'glass-card py-3'
             : 'py-5 bg-transparent'
       }`}
-      style={isDevotionPage ? { background: '#F8F4EC' } : undefined}
+      style={isDevotionPage ? { background: '#F8F4EC' } : isHome ? { background: 'rgba(255,243,236,0.97)' } : undefined}
     >
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex items-center justify-between">

@@ -84,6 +84,8 @@ export interface GemstoneInfo {
   customs: { metal: string; finger: string };
   /** Plain-language traditional significance. */
   significance: string[];
+  /** Traditional themes linked with the stone's planet (symbolic, never personal claims). */
+  themes: { label: string; note: string }[];
   /** Rudraksha mukhi in the (conventional, not universal) mukhi→planet map. */
   rudrakshaMukhi: number | null;
 }
@@ -103,6 +105,12 @@ export const GEMSTONES: Record<string, GemstoneInfo> = {
       "Traditionally associated with the Sun, linked in Vedic texts with vitality, authority and self-confidence.",
       "Often worn in the belief that it supports a sense of purpose and leadership.",
     ],
+    themes: [
+      { label: "Confidence and self-belief", note: "The Sun is linked with self-assurance and a strong sense of identity." },
+      { label: "Leadership and authority", note: "Associated with responsibility, recognition and positions of authority." },
+      { label: "Purpose and direction", note: "Traditionally linked with clarity of purpose and personal direction." },
+      { label: "Dignity and standing", note: "Connected in the texts with reputation and the respect of others." },
+    ],
     rudrakshaMukhi: 1,
   },
   pearl: {
@@ -118,6 +126,12 @@ export const GEMSTONES: Record<string, GemstoneInfo> = {
     significance: [
       "Traditionally associated with the Moon, linked with the mind, emotions and calm.",
       "Often worn in the belief that it supports emotional steadiness and a peaceful temperament.",
+    ],
+    themes: [
+      { label: "Calm and emotional balance", note: "The Moon is linked with the mind, mood and emotional sensitivity." },
+      { label: "Care and nurturing", note: "Associated with the mother, the home and caring relationships." },
+      { label: "Intuition and imagination", note: "Traditionally linked with intuition, receptivity and imagination." },
+      { label: "Peaceful temperament", note: "Often described as a symbol of serenity and a gentle outlook." },
     ],
     rudrakshaMukhi: 2,
   },
@@ -135,6 +149,12 @@ export const GEMSTONES: Record<string, GemstoneInfo> = {
       "Traditionally associated with Mars, linked with energy, courage and drive.",
       "Often worn in the belief that it supports determination and confidence.",
     ],
+    themes: [
+      { label: "Courage and initiative", note: "Mars is linked with boldness and the willingness to act." },
+      { label: "Energy and drive", note: "Associated with stamina, motivation and physical vigour." },
+      { label: "Determination", note: "Traditionally linked with resolve and a competitive spirit." },
+      { label: "Decisive action", note: "The classical significator of practical, decisive action." },
+    ],
     rudrakshaMukhi: 3,
   },
   emerald: {
@@ -150,6 +170,12 @@ export const GEMSTONES: Record<string, GemstoneInfo> = {
     significance: [
       "Traditionally associated with Mercury, linked with communication, learning and analysis.",
       "Often worn in the belief that it supports clear expression and intellectual focus.",
+    ],
+    themes: [
+      { label: "Communication", note: "Mercury is linked with speech, writing and how ideas are expressed." },
+      { label: "Learning and study", note: "Traditionally associated with curiosity, education and quick understanding." },
+      { label: "Analysis and reasoning", note: "Linked with logic, discrimination and practical problem-solving." },
+      { label: "Commerce and trade", note: "The classical significator of business, accounts and exchange." },
     ],
     rudrakshaMukhi: 4,
   },
@@ -167,6 +193,12 @@ export const GEMSTONES: Record<string, GemstoneInfo> = {
       "Traditionally associated with Jupiter, linked with wisdom, learning and goodwill.",
       "Often worn in the belief that it supports reflection, guidance and optimism.",
     ],
+    themes: [
+      { label: "Wisdom and guidance", note: "Jupiter is linked with counsel, teachers and thoughtful judgement." },
+      { label: "Learning and teaching", note: "Associated with higher learning, philosophy and the sharing of knowledge." },
+      { label: "Optimism and goodwill", note: "Traditionally linked with generosity, faith and a hopeful outlook." },
+      { label: "Growth and prosperity", note: "The classical significator of expansion and good fortune, as a symbol only." },
+    ],
     rudrakshaMukhi: 5,
   },
   diamond: {
@@ -182,6 +214,12 @@ export const GEMSTONES: Record<string, GemstoneInfo> = {
     significance: [
       "Traditionally associated with Venus, linked with harmony, aesthetics and relationships.",
       "Often worn in the belief that it supports appreciation of beauty and balance. White sapphire is the customary, more accessible alternative.",
+    ],
+    themes: [
+      { label: "Harmony and relationships", note: "Venus is linked with affection, partnership and getting along with others." },
+      { label: "Beauty, art and refinement", note: "Associated with the arts, aesthetics and a cultivated taste." },
+      { label: "Comfort and enjoyment", note: "Traditionally linked with pleasure, comfort and life's finer things." },
+      { label: "Prosperity and luxury", note: "Connected in the texts with material well-being, as a symbol only." },
     ],
     rudrakshaMukhi: 6,
   },
@@ -199,6 +237,12 @@ export const GEMSTONES: Record<string, GemstoneInfo> = {
       "Traditionally associated with Saturn, linked with discipline, patience and perseverance.",
       "Traditional sources treat it as a stone to be approached with care, often on a trial basis, because Saturn's influence is considered strong.",
     ],
+    themes: [
+      { label: "Discipline", note: "Saturn is linked with structure, routine and self-control." },
+      { label: "Patience and perseverance", note: "Associated with steady effort sustained over a long time." },
+      { label: "Responsibility and hard work", note: "Traditionally linked with duty, diligence and endurance." },
+      { label: "A careful approach", note: "Traditional sources advise caution with this stone and often suggest a gentle trial." },
+    ],
     rudrakshaMukhi: 7,
   },
   hessonite: {
@@ -214,6 +258,10 @@ export const GEMSTONES: Record<string, GemstoneInfo> = {
     significance: [
       "Traditionally associated with Rahu, the ascending lunar node.",
     ],
+    themes: [
+      { label: "Ambition and worldly pursuits", note: "Rahu is linked with ambition, novelty and the pull of worldly goals." },
+      { label: "Unconventional thinking", note: "Associated with unusual paths and thinking outside the norm." },
+    ],
     rudrakshaMukhi: 8,
   },
   "cats-eye": {
@@ -228,6 +276,10 @@ export const GEMSTONES: Record<string, GemstoneInfo> = {
     customs: { metal: "Silver or panchdhatu", finger: "Middle finger" },
     significance: [
       "Traditionally associated with Ketu, the descending lunar node.",
+    ],
+    themes: [
+      { label: "Detachment and introspection", note: "Ketu is linked with turning inward and letting go." },
+      { label: "Spiritual curiosity", note: "Associated with renunciation and the search for deeper meaning." },
     ],
     rudrakshaMukhi: 9,
   },
@@ -249,3 +301,25 @@ export const getGemstone = (key: string): GemstoneInfo | undefined =>
   Object.prototype.hasOwnProperty.call(GEMSTONES, key)
     ? GEMSTONES[key]
     : undefined;
+
+/** Weekday names, indexed like Date#getUTCDay (0 = Sunday). */
+export const WEEKDAYS = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+] as const;
+
+/** Traditional planetary ruler of each weekday (vara). */
+export const WEEKDAY_LORD: readonly Planet[] = [
+  "Sun",
+  "Moon",
+  "Mars",
+  "Mercury",
+  "Jupiter",
+  "Venus",
+  "Saturn",
+];

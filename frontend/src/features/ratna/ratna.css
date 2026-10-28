@@ -57,3 +57,59 @@
   color: #f0d58a;
 }
 .ratna-btn-ghost:hover { background: rgba(212, 166, 74, 0.12); }
+
+/* ---- Results page ---------------------------------------------------- */
+/* Everything below is transform/opacity only, so it stays on the compositor. */
+@keyframes ratna-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes ratna-breathe { 0%, 100% { opacity: 0.55; transform: scale(1); } 50% { opacity: 0.9; transform: scale(1.06); } }
+@keyframes ratna-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes ratna-shimmer { 0% { transform: translateX(-130%) skewX(-18deg); } 55%, 100% { transform: translateX(260%) skewX(-18deg); } }
+
+.ratna-reveal { animation: ratna-rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both; animation-delay: calc(var(--i, 0) * 80ms); }
+.ratna-glow { animation: ratna-breathe 7s ease-in-out infinite; }
+.ratna-float { animation: ratna-float 6s ease-in-out infinite; }
+.ratna-ring { animation: ratna-spin 70s linear infinite; will-change: transform; }
+.ratna-ring-rev { animation-direction: reverse; animation-duration: 110s; }
+
+.ratna-hero-glow {
+  position: absolute; inset: -20% 10% auto; height: 120%; z-index: -1;
+  background: radial-gradient(ellipse at 50% 30%, rgba(212, 166, 74, 0.16), transparent 62%);
+}
+
+.ratna-gem-card { position: relative; overflow: hidden; border-color: rgba(212, 166, 74, 0.45); }
+.ratna-gem-card::after {
+  content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 38%; pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgba(240, 213, 138, 0.09), transparent);
+  animation: ratna-shimmer 11s ease-in-out infinite;
+}
+
+.ratna-lift { transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease; }
+.ratna-lift:hover { transform: translateY(-4px); border-color: rgba(212, 166, 74, 0.6); box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35); }
+.ratna-lift img { transition: transform 0.5s ease; }
+.ratna-lift:hover img { transform: scale(1.05); }
+
+.ratna-acc { border: 1px solid rgba(212, 166, 74, 0.3); border-radius: 12px; background: rgba(8, 20, 38, 0.6); }
+.ratna-acc-btn {
+  display: flex; width: 100%; min-height: 52px; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 16px; text-align: left; font-size: 1.1rem; font-weight: 600; color: #f0d58a; border-radius: 12px;
+}
+.ratna-acc-btn:focus-visible { outline: 2px solid #fff2c4; outline-offset: 2px; }
+.ratna-acc-chev {
+  width: 10px; height: 10px; flex: none; border-right: 2px solid #d4a64a; border-bottom: 2px solid #d4a64a;
+  transform: rotate(45deg); transition: transform 0.3s ease;
+}
+.ratna-acc[data-open="true"] .ratna-acc-chev { transform: rotate(-135deg); }
+.ratna-acc-panel {
+  display: grid; grid-template-rows: 0fr; opacity: 0; visibility: hidden; padding: 0 16px;
+  transition: grid-template-rows 0.35s ease, opacity 0.3s ease, visibility 0s linear 0.35s;
+}
+.ratna-acc-panel[data-open="true"] {
+  grid-template-rows: 1fr; opacity: 1; visibility: visible; transition-delay: 0s;
+}
+.ratna-acc-inner { min-height: 0; overflow: hidden; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ratna-reveal, .ratna-glow, .ratna-float, .ratna-ring, .ratna-gem-card::after { animation: none; }
+  .ratna-lift, .ratna-lift img, .ratna-acc-chev, .ratna-acc-panel { transition: none; }
+  .ratna-lift:hover, .ratna-lift:hover img { transform: none; }
+}

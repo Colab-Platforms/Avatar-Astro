@@ -61,15 +61,15 @@ describe("calculateRatna", () => {
     assert.equal(r.wearing?.weekday, "Friday");
   });
 
-  test("unknown birth time never invents an Ascendant or a stone", async () => {
-    const r = await calculateRatna(parseInput({ ...body, timeOfBirth: null, timeUnknown: true }));
-    assert.equal(r.status, "limited");
-    assert.equal(r.chart, null);
-    assert.equal(r.recommendation, null);
-    assert.equal(r.wearing, null);
-    assert.ok(r.stableSigns.length > 0);
-    assert.ok(r.stableSigns.some((s) => s.planet === "Sun"));
-    assert.match(r.explanation.text, /cannot be calculated/);
+  test("exact-time result is unchanged and now reports its method and primary stone", async () => {
+    const r = await calculateRatna(parseInput(body));
+    assert.equal(r.method.id, "lagna-lord");
+    assert.equal(r.method.name, "Parashari Lagna-lord method");
+    assert.equal(r.dateBased, null);
+    assert.equal(r.primary.basis, "lagna-lord");
+    assert.equal(r.primary.stone.key, r.recommendation?.stone.key);
+    assert.deepEqual(r.primary.factors, r.recommendation?.factors);
+    assert.match(r.primary.summary, /Taurus/);
   });
 
   test("propagates timezone and coordinate errors", async () => {
@@ -192,6 +192,7 @@ describe("shop matching", () => {
     const m = matchShop(GEMSTONES["blue-sapphire"], catalogue); // Saturn -> 7 mukhi
     assert.deepEqual(m.chartLinked.map((p) => p.name), ["7 Mukhi Rudraksha"]);
     assert.match(m.chartLinked[0].reason ?? "", /common convention/);
+    assert.doesNotMatch(m.chartLinked[0].reason ?? "", /Lagna lord/i); // valid for date-based results too
     const j = matchShop(GEMSTONES["yellow-sapphire"], catalogue); // Jupiter -> 5 mukhi
     assert.deepEqual(j.chartLinked.map((p) => p.name), ["Panchmukhi Rudraksha"]);
   });

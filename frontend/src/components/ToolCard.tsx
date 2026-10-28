@@ -11,36 +11,35 @@ interface ToolCardProps {
 
 const ToolCard = ({ tool, index }: ToolCardProps) => (
   <motion.div
-    initial={{ opacity: 0, y: 40 }}
+    initial={{ opacity: 0, y: 28 }}
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true, amount: 0.2 }}
-    transition={{ duration: 0.6, delay: index * 0.1, ease: "easeOut" }}
-    whileHover={{ y: -8, scale: 1.02 }}
-    className="group relative rounded-2xl overflow-hidden border border-[#ffaa50]/[0.18] shadow-[0_8px_30px_rgba(0,0,0,0.35)] transition-[border-color,box-shadow] duration-300 hover:border-[#ffaa50]/60 hover:shadow-[0_8px_30px_rgba(0,0,0,0.35),0_0_32px_rgba(232,147,95,0.22)]"
-    style={{ background: "linear-gradient(180deg, rgba(13,28,52,0.7) 0%, rgba(5,11,24,0.85) 100%)" }}
+    transition={{ duration: 0.5, delay: (index % 4) * 0.07, ease: "easeOut" }}
+    className="hl-card group relative flex h-full flex-col overflow-hidden"
   >
-    <div className="relative aspect-[16/10] overflow-hidden">
+    <div className="hl-img-zoom relative h-[140px] shrink-0 overflow-hidden">
       <img
         src={tool.image}
         alt={tool.title}
-        className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+        width={960}
+        height={492}
+        className="h-full w-full object-cover object-center"
         loading="lazy"
+        decoding="async"
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#050b18] via-transparent to-transparent" />
     </div>
 
-    <div className="p-6">
-      <h3 className="font-['Inter'] font-bold text-lg text-white mb-2">{tool.title}</h3>
-      <p className="font-['Inter'] text-sm text-white/55 leading-relaxed mb-5 min-h-[40px]">
+    <div className="flex flex-1 flex-col p-4">
+      <h3 className="hl-serif mb-1 text-base font-semibold normal-case tracking-[0.04em] text-home-ink">
+        {tool.title}
+      </h3>
+      <p className="mb-3 line-clamp-3 font-home-sans text-[0.875rem] leading-[1.45] text-home-muted">
         {tool.description}
       </p>
 
-      <Link
-        to={tool.path}
-        className="group/btn inline-flex items-center gap-2 rounded-full border border-[#e8935f]/55 px-5 py-2.5 font-['Inter'] text-sm font-semibold text-[#e8935f] transition-all duration-300 hover:bg-[#e8935f] hover:text-[#0b0f1a] hover:shadow-[0_0_22px_rgba(232,147,95,0.45)]"
-      >
+      <Link to={tool.path} className="hl-btn-ghost hl-btn-sm group/btn mt-auto h-9 w-fit">
         {tool.button}
-        <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
+        <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
       </Link>
     </div>
   </motion.div>

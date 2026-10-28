@@ -6,84 +6,17 @@ import RatnaJyotish from "@/pages/RatnaJyotish";
 import RatnaJyotishResult from "@/pages/RatnaJyotishResult";
 import { ratnaApi } from "../api";
 import { loadResult, saveResult } from "../storage";
-import type { PlaceResult, RatnaResult, ShopMatches } from "../types";
+import type { RatnaResult } from "../types";
+import { complete, dateBased, delhi, diamond as stone, emptyShop } from "./fixtures";
 
 vi.mock("../api", () => ({
   ratnaApi: { searchLocations: vi.fn(), calculate: vi.fn(), products: vi.fn() },
 }));
+// The 5 s minimum is covered in loader-duration.test.tsx; keep these fast.
+vi.mock("../loaderTiming", () => ({ MIN_LOADER_MS: 0 }));
 const api = vi.mocked(ratnaApi);
 
-const delhi: PlaceResult = {
-  id: "1",
-  name: "New Delhi",
-  admin1: "Delhi",
-  country: "India",
-  latitude: 28.6,
-  longitude: 77.2,
-  timezone: "Asia/Kolkata",
-  label: "New Delhi, Delhi, India",
-};
-
-const stone = {
-  key: "diamond",
-  planet: "Venus",
-  name: "Diamond or White Sapphire",
-  sanskrit: "Heera",
-  colour: "#dfe9f5",
-  weekday: "Friday",
-  customs: { metal: "Platinum", finger: "Middle finger" },
-  significance: ["Traditionally associated with Venus."],
-};
-
-const complete: RatnaResult = {
-  status: "complete",
-  method: {
-    name: "Parashari Lagna-lord method",
-    zodiac: "Sidereal",
-    ayanamsa: "Lahiri",
-    houses: "Whole sign",
-    nodes: "Mean",
-    engine: "astronomy-engine",
-    summary: "Summary text.",
-    limitations: ["One school of Vedic astrology."],
-  },
-  birth: { dateOfBirth: "1990-05-05", timeOfBirth: "10:00", place: "New Delhi, Delhi, India", timeZone: "Asia/Kolkata", utcOffsetMinutes: 330, ambiguousLocalTime: false },
-  chart: { ascendant: { sign: "Taurus", degree: 5 }, planets: [{ planet: "Venus", sign: "Cancer", degree: 3, house: 3 }] },
-  stableSigns: [],
-  recommendation: {
-    stone,
-    lagnaLord: "Venus",
-    lagnaLordSign: "Cancer",
-    lagnaLordHouse: 3,
-    factors: [{ label: "Lagna lord", value: "Venus" }],
-    secondary: [],
-    excluded: [],
-    cautions: [],
-  },
-  wearing: {
-    weekday: "Friday",
-    metal: "Platinum",
-    finger: "Middle finger",
-    customNote: "Customs vary.",
-    sunrise: { iso: "x", local: "Friday, 6 Nov 2026, 06:30", timeZone: "Asia/Kolkata", locationLabel: "New Delhi (your birthplace)" },
-    sunriseNote: "Sunrise note.",
-  },
-  explanation: { text: "Rule based explanation text.", source: "rules" },
-  notice: null,
-};
-
-const limited: RatnaResult = {
-  ...complete,
-  status: "limited",
-  chart: null,
-  recommendation: null,
-  wearing: null,
-  stableSigns: [{ planet: "Sun", sign: "Taurus" }],
-  explanation: { text: "No recommendation without a birth time.", source: "rules" },
-  notice: "Only stable signs shown.",
-};
-
-const emptyShop: ShopMatches = { stone: { key: "diamond", name: stone.name, planet: "Venus" }, gemstones: [], jewellery: [], chartLinked: [], complementary: [] };
+const limited = dateBased; // unknown birth time -> date-based result
 
 const renderApp = (initial = "/ratna-jyotish") => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -208,7 +141,7 @@ describe("Ratna Jyotish form", () => {
     expect(await screen.findByTestId("recommended-stone")).toBeInTheDocument();
   });
 
-  it("sends no time when the birth time is unknown and shows the limited result", async () => {
+  it("sends no time when the birth time is unknown and shows a gemstone-led date-based result", async () => {
     api.calculate.mockResolvedValue(limited);
     renderApp();
     fireEvent.change(screen.getByLabelText("Date of birth"), { target: { value: "1990-05-05" } });
@@ -216,11 +149,11 @@ describe("Ratna Jyotish form", () => {
     fireEvent.change(screen.getByRole("combobox"), { target: { value: "Delhi" } });
     fireEvent.mouseDown(await screen.findByRole("option", { name: delhi.label }));
     fireEvent.click(screen.getByRole("button", { name: "CALCULATE MY GEMSTONE" }));
-    expect(await screen.findByText("No recommendation without a birth time.")).toBeInTheDocument();
+    expect(await screen.findByTestId("recommended-stone")).toHaveTextContent("Emerald");
     expect(api.calculate.mock.calls[0][0]).toMatchObject({ timeOfBirth: null, timeUnknown: true });
-    expect(screen.queryByTestId("recommended-stone")).toBeNull();
-    expect(screen.getByText("Sun in Taurus")).toBeInTheDocument();
-    expect(api.products).not.toHaveBeenCalled();
+    expect(screen.getByTestId("method-label")).toHaveTextContent("Method: Birth-Date & Place Gemstone Method");
+    expect(screen.queryByText(/No recommendation/i)).toBeNull();
+    await waitFor(() => expect(api.products).toHaveBeenCalledWith("emerald"));
   });
 
   it("clears a stale stored result when a new calculation starts", async () => {
@@ -247,7 +180,13 @@ describe("Ratna Jyotish results page", () => {
     renderApp("/ratna-jyotish/result");
     expect(await screen.findByTestId("recommended-stone")).toBeInTheDocument();
     expect(screen.getByText("How this was calculated")).toBeInTheDocument();
-    expect(screen.getByText(/Location used: New Delhi \(your birthplace\)/)).toBeInTheDocument();
+    expect(screen.getByText(/New Delhi \(your birthplace\) · Asia\/Kolkata/)).toBeInTheDocument();
+  });
+
+  it("ignores a result saved by the older build (no primary gemstone)", () => {
+    sessionStorage.setItem("ratna-jyotish:result", JSON.stringify({ ...complete, status: "limited", primary: undefined }));
+    renderApp("/ratna-jyotish/result");
+    expect(screen.getByTestId("ratna-empty")).toBeInTheDocument();
   });
 
   it("ignores corrupt stored data", () => {
@@ -276,7 +215,7 @@ describe("Ratna Jyotish results page", () => {
     expect(await screen.findByText(/is currently listed in the shop/)).toBeInTheDocument();
     expect(screen.getByText(/do not substitute a different gemstone/)).toBeInTheDocument();
     expect(screen.queryByText("Complementary Spiritual Accessories")).toBeNull();
-    expect(screen.getByText(/Purchasing a gemstone or spiritual accessory is optional/)).toBeInTheDocument();
+    expect(screen.getByText(/Buying is optional/)).toBeInTheDocument();
   });
 
   it("renders real products with real prices and links, separating general accessories", async () => {
@@ -295,9 +234,11 @@ describe("Ratna Jyotish results page", () => {
     const link = await screen.findByRole("link", { name: "Natural Diamond" });
     expect(link).toHaveAttribute("href", "/shop/diamond-1");
     expect(screen.getByText("₹45,000")).toBeInTheDocument();
-    expect(screen.getByText("Common convention reason")).toBeInTheDocument();
+    expect(screen.getByText(/Linked by convention to Venus/)).toBeInTheDocument();
     expect(screen.getByText("Complementary Spiritual Accessories")).toBeInTheDocument();
-    expect(screen.getByText("These are general spiritual accessories and have not been individually selected from your birth chart.")).toBeInTheDocument();
+    expect(screen.getByText("General accessories, not selected from your birth details.")).toBeInTheDocument();
+    expect(screen.getByText("Planet-Linked Accessories")).toBeInTheDocument();
+    expect(screen.getByText("Your Matching Gemstone")).toBeInTheDocument();
     expect(screen.queryByText(/left in stock|only \d+ left/i)).toBeNull();
   });
 

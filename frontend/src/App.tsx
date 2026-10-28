@@ -28,6 +28,7 @@ import TarotExperience from "./pages/TarotExperience";
 import SolarSystem from "./pages/SolarSystem";
 import NotFound from "./pages/NotFound";
 import CosmicBackground from "./components/CosmicBackground";
+import HideOnHome from "./components/HideOnHome";
 import { PublicRoute } from "./routes/PublicRoute";
 import { GoogleOnboardingRoute } from "./routes/ProtectedRoute";
 import { AdminRoute } from "./routes/AdminRoute";
@@ -527,7 +528,7 @@ const App = () => {
             path="*"
             element={
               <>
-                <CosmicBackground />
+                <HideOnHome><CosmicBackground /></HideOnHome>
                 <NavigationProvider>
                   <Layout>
                     <AnimatedRoutes />

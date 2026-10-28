@@ -30,11 +30,13 @@ export interface GemstoneInfo {
   weekday: string;
   customs: { metal: string; finger: string };
   significance: string[];
+  themes: { label: string; note: string }[];
 }
 
 export interface RatnaResult {
-  status: "complete" | "limited";
+  status: "complete" | "date_based";
   method: {
+    id: "lagna-lord" | "birth-date-place";
     name: string;
     zodiac: string;
     ayanamsa: string;
@@ -57,6 +59,25 @@ export interface RatnaResult {
     planets: { planet: string; sign: string; degree: number; house: number }[];
   };
   stableSigns: { planet: string; sign: string }[];
+  /** The one gemstone this result is about, whichever method chose it. */
+  primary: {
+    stone: GemstoneInfo;
+    planet: string;
+    basis: "lagna-lord" | "birth-weekday";
+    summary: string;
+    factors: { label: string; value: string }[];
+  };
+  /** Present only for the unknown-birth-time method. */
+  dateBased: null | {
+    localDate: string;
+    weekday: string;
+    weekdayLord: string;
+    rule: string;
+    weekdayLordSign: string | null;
+    sunrise: null | { local: string; timeZone: string };
+    classicalNote: string;
+    table: { weekday: string; planet: string; stone: string }[];
+  };
   recommendation: null | {
     stone: GemstoneInfo;
     lagnaLord: string;

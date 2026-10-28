@@ -1,14 +1,15 @@
 import { computeBirthChart, wholeSignHouse } from "./chart.engine.js";
 import { BirthTimeError, resolveBirthInstant } from "./birth.time.js";
 import { recommend } from "./recommendation.js";
-import { stableSignsForDate } from "./limited.chart.js";
+import { selectByBirthDate, WEEKDAY_TABLE, type WeekdayRow } from "./date.based.js";
 import { buildWearingGuidance } from "./wearing.js";
 import {
+  generateDateExplanation,
   generateExplanation,
   type Explanation,
   type ExplainOptions,
 } from "./explanation.service.js";
-import { GEMSTONES, PLANETS, type Planet, type Sign } from "./gemstone.catalogue.js";
+import { GEMSTONES, PLANETS, type GemstoneInfo, type Planet, type Sign } from "./gemstone.catalogue.js";
 
 export interface CalculateInput {
   dateOfBirth: string; // YYYY-MM-DD
@@ -24,7 +25,20 @@ export interface CalculateInput {
   };
 }
 
-export const METHOD = {
+export interface MethodInfo {
+  id: "lagna-lord" | "birth-date-place";
+  name: string;
+  zodiac: string;
+  ayanamsa: string;
+  houses: string;
+  nodes: string;
+  engine: string;
+  summary: string;
+  limitations: string[];
+}
+
+export const METHOD: MethodInfo = {
+  id: "lagna-lord",
   name: "Parashari Lagna-lord method",
   zodiac: "Sidereal",
   ayanamsa: "Lahiri (Chitrapaksha)",
@@ -38,7 +52,26 @@ export const METHOD = {
     "Gemstone associations are traditional beliefs. There is no scientific evidence that a gemstone changes life outcomes.",
     "Planetary positions are geocentric; the Ascendant changes about 1° every 4 minutes, so an inaccurate birth time can change the result.",
   ],
-} as const;
+};
+
+/** Used only when the exact birth time is unknown. */
+export const DATE_METHOD: MethodInfo = {
+  id: "birth-date-place",
+  name: "Birth-Date & Place Gemstone Method",
+  zodiac: "Sidereal (used only for the planetary context shown)",
+  ayanamsa: "Lahiri (Chitrapaksha)",
+  houses: "Not calculated: the Ascendant and houses need an exact birth time",
+  nodes: "Mean lunar node (context only)",
+  engine: "astronomy-engine ephemeris, sampled across the whole local birth date at your birthplace",
+  summary:
+    "Without a birth time the Ascendant cannot be found, so this method uses the traditional weekday-ruler convention instead. The local calendar weekday at your birthplace is taken from your birth date; the planet that rules that weekday gives the gemstone traditionally associated with it (Sunday: Sun, Ruby; Monday: Moon, Pearl; Tuesday: Mars, Red Coral; Wednesday: Mercury, Emerald; Thursday: Jupiter, Yellow Sapphire; Friday: Venus, Diamond or White Sapphire; Saturday: Saturn, Blue Sapphire). Real planetary positions across that date are checked, and any planet that stays in one sign all day is noted as context. No Ascendant, houses or Lagna lord are claimed.",
+  limitations: [
+    "This is a date-based interpretation. It is less specific than a full birth-chart reading, which needs your exact birth time.",
+    "The local calendar weekday is used. Classical reckoning starts a weekday at sunrise, so a birth shortly after midnight but before sunrise can belong to the previous weekday.",
+    "The weekday-ruler gemstone is one traditional convention; other methods (Lagna-lord, Moon-sign, dasha-based) can suggest a different stone.",
+    "Gemstone associations are traditional beliefs. There is no scientific evidence that a gemstone changes life outcomes.",
+  ],
+};
 
 const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
 const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -89,8 +122,8 @@ const placeLabel = (p: CalculateInput["place"]) =>
   [p.name, p.admin1, p.country].filter(Boolean).join(", ");
 
 export interface RatnaResult {
-  status: "complete" | "limited";
-  method: typeof METHOD;
+  status: "complete" | "date_based";
+  method: MethodInfo;
   birth: {
     dateOfBirth: string;
     timeOfBirth: string | null;
@@ -104,6 +137,25 @@ export interface RatnaResult {
     planets: { planet: Planet; sign: Sign; degree: number; house: number }[];
   };
   stableSigns: { planet: Planet; sign: Sign }[];
+  /** The one gemstone this result is about, whichever method chose it. */
+  primary: {
+    stone: GemstoneInfo;
+    planet: Planet;
+    basis: "lagna-lord" | "birth-weekday";
+    summary: string;
+    factors: { label: string; value: string }[];
+  };
+  /** Present only for the unknown-birth-time method. */
+  dateBased: null | {
+    localDate: string;
+    weekday: string;
+    weekdayLord: Planet;
+    rule: string;
+    weekdayLordSign: Sign | null;
+    sunrise: { local: string; timeZone: string } | null;
+    classicalNote: string;
+    table: WeekdayRow[];
+  };
   recommendation: null | {
     stone: (typeof GEMSTONES)[string];
     lagnaLord: Planet;
@@ -146,25 +198,69 @@ export const calculateRatna = async (
   };
 
   if (input.timeUnknown || !input.timeOfBirth) {
-    // Validate the date/zone even though no time is available.
-    resolveBirthInstant({ year: y, month: m, day: d, hour: 12, minute: 0 }, timezone);
-    const stableSigns = stableSignsForDate({ year: y, month: m, day: d }, timezone);
+    if (
+      !Number.isFinite(latitude) ||
+      !Number.isFinite(longitude) ||
+      Math.abs(latitude) > 90 ||
+      Math.abs(longitude) > 180
+    ) {
+      throw new ValidationError("Invalid geographic coordinates.");
+    }
+    // Unlike the Ascendant, nothing here is unreliable at high latitudes.
+    const sel = selectByBirthDate({ year: y, month: m, day: d }, input.place);
+    const explanation = await generateDateExplanation(
+      {
+        stone: sel.stone,
+        weekday: sel.weekday,
+        weekdayLord: sel.weekdayLord,
+        weekdayLordSign: sel.weekdayLordSign,
+        stableSigns: sel.stableSigns,
+        place: label,
+        localDate: sel.localDate,
+      },
+      deps.explain,
+    );
+    const factors = [
+      { label: "Local birth date", value: sel.localDate },
+      { label: "Birthplace and time zone", value: `${label} (${timezone})` },
+      { label: "Weekday ruler", value: `${sel.weekday}: ${sel.weekdayLord}` },
+      { label: "Traditional gemstone", value: sel.stone.name },
+      ...(sel.weekdayLordSign
+        ? [{ label: `${sel.weekdayLord} on that date`, value: `In ${sel.weekdayLordSign} all day (sidereal)` }]
+        : []),
+      { label: "Birth time", value: "Not used (unknown)" },
+    ];
     return {
-      status: "limited",
-      method: METHOD,
+      status: "date_based",
+      method: DATE_METHOD,
       birth: { ...baseBirth, utcOffsetMinutes: null, ambiguousLocalTime: false },
       chart: null,
-      stableSigns,
-      recommendation: null,
-      wearing: null,
-      explanation: {
-        source: "rules",
-        text: "Without an exact birth time, your Ascendant (Lagna) and houses cannot be calculated, and the Lagna-lord method cannot reliably identify a personalised gemstone. No recommendation is made. If you can find your birth time (for example on a birth certificate), you can calculate again.",
+      stableSigns: sel.stableSigns,
+      primary: {
+        stone: sel.stone,
+        planet: sel.weekdayLord,
+        basis: "birth-weekday",
+        summary: `Using your local birth date (a ${sel.weekday}) and birthplace, the Birth-Date & Place Gemstone Method identifies ${sel.stone.name}, traditionally associated with ${sel.weekdayLord}, as your gemstone association.`,
+        factors,
       },
-      notice:
-        stableSigns.length > 0
-          ? "Only planetary signs that stay the same throughout your birth date are shown below."
-          : null,
+      dateBased: {
+        localDate: sel.localDate,
+        weekday: sel.weekday,
+        weekdayLord: sel.weekdayLord,
+        rule: sel.rule,
+        weekdayLordSign: sel.weekdayLordSign,
+        sunrise: sel.sunrise,
+        classicalNote: sel.classicalNote,
+        table: WEEKDAY_TABLE,
+      },
+      recommendation: null,
+      wearing: buildWearingGuidance(
+        sel.stone,
+        { label, latitude, longitude, timeZone: timezone },
+        deps.now,
+      ),
+      explanation,
+      notice: null,
     };
   }
 
@@ -201,6 +297,14 @@ export const calculateRatna = async (
       })),
     },
     stableSigns: [],
+    primary: {
+      stone: rec.primary,
+      planet: rec.primary.planet,
+      basis: "lagna-lord",
+      summary: `Your Ascendant is ${rec.lagnaSign}; its ruler ${rec.lagnaLord} is traditionally associated with ${rec.primary.name} under the Parashari Lagna-lord method.`,
+      factors: rec.factors,
+    },
+    dateBased: null,
     recommendation: {
       stone: rec.primary,
       lagnaLord: rec.lagnaLord,
