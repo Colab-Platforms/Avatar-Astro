@@ -1,13 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import FeatureIntro from "@/components/FeatureIntro";
+import { aiChat } from "@/lib/aiClient";
 
 const fl = document.createElement("link"); fl.rel = "stylesheet";
 fl.href = "https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:wght@400;700&display=swap";
 if (!document.head.querySelector("link[href*='Cinzel']")) document.head.appendChild(fl);
 
-const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
-const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || "openai/gpt-oss-120b";
 
 const SYSTEM_PROMPT = `You are a Vedic scripture scholar. When given a situation, find the most relevant verse.
 Return ONLY a JSON object with exactly these keys (all required, no nulls):
@@ -26,20 +25,15 @@ Return ONLY a JSON object with exactly these keys (all required, no nulls):
 }`;
 
 async function callAI(userMsg) {
-  const res = await fetch(GROQ_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROQ_API_KEY}` },
-    body: JSON.stringify({
-      model: GROQ_MODEL,
+  const res = await aiChat({
       temperature: 0.7,
       max_tokens: 1500,
-      response_format: { type: "json_object" },
+      json: true,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: userMsg }
       ]
-    }),
-  });
+    });
   const data = await res.json();
   if (data.error) throw new Error(data.error.message);
   const raw = data.choices?.[0]?.message?.content || "{}";
@@ -191,7 +185,16 @@ function StarCanvas() {
   return <canvas ref={canvasRef} style={{position:"fixed",inset:0,zIndex:0,pointerEvents:"none"}} />;
 }
 
-function Field({ icon, label, labelClass, text, textClass, children }) {
+interface FieldProps {
+  icon?: string;
+  label: string;
+  labelClass: string;
+  text?: string;
+  textClass?: string;
+  children?: React.ReactNode;
+}
+
+function Field({ icon, label, labelClass, text, textClass, children }: FieldProps) {
   const content = text || children;
   if (!content) return null;
   return (
@@ -218,10 +221,10 @@ export default function InnerVoiceWisdom() {
     const s = document.createElement("style");
     s.textContent = CSS;
     document.head.appendChild(s);
-    return () => document.head.removeChild(s);
+    return () => { document.head.removeChild(s); };
   }, []);
 
-  const fetchWisdom = async (sit) => {
+  const fetchWisdom = async (sit?: string) => {
     const q = (sit || situation).trim();
     if (!q) return;
     if (sit) setSituation(sit);
@@ -234,7 +237,7 @@ export default function InnerVoiceWisdom() {
       if (!data || Object.keys(data).length === 0) throw new Error("Empty response from AI");
       setResult(data);
     } catch(e) {
-      console.error("[Shloka Wisdom] request failed:", e);
+      console.error("[Sacred Shloka] request failed:", e);
       setError("Could not retrieve wisdom right now. Please try again in a moment.");
     } finally {
       setLoading(false);
@@ -260,9 +263,21 @@ export default function InnerVoiceWisdom() {
 
         <div className="ivw-hdr">
           <div className="ivw-eyebrow">Ancient Vedic Scripture</div>
-          <h1 className="ivw-h1">Shloka Oracle</h1>
-          <p className="ivw-hsub">The exact verse that speaks to your situation — not a random quote</p>
+          <h1 className="ivw-h1">Sacred Shloka</h1>
         </div>
+
+        {!display && (
+          <FeatureIntro
+            className="mb-10"
+            description="Discover timeless wisdom from sacred Sanskrit verses and traditional Indian scriptures. Sacred Shloka helps you explore the meaning, context, and practical lessons behind each verse so you can connect ancient teachings with everyday life."
+            steps={[
+              { title: "Share Your Situation", text: "Describe what you are going through, or pick a quick situation. You may also choose a scripture." },
+              { title: "Understand Its Meaning", text: "Read the Sanskrit verse, its transliteration, word meanings and the English meaning." },
+              { title: "Apply the Wisdom", text: "Explore how the verse applies to you and the practical action it suggests." },
+            ]}
+            disclaimer="Verses are suggested by an AI and may contain errors in text, translation or verse numbers. Please verify the verse and its reference in an authentic edition before quoting or relying on it."
+          />
+        )}
 
         {!display ? (
           <>
@@ -344,7 +359,7 @@ export default function InnerVoiceWisdom() {
 
               {display.meaning && (
                 <div className="ivw-sec meaning">
-                  <Field icon="📖" label="Meaning" labelClass="lbl-meaning" text={display.meaning} textClass="gold" />
+                  <Field icon="📖" label="English Meaning" labelClass="lbl-meaning" text={display.meaning} textClass="gold" />
                 </div>
               )}
 
@@ -362,7 +377,7 @@ export default function InnerVoiceWisdom() {
 
               {display.action && (
                 <div className="ivw-sec action">
-                  <Field icon="⚡" label="Your Action Today" labelClass="lbl-action" text={display.action} />
+                  <Field icon="⚡" label="Practical Lesson for Today" labelClass="lbl-action" text={display.action} />
                 </div>
               )}
 
@@ -382,6 +397,10 @@ export default function InnerVoiceWisdom() {
                 {display.mantraCount && <div className="ivw-mantra-count">↳ {display.mantraCount}</div>}
               </div>
             )}
+
+            <p style={{textAlign:"center",fontSize:13,fontStyle:"italic",color:"rgba(255,255,255,.5)",margin:"4px 0 16px"}}>
+              AI-suggested verse — please verify the text and reference in an authentic edition before quoting.
+            </p>
 
             <div className="ivw-btns">
               <button className="ivw-save" onClick={saveShloka}>✦ Save Shloka</button>

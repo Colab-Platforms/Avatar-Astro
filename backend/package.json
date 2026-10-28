@@ -15,6 +15,7 @@
     "db:seed:chadhawa": "tsx prisma/seeds/chadhawaOfferings.ts",
     "db:seed:shop": "tsx prisma/seeds/shopProducts.ts",
     "db:seed:darshan": "tsx prisma/seeds/darshanChannels.ts",
+    "test:ai": "tsx --test src/__tests__/routes/aiRoutes.node-test.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy"

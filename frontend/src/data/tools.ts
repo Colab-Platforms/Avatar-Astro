@@ -41,11 +41,11 @@ export const tools: AstrologyTool[] = [
     path: "/palm-reading",
   },
   {
-    title: "AI Name Analysis",
+    title: "Cosmic Blueprint",
     description:
-      "Analyze your name's numerology and discover hidden personality insights.",
-    image: "/placeholders/AI-name-analysis.webp",
-    button: "Analyze",
+      "Explore name and birth-date numerology insights into your personality and life journey.",
+    image: "/placeholders/Cosmic-Blueprint.webp",
+    button: "Explore Now",
     path: "/name-destiny-report",
   },
   {

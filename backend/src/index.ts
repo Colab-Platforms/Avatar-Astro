@@ -7,6 +7,7 @@ import compatibilityRoutes from "./routes/compatibilityRoutes.js";
 import birthChartRoutes from "./routes/birthChartRoutes.js";
 import nameAnalysisRoutes from "./routes/nameAnalysisRoutes.js";
 import innerVoiceRoutes from "./routes/innerVoiceRoutes.js";
+import aiProxyRoutes from "./routes/aiProxyRoutes.js";
 import darshanRoutes from "./modules/darshan/darshan.public.route.js";
 import authRoutes from "./modules/auth/auth.route.js";
 import adminRoutes from "./modules/admin/admin.route.js";
@@ -57,6 +58,8 @@ app.use(
     credentials: true,
   }),
 );
+// Mounted before the global 20mb body parser: it applies its own 250kb limit.
+app.use("/api/ai", aiProxyRoutes);
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true, limit: "20mb" }));
 

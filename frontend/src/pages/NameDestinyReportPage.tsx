@@ -1,6 +1,7 @@
 import { useState } from "react";
 import NameDestinyReport from "@/components/NameDestinyReport";
 import CelebrityCarousel from "@/components/NameDestinyReport/sections/CelebrityCarousel";
+import FeatureIntro from "@/components/FeatureIntro";
 import PremiumHero from "@/components/NameDestinyReport/sections/PremiumHero";
 import StatsRow from "@/components/NameDestinyReport/sections/StatsRow";
 import { zodiacFromDob, lifePathNumber } from "@/lib/numerology";
@@ -62,12 +63,23 @@ export default function NameDestinyReportPage() {
             onViewSample={() => scrollToId("celebrity-name-changes")}
           />
 
+          <FeatureIntro
+            className="mb-4"
+            description="Discover the cosmic influences that may shape your personality, strengths, challenges, and life journey. Cosmic Blueprint uses your name and date of birth to generate a personalized numerology and astrological interpretation."
+            steps={[
+              { title: "Enter Your Details", text: "Provide your name and date of birth. Your last name is optional." },
+              { title: "Generate Your Reading", text: "Your name and birth date are analysed using the tool's numerology and planetary-ruler logic." },
+              { title: "Explore Your Insights", text: "Review the personalized interpretation and the themes highlighted in your reading." },
+            ]}
+            disclaimer="Readings are interpretive guidance for reflection, not scientific fact or a guarantee of outcomes."
+          />
+
           <StatsRow />
 
           <div id="destiny-form" style={{ maxWidth: 600, margin: "0 auto", padding: "32px 0 20px", scrollMarginTop: 100 }}>
             <div style={{ textAlign: "center", marginBottom: 36 }}>
               <h2 style={{ fontFamily: "'Astra','Cinzel',serif", fontSize: "clamp(24px,3.5vw,34px)", fontWeight: 700, color: "#fff", textTransform: "uppercase", letterSpacing: "0.03em", lineHeight: 1.2, marginBottom: 12 }}>
-                Your Name &amp; Destiny Report
+                Your Cosmic Blueprint
               </h2>
               <p style={{ color: "rgba(255,255,255,0.55)", fontStyle: "italic", fontSize: 16 }}>
                 Enter your details below to begin your free name analysis
@@ -83,18 +95,18 @@ export default function NameDestinyReportPage() {
             <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "32px 28px", backdropFilter: "blur(16px)" }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
                 <div>
-                  <label style={{ display: "block", color: "#ff7e47", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>First Name *</label>
-                  <input style={inputStyle} value={form.firstName} onChange={(e) => up("firstName", e.target.value)} placeholder="e.g. Rohan" />
+                  <label htmlFor="nd-first" style={{ display: "block", color: "#ff7e47", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>First Name *</label>
+                  <input id="nd-first" style={inputStyle} value={form.firstName} onChange={(e) => up("firstName", e.target.value)} placeholder="e.g. Rohan" />
                 </div>
                 <div>
-                  <label style={{ display: "block", color: "#ff7e47", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>Last Name</label>
-                  <input style={inputStyle} value={form.lastName} onChange={(e) => up("lastName", e.target.value)} placeholder="e.g. Mehta" />
+                  <label htmlFor="nd-last" style={{ display: "block", color: "#ff7e47", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>Last Name</label>
+                  <input id="nd-last" style={inputStyle} value={form.lastName} onChange={(e) => up("lastName", e.target.value)} placeholder="e.g. Mehta" />
                 </div>
               </div>
 
               <div style={{ marginBottom: 28 }}>
-                <label style={{ display: "block", color: "#ff7e47", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>Date of Birth *</label>
-                <input type="date" style={inputStyle} value={form.dob} onChange={(e) => up("dob", e.target.value)} />
+                <label htmlFor="nd-dob" style={{ display: "block", color: "#ff7e47", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>Date of Birth *</label>
+                <input id="nd-dob" type="date" style={inputStyle} value={form.dob} onChange={(e) => up("dob", e.target.value)} />
               </div>
 
               <button
@@ -108,7 +120,7 @@ export default function NameDestinyReportPage() {
                 onMouseOver={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 0 40px rgba(255,126,71,0.5)"; }}
                 onMouseOut={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 0 30px rgba(255,126,71,0.35)"; }}
               >
-                ✦ Reveal My Destiny Report ✦
+                ✦ Reveal My Cosmic Blueprint ✦
               </button>
             </div>
           </div>

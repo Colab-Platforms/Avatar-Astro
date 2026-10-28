@@ -208,7 +208,7 @@ export default function PremiumHero({
           className="text-center lg:text-left"
         >
           <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[rgba(255,126,71,0.12)] text-[#ff7e47] text-xs font-semibold tracking-widest uppercase mb-5">
-            <Sparkles size={12} /> AI Name Analysis
+            <Sparkles size={12} /> Cosmic Blueprint
           </div>
 
           <h1

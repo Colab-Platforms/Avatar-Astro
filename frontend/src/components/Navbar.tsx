@@ -23,15 +23,15 @@ const astrologyTools = [
   { name: "Birth Chart",      path: "/birth-chart" },
   { name: "Compatibility",    path: "/compatibility" },
   { name: "Palm Reading",     path: "/palm-reading" },
-  { name: "AI Destiny Report", path: "/name-destiny-report" },
+  { name: "Cosmic Blueprint", path: "/name-destiny-report" },
 ];
 
 const innerVoiceLinks = [
-  { name: "Karma Diagnosis", path: "/inner-voice" },
+  { name: "Know Your Karma", path: "/inner-voice" },
   { name: "AI Guru",         path: "/inner-voice/chat" },
   { name: "Karma Score",     path: "/inner-voice/dashboard" },
-  { name: "Karma Journal",   path: "/inner-voice/journal" },
-  { name: "Shloka Wisdom",   path: "/inner-voice/wisdom" },
+  { name: "Future Life Path Prediction", path: "/inner-voice/future-path" },
+  { name: "Sacred Shloka", path: "/inner-voice/wisdom" },
 ];
 
 const devotionLinks = [

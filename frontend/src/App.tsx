@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import Layout from "./components/Layout";
 import { NavigationProvider } from "./context/NavigationContext";
@@ -22,7 +22,7 @@ import PalmReading from "./pages/PalmReading";
 import InnerVoice from "./pages/InnerVoice";
 import InnerVoiceChat from "./pages/InnerVoiceChat";
 import InnerVoiceDashboard from "./pages/InnerVoiceDashboard";
-import InnerVoiceJournal from "./pages/InnerVoiceJournal";
+import FutureLifePath from "./pages/FutureLifePath";
 import InnerVoiceWisdom from "./pages/InnerVoiceWisdom";
 import TarotExperience from "./pages/TarotExperience";
 import SolarSystem from "./pages/SolarSystem";
@@ -232,13 +232,15 @@ const AnimatedRoutes = () => {
           }
         />
         <Route
-          path="/inner-voice/journal"
+          path="/inner-voice/future-path"
           element={
             <PageTransition>
-              <InnerVoiceJournal />
+              <FutureLifePath />
             </PageTransition>
           }
         />
+        {/* Karma Journal was replaced by Future Life Path Prediction; keep old links working. */}
+        <Route path="/inner-voice/journal" element={<Navigate to="/inner-voice/future-path" replace />} />
         <Route
           path="/inner-voice/wisdom"
           element={

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Check, Sparkles } from "lucide-react";
 
 const FEATURES = [
-  "AI Name Analysis",
+  "Name Numerology Analysis",
   "Top 5 Optimized Name Spellings",
   "Planet Compatibility",
   "Destiny Score",
@@ -45,7 +45,7 @@ export default function PricingPaywall({
           className="text-2xl sm:text-3xl font-extrabold text-foreground mb-2 uppercase tracking-wide"
           style={{ fontFamily: "'Astra','Cinzel',serif" }}
         >
-          Unlock Your Complete AI Destiny Report
+          Unlock Your Complete Cosmic Blueprint
         </h3>
         <div className="text-4xl font-extrabold text-gold mb-6">₹499</div>
 
@@ -66,7 +66,7 @@ export default function PricingPaywall({
               onClick={handleClick}
               className="ndr-glow-btn w-full rounded-2xl bg-gradient-to-r from-gold to-gold-dim text-cosmic-dark font-bold text-base uppercase tracking-wide py-4 hover:opacity-90 transition-opacity"
             >
-              Unlock My AI Destiny Report
+              Unlock My Cosmic Blueprint
             </button>
             {justUnlocked ? null : (
               <p className="text-xs text-muted-foreground mt-3">Demo unlock — real payment coming soon.</p>

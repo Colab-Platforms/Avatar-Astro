@@ -4,11 +4,9 @@ import { useTextToSpeech } from "../hooks/useTextToSpeech";
 import { useLanguageDetection, type Language } from "../hooks/useLanguageDetection";
 import { useConsultationGuard } from "../hooks/useConsultationGuard";
 import { API_BASE_URL } from "@/lib/api";
+import { aiChat } from "@/lib/aiClient";
 
 // ── API ──────────────────────────────────────────────────────────────────────
-const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
-const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || "openai/gpt-oss-120b";
 
 // Sarvam AI TTS — routed through /api/tts serverless function (no CORS issues).
 export const TTS_PROVIDER = "sarvam" as const;
@@ -121,19 +119,14 @@ async function translateText(text: string, targetLang: Language): Promise<string
       ? "Translate the following to natural Hindi written entirely in Roman letters — absolutely NO Devanagari script. Preserve the spiritual tone. Output ONLY the translation."
       : "Translate the following to natural Hinglish — Hindi words in Roman letters mixed with English, as spoken in urban India. Preserve the spiritual tone. Output ONLY the translation.";
   try {
-    const res = await fetch(GROQ_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${GROQ_API_KEY}` },
-      body: JSON.stringify({
-        model: GROQ_MODEL,
+    const res = await aiChat({
         temperature: 0.3,
         max_tokens: 400,
         messages: [
           { role: "system", content: instruction },
           { role: "user", content: text },
         ],
-      }),
-    });
+      });
     const data = await res.json();
     return transliterateToRoman((data.choices?.[0]?.message?.content || "").trim()) || text;
   } catch {
@@ -510,16 +503,11 @@ export default function VoiceConsultation() {
         role: e.role === "user" ? ("user" as const) : ("assistant" as const),
         content: e.text,
       }));
-      const res = await fetch(GROQ_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${GROQ_API_KEY}` },
-        body: JSON.stringify({
-          model: GROQ_MODEL,
+      const res = await aiChat({
           temperature: 0.75,
           max_tokens: 380,
           messages: [{ role: "system", content: VOICE_SYSTEM_PROMPT }, ...history],
-        }),
-      });
+        });
       if (abortRef.current) return;
       const data = await res.json();
       if (data.error) throw new Error(data.error.message);
