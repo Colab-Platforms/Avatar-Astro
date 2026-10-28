@@ -67,13 +67,13 @@ export default function DestinyHero({
   return (
     <div className="px-6 sm:px-10 pt-10 pb-8 text-center">
       <div className="inline-block px-4 py-1.5 rounded-full bg-gold/10 text-gold text-xs font-semibold tracking-widest uppercase mb-4">
-        ✨ AI Name Analysis
+        ✨ Cosmic Blueprint
       </div>
       <h2
         className="ndr-gradient-text text-3xl sm:text-5xl font-extrabold leading-tight mb-3 uppercase tracking-wide"
         style={{ fontFamily: "'Astra','Cinzel',serif" }}
       >
-        Your AI Destiny Report
+        Your Cosmic Blueprint
       </h2>
       <p className="text-muted-foreground max-w-xl mx-auto mb-10 text-base sm:text-lg">
         Your name carries a unique vibration. Our AI combines Astrology, Numerology and Planetary

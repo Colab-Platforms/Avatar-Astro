@@ -84,7 +84,7 @@ export function downloadDestinyReportPDF(data: PdfData) {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(24);
   doc.setTextColor(255, 255, 255);
-  doc.text("AI Destiny Report", margin, 70);
+  doc.text("Cosmic Blueprint", margin, 70);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(13);
   doc.text(data.name, margin, 100);

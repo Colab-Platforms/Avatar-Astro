@@ -16,17 +16,15 @@ import GuruConversation from "@/components/ai-guru/GuruConversation";
 import GuruChatInput from "@/components/ai-guru/GuruChatInput";
 import LanguageControls from "@/components/ai-guru/LanguageControls";
 import { detectLanguage, buildLanguageDirective, type InputLanguageChoice, type ReplyLanguageChoice } from "@/components/ai-guru/languages";
+import { aiChat } from "@/lib/aiClient";
 
 const fl = document.createElement("link"); fl.rel = "stylesheet";
 fl.href = "https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap";
 if (!document.head.querySelector("link[href*='Cinzel']")) document.head.appendChild(fl);
 
-const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
-const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 // Configurable so a deprecated/renamed model doesn't require a code change —
-// set VITE_GROQ_MODEL to override. "llama-3.3-70b-versatile" was retired by
+// set GROQ_MODEL on the backend to override. "llama-3.3-70b-versatile" was retired by
 // Groq; openai/gpt-oss-120b is the current large json_mode-capable model.
-const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || "openai/gpt-oss-120b";
 
 const PANDIT_CONSULTATION_SYSTEM = `You are Pandit Rameshwar Ji, a revered Jyotish Acharya and Vedic astrologer with 40 years of experience in temples, Vedic scriptures, and spiritual healing. You speak like a wise, calm elder — deeply compassionate, never preachy, with the authority of a true Pandit Ji.
 
@@ -166,11 +164,7 @@ const PANDIT_DIAGNOSIS_SYSTEM = `You are Pandit Rameshwar Ji, a revered Vedic as
 }`;
 
 async function callConsultation(messages) {
-  const res = await fetch(GROQ_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROQ_API_KEY}` },
-    body: JSON.stringify({ model: GROQ_MODEL, temperature: 0.7, max_tokens: 1000, response_format: { type: "json_object" }, messages }),
-  });
+  const res = await aiChat({ temperature: 0.7, max_tokens: 1000, json: true, messages });
   const data = await res.json();
   if (data.error) throw new Error(data.error.message);
   try { return JSON.parse(data.choices?.[0]?.message?.content || "{}"); }
@@ -181,18 +175,14 @@ async function callDiagnosis(conversationHistory) {
   const summary = conversationHistory
     .map(m => `${m.role === "user" ? "Seeker" : "Pandit Ji"}: ${typeof m.content === "string" ? m.content : m.content?.message || ""}`)
     .join("\n");
-  const res = await fetch(GROQ_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROQ_API_KEY}` },
-    body: JSON.stringify({
-      model: GROQ_MODEL, temperature: 0.6, max_tokens: 4000,
-      response_format: { type: "json_object" },
+  const res = await aiChat({
+      temperature: 0.6, max_tokens: 4000,
+      json: true,
       messages: [
         { role: "system", content: PANDIT_DIAGNOSIS_SYSTEM },
         { role: "user", content: `Based on this consultation, generate the complete diagnosis report:\n\n${summary}` },
       ],
-    }),
-  });
+    });
   const data = await res.json();
   if (data.error) throw new Error(data.error.message);
   try { return JSON.parse(data.choices?.[0]?.message?.content || "{}"); }

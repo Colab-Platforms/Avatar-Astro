@@ -18,7 +18,7 @@ const PARENT_ROUTES: Record<string, string> = {
   '/inner-voice':           '/',
   '/inner-voice/chat':      '/inner-voice',
   '/inner-voice/dashboard': '/inner-voice',
-  '/inner-voice/journal':   '/inner-voice',
+  '/inner-voice/future-path': '/inner-voice',
   '/inner-voice/wisdom':    '/inner-voice',
 };
 

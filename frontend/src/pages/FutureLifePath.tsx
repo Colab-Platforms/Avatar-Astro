@@ -1,0 +1,277 @@
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Compass, RotateCcw, Pencil, Loader2 } from "lucide-react";
+import FeatureIntro from "@/components/FeatureIntro";
+import { API_BASE_URL } from "@/lib/api";
+
+const FOCUS_OPTIONS = [
+  { value: "general", label: "General life direction" },
+  { value: "career", label: "Career and professional growth" },
+  { value: "relationships", label: "Relationships" },
+  { value: "personal-growth", label: "Personal development" },
+  { value: "finance", label: "Financial habits and goals" },
+];
+
+interface LifePathResult {
+  lifePathOverview?: string;
+  careerAndGrowth?: string;
+  relationships?: string;
+  personalDevelopment?: string;
+  focusInsight?: string;
+  upcomingPeriods?: { period: string; theme: string }[];
+  reflectionQuestions?: string[];
+}
+
+const SECTIONS: { key: keyof LifePathResult; title: string }[] = [
+  { key: "lifePathOverview", title: "Life Path Overview" },
+  { key: "careerAndGrowth", title: "Career and Growth" },
+  { key: "relationships", title: "Relationships" },
+  { key: "personalDevelopment", title: "Personal Development" },
+];
+
+const inputCls =
+  "w-full rounded-xl border border-white/15 bg-white/[0.05] px-4 py-3 text-base text-white placeholder:text-white/30 focus:border-[#BC6A4D] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#BC6A4D]/50";
+const labelCls = "mb-2 block text-sm font-semibold text-[#D9895F]";
+
+export default function FutureLifePath() {
+  const [dob, setDob] = useState("");
+  const [tob, setTob] = useState("");
+  const [pob, setPob] = useState("");
+  const [focus, setFocus] = useState("general");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [result, setResult] = useState<LifePathResult | null>(null);
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  async function generate() {
+    if (!dob) {
+      setError("Please enter your date of birth.");
+      return;
+    }
+    if (dob > today || dob < "1900-01-01") {
+      setError("Please enter a valid date of birth.");
+      return;
+    }
+    setError("");
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/inner-voice/life-path`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dob, tob: tob || undefined, pob: pob.trim() || undefined, focus }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Request failed");
+      if (!data || !data.lifePathOverview) throw new Error("Empty reading");
+      setResult(data);
+    } catch (e) {
+      console.error("[Future Life Path Prediction] request failed:", e);
+      setError("We couldn't generate your reading right now. Please try again in a moment.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-[#050510] px-4 pb-24 pt-24 text-white">
+      <div className="mx-auto max-w-3xl">
+        <Link
+          to="/inner-voice"
+          className="mb-8 inline-block text-xs uppercase tracking-[0.2em] text-[#BC6A4D]/70 hover:text-[#BC6A4D] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#BC6A4D]"
+        >
+          ← Inner Voice
+        </Link>
+
+        <header className="mb-8 text-center">
+          <Compass aria-hidden="true" className="mx-auto mb-3 text-[#BC6A4D]" size={36} />
+          <h1
+            className="mb-4 text-3xl leading-tight text-[#BC6A4D] sm:text-5xl"
+            style={{ fontFamily: "'Astra','Iceland',sans-serif" }}
+          >
+            Future Life Path Prediction
+          </h1>
+        </header>
+
+        <FeatureIntro
+          className="mb-10"
+          description="Explore possible directions for your future through personalized astrological insights. Future Life Path Prediction helps you reflect on potential opportunities, personal growth, relationships, career themes, and important life decisions through the lens of astrology."
+          steps={[
+            { title: "Enter Details", text: "Add your date of birth. Time, place and an area of interest are optional." },
+            { title: "Generate Your Reading", text: "A life path interpretation is written for you from the details you provide." },
+            { title: "Explore Your Insights", text: "Read each section and use the reflection questions to think through your next steps." },
+          ]}
+          disclaimer="This is interpretive guidance, not certain knowledge of the future. Readings are AI-written interpretations and do not include a computed birth chart. Please don't treat them as medical, legal or financial advice."
+        />
+
+        {!result ? (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!loading) generate();
+            }}
+            noValidate
+            className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 sm:p-8"
+            aria-busy={loading}
+          >
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label htmlFor="flp-dob" className={labelCls}>
+                  Date of birth <span className="text-[#ff9b7a]">(required)</span>
+                </label>
+                <input
+                  id="flp-dob"
+                  type="date"
+                  required
+                  min="1900-01-01"
+                  max={today}
+                  value={dob}
+                  onChange={(e) => setDob(e.target.value)}
+                  className={inputCls}
+                  aria-describedby={error ? "flp-error" : undefined}
+                />
+              </div>
+              <div>
+                <label htmlFor="flp-tob" className={labelCls}>
+                  Time of birth <span className="font-normal text-white/50">(optional)</span>
+                </label>
+                <input id="flp-tob" type="time" value={tob} onChange={(e) => setTob(e.target.value)} className={inputCls} />
+              </div>
+              <div>
+                <label htmlFor="flp-pob" className={labelCls}>
+                  Place of birth <span className="font-normal text-white/50">(optional)</span>
+                </label>
+                <input
+                  id="flp-pob"
+                  type="text"
+                  maxLength={100}
+                  value={pob}
+                  onChange={(e) => setPob(e.target.value)}
+                  placeholder="City, country"
+                  className={inputCls}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label htmlFor="flp-focus" className={labelCls}>
+                  Area of interest <span className="font-normal text-white/50">(optional)</span>
+                </label>
+                <select id="flp-focus" value={focus} onChange={(e) => setFocus(e.target.value)} className={inputCls}>
+                  {FOCUS_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value} className="bg-[#050510]">
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {error && (
+              <div
+                id="flp-error"
+                role="alert"
+                className="mt-5 rounded-xl border border-red-400/30 bg-red-400/10 px-4 py-3 text-sm text-red-300"
+              >
+                ⚠ {error}
+                {!loading && dob && error.startsWith("We couldn't") && (
+                  <button type="button" onClick={generate} className="ml-3 underline underline-offset-2 hover:text-white">
+                    Retry
+                  </button>
+                )}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#BC6A4D] px-6 py-4 text-sm font-bold uppercase tracking-[0.15em] text-[#050510] transition hover:bg-[#D9895F] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="animate-spin" size={18} aria-hidden="true" /> Reading your path…
+                </>
+              ) : (
+                "Generate My Life Path Reading"
+              )}
+            </button>
+            <p className="mt-3 text-center text-xs text-white/45">
+              Your details are sent only to generate this reading and are not saved.
+            </p>
+          </form>
+        ) : (
+          <div className="space-y-4" aria-live="polite">
+            {SECTIONS.map(({ key, title }) =>
+              result[key] ? (
+                <section key={key} className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 sm:p-6">
+                  <h2 className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-[#D9895F]">{title}</h2>
+                  <p className="text-base leading-relaxed text-white/85">{result[key] as string}</p>
+                </section>
+              ) : null,
+            )}
+
+            {result.focusInsight && (
+              <section className="rounded-2xl border border-[#BC6A4D]/30 bg-[#BC6A4D]/[0.07] p-5 sm:p-6">
+                <h2 className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-[#D9895F]">
+                  Your Focus: {FOCUS_OPTIONS.find((o) => o.value === focus)?.label}
+                </h2>
+                <p className="text-base leading-relaxed text-white/90">{result.focusInsight}</p>
+              </section>
+            )}
+
+            {!!result.upcomingPeriods?.length && (
+              <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 sm:p-6">
+                <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-[#D9895F]">Upcoming Periods</h2>
+                <ul className="space-y-3">
+                  {result.upcomingPeriods.map((p, i) => (
+                    <li key={i} className="text-base leading-relaxed text-white/85">
+                      <span className="font-semibold text-white">{p.period}: </span>
+                      {p.theme}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {!!result.reflectionQuestions?.length && (
+              <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 sm:p-6">
+                <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-[#D9895F]">Questions to Reflect On</h2>
+                <ul className="list-disc space-y-2 pl-5 text-base text-white/80">
+                  {result.reflectionQuestions.map((q, i) => (
+                    <li key={i}>{q}</li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            <p className="px-2 text-center text-xs italic text-white/50">
+              This reading is interpretive guidance for reflection, not a prediction of certain outcomes.
+            </p>
+
+            <div className="flex flex-col gap-3 pt-2 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => setResult(null)}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-[#BC6A4D]/40 px-5 py-3 text-sm uppercase tracking-widest text-[#D9895F] hover:bg-[#BC6A4D]/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#BC6A4D]"
+              >
+                <Pencil size={16} aria-hidden="true" /> Edit Details
+              </button>
+              <button
+                type="button"
+                onClick={generate}
+                disabled={loading}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/20 px-5 py-3 text-sm uppercase tracking-widest text-white/70 hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#BC6A4D] disabled:opacity-50"
+              >
+                {loading ? <Loader2 className="animate-spin" size={16} aria-hidden="true" /> : <RotateCcw size={16} aria-hidden="true" />}
+                Regenerate
+              </button>
+            </div>
+            {error && (
+              <div role="alert" className="rounded-xl border border-red-400/30 bg-red-400/10 px-4 py-3 text-sm text-red-300">
+                ⚠ {error}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -1,14 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from "recharts";
+import { aiChat } from "@/lib/aiClient";
 
 const fl = document.createElement("link"); fl.rel = "stylesheet";
 fl.href = "https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:wght@400;700&display=swap";
 if (!document.head.querySelector("link[href*='Cinzel']")) document.head.appendChild(fl);
 
-const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
-const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || "openai/gpt-oss-120b";
 
 const CSS = `
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -181,7 +179,7 @@ export default function InnerVoiceDashboard() {
   const [loadingAI, setLoadingAI] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  useEffect(()=>{ const s=document.createElement("style"); s.textContent=CSS; document.head.appendChild(s); return()=>document.head.removeChild(s); },[]);
+  useEffect(()=>{ const s=document.createElement("style"); s.textContent=CSS; document.head.appendChild(s); return()=>{ document.head.removeChild(s); }; },[]);
   useEffect(()=>{ if(profile && !aiData) loadAI(); },[profile]);
 
   const saveProfile=()=>{ if(!form.name||!form.sign) return; localStorage.setItem("iv_profile",JSON.stringify(form)); setProfile(form); };
@@ -190,18 +188,14 @@ export default function InnerVoiceDashboard() {
     setLoadingAI(true);
     const today=new Date().toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
     try {
-      const res=await fetch(GROQ_URL,{
-        method:"POST",
-        headers:{"Content-Type":"application/json","Authorization":`Bearer ${GROQ_API_KEY}`},
-        body:JSON.stringify({
-          model:GROQ_MODEL, temperature:0.7, max_tokens:1000,
-          response_format:{type:"json_object"},
+      const res=await aiChat({
+          temperature:0.7, max_tokens:1000,
+          json: true,
           messages:[
             {role:"system",content:"You are a Vedic astrology karma calculator. Return ONLY valid JSON."},
             {role:"user",content:`Calculate karma score for: Name: ${profile.name}, Sun Sign: ${profile.sign}, Nakshatra: ${profile.nakshatra||"Unknown"}, Dasha: ${profile.dasha||"Unknown"}, DOB: ${profile.dob||"Unknown"}, Today: ${today}. Return JSON: {composite (0-100), natalBase (0-40), transitBonus (-20 to +30), behaviorBase (0-30), scoreMessage (2 sentences), currentDasha (string), transitAlerts [{planet,event,impact,tip}], radarData [{subject,value 1-10} for Dharma/Artha/Kama/Moksha/Karma/Seva]}`}
           ]
-        }),
-      });
+        });
       const data=await res.json();
       if(data.error) throw new Error(data.error.message);
       const parsed=JSON.parse(data.choices?.[0]?.message?.content||"{}");

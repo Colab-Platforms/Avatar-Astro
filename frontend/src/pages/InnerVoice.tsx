@@ -1,13 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import FeatureIntro from "@/components/FeatureIntro";
+import { aiChat } from "@/lib/aiClient";
 
 const fl = document.createElement("link"); fl.rel = "stylesheet";
 fl.href = "https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:wght@400;700&display=swap";
 if (!document.head.querySelector("link[href*='Cinzel']")) document.head.appendChild(fl);
 
-const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
-const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || "openai/gpt-oss-120b";
 
 const SYSTEM_PROMPT = `You are Pandit Rameshwar Ji, a revered Vedic astrologer with 40 years of experience.
 Analyze the seeker's situation and return ONLY a valid JSON object with EXACTLY these keys (all required):
@@ -38,20 +37,15 @@ Analyze the seeker's situation and return ONLY a valid JSON object with EXACTLY 
 }`;
 
 async function callAI(userMsg) {
-  const res = await fetch(GROQ_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROQ_API_KEY}` },
-    body: JSON.stringify({
-      model: GROQ_MODEL,
+  const res = await aiChat({
       temperature: 0.7,
       max_tokens: 1500,
-      response_format: { type: "json_object" },
+      json: true,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: `My situation: ${userMsg}` }
       ]
-    }),
-  });
+    });
   const data = await res.json();
   if (data.error) throw new Error(data.error.message);
   const raw = data.choices?.[0]?.message?.content || "{}";
@@ -249,11 +243,15 @@ const CSS = `
 .iv-reset-btn:hover{background:rgba(188,106,77,.08);color:#BC6A4D;border-color:rgba(188,106,77,.5);}
 `;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SpeechCtor = new () => any;
+type SpeechWindow = { SpeechRecognition?: SpeechCtor; webkitSpeechRecognition?: SpeechCtor };
+
 const NAV_CARDS = [
   { icon:"🧘", name:"AI Guru", tag:"Pandit Intelligence", desc:"Converse with a Vedic pandit. Get pooja prescriptions, mantra remedies, and personal dharmic guidance.", path:"/inner-voice/chat", color:"gold" },
   { icon:"⚡", name:"Karma Score", tag:"Natal + Behavioral", desc:"Your real karma score — calculated from your birth chart, planetary transits, and daily actions combined.", path:"/inner-voice/dashboard", color:"purple" },
-  { icon:"📓", name:"Karma Journal", tag:"Planetary Diary", desc:"Log life events and let AI cross-reference them with your running dasha and transit chart.", path:"/inner-voice/journal", color:"rose" },
-  { icon:"🕉", name:"Shloka Oracle", tag:"Live Vedic Wisdom", desc:"Not a random verse — the exact shloka from Gita, Upanishads, or Puranas that speaks to your exact situation.", path:"/inner-voice/wisdom", color:"cyan" },
+  { icon:"🧭", name:"Future Life Path Prediction", tag:"Interpretive Astrology", desc:"Explore possible life directions through interpretive astrological guidance.", path:"/inner-voice/future-path", color:"rose" },
+  { icon:"🕉", name:"Sacred Shloka", tag:"Vedic Wisdom", desc:"Discover the meaning and practical wisdom of traditional Sanskrit verses.", path:"/inner-voice/wisdom", color:"cyan" },
 ];
 
 const HINTS = [
@@ -545,14 +543,14 @@ export default function InnerVoice() {
     const s = document.createElement("style");
     s.textContent = CSS;
     document.head.appendChild(s);
-    return () => document.head.removeChild(s);
+    return () => { document.head.removeChild(s); };
   }, []);
 
   const karmaHistory = (() => { try { return JSON.parse(localStorage.getItem("iv_karma_v2")||"[]"); } catch { return []; } })();
   const latestScore = karmaHistory[0]?.composite || null;
 
   const startVoice = () => {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SR = (window as unknown as SpeechWindow).SpeechRecognition || (window as unknown as SpeechWindow).webkitSpeechRecognition;
     if (!SR) { alert("Use Chrome for voice input."); return; }
     if (listening) { recognitionRef.current?.stop(); setListening(false); return; }
     const rec = new SR();
@@ -569,14 +567,14 @@ export default function InnerVoice() {
       const data = await callAI(text);
       if (!data || !Object.keys(data).length) throw new Error("Empty response. Please try again.");
       setResult(data);
-    } catch(e) { console.error("[Karma Diagnosis] request failed:", e); setError("Could not read your karma right now. Please try again in a moment."); }
+    } catch(e) { console.error("[Know Your Karma] request failed:", e); setError("Could not read your karma right now. Please try again in a moment."); }
     finally { setLoading(false); }
   };
 
   // Hint click — fills textarea and scrolls to input
   const onHintClick = (txt) => {
     setText(txt);
-    document.querySelector(".iv-textarea")?.focus();
+    (document.querySelector(".iv-textarea") as HTMLElement | null)?.focus();
   };
 
   return (
@@ -618,9 +616,19 @@ export default function InnerVoice() {
         {/* Diagnosis */}
         {!result && (
           <div className="iv-diag-section">
+            <FeatureIntro
+              className="mb-10"
+              description="Explore the principles of karma and reflect on how your actions, intentions, and choices influence your personal journey. Know Your Karma offers a space to understand karmic concepts and discover meaningful guidance inspired by traditional spiritual wisdom."
+              steps={[
+                { title: "Share Your Situation", text: "Describe what is on your mind in your own words (Hindi, English or Hinglish), or tap an example below." },
+                { title: "Explore Your Karma Insights", text: "Review the karmic pattern, soul lesson and suggested practices generated for you." },
+                { title: "Reflect and Learn", text: "Use the insights as an opportunity for personal reflection and more mindful decision-making." },
+              ]}
+              disclaimer="Karma insights are spiritual guidance for reflection. They are AI-generated interpretations, not scientific fact, professional advice, or a prediction of what will happen."
+            />
             <div className="iv-diag-inner">
               <div>
-                <h2 className="iv-diag-heading">Quick Karma Diagnosis</h2>
+                <h2 className="iv-diag-heading">Know Your Karma</h2>
                 <p className="iv-diag-sub">Share your situation in any language — Hindi, English, or Hinglish. Pandit Ji will diagnose the karmic root and prescribe exact remedies.</p>
                 <div className="iv-diag-hints">
                   {HINTS.map((h, i) => (
@@ -652,7 +660,7 @@ export default function InnerVoice() {
                     </div>
                   ) : (
                     <button className="iv-submit-btn" onClick={diagnose} disabled={text.trim().length < 10}>
-                      ॐ &nbsp; Diagnose My Karma
+                      ॐ &nbsp; Know My Karma
                     </button>
                   )}
                   {error && <div className="iv-err">⚠ {error}</div>}
