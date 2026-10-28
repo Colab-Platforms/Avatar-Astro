@@ -12,8 +12,6 @@ export const tools: AstrologyTool[] = [
     title: "Birth Chart",
     description:
       "Enter your birth date to see your Sun sign, Life Path number and a written profile of traditional themes.",
-    image: "/placeholders/Birth-Chart.webp",
-      "Generate your complete birth chart with detailed astrological insights.",
     image: "/images/tools/birth-chart.jpg",
     button: "Generate",
     path: "/birth-chart",
@@ -30,8 +28,6 @@ export const tools: AstrologyTool[] = [
     title: "Compatibility",
     description:
       "Compare two Sun signs to see how their elements and aspects traditionally fit together.",
-    image: "/placeholders/Compatibility.webp",
-      "Discover relationship compatibility using advanced astrology matching.",
     image: "/images/tools/compatibility.jpg",
     button: "Check Now",
     path: "/compatibility",
@@ -40,8 +36,6 @@ export const tools: AstrologyTool[] = [
     title: "Palm Reading",
     description:
       "Upload a palm photo or use your camera to find your hand shape: Earth, Air, Water or Fire.",
-    image: "/placeholders/Palm-Reading.webp",
-      "Upload your palm and receive an AI-generated palm analysis.",
     image: "/images/tools/palm-reading.jpg",
     button: "Analyze",
     path: "/palm-reading",
