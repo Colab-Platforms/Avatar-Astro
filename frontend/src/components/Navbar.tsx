@@ -23,9 +23,8 @@ const astrologyTools = [
   { name: "Birth Chart",      path: "/birth-chart" },
   { name: "Compatibility",    path: "/compatibility" },
   { name: "Palm Reading",     path: "/palm-reading" },
-  { name: "AI Destiny Report", path: "/name-destiny-report" },
-  { name: "Ratna Jyotish",    path: "/ratna-jyotish" },
   { name: "Cosmic Blueprint", path: "/name-destiny-report" },
+  { name: "Ratna Jyotish",    path: "/ratna-jyotish" },
 ];
 
 const innerVoiceLinks = [
