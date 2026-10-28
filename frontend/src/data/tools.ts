@@ -40,4 +40,20 @@ export const tools: AstrologyTool[] = [
     button: "Analyze",
     path: "/palm-reading",
   },
+  {
+    title: "Cosmic Blueprint",
+    description:
+      "Explore name and birth-date numerology insights into your personality and life journey.",
+    image: "/placeholders/Cosmic-Blueprint.webp",
+    button: "Explore Now",
+    path: "/name-destiny-report",
+  },
+  {
+    title: "Daily Horoscope",
+    description:
+      "Read personalized daily horoscope predictions based on your zodiac sign.",
+    image: "/placeholders/Daily-horoscope.webp",
+    button: "Read Now",
+    path: "/horoscopes",
+  },
 ];

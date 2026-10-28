@@ -13,7 +13,7 @@ const ITEMS = [
   { icon: "📿", title: "Personalized Remedies", desc: "Mantras, gemstones, donations and spiritual guidance." },
   { icon: "✍️", title: "Signature Analysis", desc: "Recommendations to optimize your signature style." },
   { icon: "🏢", title: "Business Name Suggestions", desc: "AI-generated business and brand name ideas aligned with your numerology." },
-  { icon: "📄", title: "Premium PDF Report", desc: "Download your professionally designed AI Destiny Report with lifetime access." },
+  { icon: "📄", title: "Premium PDF Report", desc: "Download your professionally designed Cosmic Blueprint with lifetime access." },
 ];
 
 export default function WhatsIncludedGrid() {
@@ -23,7 +23,7 @@ export default function WhatsIncludedGrid() {
         className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-2 uppercase tracking-wide"
         style={{ fontFamily: "'Astra','Cinzel',serif" }}
       >
-        📋 Everything Included in Your AI Destiny Report
+        📋 Everything Included in Your Cosmic Blueprint
       </h3>
       <p className="text-center text-muted-foreground max-w-2xl mx-auto mb-8 text-sm sm:text-base">
         Your premium report combines AI, Vedic Astrology, Numerology and personalized insights into

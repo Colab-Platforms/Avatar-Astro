@@ -17,7 +17,7 @@ export default function PdfExportButton({ name, dob, report }: { name: string; d
         className="inline-flex items-center gap-2 px-6 py-3 rounded-full border-2 border-gold/40 text-gold font-semibold text-sm uppercase tracking-wide hover:bg-gold/10 transition-colors disabled:opacity-40"
       >
         {narrativeLoading ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
-        Download Destiny Report as PDF
+        Download Cosmic Blueprint as PDF
       </button>
     </div>
   );

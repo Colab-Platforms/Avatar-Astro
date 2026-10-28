@@ -1,4 +1,5 @@
 import { Router, Request, Response } from "express";
+import { createRateLimiter } from "../utils/rateLimit.js";
 
 const router = Router();
 
@@ -8,6 +9,7 @@ const MODEL = "google/gemma-4-31b-it:free";
 async function callAI(apiKey: string, prompt: string, maxTokens = 1000): Promise<string> {
   const res = await fetch(OPENROUTER_URL, {
     method: "POST",
+    signal: AbortSignal.timeout(45_000),
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${apiKey}`,
@@ -188,6 +190,105 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
   } catch (err: any) {
     console.error("Wisdom/shloka error:", err.message);
     return res.status(500).json({ error: "Failed to fetch shloka wisdom" });
+  }
+});
+
+// ── POST /api/inner-voice/life-path ───────────────────────────────────────────
+// Birth details are used only to build the prompt for this request; nothing is
+// stored or logged. No ephemeris is computed here: the reading is an AI-written
+// interpretation, and the prompt forbids inventing exact planetary positions.
+const LIFE_PATH_FOCUS = ["general", "career", "relationships", "personal-growth", "finance"] as const;
+
+router.post("/life-path", createRateLimiter({ windowMs: 60_000, max: 10 }), async (req: Request, res: Response) => {
+  try {
+    const { dob, tob, pob, focus = "general" } = req.body ?? {};
+
+    const dobStr = typeof dob === "string" ? dob.trim() : "";
+    const dobDate = new Date(dobStr);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dobStr) || isNaN(dobDate.getTime())) {
+      return res.status(400).json({ error: "A valid date of birth (YYYY-MM-DD) is required" });
+    }
+    if (dobDate > new Date() || dobDate.getFullYear() < 1900) {
+      return res.status(400).json({ error: "Date of birth is out of range" });
+    }
+    if (!LIFE_PATH_FOCUS.includes(focus)) {
+      return res.status(400).json({ error: "Invalid focus area" });
+    }
+    const tobStr = typeof tob === "string" && /^\d{2}:\d{2}$/.test(tob.trim()) ? tob.trim() : "";
+    // Place is interpolated into the prompt, so keep it to plain place-name characters.
+    const pobStr = typeof pob === "string" ? pob.trim() : "";
+    if (pobStr && (pobStr.length > 100 || !/^[\p{L}\p{M}\d\s,.'’-]+$/u.test(pobStr))) {
+      return res.status(400).json({ error: "Place of birth contains invalid characters" });
+    }
+
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    if (!apiKey) {
+      console.error("OPENROUTER_API_KEY is not configured");
+      return res.status(503).json({ error: "The reading service is not configured" });
+    }
+
+    const prompt = `You are a thoughtful Vedic astrology guide. Write an interpretive life-path reading for a person with these details:
+- Date of birth: ${dobStr}
+- Time of birth: ${tobStr || "not provided"}
+- Place of birth: ${pobStr || "not provided"}
+- Area of interest: ${focus}
+
+Rules:
+- This is interpretive guidance for reflection, not certain knowledge of the future. Use soft language ("may", "tends to", "could").
+- Do NOT state exact planetary degrees, house positions, or dasha dates; you have not computed a chart. If time/place are missing, do not pretend to know the ascendant.
+- Only give broad time-based themes if you can ground them in general astrological ideas; otherwise set "upcomingPeriods" to an empty array.
+- Never give medical, legal, or financial-product advice. No fear-based or fatalistic statements.
+
+Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this structure:
+{
+  "lifePathOverview": "3-4 sentences on the person's general journey and temperament",
+  "careerAndGrowth": "2-3 sentences on work, skills, and opportunities",
+  "relationships": "2-3 sentences of reflective insight on relationships and communication",
+  "personalDevelopment": "2-3 sentences on areas for self-improvement",
+  "focusInsight": "2-3 sentences specific to the area of interest (${focus})",
+  "upcomingPeriods": [{"period": "a broad timeframe label", "theme": "1-2 sentence theme"}],
+  "reflectionQuestions": ["a question for self-reflection", "another question"]
+}`;
+
+    let raw: string;
+    try {
+      raw = await callAI(apiKey, prompt, 1200);
+    } catch (err: any) {
+      const timedOut = err?.name === "TimeoutError" || err?.name === "AbortError";
+      console.error("Life path provider error:", timedOut ? "timeout" : err?.name);
+      return res
+        .status(timedOut ? 504 : 502)
+        .json({ error: timedOut ? "The reading service timed out" : "The reading service is unavailable" });
+    }
+
+    let result: any;
+    try {
+      result = parseJSON(raw);
+    } catch {
+      return res.status(502).json({ error: "The reading service returned an unreadable response" });
+    }
+    if (!result || typeof result.lifePathOverview !== "string" || !result.lifePathOverview.trim()) {
+      return res.status(502).json({ error: "The reading service returned an incomplete response" });
+    }
+    const str = (v: unknown) => (typeof v === "string" ? v : undefined);
+    return res.json({
+      lifePathOverview: result.lifePathOverview,
+      careerAndGrowth: str(result.careerAndGrowth),
+      relationships: str(result.relationships),
+      personalDevelopment: str(result.personalDevelopment),
+      focusInsight: str(result.focusInsight),
+      upcomingPeriods: Array.isArray(result.upcomingPeriods)
+        ? result.upcomingPeriods
+            .filter((p: any) => p && typeof p.period === "string" && typeof p.theme === "string")
+            .slice(0, 6)
+        : [],
+      reflectionQuestions: Array.isArray(result.reflectionQuestions)
+        ? result.reflectionQuestions.filter((q: unknown) => typeof q === "string").slice(0, 5)
+        : [],
+    });
+  } catch (err: any) {
+    console.error("Life path error:", err?.name);
+    return res.status(500).json({ error: "Failed to generate life path reading" });
   }
 });
 
