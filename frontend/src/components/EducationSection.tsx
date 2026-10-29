@@ -45,7 +45,7 @@ export default function EducationSection({ title, blocks, faqs, disclaimer, idPr
         <p
           id={`${idPrefix}-edu-title`}
           className="text-xs font-semibold uppercase tracking-[0.3em] text-[#592209]"
-          style={{ fontFamily: "'Astra','Iceland',sans-serif" }}
+          style={{ fontFamily: "'Cinzel', Georgia, serif" }}
         >
           {title}
         </p>
@@ -57,7 +57,7 @@ export default function EducationSection({ title, blocks, faqs, disclaimer, idPr
           <article key={b.heading} className="rounded-2xl border border-[#592209]/10 bg-white/[0.04] p-5 sm:p-7">
             <h2
               className="mb-3 text-xl leading-snug text-[#592209] sm:text-2xl"
-              style={{ fontFamily: "'Astra','Iceland',sans-serif" }}
+              style={{ fontFamily: "'Cinzel', Georgia, serif" }}
             >
               <span aria-hidden="true" className="mr-2 text-[#592209]/70">
                 {i + 1}.
@@ -120,7 +120,7 @@ export default function EducationSection({ title, blocks, faqs, disclaimer, idPr
           <article className="rounded-2xl border border-[#592209]/10 bg-white/[0.04] p-5 sm:p-7">
             <h2
               className="mb-3 text-xl leading-snug text-[#592209] sm:text-2xl"
-              style={{ fontFamily: "'Astra','Iceland',sans-serif" }}
+              style={{ fontFamily: "'Cinzel', Georgia, serif" }}
             >
               <span aria-hidden="true" className="mr-2 text-[#592209]/70">
                 {blocks.length + 1}.
