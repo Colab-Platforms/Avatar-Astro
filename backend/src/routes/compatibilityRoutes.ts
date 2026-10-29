@@ -1,7 +1,9 @@
 import { Router, Request, Response } from "express";
 import { createRateLimiter } from "../utils/rateLimit.js";
+import { auth } from "../middleware/authMiddleware.js";
 
 const router = Router();
+router.use(auth("USER"));
 
 // This AI endpoint is not called by the current Compatibility page; keep it from being used as an open, uncapped AI relay.
 router.use(createRateLimiter({ windowMs: 60_000, max: 10 }));

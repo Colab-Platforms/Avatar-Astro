@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { API_BASE_URL } from '@/lib/api';
+import { authedFetch, SignInRequiredError } from '@/lib/authedFetch';
 
 interface ChatMessage {
   id: string;
@@ -40,7 +41,7 @@ export function useChartChat() {
     }));
 
     try {
-      const response = await fetch(`${API_BASE_URL}/interpretation/chart-chat`, {
+      const response = await authedFetch(`${API_BASE_URL}/interpretation/chart-chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

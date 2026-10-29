@@ -1058,6 +1058,7 @@ import zodiacSagittarius from "@/assets/zodiac-gold/sagittarius.png";
 import zodiacCapricorn from "@/assets/zodiac-gold/capricorn.png";
 import zodiacAquarius from "@/assets/zodiac-gold/aquarius.png";
 import zodiacPisces from "@/assets/zodiac-gold/pisces.png";
+import { requireSignIn } from "@/lib/authedFetch";
 
 const fontLink = document.createElement("link");
 fontLink.rel = "stylesheet";
@@ -1673,6 +1674,7 @@ export default function App() {
 
   const compute = useCallback(async () => {
     if (phase !== "form") return; // ignore double submits
+    if (!requireSignIn()) return; // account required to generate a reading
     setError("");
     const problem = checkPerson(p1, "Person 1") || checkPerson(p2, "Person 2");
     if (problem) { setError(problem); return; }

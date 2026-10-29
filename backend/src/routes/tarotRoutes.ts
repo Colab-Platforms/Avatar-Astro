@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import express from "express";
 import { createRateLimiter } from "../utils/rateLimit.js";
+import { auth } from "../middleware/authMiddleware.js";
 
 /**
  * Tarot reading endpoint. The browser draws the cards (random draw from the 22
@@ -30,6 +31,8 @@ export const KARMA_POSITIONS = ["Current Karma", "Hidden Blockage", "Healing Pat
 export const CATEGORIES = ["Career", "Love", "Marriage", "Business", "Finance", "Health", "Life Purpose"];
 
 const router = Router();
+// Tarot readings are AI-generated per request, so they require a signed-in user.
+router.use(auth("USER"));
 router.use(express.json({ limit: "20kb" }));
 router.use(createRateLimiter({ windowMs: 60_000, max: 10 }));
 

@@ -59,13 +59,6 @@ const ShopDetail = () => {
     <div className="pt-24 pb-16 relative z-10">
       <div className="container mx-auto px-6 lg:px-16 py-10">
 
-        <Link
-          to="/shop"
-          className="inline-flex items-center gap-2 text-xs text-primary/70 hover:text-primary mb-10 transition-colors font-display tracking-wider"
-        >
-          <ArrowLeft className="w-3 h-3" /> Back to shop
-        </Link>
-
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start">
 
           {/* ── Left — image + authenticity ─────────────────────────────── */}

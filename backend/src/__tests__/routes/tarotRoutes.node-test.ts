@@ -5,6 +5,12 @@ import type { AddressInfo } from "node:net";
 import type { Server } from "node:http";
 import express from "express";
 import tarotRoutes from "../../routes/tarotRoutes.js";
+import jwt from "jsonwebtoken";
+
+// Test-only secret and tokens: they exercise the real auth middleware, nothing is bypassed in the app.
+process.env.JWT_SECRET = "test-only-jwt-secret";
+const userToken = jwt.sign({ id: "test-user", role: "USER" }, process.env.JWT_SECRET);
+const adminToken = jwt.sign({ id: "test-admin", role: "ADMIN" }, process.env.JWT_SECRET);
 
 const SECRET = "sk-test-SECRET-do-not-leak";
 const realFetch = globalThis.fetch;
@@ -24,7 +30,7 @@ before(async () => {
   app.set("trust proxy", true);
   app.use("/api/tarot", tarotRoutes);
   app.use((err: any, _req: any, res: any, _next: any) => {
-    res.status(err.status || 500).json({ success: false, error: err.message || "Internal Server Error" });
+    res.status(err.statusCode || err.status || 500).json({ success: false, error: err.message || "Internal Server Error" });
   });
   server = app.listen(0);
   base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
@@ -45,10 +51,10 @@ beforeEach(() => {
   process.env.OPENROUTER_API_KEY = SECRET;
 });
 
-async function post(body: unknown, ip = `10.1.0.${++ipCounter}`) {
+async function post(body: unknown, ip = `10.1.0.${++ipCounter}`, token: string | null = userToken) {
   const res = await realFetch(`${base}/api/tarot/reading`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", "X-Forwarded-For": ip },
+    headers: { "Content-Type": "application/json", "X-Forwarded-For": ip, ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     body: typeof body === "string" ? body : JSON.stringify(body),
   });
   const raw = await res.text();
@@ -216,4 +222,14 @@ test("rate limit (10/min/IP) -> 429", async () => {
   let last = 0;
   for (let i = 0; i < 11; i++) last = (await post({ mode: "karma", cards: KM }, "203.0.113.77")).status;
   assert.equal(last, 429);
+});
+
+test("auth: tarot reading without a token -> 401 and the provider is never called", async () => {
+  const r = await post({ mode: "timeline", cards: ["The Sun", "The Hermit", "Temperance", "The Fool", "The Star"] }, undefined, null);
+  assert.equal(r.status, 401);
+  assert.equal(upstreamCalls.length, 0);
+});
+test("auth: tarot reading with a forged token -> 401", async () => {
+  const forged = jwt.sign({ id: "x", role: "USER" }, "other-secret");
+  assert.equal((await post({ mode: "timeline", cards: [] }, undefined, forged)).status, 401);
 });

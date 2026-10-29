@@ -18,6 +18,7 @@
     "db:seed:darshan": "tsx prisma/seeds/darshanChannels.ts",
     "test:ai": "tsx --test src/__tests__/routes/aiRoutes.node-test.ts",
     "test:tarot": "tsx --test src/__tests__/routes/tarotRoutes.node-test.ts",
+    "test:inquiry": "tsx --test src/__tests__/routes/inquiryRoutes.node-test.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy"

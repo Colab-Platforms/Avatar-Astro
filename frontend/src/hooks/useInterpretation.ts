@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { apiService, API_BASE_URL } from '@/lib/api';
+import { authedFetch, SignInRequiredError } from '@/lib/authedFetch';
 
 interface HumanReadableInterpretation {
   summary: string;
@@ -28,7 +29,7 @@ export function useInterpretBirthChart() {
   const interpret = useCallback(async (birthData: any) => {
     setState({ data: null, loading: true, error: null });
     try {
-      const response = await fetch(`${API_BASE_URL}/interpretation/birth-chart`, {
+      const response = await authedFetch(`${API_BASE_URL}/interpretation/birth-chart`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -96,7 +97,7 @@ export function useAICompatibility(sign1: string, sign2: string) {
     if (!sign1 || !sign2) return null;
     setState({ data: null, loading: true, error: null });
     try {
-      const response = await fetch(
+      const response = await authedFetch(
         `${API_BASE_URL}/interpretation/compatibility?sign1=${sign1}&sign2=${sign2}`
       );
 

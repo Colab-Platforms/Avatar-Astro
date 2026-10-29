@@ -1,3 +1,4 @@
+import { OPENROUTER_MODEL } from '../config/aiModels.js';
 import axios from 'axios';
 
 interface BirthChartData {
@@ -53,7 +54,7 @@ Use simple, conversational language. Avoid complex astrological jargon. Make it 
     const response = await axios.post(
       `${OPENROUTER_BASE_URL}/chat/completions`,
       {
-        model: 'openai/gpt-4-turbo-preview',
+        model: OPENROUTER_MODEL,
         messages: [
           {
             role: 'system',
@@ -138,7 +139,7 @@ Keep it positive, practical, and easy to understand. Use Hinglish (Hindi-English
     const response = await axios.post(
       `${OPENROUTER_BASE_URL}/chat/completions`,
       {
-        model: 'openai/gpt-4-turbo-preview',
+        model: OPENROUTER_MODEL,
         messages: [
           {
             role: 'system',
@@ -194,7 +195,7 @@ Use simple, encouraging language. Make it practical and relatable. Use Hinglish 
     const response = await axios.post(
       `${OPENROUTER_BASE_URL}/chat/completions`,
       {
-        model: 'openai/gpt-4-turbo-preview',
+        model: OPENROUTER_MODEL,
         messages: [
           {
             role: 'system',

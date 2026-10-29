@@ -6,6 +6,12 @@ import type { Server } from "node:http";
 import express from "express";
 import aiProxyRoutes from "../../routes/aiProxyRoutes.js";
 import innerVoiceRoutes from "../../routes/innerVoiceRoutes.js";
+import jwt from "jsonwebtoken";
+
+// Test-only secret and tokens: they exercise the real auth middleware, nothing is bypassed in the app.
+process.env.JWT_SECRET = "test-only-jwt-secret";
+const userToken = jwt.sign({ id: "test-user", role: "USER" }, process.env.JWT_SECRET);
+const adminToken = jwt.sign({ id: "test-admin", role: "ADMIN" }, process.env.JWT_SECRET);
 
 const SECRET = "sk-test-SECRET-do-not-leak";
 const realFetch = globalThis.fetch;
@@ -27,7 +33,7 @@ before(async () => {
   app.use("/api/inner-voice", innerVoiceRoutes);
   // Same shape as the final error middleware in src/index.ts (no stack traces to clients).
   app.use((err: any, _req: any, res: any, _next: any) => {
-    res.status(err.status || 500).json({ success: false, error: err.message || "Internal Server Error" });
+    res.status(err.statusCode || err.status || 500).json({ success: false, error: err.message || "Internal Server Error" });
   });
   server = app.listen(0);
   base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
@@ -51,10 +57,10 @@ beforeEach(() => {
   delete process.env.GROQ_MODEL;
 });
 
-async function post(path: string, body: unknown, ip = `10.0.0.${++ipCounter}`) {
+async function post(path: string, body: unknown, ip = `10.0.0.${++ipCounter}`, token: string | null = userToken) {
   const res = await realFetch(base + path, {
     method: "POST",
-    headers: { "Content-Type": "application/json", "X-Forwarded-For": ip },
+    headers: { "Content-Type": "application/json", "X-Forwarded-For": ip, ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     body: typeof body === "string" ? body : JSON.stringify(body),
   });
   const text = await res.text();
@@ -266,4 +272,23 @@ test("life-path: rate limit (10/min/IP) -> 429", async () => {
   let last = 0;
   for (let i = 0; i < 11; i++) last = (await post(LP, { dob: "1990-05-17" }, "203.0.113.50")).status;
   assert.equal(last, 429);
+});
+
+// ── authentication is enforced server-side ────────────────────────────────────
+for (const path of ["/api/ai/chat", "/api/inner-voice/life-path", "/api/inner-voice/tts"]) {
+  test(`auth: ${path} without a token -> 401 and the provider is never called`, async () => {
+    const r = await post(path, { messages: userMsg, dob: "1990-01-01", text: "hi" }, undefined, null);
+    assert.equal(r.status, 401);
+    assert.equal(upstreamCalls.length, 0);
+  });
+  test(`auth: ${path} with a malformed/forged token -> 401`, async () => {
+    const forged = jwt.sign({ id: "x", role: "USER" }, "some-other-secret");
+    assert.equal((await post(path, { messages: userMsg }, undefined, forged)).status, 401);
+    assert.equal((await post(path, { messages: userMsg }, undefined, "not-a-jwt")).status, 401);
+  });
+}
+test("auth: signed-in USER and ADMIN can use /api/ai/chat", async () => {
+  upstream = async () => completion("ok");
+  assert.equal((await post("/api/ai/chat", { messages: userMsg }, undefined, userToken)).status, 200);
+  assert.equal((await post("/api/ai/chat", { messages: userMsg }, undefined, adminToken)).status, 200);
 });

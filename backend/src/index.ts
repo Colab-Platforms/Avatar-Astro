@@ -9,6 +9,8 @@ import nameAnalysisRoutes from "./routes/nameAnalysisRoutes.js";
 import innerVoiceRoutes from "./routes/innerVoiceRoutes.js";
 import aiProxyRoutes from "./routes/aiProxyRoutes.js";
 import tarotRoutes from "./routes/tarotRoutes.js";
+import inquiryRoutes from "./routes/inquiryRoutes.js";
+import { auth } from "./middleware/authMiddleware.js";
 import { createRateLimiter } from "./utils/rateLimit.js";
 import darshanRoutes from "./modules/darshan/darshan.public.route.js";
 import authRoutes from "./modules/auth/auth.route.js";
@@ -23,6 +25,9 @@ import { startDarshanRefreshLoop } from "./modules/darshan/darshan.refresh.js";
 dotenv.config();
 
 const app = express();
+// Render (and most hosts) terminate TLS at one proxy hop. Without this, req.ip is the proxy for every visitor,
+// so the per-IP rate limits would be shared by all users at once.
+app.set("trust proxy", 1);
 const PORT = process.env.PORT || 5001;
 
 // Middleware
@@ -255,23 +260,8 @@ app.get("/api/zodiac/signs/:sign", (req: Request, res: Response) => {
 });
 
 // Newsletter
-app.post("/api/newsletter/subscribe", (req: Request, res: Response) => {
-  const { email } = req.body;
-  if (!email)
-    return res.status(400).json({ success: false, error: "Email is required" });
-  res.json({ success: true, message: "Subscribed successfully", email });
-});
-
-// Contact form
-app.post("/api/contact/send", (req: Request, res: Response) => {
-  const { name, email, subject, message } = req.body;
-  if (!name || !email || !subject || !message) {
-    return res
-      .status(400)
-      .json({ success: false, error: "All fields are required" });
-  }
-  res.json({ success: true, message: "Message sent successfully" });
-});
+// Contact + partnership forms: validated, rate-limited, and delivered by email to SUPPORT_EMAIL.
+app.use("/api", inquiryRoutes);
 
 // Auth routes
 app.use("/api/auth", authRoutes);
@@ -300,7 +290,7 @@ app.use("/api/inner-voice", innerVoiceRoutes);
 app.use("/api/darshan", darshanRoutes);
 
 // TTS proxy — matches the /api/tts path used by VoiceConsultation.tsx
-app.post("/api/tts", async (req: Request, res: Response) => {
+app.post("/api/tts", auth("USER"), async (req: Request, res: Response) => {
   const { text, language } = req.body ?? {};
   if (!String(text ?? "").trim()) {
     return res.status(400).json({ error: "text is required" });
@@ -348,7 +338,7 @@ app.post("/api/tts", async (req: Request, res: Response) => {
 // It is kept (and locked down) because it forwards an image to a paid vision model.
 const PALM_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const PALM_MAX_BASE64_CHARS = 8_000_000; // ~6 MB of image data
-app.post("/api/palm-reading", createRateLimiter({ windowMs: 60_000, max: 5 }), async (req: Request, res: Response) => {
+app.post("/api/palm-reading", auth("USER"), createRateLimiter({ windowMs: 60_000, max: 5 }), async (req: Request, res: Response) => {
   const { imageBase64, imageType, fingerprint } = req.body;
   if (!imageBase64 || !imageType) {
     return res.status(400).json({

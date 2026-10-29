@@ -1,56 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import FeatureIntro from "@/components/FeatureIntro";
-import { aiChat } from "@/lib/aiClient";
+import { fetchKarmaReading, KarmaReadingError, MIN_SITUATION_CHARS, MAX_SITUATION_CHARS, type KarmaReading } from "@/lib/karmaReading";
 
 const fl = document.createElement("link"); fl.rel = "stylesheet";
 fl.href = "https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:wght@400;700&display=swap";
 if (!document.head.querySelector("link[href*='Cinzel']")) document.head.appendChild(fl);
 
-
-const SYSTEM_PROMPT = `You are Pandit Rameshwar Ji, a revered Vedic astrologer with 40 years of experience.
-Analyze the seeker's situation and return ONLY a valid JSON object with EXACTLY these keys (all required):
-{
-  "lifeDomain": "Career / Relationships / Health / Finance / Spiritual / Family / Mind",
-  "karmaType": "Sanchita Karma / Prarabdha Karma / Kriyamana Karma / Agami Karma",
-  "severity": "Gentle Turbulence / Significant Lesson / Deep Karmic Debt / Breakthrough Moment",
-  "rootPlanet": "e.g. Saturn in 7th house — specific planet and house",
-  "karmicPattern": "2-3 sentences describing the karmic pattern from a Vedic perspective",
-  "soulLesson": "The specific soul lesson this situation is teaching (1-2 sentences)",
-  "pastLifeEcho": "What past-life karma this is clearing — thoughtful Vedic perspective (1-2 sentences)",
-  "suggestedAction": "Exact remedy: specific pooja name, mantra with count, fasting day",
-  "remedyUrgency": "Today / This Week / This Month",
-  "weeklyPlan": ["Specific action 1", "Specific action 2", "Specific action 3", "Specific action 4"],
-  "planets": [
-    {"name": "Saturn", "influence": "Strong", "note": "brief specific note"},
-    {"name": "Jupiter", "influence": "Moderate", "note": "brief specific note"},
-    {"name": "Rahu", "influence": "Challenging", "note": "brief specific note"}
-  ],
-  "karmaScores": {
-    "spiritual": 72,
-    "discipline": 58,
-    "compassion": 81,
-    "karmaDebt": "Medium"
-  },
-  "currentCycle": "Learning & Expansion",
-  "affirmation": "A personalized Sanskrit or English Vedic affirmation"
-}`;
-
-async function callAI(userMsg) {
-  const res = await aiChat({
-      temperature: 0.7,
-      max_tokens: 1500,
-      json: true,
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: `My situation: ${userMsg}` }
-      ]
-    });
-  const data = await res.json();
-  if (data.error) throw new Error(data.error.message);
-  const raw = data.choices?.[0]?.message?.content || "{}";
-  try { return JSON.parse(raw); } catch { return {}; }
-}
 
 const CSS = `
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -249,7 +205,7 @@ type SpeechWindow = { SpeechRecognition?: SpeechCtor; webkitSpeechRecognition?: 
 
 const NAV_CARDS = [
   { icon:"🧘", name:"AI Guru", tag:"Pandit Intelligence", desc:"Converse with a Vedic pandit. Get pooja prescriptions, mantra remedies, and personal dharmic guidance.", path:"/inner-voice/chat", color:"gold" },
-  { icon:"⚡", name:"Karma Score", tag:"Natal + Behavioral", desc:"Your real karma score — calculated from your birth chart, planetary transits, and daily actions combined.", path:"/inner-voice/dashboard", color:"purple" },
+  { icon:"⚡", name:"Karma Score", tag:"Daily Practice Tracker", desc:"A simple, symbolic daily score based on the mindful practices you complete. Track your consistency over time.", path:"/inner-voice/dashboard", color:"purple" },
   { icon:"🧭", name:"Future Life Path Prediction", tag:"Interpretive Astrology", desc:"Explore possible life directions through interpretive astrological guidance.", path:"/inner-voice/future-path", color:"rose" },
   { icon:"🕉", name:"Sacred Shloka", tag:"Vedic Wisdom", desc:"Discover the meaning and practical wisdom of traditional Sanskrit verses.", path:"/inner-voice/wisdom", color:"cyan" },
 ];
@@ -347,186 +303,102 @@ function StarCanvas() {
   return <canvas ref={canvasRef} className="iv-canvas" />;
 }
 
-function ScoreBar({ label, value, gradient }) {
-  return (
-    <div className="iv-score-item">
-      <div className="iv-score-lbl">{label}</div>
-      <div className="iv-score-track">
-        <div className="iv-score-fill" style={{ width:`${value||0}%`, background: gradient }} />
-      </div>
-      <div className="iv-score-pct">{value||0}%</div>
-    </div>
-  );
-}
+const NEXT_STEPS = [
+  { icon:"🧘", name:"Ask AI Guru", desc:"Talk through a specific question.", path:"/inner-voice/chat" },
+  { icon:"⚡", name:"Track your Karma Score", desc:"Log daily actions and watch your progress.", path:"/inner-voice/dashboard" },
+  { icon:"🕉", name:"Read a Sacred Shloka", desc:"Find a verse to reflect on.", path:"/inner-voice/wisdom" },
+];
 
-function ReportView({ result, onReset }) {
-  if (!result || !Object.keys(result).length) return null;
-  const sevClass = (s="") => {
-    if (s.includes("Gentle")) return "sev-gentle";
-    if (s.includes("Significant")) return "sev-significant";
-    if (s.includes("Deep")) return "sev-deep";
-    if (s.includes("Breakthrough")) return "sev-breakthrough";
-    return "sev-significant";
-  };
-  const ks = result.karmaScores || {};
-  const planets = Array.isArray(result.planets) ? result.planets : [];
-  const weekly = Array.isArray(result.weeklyPlan) ? result.weeklyPlan : [];
-
-  const remedies = [
-    { icon:"📿", type:"Mantra Practice", txt: result.suggestedAction || "Chant the prescribed mantra 108 times daily at sunrise" },
-    { icon:"🪔", type:"Pooja Ritual", txt: `Perform the indicated pooja — urgency: ${result.remedyUrgency || "This Week"}` },
-    { icon:"🌅", type:"Morning Sadhana", txt: "15 minutes of silent meditation and pranayama each morning before sunrise" },
-    { icon:"🤲", type:"Seva / Charity", txt: "Offer food, donate to the needy, or perform community service on the auspicious day" },
-  ];
-
-  const lessons = [result.soulLesson, result.pastLifeEcho, result.karmicPattern].filter(Boolean);
-  const timeline = [
-    { icon:"🌱", label:"Past Karma", txt: result.pastLifeEcho },
-    { icon:"⚡", label:"Current Challenge", txt: result.karmicPattern },
-    { icon:"🎓", label:"Soul Lesson", txt: result.soulLesson },
-    { icon:"🌟", label:"Path Forward", txt: result.suggestedAction },
-  ].filter(t => t.txt);
-
+function ReportView({ result, onReset }: { result: KarmaReading; onReset: () => void }) {
   return (
     <div className="iv-report iv-report-anim">
-      {/* Header */}
       <div className="iv-report-hdr">
         <div className="iv-report-title">
-          Your Karma Report
-          <span>Personalized Vedic Analysis</span>
+          Your Karma Reflection
+          <span>An AI-generated interpretation for reflection</span>
         </div>
         <div className="iv-report-badges">
-          {result.karmaType && <span className="iv-badge karma-type">{result.karmaType}</span>}
-          {result.severity && <span className={`iv-badge ${sevClass(result.severity)}`}>{result.severity}</span>}
           {result.lifeDomain && <span className="iv-badge" style={{background:"rgba(188,106,77,.08)",border:"1px solid rgba(188,106,77,.25)",color:"#BC6A4D"}}>{result.lifeDomain}</span>}
         </div>
       </div>
 
-      {/* Row 1: Snapshot + Domain + Pattern */}
-      <div className="iv-row iv-row-3">
-        {/* Karma Snapshot */}
-        <div className="iv-card gold-card">
-          <span className="iv-card-lbl">Karma Snapshot</span>
-          <div className="iv-snap-scores">
-            <ScoreBar label="Spiritual" value={ks.spiritual} gradient="linear-gradient(90deg,#BC6A4D,#D9895F)" />
-            <ScoreBar label="Discipline" value={ks.discipline} gradient="linear-gradient(90deg,#BC6A4D,#BC6A4D)" />
-            <ScoreBar label="Compassion" value={ks.compassion} gradient="linear-gradient(90deg,#D9895F,#f43f5e)" />
-          </div>
-          <div className="iv-debt-row">
-            <span className="iv-debt-lbl">Karmic Debt</span>
-            <span className={`iv-debt-val debt-${ks.karmaDebt||"Medium"}`}>{ks.karmaDebt||"Medium"}</span>
-          </div>
-          {result.currentCycle && <div className="iv-cycle">{result.currentCycle}</div>}
-        </div>
-
-        {/* Domain + Planet */}
-        <div className="iv-card">
-          <span className="iv-card-lbl">Life Domain & Ruling Planet</span>
-          {result.lifeDomain && <div className="iv-card-title">{result.lifeDomain}</div>}
-          {result.rootPlanet && <div className="iv-card-body">{result.rootPlanet}</div>}
-          {result.remedyUrgency && (
-            <div style={{marginTop:20,fontFamily:"'Astra','Iceland',sans-serif",fontSize:11,letterSpacing:2,color:"rgba(188,106,77,.8)",textTransform:"uppercase"}}>
-              ⚡ Act: {result.remedyUrgency}
-            </div>
-          )}
-        </div>
-
-        {/* Karmic Pattern */}
-        <div className="iv-card cyan-card">
-          <span className="iv-card-lbl">Karmic Pattern</span>
-          {result.karmicPattern && <div className="iv-card-body italic" style={{fontSize:19}}>{result.karmicPattern}</div>}
-        </div>
-      </div>
-
-      {/* Row 2: Timeline + Soul Lessons + Weekly */}
       <div className="iv-row iv-row-2">
-        {/* Timeline */}
-        <div className="iv-card">
-          <span className="iv-card-lbl">Karmic Journey</span>
-          <div className="iv-tl">
-            {timeline.map((t, i) => (
-              <div key={i} className="iv-tl-item">
-                {i < timeline.length - 1 && <div className="iv-tl-line" />}
-                <div className="iv-tl-dot">{t.icon}</div>
-                <div className="iv-tl-body">
-                  <div className="iv-tl-lbl">{t.label}</div>
-                  <div className="iv-tl-txt">{t.txt}</div>
-                </div>
-              </div>
-            ))}
-          </div>
+        <div className="iv-card gold-card">
+          <span className="iv-card-lbl">Your Reading</span>
+          <div className="iv-card-body">{result.overview}</div>
         </div>
-
-        {/* Soul Lessons + Weekly */}
-        <div style={{display:"flex",flexDirection:"column",gap:22}}>
-          <div className="iv-card purple-card">
-            <span className="iv-card-lbl">Soul Lessons</span>
-            <div className="iv-lessons">
-              {lessons.map((l, i) => (
-                <div key={i} className="iv-lesson">
-                  <div className="iv-lesson-num">0{i+1}</div>
-                  <div className="iv-lesson-txt">{l}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-          {weekly.length > 0 && (
-            <div className="iv-card dark-card">
-              <span className="iv-card-lbl">This Week's Actions</span>
-              <div className="iv-week">
-                {weekly.map((w, i) => (
-                  <div key={i} className="iv-week-item">
-                    <div className="iv-week-check">✓</div>
-                    <div className="iv-week-txt">{w}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+        <div className="iv-card cyan-card">
+          <span className="iv-card-lbl">What It Means</span>
+          <div className="iv-card-body italic">{result.meaning}</div>
         </div>
       </div>
 
-      {/* Row 3: Remedies */}
-      <div className="iv-card" style={{marginBottom:22}}>
-        <span className="iv-card-lbl">Prescribed Remedies</span>
-        <div className="iv-rem-grid">
-          {remedies.map((r, i) => (
-            <div key={i} className="iv-rem-card">
-              <span className="iv-rem-icon">{r.icon}</span>
-              <div className="iv-rem-type">{r.type}</div>
-              <div className="iv-rem-txt">{r.txt}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Row 4: Planets */}
-      {planets.length > 0 && (
+      {result.insights.length > 0 && (
         <div className="iv-card" style={{marginBottom:22}}>
-          <span className="iv-card-lbl">Cosmic Influences</span>
-          <div className="iv-planets">
-            {planets.map((p, i) => (
-              <div key={i} className="iv-planet-card">
-                <div className="iv-planet-name">{p.name}</div>
-                <div className={`iv-planet-inf inf-${(p.influence||"Moderate").split(" ")[0]}`}>{p.influence}</div>
-                <div className="iv-planet-note">{p.note}</div>
+          <span className="iv-card-lbl">Key Insights</span>
+          <div className="iv-lessons">
+            {result.insights.map((it, i) => (
+              <div key={i} className="iv-lesson">
+                <div className="iv-lesson-num">0{i+1}</div>
+                <div className="iv-lesson-txt"><strong style={{display:"block",color:"#D9895F",marginBottom:4}}>{it.title}</strong>{it.text}</div>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Sacred quote */}
+      {result.soulLesson && (
+        <div className="iv-card purple-card" style={{marginBottom:22}}>
+          <span className="iv-card-lbl">What You May Be Learning</span>
+          <div className="iv-card-body">{result.soulLesson}</div>
+        </div>
+      )}
+
+      <div className="iv-card dark-card" style={{marginBottom:22}}>
+        <span className="iv-card-lbl">Practical Guidance</span>
+        <div className="iv-week">
+          {result.guidance.map((g, i) => (
+            <div key={i} className="iv-week-item">
+              <div className="iv-week-check">✓</div>
+              <div className="iv-week-txt">{g}</div>
+            </div>
+          ))}
+        </div>
+        {result.practice && <div className="iv-card-body" style={{marginTop:22,fontSize:17}}><strong style={{color:"#D9895F"}}>Optional practice: </strong>{result.practice}</div>}
+      </div>
+
+      {result.reflectionQuestion && (
+        <div className="iv-card" style={{marginBottom:22}}>
+          <span className="iv-card-lbl">Question to Reflect On</span>
+          <div className="iv-card-body italic gold">{result.reflectionQuestion}</div>
+        </div>
+      )}
+
       {result.affirmation && (
         <div className="iv-quote">
           <span className="iv-quote-deco l">"</span>
           <span className="iv-quote-deco r">"</span>
-          <div className="iv-quote-lbl">Your Sacred Affirmation</div>
+          <div className="iv-quote-lbl">Affirmation</div>
           <div className="iv-quote-txt">"{result.affirmation}"</div>
         </div>
       )}
 
-      <button className="iv-reset-btn" onClick={onReset}>↩ New Diagnosis</button>
+      <div className="iv-card" style={{marginBottom:22}}>
+        <span className="iv-card-lbl">Next Steps</span>
+        <div className="iv-planets">
+          {NEXT_STEPS.map(n => (
+            <Link key={n.path} to={n.path} className="iv-planet-card" style={{textDecoration:"none"}}>
+              <div className="iv-planet-name">{n.icon} {n.name}</div>
+              <div className="iv-planet-note">{n.desc}</div>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      <p style={{fontSize:13,color:"rgba(255,255,255,.6)",textAlign:"center",marginBottom:22,lineHeight:1.6}}>
+        This is a reflective, AI-generated interpretation, not a prediction, diagnosis or professional advice. For health, financial or emotional difficulty, please also speak to a qualified professional or someone you trust.
+      </p>
+      <button className="iv-reset-btn" onClick={onReset}>↩ New Reading</button>
     </div>
   );
 }
@@ -534,7 +406,7 @@ function ReportView({ result, onReset }) {
 export default function InnerVoice() {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState<KarmaReading | null>(null);
   const [error, setError] = useState("");
   const [listening, setListening] = useState(false);
   const recognitionRef = useRef(null);
@@ -547,7 +419,7 @@ export default function InnerVoice() {
   }, []);
 
   const karmaHistory = (() => { try { return JSON.parse(localStorage.getItem("iv_karma_v2")||"[]"); } catch { return []; } })();
-  const latestScore = karmaHistory[0]?.composite || null;
+  const latestScore = karmaHistory[0]?.composite ?? null;
 
   const startVoice = () => {
     const SR = (window as unknown as SpeechWindow).SpeechRecognition || (window as unknown as SpeechWindow).webkitSpeechRecognition;
@@ -561,14 +433,14 @@ export default function InnerVoice() {
   };
 
   const diagnose = async () => {
-    if (!text.trim()) return;
+    if (loading || text.trim().length < MIN_SITUATION_CHARS) return;
     setLoading(true); setError(""); setResult(null);
     try {
-      const data = await callAI(text);
-      if (!data || !Object.keys(data).length) throw new Error("Empty response. Please try again.");
-      setResult(data);
-    } catch(e) { console.error("[Know Your Karma] request failed:", e); setError("Could not read your karma right now. Please try again in a moment."); }
-    finally { setLoading(false); }
+      setResult(await fetchKarmaReading(text));
+    } catch (e) {
+      console.error("[Know Your Karma] request failed:", e);
+      setError(e instanceof KarmaReadingError ? e.message : "Could not create your reading right now. Please try again in a moment.");
+    } finally { setLoading(false); }
   };
 
   // Hint click — fills textarea and scrolls to input
@@ -590,10 +462,10 @@ export default function InnerVoice() {
           <h1 className="iv-hero-title">Inner Voice</h1>
           <div className="iv-hero-tagline">Know Your Karma · Improve Your Karma</div>
           <p className="iv-hero-sub">Your personal Vedic guidance system — powered by ancient wisdom and modern AI. Diagnose karmic patterns, track your dharmic progress, and receive actionable remedies.</p>
-          {latestScore && (
+          {latestScore !== null && (
             <div className="iv-karma-strip">
               <div className="iv-ks-item"><div className="iv-ks-val">{latestScore}</div><div className="iv-ks-lbl">Karma Score</div></div>
-              <div className="iv-ks-item"><div className="iv-ks-val">{karmaHistory.length}</div><div className="iv-ks-lbl">Days Tracked</div></div>
+              <div className="iv-ks-item"><div className="iv-ks-val">{karmaHistory.length}</div><div className="iv-ks-lbl">Days Saved</div></div>
             </div>
           )}
         </div>
@@ -629,7 +501,7 @@ export default function InnerVoice() {
             <div className="iv-diag-inner">
               <div>
                 <h2 className="iv-diag-heading">Know Your Karma</h2>
-                <p className="iv-diag-sub">Share your situation in any language — Hindi, English, or Hinglish. Pandit Ji will diagnose the karmic root and prescribe exact remedies.</p>
+                <p className="iv-diag-sub">Share your situation in any language — Hindi, English, or Hinglish. You will receive a reflective reading with practical guidance.</p>
                 <div className="iv-diag-hints">
                   {HINTS.map((h, i) => (
                     <div key={i} className="iv-hint" onClick={() => onHintClick(h.text)} role="button" tabIndex={0} onKeyDown={e => e.key==="Enter" && onHintClick(h.text)}>
@@ -645,25 +517,26 @@ export default function InnerVoice() {
                     <button className={`iv-voice-btn${listening?" listening":""}`} onClick={startVoice}>
                       {listening ? "🔴 Listening..." : "🎙️ Speak"}
                     </button>
-                    <span className="iv-char">{text.length} / 1500</span>
+                    <span className="iv-char">{text.length} / {MAX_SITUATION_CHARS}</span>
                   </div>
                   <textarea
                     className="iv-textarea"
                     placeholder="Apni situation batayein... What is weighing on your heart right now? Be honest and specific."
                     value={text}
-                    onChange={e => setText(e.target.value.slice(0, 1500))}
+                    onChange={e => setText(e.target.value.slice(0, MAX_SITUATION_CHARS))}
                   />
                   {loading ? (
                     <div className="iv-loading">
                       <div className="iv-loader" />
-                      <div className="iv-loading-text">Pandit Ji is reading your karma...</div>
+                      <div className="iv-loading-text">Preparing your reading...</div>
                     </div>
                   ) : (
-                    <button className="iv-submit-btn" onClick={diagnose} disabled={text.trim().length < 10}>
+                    <button className="iv-submit-btn" onClick={diagnose} disabled={text.trim().length < MIN_SITUATION_CHARS}>
                       ॐ &nbsp; Know My Karma
                     </button>
                   )}
-                  {error && <div className="iv-err">⚠ {error}</div>}
+                  {!loading && text.trim().length > 0 && text.trim().length < MIN_SITUATION_CHARS && <div className="iv-char" style={{marginTop:10}}>Please write a little more (at least {MIN_SITUATION_CHARS} characters).</div>}
+                  {error && <div className="iv-err" role="alert">⚠ {error} <button onClick={diagnose} style={{marginLeft:8,textDecoration:"underline",background:"none",border:0,color:"inherit",cursor:"pointer"}}>Try again</button></div>}
                 </div>
               </div>
             </div>
@@ -674,7 +547,7 @@ export default function InnerVoice() {
         {result && (
           <div className="iv-report-wrap">
             <div className="iv-container">
-              <ReportView result={result} onReset={() => { setResult(null); setText(""); }} />
+              <ReportView result={result} onReset={() => { setResult(null); setText(""); setError(""); }} />
             </div>
           </div>
         )}

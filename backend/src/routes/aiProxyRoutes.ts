@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import express from "express";
 import { createRateLimiter } from "../utils/rateLimit.js";
+import { auth } from "../middleware/authMiddleware.js";
 
 /**
  * Server-side proxy for the Groq chat-completions API so the key never ships
@@ -19,6 +20,8 @@ const ROLES = new Set(["system", "user", "assistant"]);
 
 const router = Router();
 
+// Every AI call spends provider credits, so it requires a signed-in user.
+router.use(auth("USER"));
 router.use(express.json({ limit: "250kb" }));
 router.use(createRateLimiter({ windowMs: 60_000, max: 30 }));
 

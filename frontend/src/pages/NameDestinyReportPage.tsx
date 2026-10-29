@@ -3,6 +3,7 @@ import NameDestinyReport from "@/components/NameDestinyReport";
 import FeatureIntro from "@/components/FeatureIntro";
 import NameNumerologyEducation from "@/components/NameNumerologyEducation";
 import { buildProfile, checkName, type NameProfile } from "@/lib/numerology";
+import { requireSignIn } from "@/lib/authedFetch";
 
 interface FormState {
   firstName: string;
@@ -37,6 +38,7 @@ export default function NameDestinyReportPage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!requireSignIn()) return; // account required to generate a report
     if (!form.firstName.trim() || !form.dob) {
       setError("Please enter your first name and date of birth.");
       return;
@@ -94,7 +96,7 @@ export default function NameDestinyReportPage() {
               <h2 style={{ fontFamily: "'Astra','Cinzel',serif", fontSize: "clamp(24px,3.5vw,34px)", fontWeight: 700, color: "#fff", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>
                 Your Details
               </h2>
-              <p style={{ color: "rgba(255,255,255,0.65)", fontStyle: "italic", fontSize: 16 }}>Free to use. Your details stay in your browser.</p>
+              <p style={{ color: "rgba(255,255,255,0.65)", fontStyle: "italic", fontSize: 16 }}>Free with an account. Your details stay in your browser.</p>
             </div>
 
             {error && (
