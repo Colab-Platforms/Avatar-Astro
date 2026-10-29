@@ -7,6 +7,7 @@ import {
 import { SQUARE_PALM_MIN, LONG_FINGERS_MIN } from "@/lib/palmAnalysis/lineEstimator";
 import { ScanSequence } from "@/components/palm/ScanSequence";
 import PalmEducation from "@/components/palm/PalmEducation";
+import { requireSignIn } from "@/lib/authedFetch";
 
 // Upload limits (checked before anything is read or analysed).
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -355,6 +356,7 @@ export default function PalmReading() {
     const file = e.target.files?.[0];
     e.target.value = ""; // allow re-selecting the same file after a retake
     if (!file) return;
+    if (!requireSignIn()) return; // account required to analyse a palm photo
     if (!ACCEPTED_TYPES.includes(file.type)) {
       setRetakeMessage("That file type isn't supported. Please upload a JPG, PNG or WebP photo of your palm.");
       setStage("retake");

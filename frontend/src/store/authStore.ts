@@ -8,6 +8,18 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { AuthSession, AuthUser } from "@/features/auth/types";
 
+/** Browser-stored personal results. Removed on sign-out so the next person on this device cannot see them. */
+const PERSONAL_KEY_PREFIXES = ["iv_"];
+export function clearPersonalLocalData(): void {
+  try {
+    for (const key of Object.keys(localStorage)) {
+      if (PERSONAL_KEY_PREFIXES.some((p) => key.startsWith(p))) localStorage.removeItem(key);
+    }
+  } catch {
+    /* storage unavailable */
+  }
+}
+
 interface AuthState {
   user: AuthUser | null;
   accessToken: string | null;
@@ -47,13 +59,15 @@ export const useAuthStore = create<AuthState>()(
 
       setHasHydrated: (hasHydrated) => set({ hasHydrated }),
 
-      logout: () =>
+      logout: () => {
+        clearPersonalLocalData();
         set({
           user: null,
           accessToken: null,
           refreshToken: null,
           isAuthenticated: false,
-        }),
+        });
+      },
     }),
     {
       name: "auth",

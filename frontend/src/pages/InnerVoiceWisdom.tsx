@@ -1,44 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import FeatureIntro from "@/components/FeatureIntro";
-import { aiChat } from "@/lib/aiClient";
+import { useAuthStore } from "@/store/authStore";
+import { requireSignIn } from "@/lib/authedFetch";
+import { fetchWisdom as requestWisdom, ShlokaError, shareText, MAX_SITUATION_CHARS } from "@/lib/shlokaWisdom";
 
 const fl = document.createElement("link"); fl.rel = "stylesheet";
 fl.href = "https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:wght@400;700&display=swap";
 if (!document.head.querySelector("link[href*='Cinzel']")) document.head.appendChild(fl);
 
-
-const SYSTEM_PROMPT = `You are a Vedic scripture scholar. When given a situation, find the most relevant verse.
-Return ONLY a JSON object with exactly these keys (all required, no nulls):
-{
-  "source": "Bhagavad Gita",
-  "chapter": "Chapter 2, Verse 47",
-  "devanagari": "कर्मण्येवाधिकारस्ते...",
-  "transliteration": "karmany-evadhikaras te...",
-  "wordByWord": "karma = action | phala = fruit | adhikara = right",
-  "meaning": "Plain English translation of the verse",
-  "application": "How this specifically applies to the person's situation (3 sentences)",
-  "deeperWisdom": "The deeper philosophical meaning",
-  "action": "One concrete action to take today",
-  "mantra": "Short key phrase to repeat",
-  "mantraCount": "108 times daily for 21 days"
-}`;
-
-async function callAI(userMsg) {
-  const res = await aiChat({
-      temperature: 0.7,
-      max_tokens: 1500,
-      json: true,
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: userMsg }
-      ]
-    });
-  const data = await res.json();
-  if (data.error) throw new Error(data.error.message);
-  const raw = data.choices?.[0]?.message?.content || "{}";
-  try { return JSON.parse(raw); } catch { return {}; }
-}
 
 const CSS = `
 *{box-sizing:border-box;}
@@ -151,7 +121,7 @@ const CSS = `
 .ivw-saved-prev{font-size:15px;color:rgba(255,255,255,.58);font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 `;
 
-const SCRIPTURES = ["Bhagavad Gita","Upanishads","Ramayana","Mahabharata","Vedas","Puranas"];
+const SCRIPTURES = ["Bhagavad Gita","Upanishads"];
 const QUICK_PROMPTS = [
   "I keep failing despite working hard",
   "My relationship is breaking apart",
@@ -230,36 +200,38 @@ export default function InnerVoiceWisdom() {
     if (sit) setSituation(sit);
     setLoading(true); setError(""); setResult(null); setViewingSaved(null);
     try {
-      const msg = scripture
-        ? `Scripture preference: ${scripture}\n\nMy situation: ${q}`
-        : `My situation: ${q}`;
-      const data = await callAI(msg);
-      if (!data || Object.keys(data).length === 0) throw new Error("Empty response from AI");
-      setResult(data);
+      setResult(await requestWisdom(q, scripture));
     } catch(e) {
       console.error("[Sacred Shloka] request failed:", e);
-      setError("Could not retrieve wisdom right now. Please try again in a moment.");
+      setError(e instanceof ShlokaError ? e.message : "Could not retrieve wisdom right now. Please try again in a moment.");
     } finally {
       setLoading(false);
     }
   };
 
+  const signedIn = useAuthStore((s) => s.isAuthenticated);
   const saveShloka = () => {
     if (!result) return;
+    if (!requireSignIn()) return;
     const entry = { id: Date.now(), source: result.source, chapter: result.chapter, situation: situation.slice(0,80), result };
     const updated = [entry, ...savedShlokas].slice(0, 20);
     setSavedShlokas(updated);
     localStorage.setItem("iv_shlokas", JSON.stringify(updated));
   };
 
+  const [copied, setCopied] = useState(false);
   const display = viewingSaved?.result || result;
+  const copyShloka = async () => {
+    if (!display) return;
+    try { await navigator.clipboard.writeText(shareText(display)); setCopied(true); setTimeout(() => setCopied(false), 2000); }
+    catch { setError("Copying isn't available in this browser."); }
+  };
 
   return (
     <div className="ivw-app">
       <style>{CSS}</style>
       <StarCanvas />
       <div className="ivw-wrap">
-        <Link to="/inner-voice" className="ivw-back">← Inner Voice</Link>
 
         <div className="ivw-hdr">
           <div className="ivw-eyebrow">Ancient Vedic Scripture</div>
@@ -275,7 +247,7 @@ export default function InnerVoiceWisdom() {
               { title: "Understand Its Meaning", text: "Read the Sanskrit verse, its transliteration, word meanings and the English meaning." },
               { title: "Apply the Wisdom", text: "Explore how the verse applies to you and the practical action it suggests." },
             ]}
-            disclaimer="Verses are suggested by an AI and may contain errors in text, translation or verse numbers. Please verify the verse and its reference in an authentic edition before quoting or relying on it."
+            disclaimer="The verse is chosen from a curated list and the personal reflection is AI-written. Please check any verse against an authentic edition before quoting or relying on it or relying on it."
           />
         )}
 
@@ -295,7 +267,8 @@ export default function InnerVoiceWisdom() {
                 className="ivw-ta"
                 placeholder={`Describe your situation honestly and specifically...\n\nExample: "I worked hard for 2 years on my startup. It failed. I feel God doesn't reward honest effort."`}
                 value={situation}
-                onChange={e=>setSituation(e.target.value)}
+                maxLength={MAX_SITUATION_CHARS}
+                onChange={e=>setSituation(e.target.value.slice(0, MAX_SITUATION_CHARS))}
               />
 
               <label className="ivw-flabel">Or pick a quick situation</label>
@@ -319,7 +292,7 @@ export default function InnerVoiceWisdom() {
             </div>
 
             {/* Saved shlokas */}
-            {savedShlokas.length > 0 && (
+            {signedIn && savedShlokas.length > 0 && (
               <>
                 <div className="ivw-saved-hdr">📿 Your Saved Shlokas ({savedShlokas.length})</div>
                 {savedShlokas.map(s=>(
@@ -339,6 +312,8 @@ export default function InnerVoiceWisdom() {
               <span className="ivw-src-badge">{display.source || "Vedic Scripture"}</span>
               {display.chapter && <span className="ivw-src-chapter">{display.chapter}</span>}
             </div>
+
+            {display.context && <p style={{textAlign:"center",fontSize:14,color:"rgba(255,255,255,.65)",margin:"0 0 14px"}}>{display.context}</p>}
 
             {/* The Shloka */}
             <div className="ivw-shloka">
@@ -381,6 +356,12 @@ export default function InnerVoiceWisdom() {
                 </div>
               )}
 
+              {display.reflectionQuestion && (
+                <div className="ivw-sec wisdom">
+                  <Field icon="💭" label="Question to Reflect On" labelClass="lbl-wisdom" text={display.reflectionQuestion} textClass="italic" />
+                </div>
+              )}
+
               {display.relatedVerse && (
                 <div className="ivw-sec related">
                   <Field icon="🔗" label="Also See" labelClass="lbl-related" text={display.relatedVerse} textClass="small" />
@@ -399,11 +380,14 @@ export default function InnerVoiceWisdom() {
             )}
 
             <p style={{textAlign:"center",fontSize:13,fontStyle:"italic",color:"rgba(255,255,255,.5)",margin:"4px 0 16px"}}>
-              AI-suggested verse — please verify the text and reference in an authentic edition before quoting.
+              {display.verified
+                ? "The verse comes from a curated list; the personal reflection is AI-written. For study or formal use, please check the verse against an authentic edition."
+                : "This saved verse was suggested by an AI and may contain errors. Please verify the text and reference in an authentic edition before quoting."}
             </p>
 
             <div className="ivw-btns">
               <button className="ivw-save" onClick={saveShloka}>✦ Save Shloka</button>
+              <button className="ivw-again" onClick={copyShloka}>{copied ? "✓ Copied" : "⧉ Copy Verse"}</button>
               <button className="ivw-again" onClick={()=>{ setResult(null); setViewingSaved(null); setSituation(""); }}>
                 ↩ Seek Another
               </button>

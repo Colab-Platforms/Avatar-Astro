@@ -1,7 +1,9 @@
 import { Router, Request, Response } from "express";
 import { createRateLimiter } from "../utils/rateLimit.js";
+import { auth } from "../middleware/authMiddleware.js";
 
 const router = Router();
+router.use(auth("USER"));
 
 // These AI endpoints are not called by the current Birth Chart page; keep them from being used as an open, uncapped AI relay.
 router.use(createRateLimiter({ windowMs: 60_000, max: 10 }));

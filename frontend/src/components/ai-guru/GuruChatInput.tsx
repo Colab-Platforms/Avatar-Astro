@@ -28,6 +28,7 @@ const GuruChatInput = forwardRef<HTMLTextAreaElement, GuruChatInputProps>(
       >
         <Sparkles className="h-4 w-4 shrink-0 text-[#FF9D4D]" />
         <textarea
+          maxLength={1000}
           ref={ref}
           rows={1}
           value={value}

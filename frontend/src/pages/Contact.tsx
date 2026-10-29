@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import gsap from 'gsap';
-import { Send, Mail, MapPin, Phone, Check } from 'lucide-react';
+import { Send, Mail, Check } from 'lucide-react';
+import { submitContact } from '@/lib/inquiry';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -11,6 +12,7 @@ const Contact = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState('');
 
   const pageRef = useRef<HTMLDivElement>(null);
 
@@ -26,23 +28,25 @@ const Contact = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setIsSubmitting(true);
-    
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    setIsSubmitting(false);
-    setIsSubmitted(true);
-    setFormData({ name: '', email: '', subject: '', message: '' });
-
-    setTimeout(() => setIsSubmitted(false), 5000);
+    setError('');
+    try {
+      const result = await submitContact(formData);
+      if (result.ok) {
+        setIsSubmitted(true);
+        setFormData({ name: '', email: '', subject: '', message: '' });
+        setTimeout(() => setIsSubmitted(false), 8000);
+      } else {
+        // Keep what the visitor typed so they can fix it or retry.
+        setError(result.message || "We couldn't send your message. Please try again.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const contactInfo = [
-    { icon: Mail, label: 'Email', value: 'hello@celestial.com' },
-    { icon: MapPin, label: 'Location', value: 'Written in the Stars' },
-    { icon: Phone, label: 'Phone', value: '+1 (555) STARS' },
-  ];
+  const contactInfo = [{ icon: Mail, label: 'Email', value: 'support@avatarindia.com' }];
 
   return (
     <div ref={pageRef} className="min-h-screen pt-24 pb-12 relative z-10">
@@ -67,8 +71,8 @@ const Contact = () => {
                 <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Check className="w-8 h-8 text-primary" />
                 </div>
-                <h3 className="font-display text-xl text-foreground mb-2">Message Sent!</h3>
-                <p className="text-muted-foreground">We'll get back to you as soon as the stars align.</p>
+                <h3 className="font-display text-xl text-foreground mb-2" role="status">Message Sent!</h3>
+                <p className="text-muted-foreground">Thank you. Our team has received your message and will reply by email.</p>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
@@ -116,6 +120,12 @@ const Contact = () => {
                   />
                 </div>
                 
+                {error && (
+                  <div role="alert" className="rounded-lg border border-red-400/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                    {error}
+                  </div>
+                )}
+
                 <button
                   type="submit"
                   disabled={isSubmitting}
@@ -153,14 +163,6 @@ const Contact = () => {
               </div>
             </div>
 
-            <div className="glass-card rounded-2xl p-6 md:p-8">
-              <h3 className="font-display text-lg text-foreground mb-4">Office Hours</h3>
-              <div className="space-y-2 text-muted-foreground text-sm">
-                <p>Monday - Friday: 9am - 6pm PST</p>
-                <p>Saturday: 10am - 4pm PST</p>
-                <p>Sunday: Closed (Communing with the cosmos)</p>
-              </div>
-            </div>
           </div>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { authedFetch, SignInRequiredError } from '@/lib/authedFetch';
 import gsap from 'gsap';
 import { RotateCcw, Sprout, Sparkles, EyeOff, Star, Zap, Flame } from 'lucide-react';
 import { TarotCard, ALL_CARDS, MAJOR_ARCANA, shuffleDeck, getCategoryCardImage } from '../data/tarotData';
@@ -1853,7 +1854,7 @@ const TarotExperience = () => {
     setReadingError(null);
     setReading(null);
     try {
-      const res = await fetch(`${API_BASE_URL}/tarot/reading`, {
+      const res = await authedFetch(`${API_BASE_URL}/tarot/reading`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         // Only card names are sent — the server supplies positions and does not trust client card text.
@@ -1866,6 +1867,7 @@ const TarotExperience = () => {
       else setReadingError(res.status === 429 ? 'Too many readings requested. Please wait a minute and try again.' : "We couldn't create your reading just now. Your cards are still here — please try again.");
     } catch (e) {
       if (controller.signal.aborted) return;
+      if (e instanceof SignInRequiredError) { setReadingError('Please sign in to get your reading. Your cards are still here.'); return; }
       console.error('[Tarot] reading request failed:', e);
       setReadingError("We couldn't reach the reading service. Check your connection and try again.");
     } finally {

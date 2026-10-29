@@ -20,18 +20,36 @@ const PARENT_ROUTES: Record<string, string> = {
   '/inner-voice/dashboard': '/inner-voice',
   '/inner-voice/future-path': '/inner-voice',
   '/inner-voice/wisdom':    '/inner-voice',
+  '/name-destiny-report':   '/',
+  '/puja':                  '/',
+  '/chadhawa':              '/',
+  '/shop':                  '/',
+  '/ratna-jyotish':         '/',
+  '/avatar-live':           '/',
+  '/avatar-live/darshan':   '/avatar-live',
+  '/avatar-live/family':    '/avatar-live',
 };
 
-const getFallback = (pathname: string): string => {
-  // Dynamic route: /zodiac/:sign → /zodiac
-  if (pathname.startsWith('/zodiac/') && pathname !== '/zodiac') return '/zodiac';
-  return PARENT_ROUTES[pathname] ?? '/';
+// Nested/dynamic routes: the first matching prefix decides the logical parent.
+const NESTED_PARENTS: [string, string][] = [
+  ['/zodiac/', '/zodiac'],
+  ['/avatar-live/darshan/', '/avatar-live/darshan'],
+  ['/ratna-jyotish/', '/ratna-jyotish'],
+  ['/puja/', '/puja'],
+  ['/chadhawa/', '/chadhawa'],
+  ['/shop/', '/shop'],
+];
+
+export const getFallback = (pathname: string): string => {
+  if (PARENT_ROUTES[pathname]) return PARENT_ROUTES[pathname];
+  const nested = NESTED_PARENTS.find(([prefix]) => pathname.startsWith(prefix));
+  return nested ? nested[1] : '/';
 };
 
 const BackButton = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { historyStack, onBackOverride } = useNavigation();
+  const { onBackOverride } = useNavigation();
 
   // Never render on the home page, or on pages that already have their own
   // equivalent back navigation built into the layout (e.g. AI Guru's sidebar
@@ -43,8 +61,10 @@ const BackButton = () => {
       onBackOverride();
       return;
     }
-    // Prefer real browser / SPA history when available
-    if (historyStack.length > 0 || window.history.length > 1) {
+    // Go back through history only when the previous entry belongs to this app.
+    // `location.key === 'default'` marks the first in-app entry (deep link, refresh or
+    // arriving from another site), where navigate(-1) would leave the site.
+    if (location.key !== 'default') {
       navigate(-1);
     } else {
       navigate(getFallback(location.pathname));

@@ -38,10 +38,6 @@ const ZodiacDetail = () => {
 
   return (
     <main className="relative z-10 mx-auto max-w-5xl px-4 pb-20 pt-24">
-      <Link to="/zodiac" className="mb-8 inline-flex items-center gap-2 text-sm uppercase tracking-[0.18em] text-primary/80 hover:text-primary">
-        <ArrowLeft className="h-4 w-4" aria-hidden="true" /> All signs
-      </Link>
-
       <header className="mb-10 grid items-center gap-8 md:grid-cols-[minmax(0,260px)_1fr]">
         <div className="mx-auto w-48 md:w-full">
           <img src={zodiacImages[zodiac.name]} alt={`${zodiac.name} constellation illustration`} className="w-full object-contain drop-shadow-[0_0_24px_rgba(245,195,106,0.35)]" />
