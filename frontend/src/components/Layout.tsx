@@ -1,5 +1,4 @@
 import { ReactNode, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import BackButton from './BackButton';
@@ -9,17 +8,15 @@ interface LayoutProps {
 }
 
 const Layout = ({ children }: LayoutProps) => {
-  // The homepage alone uses the warm light theme (.home-light, see index.css).
-  const isHome = useLocation().pathname === '/';
-
-  // Keep overscroll / short pages from flashing the dark body colour on the homepage.
+  // The MyBhagya light theme (.home-light, see index.css) applies to every route.
+  // Keep overscroll / short pages from flashing a different body colour.
   useEffect(() => {
-    document.body.classList.toggle('home-light-body', isHome);
+    document.body.classList.add('home-light-body');
     return () => document.body.classList.remove('home-light-body');
-  }, [isHome]);
+  }, []);
 
   return (
-    <div className={`relative min-h-screen overflow-x-hidden ${isHome ? 'home-light' : 'bg-transparent'}`}>
+    <div className="relative min-h-screen overflow-x-hidden home-light">
       <div className="grain-overlay" />
 
       <div className="relative z-20">

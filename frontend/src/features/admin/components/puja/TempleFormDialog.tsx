@@ -205,12 +205,12 @@ export function TempleFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => !isSubmitting && onOpenChange(next)}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto border-white/10 bg-[#0a1628] text-white sm:max-w-2xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto border-primary/15 bg-[#FBF5EC] text-foreground sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="font-display text-lg tracking-wide text-white">
+          <DialogTitle className="font-display text-lg tracking-wide text-foreground">
             {isEdit ? `Edit ${temple?.name}` : "Add Temple"}
           </DialogTitle>
-          <DialogDescription className="text-white/60">
+          <DialogDescription className="text-foreground/70">
             {isEdit
               ? "Update the temple details. Existing images stay untouched unless you remove them."
               : "Create a temple record. You can attach images now or later."}
@@ -224,7 +224,7 @@ export function TempleFormDialog({
                 value={values.name}
                 onChange={(e) => handleNameChange(e.target.value)}
                 placeholder="Tirupati Balaji"
-                className="border-white/10 bg-white/[0.03] text-white"
+                className="border-primary/15 bg-card text-foreground"
               />
             </Field>
 
@@ -236,7 +236,7 @@ export function TempleFormDialog({
                   setField("slug", slugify(e.target.value));
                 }}
                 placeholder="tirupati-balaji"
-                className="border-white/10 bg-white/[0.03] text-white"
+                className="border-primary/15 bg-card text-foreground"
               />
             </Field>
 
@@ -245,7 +245,7 @@ export function TempleFormDialog({
                 value={values.location}
                 onChange={(e) => setField("location", e.target.value)}
                 placeholder="Tirumala, Tirupati"
-                className="border-white/10 bg-white/[0.03] text-white"
+                className="border-primary/15 bg-card text-foreground"
               />
             </Field>
 
@@ -254,7 +254,7 @@ export function TempleFormDialog({
                 value={values.state}
                 onChange={(e) => setField("state", e.target.value)}
                 placeholder="Andhra Pradesh"
-                className="border-white/10 bg-white/[0.03] text-white"
+                className="border-primary/15 bg-card text-foreground"
               />
             </Field>
 
@@ -263,7 +263,7 @@ export function TempleFormDialog({
                 value={values.deity}
                 onChange={(e) => setField("deity", e.target.value)}
                 placeholder="Lord Venkateswara"
-                className="border-white/10 bg-white/[0.03] text-white"
+                className="border-primary/15 bg-card text-foreground"
               />
             </Field>
 
@@ -275,7 +275,7 @@ export function TempleFormDialog({
                 onChange={(e) =>
                   setField("priceFrom", Number(e.target.value))
                 }
-                className="border-white/10 bg-white/[0.03] text-white"
+                className="border-primary/15 bg-card text-foreground"
               />
             </Field>
           </div>
@@ -286,7 +286,7 @@ export function TempleFormDialog({
               value={values.description}
               onChange={(e) => setField("description", e.target.value)}
               placeholder="One of the world's most visited religious sites…"
-              className="border-white/10 bg-white/[0.03] text-white"
+              className="border-primary/15 bg-card text-foreground"
             />
           </Field>
 
@@ -298,7 +298,7 @@ export function TempleFormDialog({
           </Field>
 
           <div className="space-y-2">
-            <Label className="text-sm text-white/80">
+            <Label className="text-sm text-foreground/80">
               {isEdit ? "Add More Images" : "Temple Images"}
             </Label>
 
@@ -307,7 +307,7 @@ export function TempleFormDialog({
                 {previews.map((preview, index) => (
                   <div
                     key={preview.url}
-                    className="relative h-20 w-20 overflow-hidden rounded-md border border-white/10"
+                    className="relative h-20 w-20 overflow-hidden rounded-md border border-primary/15"
                   >
                     <img
                       src={preview.url}
@@ -343,12 +343,12 @@ export function TempleFormDialog({
               type="button"
               variant="outline"
               onClick={() => fileInputRef.current?.click()}
-              className="border-white/10 bg-transparent text-white hover:bg-white/5 hover:text-white"
+              className="border-primary/15 bg-transparent text-foreground hover:bg-primary/10 hover:text-foreground"
             >
               <ImagePlus className="h-4 w-4" />
               Select Images
             </Button>
-            <p className="text-xs text-white/40">
+            <p className="text-xs text-foreground/70">
               JPEG, PNG, WebP or AVIF · up to 10 MB each
             </p>
           </div>
@@ -359,14 +359,14 @@ export function TempleFormDialog({
               variant="ghost"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
-              className="text-white/70 hover:bg-white/5 hover:text-white"
+              className="text-foreground/70 hover:bg-primary/10 hover:text-foreground"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="bg-[#BC6A4D] text-white hover:bg-[#BC6A4D]/90"
+              className="bg-[#592209] text-[#F5E9D6] hover:bg-[#592209]/90"
             >
               {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
               {uploadImages.isPending
@@ -395,12 +395,12 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <Label className="text-sm text-white/80">
+      <Label className="text-sm text-foreground/80">
         {label}
-        {required && <span className="ml-0.5 text-[#BC6A4D]">*</span>}
+        {required && <span className="ml-0.5 text-[#592209]">*</span>}
       </Label>
       {children}
-      {error && <p className="text-xs text-red-400">{error}</p>}
+      {error && <p className="text-xs text-red-800">{error}</p>}
     </div>
   );
 }

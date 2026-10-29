@@ -50,11 +50,11 @@ function CounterStat({ value, suffix, label }: { value: number; suffix: string; 
   const display = value >= 1000 ? count.toLocaleString() : count;
   return (
     <div ref={ref} className="glass-card rounded-2xl py-7 px-4 text-center">
-      <div className="text-2xl md:text-3xl font-extrabold text-white">
+      <div className="text-2xl md:text-3xl font-extrabold text-foreground">
         {display}
         {suffix}
       </div>
-      <div className="text-xs md:text-sm text-white/50 mt-1.5 tracking-wide">{label}</div>
+      <div className="text-xs md:text-sm text-foreground/70 mt-1.5 tracking-wide">{label}</div>
     </div>
   );
 }
@@ -62,8 +62,8 @@ function CounterStat({ value, suffix, label }: { value: number; suffix: string; 
 function StaticStat({ label }: { label: string }) {
   return (
     <div className="glass-card rounded-2xl py-7 px-4 text-center flex flex-col items-center justify-center">
-      <div className="w-2 h-2 rounded-full bg-[#ff7e47] mb-3" style={{ boxShadow: "0 0 10px rgba(255,126,71,0.7)" }} />
-      <div className="text-xs md:text-sm text-white/70 font-semibold tracking-wide">{label}</div>
+      <div className="w-2 h-2 rounded-full bg-[#592209] mb-3" style={{ boxShadow: "0 0 10px rgba(89,34,9,0.7)" }} />
+      <div className="text-xs md:text-sm text-foreground/70 font-semibold tracking-wide">{label}</div>
     </div>
   );
 }

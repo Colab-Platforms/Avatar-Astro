@@ -47,7 +47,7 @@ export function PalmLineOverlay({ imageUrl, analysis }: PalmLineOverlayProps) {
     : null;
 
   return (
-    <div style={{ position: "relative", width: "100%", borderRadius: 20, overflow: "hidden", background: "#0a0812" }}>
+    <div style={{ position: "relative", width: "100%", borderRadius: 20, overflow: "hidden", background: "#FBF5EC" }}>
       <img src={imageUrl} alt="Your analyzed palm" style={{ width: "100%", display: "block" }} />
 
       <svg
@@ -126,7 +126,7 @@ export function PalmLineOverlay({ imageUrl, analysis }: PalmLineOverlayProps) {
       {activeLine && activeMetrics && (
         <div style={{
           position: "absolute", top: 14, right: 14, maxWidth: 240,
-          background: "rgba(6,4,14,0.92)", border: `1px solid ${activeLine.color}55`,
+          background: "#FBF5EC", border: `1px solid ${activeLine.color}55`,
           borderRadius: 14, padding: "14px 16px",
           boxShadow: `0 0 24px ${activeLine.color}33`,
           animation: "pl-card-in 0.25s ease",
@@ -143,14 +143,14 @@ export function PalmLineOverlay({ imageUrl, analysis }: PalmLineOverlayProps) {
               </div>
             ))}
           </div>
-          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.55, color: "rgba(232,224,240,0.85)" }}>{MEANING[activeLine.id]}</p>
+          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.55, color: "rgba(48,22,7,0.85)" }}>{MEANING[activeLine.id]}</p>
         </div>
       )}
 
       {!activeLine && (
         <div style={{
           position: "absolute", top: 14, left: 14, fontSize: 11, color: "rgba(255,255,255,0.55)",
-          letterSpacing: "0.08em", background: "rgba(0,0,0,0.45)", borderRadius: 20, padding: "5px 12px",
+          letterSpacing: "0.08em", background: "rgba(89,34,9,0.07)", borderRadius: 20, padding: "5px 12px",
         }}>
           ✦ Hover or tap a line ✦
         </div>

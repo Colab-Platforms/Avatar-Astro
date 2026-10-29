@@ -73,7 +73,7 @@ const ImageCarousel = ({ images, name, gradient }: { images: string[]; name: str
                 onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
               />
             ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-white/30">
+              <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-foreground/70">
                 <span className="text-8xl">🛕</span>
                 <span className="font-display text-lg tracking-widest uppercase">{name}</span>
               </div>
@@ -90,10 +90,10 @@ const ImageCarousel = ({ images, name, gradient }: { images: string[]; name: str
 
         {total > 1 && (
           <>
-            <button onClick={prev} className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-primary/50 transition-all">
+            <button onClick={prev} className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm border border-primary/25 flex items-center justify-center text-white hover:bg-primary/50 transition-all">
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <button onClick={next} className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-primary/50 transition-all">
+            <button onClick={next} className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm border border-primary/25 flex items-center justify-center text-white hover:bg-primary/50 transition-all">
               <ChevronRight className="w-5 h-5" />
             </button>
           </>
@@ -323,13 +323,13 @@ const ChadhawaDetail = () => {
                       viewport={{ once: true }}
                       transition={{ duration: 0.4 }}
                       className={`glass-card rounded-2xl p-4 flex gap-4 items-start border transition-all ${
-                        q > 0 ? 'border-primary/40 shadow-[0_0_24px_rgba(188,106,77,0.10)]' : 'border-border/20'
+                        q > 0 ? 'border-primary/40 shadow-[0_0_24px_rgba(89,34,9,0.10)]' : 'border-border/20'
                       }`}
                     >
                       {/* Emoji icon */}
                       <div
                         className="w-16 h-16 rounded-xl flex items-center justify-center text-3xl flex-shrink-0 border border-primary/20"
-                        style={{ background: 'rgba(188,106,77,0.07)' }}
+                        style={{ background: 'rgba(89,34,9,0.07)' }}
                       >
                         {offering.emoji ?? '🪔'}
                       </div>
@@ -642,8 +642,8 @@ const ChadhawaDetail = () => {
                 <div
                   className="absolute inset-0 rounded-full"
                   style={{
-                    background: 'radial-gradient(circle at 50% 50%, rgba(188,106,77,0.12) 0%, rgba(188,106,77,0.04) 55%, transparent 75%)',
-                    boxShadow: '0 0 80px rgba(188,106,77,0.15)',
+                    background: 'radial-gradient(circle at 50% 50%, rgba(89,34,9,0.08) 0%, rgba(89,34,9,0.04) 55%, transparent 75%)',
+                    boxShadow: '0 0 80px rgba(89,34,9,0.15)',
                   }}
                 />
                 {/* Concentric rings */}
@@ -662,7 +662,7 @@ const ChadhawaDetail = () => {
                 ))}
                 {/* Center deity emoji */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-7xl mb-2" style={{ filter: 'drop-shadow(0 0 24px rgba(188,106,77,0.5))' }}>🪷</span>
+                  <span className="text-7xl mb-2" style={{ filter: 'drop-shadow(0 0 24px rgba(89,34,9,0.5))' }}>🪷</span>
                   <p className="font-display text-xs tracking-[0.3em] uppercase text-primary/60">Sacred Offering</p>
                 </div>
                 {/* Petal dots */}
@@ -688,7 +688,7 @@ const ChadhawaDetail = () => {
         {/* ── NEWSLETTER ────────────────────────────────────────────────────── */}
         <section className="mb-16">
           <div className="glass-card rounded-3xl p-8 md:p-12 text-center border border-primary/15"
-            style={{ background: 'linear-gradient(135deg, rgba(188,106,77,0.06) 0%, rgba(255,252,248,0.7) 100%)' }}
+            style={{ background: 'linear-gradient(135deg, rgba(89,34,9,0.06) 0%, rgba(255,252,248,0.7) 100%)' }}
           >
             <p className="text-xs font-display tracking-[0.3em] text-primary/70 uppercase mb-3">Our Newsletter</p>
             <h2 className="font-display text-2xl md:text-3xl tracking-widest uppercase text-foreground mb-3">

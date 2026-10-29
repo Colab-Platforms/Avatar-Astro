@@ -51,12 +51,12 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <Label className="text-sm text-white/80">
+      <Label className="text-sm text-foreground/80">
         {label}
-        {required && <span className="ml-0.5 text-[#BC6A4D]">*</span>}
+        {required && <span className="ml-0.5 text-[#592209]">*</span>}
       </Label>
       {children}
-      {error && <p className="text-xs text-red-400">{error}</p>}
+      {error && <p className="text-xs text-red-800">{error}</p>}
     </div>
   );
 }
@@ -146,12 +146,12 @@ export function ChadhawaFormDialog({
       open={open}
       onOpenChange={(next) => !isSubmitting && onOpenChange(next)}
     >
-      <DialogContent className="max-h-[90vh] overflow-y-auto border-white/10 bg-[#0a1628] text-white sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto border-primary/15 bg-[#FBF5EC] text-foreground sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-display text-lg tracking-wide text-white">
+          <DialogTitle className="font-display text-lg tracking-wide text-foreground">
             {isEdit ? "Edit Chadhawa Offering" : "Add Chadhawa Offering"}
           </DialogTitle>
-          <DialogDescription className="text-white/60">
+          <DialogDescription className="text-foreground/70">
             {isEdit
               ? "Update this offering's details."
               : "Create a new devotional offering for a temple."}
@@ -165,14 +165,14 @@ export function ChadhawaFormDialog({
               onValueChange={setTempleId}
               disabled={templesLoading}
             >
-              <SelectTrigger className="border-white/10 bg-white/[0.03] text-white">
+              <SelectTrigger className="border-primary/15 bg-card text-foreground">
                 <SelectValue
                   placeholder={
                     templesLoading ? "Loading temples…" : "Select a temple"
                   }
                 />
               </SelectTrigger>
-              <SelectContent className="border-white/10 bg-[#0a1628] text-white">
+              <SelectContent className="border-primary/15 bg-[#FBF5EC] text-foreground">
                 {temples.map((temple) => (
                   <SelectItem key={temple.id} value={temple.id}>
                     {temple.name}
@@ -181,7 +181,7 @@ export function ChadhawaFormDialog({
               </SelectContent>
             </Select>
             {!templesLoading && temples.length === 0 && (
-              <p className="text-xs text-white/50">
+              <p className="text-xs text-foreground/70">
                 Add a temple under Puja Management first.
               </p>
             )}
@@ -193,7 +193,7 @@ export function ChadhawaFormDialog({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Flower Basket"
-                className="border-white/10 bg-white/[0.03] text-white"
+                className="border-primary/15 bg-card text-foreground"
               />
             </Field>
 
@@ -202,7 +202,7 @@ export function ChadhawaFormDialog({
                 value={emoji}
                 onChange={(e) => setEmoji(e.target.value)}
                 placeholder="🌺"
-                className="w-24 border-white/10 bg-white/[0.03] text-center text-white"
+                className="w-24 border-primary/15 bg-card text-center text-foreground"
               />
             </Field>
           </div>
@@ -213,7 +213,7 @@ export function ChadhawaFormDialog({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Fresh flowers offered at the deity's feet"
-              className="border-white/10 bg-white/[0.03] text-white"
+              className="border-primary/15 bg-card text-foreground"
             />
           </Field>
 
@@ -224,7 +224,7 @@ export function ChadhawaFormDialog({
                 min={1}
                 value={price}
                 onChange={(e) => setPrice(Number(e.target.value))}
-                className="border-white/10 bg-white/[0.03] text-white"
+                className="border-primary/15 bg-card text-foreground"
               />
             </Field>
 
@@ -234,7 +234,7 @@ export function ChadhawaFormDialog({
                 min={0}
                 value={displayOrder}
                 onChange={(e) => setDisplayOrder(Number(e.target.value))}
-                className="border-white/10 bg-white/[0.03] text-white"
+                className="border-primary/15 bg-card text-foreground"
               />
             </Field>
           </div>
@@ -244,10 +244,10 @@ export function ChadhawaFormDialog({
               value={isActive ? "active" : "inactive"}
               onValueChange={(value) => setIsActive(value === "active")}
             >
-              <SelectTrigger className="border-white/10 bg-white/[0.03] text-white">
+              <SelectTrigger className="border-primary/15 bg-card text-foreground">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="border-white/10 bg-[#0a1628] text-white">
+              <SelectContent className="border-primary/15 bg-[#FBF5EC] text-foreground">
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="inactive">Inactive</SelectItem>
               </SelectContent>
@@ -260,14 +260,14 @@ export function ChadhawaFormDialog({
               variant="ghost"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
-              className="text-white/70 hover:bg-white/5 hover:text-white"
+              className="text-foreground/70 hover:bg-primary/10 hover:text-foreground"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="bg-[#BC6A4D] text-white hover:bg-[#BC6A4D]/90"
+              className="bg-[#592209] text-[#F5E9D6] hover:bg-[#592209]/90"
             >
               {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
               {isEdit ? "Save Changes" : "Add Offering"}

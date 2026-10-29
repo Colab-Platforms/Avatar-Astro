@@ -21,7 +21,7 @@ export default function WhatsIncludedGrid() {
     <div className="px-6 sm:px-10 pb-12">
       <h3
         className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-2 uppercase tracking-wide"
-        style={{ fontFamily: "'Astra','Cinzel',serif" }}
+        style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
       >
         📋 Everything Included in Your Cosmic Blueprint
       </h3>
@@ -42,7 +42,7 @@ export default function WhatsIncludedGrid() {
           >
             <div className="flex items-start justify-between mb-3">
               <div className="text-3xl">{item.icon}</div>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-bold uppercase tracking-wide">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-800 text-[10px] font-bold uppercase tracking-wide">
                 <Check size={10} /> Included
               </span>
             </div>

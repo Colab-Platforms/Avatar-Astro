@@ -52,7 +52,7 @@ const FeaturedCarousel = () => {
                     <FeatureButton to={slide.buttonPath} label={slide.buttonLabel} />
                   </div>
 
-                  <div className="mx-auto w-full max-w-[240px] overflow-hidden rounded-xl border border-home-line shadow-[0_8px_22px_rgba(140,63,24,0.16)]">
+                  <div className="mx-auto w-full max-w-[240px] overflow-hidden rounded-xl border border-home-line shadow-[0_8px_22px_rgba(89,34,9,0.16)]">
                     <div className="aspect-[4/3] w-full">
                       <img
                         src={slide.image}

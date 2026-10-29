@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, CheckCircle2, ArrowRight } from "lucide-react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { Sparkles, CheckCircle2, ArrowRight, Star, Orbit, Hash, Gem, PenLine, type LucideIcon } from "lucide-react";
 
 const TRUST_INDICATORS = [
   "AI + Vedic Astrology Powered",
@@ -14,20 +14,12 @@ const DEMO_EXAMPLES = [
   { name: "Karan Verma", variant: "Karran Verma", before: 72, after: 94 },
 ];
 
-const FLOATING_CARDS = [
-  { icon: "⭐", label: "Name Energy Score" },
-  { icon: "🪐", label: "Dominant Planet" },
-  { icon: "🔢", label: "Destiny Number" },
-  { icon: "📿", label: "Lucky Name Vibration" },
-  { icon: "✨", label: "Best Professional Spelling" },
-];
-
-const CARD_POSITIONS: CSSProperties[] = [
-  { top: "-3%", left: "2%" },
-  { top: "10%", right: "-10%" },
-  { bottom: "8%", right: "-6%" },
-  { bottom: "-5%", left: "14%" },
-  { top: "42%", left: "-12%" },
+const FLOATING_CARDS: { Icon: LucideIcon; label: string; pos: CSSProperties; drift: number }[] = [
+  { Icon: Star, label: "Name Energy Score", pos: { top: "3%", left: "0%" }, drift: 0 },
+  { Icon: Orbit, label: "Dominant Planet", pos: { top: "17%", right: "0%" }, drift: 1 },
+  { Icon: PenLine, label: "Best Professional Spelling", pos: { top: "47%", left: "-2%" }, drift: 2 },
+  { Icon: Hash, label: "Destiny Number", pos: { bottom: "12%", right: "2%" }, drift: 3 },
+  { Icon: Gem, label: "Lucky Name Vibration", pos: { bottom: "1%", left: "12%" }, drift: 4 },
 ];
 
 const SEED_SYLLABLES = ["ॐ", "ऐं", "ह्रीं", "श्रीं"];
@@ -73,19 +65,19 @@ function NameTransformDemo() {
           transition={{ duration: 0.4 }}
         >
           <div className="flex items-center justify-center gap-3 text-center mb-4">
-            <span className="text-white/45 text-sm line-through decoration-white/25">{ex.name}</span>
-            <ArrowRight className="text-[#ff7e47]" size={14} />
-            <span className="text-white font-semibold text-sm">{ex.variant}</span>
+            <span className="text-foreground/70 text-sm line-through decoration-white/25">{ex.name}</span>
+            <ArrowRight className="text-[#592209]" size={14} />
+            <span className="text-foreground font-semibold text-sm">{ex.variant}</span>
           </div>
           <div className="flex items-center justify-center gap-5">
             <div className="text-center">
-              <div className="text-[10px] text-white/40 uppercase tracking-widest mb-1">Before</div>
-              <div className="text-2xl font-extrabold text-white/40">{ex.before}%</div>
+              <div className="text-[10px] text-foreground/70 uppercase tracking-widest mb-1">Before</div>
+              <div className="text-2xl font-extrabold text-foreground/70">{ex.before}%</div>
             </div>
-            <div className="text-[#ff7e47] text-xl">→</div>
+            <div className="text-[#592209] text-xl">→</div>
             <div className="text-center">
-              <div className="text-[10px] text-[#ff7e47] uppercase tracking-widest mb-1">After</div>
-              <div className="text-2xl font-extrabold text-white">
+              <div className="text-[10px] text-[#592209] uppercase tracking-widest mb-1">After</div>
+              <div className="text-2xl font-extrabold text-foreground">
                 <AnimatedScore value={ex.after} />%
               </div>
             </div>
@@ -96,18 +88,28 @@ function NameTransformDemo() {
   );
 }
 
-function FloatingCard({ card, index }: { card: { icon: string; label: string }; index: number }) {
+type FloatingCardData = (typeof FLOATING_CARDS)[number];
+
+function CardBody({ card }: { card: FloatingCardData }) {
+  return (
+    <div className="flex items-center gap-2.5 rounded-2xl border border-[#592209]/15 bg-[#FBF5EC]/95 py-2 pl-2 pr-4 shadow-[0_10px_24px_rgba(89,34,9,0.16)]">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#592209] text-[#F5E9D6]">
+        <card.Icon size={15} strokeWidth={1.9} aria-hidden="true" />
+      </span>
+      <span className="whitespace-nowrap text-xs font-semibold text-[#301607]">{card.label}</span>
+    </div>
+  );
+}
+
+function FloatingCard({ card, reduce }: { card: FloatingCardData; reduce: boolean }) {
   return (
     <motion.div
       className="absolute z-10 hidden sm:block"
-      style={CARD_POSITIONS[index]}
-      animate={{ y: [0, -10, 0] }}
-      transition={{ duration: 3 + index * 0.4, repeat: Infinity, ease: "easeInOut", delay: index * 0.3 }}
+      style={card.pos}
+      animate={reduce ? undefined : { y: [0, -8, 0] }}
+      transition={{ duration: 3.4 + card.drift * 0.4, repeat: Infinity, ease: "easeInOut", delay: card.drift * 0.3 }}
     >
-      <div className="glass-card rounded-xl px-3 py-2 flex items-center gap-2 shadow-lg">
-        <span className="text-base leading-none">{card.icon}</span>
-        <span className="text-[11px] font-semibold text-white/80 whitespace-nowrap">{card.label}</span>
-      </div>
+      <CardBody card={card} />
     </motion.div>
   );
 }
@@ -115,8 +117,10 @@ function FloatingCard({ card, index }: { card: { icon: string; label: string }; 
 function MandalaVisualization() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const reduce = !!useReducedMotion();
 
   function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+    if (reduce) return;
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
     const px = (e.clientX - rect.left) / rect.width - 0.5;
@@ -128,64 +132,90 @@ function MandalaVisualization() {
   }
 
   return (
-    <div
-      ref={containerRef}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      className="relative w-full aspect-square max-w-[420px] mx-auto"
-    >
-      <motion.div
-        animate={{ x: tilt.x, y: tilt.y }}
-        transition={{ type: "spring", stiffness: 80, damping: 15 }}
-        className="relative w-full h-full flex items-center justify-center"
+    <div>
+      <div
+        ref={containerRef}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        className="relative mx-auto aspect-square w-full max-w-[460px]"
       >
-        {/* Rotating rings */}
         <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 44, repeat: Infinity, ease: "linear" }}
-          className="absolute inset-0 rounded-full"
-          style={{ border: "1px dashed rgba(255,126,71,0.25)" }}
-        />
-        <motion.div
-          animate={{ rotate: -360 }}
-          transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-          className="absolute inset-10 rounded-full"
-          style={{ border: "1px solid rgba(255,126,71,0.15)" }}
-        />
-
-        {/* Orbiting Sanskrit seed syllables */}
-        {SEED_SYLLABLES.map((s, i) => (
-          <motion.div
-            key={s}
-            className="absolute inset-0"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 30 + i * 7, repeat: Infinity, ease: "linear" }}
-          >
-            <span
-              className="absolute text-[#ff7e47]/60 text-lg"
-              style={{ fontFamily: "'Astra','Cinzel',serif", top: 0, left: "50%", transform: "translate(-50%,-50%)" }}
-            >
-              {s}
-            </span>
-          </motion.div>
-        ))}
-
-        {/* Central glowing core */}
-        <motion.div
-          animate={{ scale: [1, 1.06, 1], opacity: [0.85, 1, 0.85] }}
-          transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
-          className="relative w-40 h-40 rounded-full flex items-center justify-center"
-          style={{ background: "radial-gradient(circle, rgba(255,126,71,0.35) 0%, rgba(255,126,71,0.08) 60%, transparent 80%)" }}
+          animate={{ x: tilt.x, y: tilt.y }}
+          transition={{ type: "spring", stiffness: 80, damping: 15 }}
+          className="relative flex h-full w-full items-center justify-center"
         >
-          <div className="w-24 h-24 rounded-full flex items-center justify-center backdrop-blur-sm" style={{ background: "rgba(255,126,71,0.15)", border: "1px solid rgba(255,126,71,0.4)" }}>
-            <Sparkles className="text-[#ff7e47]" size={28} />
-          </div>
-        </motion.div>
+          {/* soft warm halo */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-[8%] rounded-full"
+            style={{ background: "radial-gradient(circle, rgba(229,138,69,0.28) 0%, rgba(229,138,69,0.08) 55%, transparent 72%)" }}
+          />
 
-        {FLOATING_CARDS.map((card, i) => (
-          <FloatingCard key={card.label} card={card} index={i} />
+          {/* outer dashed ring carrying the four seed syllables, kept upright */}
+          <motion.div
+            aria-hidden="true"
+            animate={reduce ? undefined : { rotate: 360 }}
+            transition={{ duration: 90, repeat: Infinity, ease: "linear" }}
+            className="absolute inset-[3%] rounded-full"
+            style={{ border: "1px dashed rgba(89,34,9,0.3)" }}
+          />
+          {SEED_SYLLABLES.map((glyph, i) => (
+            <motion.div
+              key={glyph}
+              aria-hidden="true"
+              className="absolute inset-[3%]"
+              initial={{ rotate: i * 90 }}
+              animate={reduce ? undefined : { rotate: i * 90 + 360 }}
+              transition={{ duration: 90, repeat: Infinity, ease: "linear" }}
+            >
+              <motion.span
+                className="absolute left-1/2 top-0 flex h-9 w-9 items-center justify-center rounded-full border border-[#592209]/25 bg-[#F5E9D6] text-base font-semibold text-[#592209]"
+                style={{ x: "-50%", y: "-50%", fontFamily: "'Noto Sans Devanagari', 'DM Sans', system-ui, sans-serif" }}
+                initial={{ rotate: -i * 90 }}
+                animate={reduce ? undefined : { rotate: -i * 90 - 360 }}
+                transition={{ duration: 90, repeat: Infinity, ease: "linear" }}
+              >
+                {glyph}
+              </motion.span>
+            </motion.div>
+          ))}
+
+          {/* inner thin ring */}
+          <div aria-hidden="true" className="absolute inset-[14%] rounded-full" style={{ border: "1px solid rgba(89,34,9,0.18)" }} />
+
+          {/* the astrolabe disc */}
+          <motion.img
+            src="/images/loader/astrolabe.webp"
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+            animate={reduce ? undefined : { rotate: 360 }}
+            transition={{ duration: 140, repeat: Infinity, ease: "linear" }}
+            className="absolute inset-[17%] h-[66%] w-[66%] rounded-full"
+            style={{ filter: "drop-shadow(0 18px 28px rgba(89,34,9,0.35))" }}
+          />
+
+          {/* pulsing sun glow over the disc centre */}
+          <motion.div
+            aria-hidden="true"
+            animate={reduce ? undefined : { scale: [0.9, 1.15, 0.9], opacity: [0.6, 1, 0.6] }}
+            transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute rounded-full"
+            style={{ inset: "41%", background: "radial-gradient(circle, rgba(255,236,170,0.8) 0%, rgba(255,200,110,0.35) 48%, transparent 74%)" }}
+          />
+
+          {FLOATING_CARDS.map((card) => (
+            <FloatingCard key={card.label} card={card} reduce={reduce} />
+          ))}
+        </motion.div>
+      </div>
+
+      {/* phones: the same highlights as a tidy wrap beneath the disc */}
+      <div className="mt-5 flex flex-wrap justify-center gap-2 sm:hidden">
+        {FLOATING_CARDS.map((card) => (
+          <CardBody key={card.label} card={card} />
         ))}
-      </motion.div>
+      </div>
     </div>
   );
 }
@@ -207,17 +237,17 @@ export default function PremiumHero({
           transition={{ duration: 0.7, ease: "easeOut" }}
           className="text-center lg:text-left"
         >
-          <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[rgba(255,126,71,0.12)] text-[#ff7e47] text-xs font-semibold tracking-widest uppercase mb-5">
+          <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[rgba(255,126,71,0.12)] text-[#592209] text-xs font-semibold tracking-widest uppercase mb-5">
             <Sparkles size={12} /> Cosmic Blueprint
           </div>
 
           <h1
             className="uppercase"
             style={{
-              fontFamily: "'Astra','Cinzel',serif",
+              fontFamily: "'DM Sans', system-ui, sans-serif",
               fontSize: "clamp(30px,4.2vw,52px)",
               fontWeight: 700,
-              color: "#fff",
+              color: "#301607",
               letterSpacing: "0.02em",
               lineHeight: 1.18,
               marginBottom: 18,
@@ -226,7 +256,7 @@ export default function PremiumHero({
             Can Your Name Unlock a Better Destiny?
           </h1>
 
-          <p className="text-white/60 text-base md:text-lg max-w-lg mx-auto lg:mx-0 mb-8 leading-relaxed">
+          <p className="text-foreground/70 text-base md:text-lg max-w-lg mx-auto lg:mx-0 mb-8 leading-relaxed">
             According to Vedic astrology and numerology, every name carries a unique vibration.
             Discover whether your current name aligns with your birth chart, life path, and
             planetary energies.
@@ -238,16 +268,16 @@ export default function PremiumHero({
               className="ndr-glow-btn"
               style={{
                 padding: "17px 34px",
-                background: "#ff7e47",
+                background: "#592209",
                 border: "none",
                 borderRadius: 40,
-                color: "#fff",
+                color: "#F5E9D6",
                 fontWeight: 800,
                 fontSize: 15,
                 letterSpacing: "0.05em",
                 textTransform: "uppercase",
                 cursor: "pointer",
-                boxShadow: "0 0 30px rgba(255,126,71,0.35)",
+                boxShadow: "0 0 30px rgba(89,34,9,0.35)",
                 transition: "transform 0.2s ease",
               }}
               onMouseOver={(e) => (e.currentTarget.style.transform = "translateY(-2px)")}
@@ -260,9 +290,9 @@ export default function PremiumHero({
               style={{
                 padding: "17px 34px",
                 background: "transparent",
-                border: "1.5px solid rgba(255,126,71,0.4)",
+                border: "1.5px solid rgba(89,34,9,0.4)",
                 borderRadius: 40,
-                color: "#ff7e47",
+                color: "#592209",
                 fontWeight: 700,
                 fontSize: 15,
                 letterSpacing: "0.05em",
@@ -279,8 +309,8 @@ export default function PremiumHero({
 
           <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-2 mb-10">
             {TRUST_INDICATORS.map((t) => (
-              <div key={t} className="flex items-center gap-1.5 text-xs text-white/50">
-                <CheckCircle2 size={13} className="text-[#ff7e47]" /> {t}
+              <div key={t} className="flex items-center gap-1.5 text-xs text-foreground/70">
+                <CheckCircle2 size={13} className="text-[#592209]" /> {t}
               </div>
             ))}
           </div>

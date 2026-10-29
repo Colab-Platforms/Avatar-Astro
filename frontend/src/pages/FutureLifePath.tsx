@@ -30,8 +30,8 @@ const SECTIONS: { key: keyof LifePathResult; title: string }[] = [
 ];
 
 const inputCls =
-  "w-full rounded-xl border border-white/15 bg-white/[0.05] px-4 py-3 text-base text-white placeholder:text-white/30 focus:border-[#BC6A4D] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#BC6A4D]/50";
-const labelCls = "mb-2 block text-sm font-semibold text-[#D9895F]";
+  "w-full rounded-xl border border-primary/25 bg-card px-4 py-3 text-base text-foreground placeholder:text-foreground/70 focus:border-[#592209] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#592209]/50";
+const labelCls = "mb-2 block text-sm font-semibold text-[#592209]";
 
 export default function FutureLifePath() {
   const [dob, setDob] = useState("");
@@ -74,20 +74,20 @@ export default function FutureLifePath() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050510] px-4 pb-24 pt-24 text-white">
+    <div className="min-h-screen bg-[#FBF5EC] px-4 pb-24 pt-24 text-foreground">
       <div className="mx-auto max-w-3xl">
         <Link
           to="/inner-voice"
-          className="mb-8 inline-block text-xs uppercase tracking-[0.2em] text-[#BC6A4D]/70 hover:text-[#BC6A4D] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#BC6A4D]"
+          className="mb-8 inline-block text-xs uppercase tracking-[0.2em] text-[#592209]/70 hover:text-[#592209] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#592209]"
         >
           ← Inner Voice
         </Link>
 
         <header className="mb-8 text-center">
-          <Compass aria-hidden="true" className="mx-auto mb-3 text-[#BC6A4D]" size={36} />
+          <Compass aria-hidden="true" className="mx-auto mb-3 text-[#592209]" size={36} />
           <h1
-            className="mb-4 text-3xl leading-tight text-[#BC6A4D] sm:text-5xl"
-            style={{ fontFamily: "'Astra','Iceland',sans-serif" }}
+            className="mb-4 text-3xl leading-tight text-[#592209] sm:text-5xl"
+            style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
           >
             Future Life Path Prediction
           </h1>
@@ -111,13 +111,13 @@ export default function FutureLifePath() {
               if (!loading) generate();
             }}
             noValidate
-            className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 sm:p-8"
+            className="rounded-3xl border border-primary/15 bg-card p-5 sm:p-8"
             aria-busy={loading}
           >
             <div className="grid gap-5 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <label htmlFor="flp-dob" className={labelCls}>
-                  Date of birth <span className="text-[#ff9b7a]">(required)</span>
+                  Date of birth <span className="text-[#592209]">(required)</span>
                 </label>
                 <input
                   id="flp-dob"
@@ -133,13 +133,13 @@ export default function FutureLifePath() {
               </div>
               <div>
                 <label htmlFor="flp-tob" className={labelCls}>
-                  Time of birth <span className="font-normal text-white/50">(optional)</span>
+                  Time of birth <span className="font-normal text-foreground/70">(optional)</span>
                 </label>
                 <input id="flp-tob" type="time" value={tob} onChange={(e) => setTob(e.target.value)} className={inputCls} />
               </div>
               <div>
                 <label htmlFor="flp-pob" className={labelCls}>
-                  Place of birth <span className="font-normal text-white/50">(optional)</span>
+                  Place of birth <span className="font-normal text-foreground/70">(optional)</span>
                 </label>
                 <input
                   id="flp-pob"
@@ -153,11 +153,11 @@ export default function FutureLifePath() {
               </div>
               <div className="sm:col-span-2">
                 <label htmlFor="flp-focus" className={labelCls}>
-                  Area of interest <span className="font-normal text-white/50">(optional)</span>
+                  Area of interest <span className="font-normal text-foreground/70">(optional)</span>
                 </label>
                 <select id="flp-focus" value={focus} onChange={(e) => setFocus(e.target.value)} className={inputCls}>
                   {FOCUS_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value} className="bg-[#050510]">
+                    <option key={o.value} value={o.value} className="bg-[#FBF5EC]">
                       {o.label}
                     </option>
                   ))}
@@ -169,11 +169,11 @@ export default function FutureLifePath() {
               <div
                 id="flp-error"
                 role="alert"
-                className="mt-5 rounded-xl border border-red-400/30 bg-red-400/10 px-4 py-3 text-sm text-red-300"
+                className="mt-5 rounded-xl border border-red-400/30 bg-red-400/10 px-4 py-3 text-sm text-red-800"
               >
                 ⚠ {error}
                 {!loading && dob && error.startsWith("We couldn't") && (
-                  <button type="button" onClick={generate} className="ml-3 underline underline-offset-2 hover:text-white">
+                  <button type="button" onClick={generate} className="ml-3 underline underline-offset-2 hover:text-foreground">
                     Retry
                   </button>
                 )}
@@ -183,7 +183,7 @@ export default function FutureLifePath() {
             <button
               type="submit"
               disabled={loading}
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#BC6A4D] px-6 py-4 text-sm font-bold uppercase tracking-[0.15em] text-[#050510] transition hover:bg-[#D9895F] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#592209] px-6 py-4 text-sm font-bold uppercase tracking-[0.15em] text-[#F5E9D6] transition hover:bg-[#592209] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? (
                 <>
@@ -193,7 +193,7 @@ export default function FutureLifePath() {
                 "Generate My Life Path Reading"
               )}
             </button>
-            <p className="mt-3 text-center text-xs text-white/45">
+            <p className="mt-3 text-center text-xs text-foreground/70">
               Your details are sent only to generate this reading and are not saved.
             </p>
           </form>
@@ -201,29 +201,29 @@ export default function FutureLifePath() {
           <div className="space-y-4" aria-live="polite">
             {SECTIONS.map(({ key, title }) =>
               result[key] ? (
-                <section key={key} className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 sm:p-6">
-                  <h2 className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-[#D9895F]">{title}</h2>
-                  <p className="text-base leading-relaxed text-white/85">{result[key] as string}</p>
+                <section key={key} className="rounded-2xl border border-primary/15 bg-card p-5 sm:p-6">
+                  <h2 className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-[#592209]">{title}</h2>
+                  <p className="text-base leading-relaxed text-foreground/85">{result[key] as string}</p>
                 </section>
               ) : null,
             )}
 
             {result.focusInsight && (
-              <section className="rounded-2xl border border-[#BC6A4D]/30 bg-[#BC6A4D]/[0.07] p-5 sm:p-6">
-                <h2 className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-[#D9895F]">
+              <section className="rounded-2xl border border-[#592209]/30 bg-[#592209]/[0.07] p-5 sm:p-6">
+                <h2 className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-[#592209]">
                   Your Focus: {FOCUS_OPTIONS.find((o) => o.value === focus)?.label}
                 </h2>
-                <p className="text-base leading-relaxed text-white/90">{result.focusInsight}</p>
+                <p className="text-base leading-relaxed text-foreground/90">{result.focusInsight}</p>
               </section>
             )}
 
             {!!result.upcomingPeriods?.length && (
-              <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 sm:p-6">
-                <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-[#D9895F]">Upcoming Periods</h2>
+              <section className="rounded-2xl border border-primary/15 bg-card p-5 sm:p-6">
+                <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-[#592209]">Upcoming Periods</h2>
                 <ul className="space-y-3">
                   {result.upcomingPeriods.map((p, i) => (
-                    <li key={i} className="text-base leading-relaxed text-white/85">
-                      <span className="font-semibold text-white">{p.period}: </span>
+                    <li key={i} className="text-base leading-relaxed text-foreground/85">
+                      <span className="font-semibold text-foreground">{p.period}: </span>
                       {p.theme}
                     </li>
                   ))}
@@ -232,9 +232,9 @@ export default function FutureLifePath() {
             )}
 
             {!!result.reflectionQuestions?.length && (
-              <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 sm:p-6">
-                <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-[#D9895F]">Questions to Reflect On</h2>
-                <ul className="list-disc space-y-2 pl-5 text-base text-white/80">
+              <section className="rounded-2xl border border-primary/15 bg-card p-5 sm:p-6">
+                <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-[#592209]">Questions to Reflect On</h2>
+                <ul className="list-disc space-y-2 pl-5 text-base text-foreground/80">
                   {result.reflectionQuestions.map((q, i) => (
                     <li key={i}>{q}</li>
                   ))}
@@ -242,7 +242,7 @@ export default function FutureLifePath() {
               </section>
             )}
 
-            <p className="px-2 text-center text-xs italic text-white/50">
+            <p className="px-2 text-center text-xs italic text-foreground/70">
               This reading is interpretive guidance for reflection, not a prediction of certain outcomes.
             </p>
 
@@ -250,7 +250,7 @@ export default function FutureLifePath() {
               <button
                 type="button"
                 onClick={() => setResult(null)}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-[#BC6A4D]/40 px-5 py-3 text-sm uppercase tracking-widest text-[#D9895F] hover:bg-[#BC6A4D]/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#BC6A4D]"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-[#592209]/40 px-5 py-3 text-sm uppercase tracking-widest text-[#D9895F] hover:bg-[#592209]/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#592209]"
               >
                 <Pencil size={16} aria-hidden="true" /> Edit Details
               </button>
@@ -258,14 +258,14 @@ export default function FutureLifePath() {
                 type="button"
                 onClick={generate}
                 disabled={loading}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/20 px-5 py-3 text-sm uppercase tracking-widest text-white/70 hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#BC6A4D] disabled:opacity-50"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-primary/25 px-5 py-3 text-sm uppercase tracking-widest text-foreground/70 hover:bg-primary/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#592209] disabled:opacity-50"
               >
                 {loading ? <Loader2 className="animate-spin" size={16} aria-hidden="true" /> : <RotateCcw size={16} aria-hidden="true" />}
                 Regenerate
               </button>
             </div>
             {error && (
-              <div role="alert" className="rounded-xl border border-red-400/30 bg-red-400/10 px-4 py-3 text-sm text-red-300">
+              <div role="alert" className="rounded-xl border border-red-400/30 bg-red-400/10 px-4 py-3 text-sm text-red-800">
                 ⚠ {error}
               </div>
             )}

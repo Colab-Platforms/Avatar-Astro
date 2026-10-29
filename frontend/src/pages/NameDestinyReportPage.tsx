@@ -16,12 +16,12 @@ const emptyForm = (): FormState => ({ firstName: "", lastName: "", dob: "" });
 
 const inputStyle: React.CSSProperties = {
   width: "100%",
-  background: "rgba(20,28,58,0.7)",
-  border: "1px solid rgba(255,255,255,0.08)",
-  borderBottom: "2px solid rgba(255,126,71,0.5)",
+  background: "#FBF5EC",
+  border: "1px solid rgba(89,34,9,0.2)",
+  borderBottom: "2px solid rgba(89,34,9,0.5)",
   borderRadius: 10,
   padding: "14px 18px",
-  color: "#fff",
+  color: "#301607",
   fontSize: 16,
   outline: "none",
 };
@@ -78,44 +78,44 @@ export default function NameDestinyReportPage() {
 
           <div id="destiny-form" style={{ maxWidth: 600, margin: "0 auto", padding: "32px 0 20px", scrollMarginTop: 100 }}>
             <div style={{ textAlign: "center", marginBottom: 36 }}>
-              <h2 style={{ fontFamily: "'Astra','Cinzel',serif", fontSize: "clamp(24px,3.5vw,34px)", fontWeight: 700, color: "#fff", textTransform: "uppercase", letterSpacing: "0.03em", lineHeight: 1.2, marginBottom: 12 }}>
+              <h2 style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: "clamp(24px,3.5vw,34px)", fontWeight: 700, color: "#301607", textTransform: "uppercase", letterSpacing: "0.03em", lineHeight: 1.2, marginBottom: 12 }}>
                 Your Cosmic Blueprint
               </h2>
-              <p style={{ color: "rgba(255,255,255,0.55)", fontStyle: "italic", fontSize: 16 }}>
+              <p style={{ color: "rgba(48,22,7,0.8)", fontStyle: "italic", fontSize: 16 }}>
                 Enter your details below to begin your free name analysis
               </p>
             </div>
 
             {error && (
-              <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.3)", borderRadius: 10, padding: "12px 16px", color: "#f87171", fontSize: 14, marginBottom: 24, textAlign: "center" }}>
+              <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.3)", borderRadius: 10, padding: "12px 16px", color: "#9B2C1D", fontSize: 14, marginBottom: 24, textAlign: "center" }}>
                 ⚠ {error}
               </div>
             )}
 
-            <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "32px 28px", backdropFilter: "blur(16px)" }}>
+            <div style={{ background: "rgba(89,34,9,0.2)", border: "1px solid rgba(89,34,9,0.2)", borderRadius: 20, padding: "32px 28px", backdropFilter: "blur(16px)" }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
                 <div>
-                  <label htmlFor="nd-first" style={{ display: "block", color: "#ff7e47", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>First Name *</label>
+                  <label htmlFor="nd-first" style={{ display: "block", color: "#592209", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>First Name *</label>
                   <input id="nd-first" style={inputStyle} value={form.firstName} onChange={(e) => up("firstName", e.target.value)} placeholder="e.g. Rohan" />
                 </div>
                 <div>
-                  <label htmlFor="nd-last" style={{ display: "block", color: "#ff7e47", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>Last Name</label>
+                  <label htmlFor="nd-last" style={{ display: "block", color: "#592209", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>Last Name</label>
                   <input id="nd-last" style={inputStyle} value={form.lastName} onChange={(e) => up("lastName", e.target.value)} placeholder="e.g. Mehta" />
                 </div>
               </div>
 
               <div style={{ marginBottom: 28 }}>
-                <label htmlFor="nd-dob" style={{ display: "block", color: "#ff7e47", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>Date of Birth *</label>
+                <label htmlFor="nd-dob" style={{ display: "block", color: "#592209", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>Date of Birth *</label>
                 <input id="nd-dob" type="date" style={inputStyle} value={form.dob} onChange={(e) => up("dob", e.target.value)} />
               </div>
 
               <button
                 onClick={handleSubmit}
                 style={{
-                  width: "100%", padding: "20px", background: "#ff7e47", border: "none", borderRadius: 40,
-                  color: "#fff", fontWeight: 800, fontSize: 18, letterSpacing: "0.05em", textTransform: "uppercase",
+                  width: "100%", padding: "20px", background: "#592209", border: "none", borderRadius: 40,
+                  color: "#F5E9D6", fontWeight: 800, fontSize: 18, letterSpacing: "0.05em", textTransform: "uppercase",
                   cursor: "pointer", transition: "transform 0.2s ease, box-shadow 0.2s ease",
-                  boxShadow: "0 0 30px rgba(255,126,71,0.35)",
+                  boxShadow: "0 0 30px rgba(89,34,9,0.35)",
                 }}
                 onMouseOver={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 0 40px rgba(255,126,71,0.5)"; }}
                 onMouseOut={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 0 30px rgba(255,126,71,0.35)"; }}
@@ -148,7 +148,7 @@ export default function NameDestinyReportPage() {
             }}
             style={{
               display: "block", margin: "0 auto", padding: "14px 40px", background: "transparent",
-              border: "1px solid rgba(255,255,255,0.15)", borderRadius: 50, color: "rgba(255,255,255,0.5)",
+              border: "1px solid rgba(89,34,9,0.2)", borderRadius: 50, color: "#F5E9D6",
               fontSize: 13, letterSpacing: "0.1em", textTransform: "uppercase", cursor: "pointer",
             }}
           >

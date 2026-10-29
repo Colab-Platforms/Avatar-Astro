@@ -43,7 +43,7 @@ export default function PricingPaywall({
         </div>
         <h3
           className="text-2xl sm:text-3xl font-extrabold text-foreground mb-2 uppercase tracking-wide"
-          style={{ fontFamily: "'Astra','Cinzel',serif" }}
+          style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
         >
           Unlock Your Complete Cosmic Blueprint
         </h3>

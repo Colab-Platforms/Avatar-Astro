@@ -5,7 +5,7 @@ import type { NameProfileScore, NameVariant } from "@/lib/numerology";
 function DeltaPill({ label, value }: { label: string; value: number }) {
   const positive = value >= 0;
   return (
-    <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${positive ? "bg-emerald-500/10 text-emerald-500" : "bg-rose-500/10 text-rose-500"}`}>
+    <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${positive ? "bg-emerald-500/10 text-emerald-800" : "bg-rose-500/10 text-rose-800"}`}>
       {positive ? "+" : ""}
       {value}% {label}
     </span>
@@ -27,7 +27,7 @@ export default function NameSimulationDeltas({
         <TrendingUp size={22} className="text-gold" />
         <h3
           className="text-2xl sm:text-3xl font-bold text-foreground text-center uppercase tracking-wide"
-          style={{ fontFamily: "'Astra','Cinzel',serif" }}
+          style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
         >
           AI Name Simulation
         </h3>

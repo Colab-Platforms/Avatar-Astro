@@ -43,7 +43,7 @@ export const StateSelect = React.forwardRef<
           </option>
         ))}
       </select>
-      {error ? <p className="mt-1.5 text-xs text-red-400">{error}</p> : null}
+      {error ? <p className="mt-1.5 text-xs text-red-800">{error}</p> : null}
     </div>
   );
 });

@@ -35,7 +35,7 @@ export default function BeforeAfterCompare({
     <div className="px-6 sm:px-10 pb-10">
       <h3
         className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-2 uppercase tracking-wide"
-        style={{ fontFamily: "'Astra','Cinzel',serif" }}
+        style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
       >
         Before vs After
       </h3>

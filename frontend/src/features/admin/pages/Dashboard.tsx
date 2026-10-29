@@ -51,14 +51,14 @@ export default function AdminDashboardPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-8">
       <div className="space-y-2">
-        <h2 className="font-display text-2xl tracking-wide text-white sm:text-3xl">
+        <h2 className="font-display text-2xl tracking-wide text-foreground sm:text-3xl">
           {isLoading ? "Welcome" : `Welcome, ${welcomeName}`}
         </h2>
-        <p className="max-w-2xl text-sm text-white/60 sm:text-base">
+        <p className="max-w-2xl text-sm text-foreground/70 sm:text-base">
           Manage your spiritual offerings and store content from one place.
         </p>
         {data?.role && (
-          <p className="text-xs uppercase tracking-wider text-[#BC6A4D]/80">
+          <p className="text-xs uppercase tracking-wider text-[#592209]/80">
             Role · {data.role}
           </p>
         )}
@@ -67,7 +67,7 @@ export default function AdminDashboardPage() {
       {isLoading && (
         <div className="flex flex-col items-center justify-center gap-4 py-8">
           <Loader />
-          <p className="text-sm text-white/50">Verifying admin access…</p>
+          <p className="text-sm text-foreground/70">Verifying admin access…</p>
         </div>
       )}
 
@@ -76,7 +76,7 @@ export default function AdminDashboardPage() {
           error instanceof AuthApiError &&
           (error.status === 401 || error.status === 403)
         ) && (
-          <p className="text-sm text-red-400">
+          <p className="text-sm text-red-800">
             Could not load dashboard details. You can still navigate the admin
             sections.
           </p>
@@ -85,18 +85,18 @@ export default function AdminDashboardPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {sections.map(({ to, title, description, icon: Icon }) => (
           <Link key={to} to={to} className="group block">
-            <Card className="h-full border-white/10 bg-white/[0.03] transition-colors group-hover:border-[#BC6A4D]/40 group-hover:bg-white/[0.05]">
+            <Card className="h-full border-primary/15 bg-card transition-colors group-hover:border-[#592209]/40 group-hover:bg-primary/10">
               <CardHeader className="space-y-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#BC6A4D]/15 text-[#BC6A4D]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#592209]/15 text-foreground">
                   <Icon className="h-5 w-5" />
                 </div>
-                <CardTitle className="text-lg text-white">{title}</CardTitle>
-                <CardDescription className="text-white/55">
+                <CardTitle className="text-lg text-foreground">{title}</CardTitle>
+                <CardDescription className="text-foreground/70">
                   {description}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <span className="text-sm text-[#BC6A4D] group-hover:underline">
+                <span className="text-sm text-[#592209] group-hover:underline">
                   Open
                 </span>
               </CardContent>

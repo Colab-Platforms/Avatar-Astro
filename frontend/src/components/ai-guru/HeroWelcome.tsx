@@ -15,7 +15,7 @@ const HeroWelcome = ({ name }: HeroWelcomeProps) => (
       <motion.div
         className="absolute inset-0 rounded-full"
         style={{
-          background: "radial-gradient(circle, rgba(255,157,77,0.35) 0%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(89,34,9,0.35) 0%, transparent 70%)",
         }}
         animate={{ opacity: [0.5, 0.9, 0.5] }}
         transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
@@ -36,7 +36,7 @@ const HeroWelcome = ({ name }: HeroWelcomeProps) => (
           return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#F5C76E" strokeOpacity="0.4" strokeWidth="1" />;
         })}
       </motion.svg>
-      <div className="relative flex h-20 w-20 items-center justify-center rounded-full border border-[#FF9D4D]/40 bg-[#17181F] text-4xl text-[#F5C76E] shadow-[0_0_40px_rgba(255,157,77,0.4)]">
+      <div className="relative flex h-20 w-20 items-center justify-center rounded-full border border-[#592209]/40 bg-[#FBF5EC] text-4xl text-[#301607] shadow-[0_0_40px_rgba(255,157,77,0.4)]">
         ॐ
       </div>
     </motion.div>
@@ -45,7 +45,7 @@ const HeroWelcome = ({ name }: HeroWelcomeProps) => (
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.15 }}
-      className="font-['Cormorant_Garamond'] text-4xl font-semibold text-white md:text-5xl"
+      className="font-home-serif text-4xl font-semibold text-foreground md:text-5xl"
     >
       Namaste, {name}
     </motion.h1>
@@ -54,7 +54,7 @@ const HeroWelcome = ({ name }: HeroWelcomeProps) => (
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.28 }}
-      className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-[#A3A3B2]"
+      className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted-foreground"
     >
       Whatever trouble weighs on your soul – speak openly.
       <br className="hidden sm:block" />

@@ -32,11 +32,11 @@ function LanguageSelector<T extends string>({ label, value, options, onChange }:
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-[#17181F] px-3 py-1.5 text-xs text-[#A3A3B2] transition-colors hover:border-[#FF9D4D]/30 hover:text-white"
+        className="flex items-center gap-1.5 rounded-full border border-primary/15 bg-[#FBF5EC] px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-[#592209]/30 hover:text-foreground"
       >
-        <span className="text-[#6B7280]">{label}:</span>
-        <span className="font-medium text-white">{current.label}</span>
-        <ChevronDown className={`h-3 w-3 shrink-0 text-[#6B7280] transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+        <span className="text-muted-foreground">{label}:</span>
+        <span className="font-medium text-foreground">{current.label}</span>
+        <ChevronDown className={`h-3 w-3 shrink-0 text-muted-foreground transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
 
       <AnimatePresence>
@@ -47,7 +47,7 @@ function LanguageSelector<T extends string>({ label, value, options, onChange }:
             exit={{ opacity: 0, y: -4, scale: 0.98 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
             role="listbox"
-            className="absolute bottom-full left-0 z-20 mb-2 min-w-[168px] overflow-hidden rounded-xl border border-white/[0.08] bg-[#17181F] p-1 shadow-[0_8px_28px_rgba(0,0,0,0.45)]"
+            className="absolute bottom-full left-0 z-20 mb-2 min-w-[168px] overflow-hidden rounded-xl border border-primary/15 bg-[#FBF5EC] p-1 shadow-[0_8px_28px_rgba(0,0,0,0.45)]"
           >
             {options.map((opt) => (
               <button
@@ -61,8 +61,8 @@ function LanguageSelector<T extends string>({ label, value, options, onChange }:
                 }}
                 className={`flex w-full items-center rounded-lg px-3 py-2 text-left text-xs transition-colors ${
                   opt.code === value
-                    ? "bg-[#FF9D4D]/12 text-[#FF9D4D]"
-                    : "text-[#A3A3B2] hover:bg-white/[0.06] hover:text-white"
+                    ? "bg-[#592209]/12 text-[#FF9D4D]"
+                    : "text-muted-foreground hover:bg-primary/10 hover:text-foreground"
                 }`}
               >
                 {opt.label}

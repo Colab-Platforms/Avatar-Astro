@@ -449,7 +449,7 @@ const PlanetComponent = ({
             alignItems:     'center',
             gap:            '2px',
           }}>
-            <span style={{ fontSize: '20px', fontFamily: "'Iceland', sans-serif", letterSpacing: '3px' }}>
+            <span style={{ fontSize: '20px', fontFamily: "'DM Sans', system-ui, sans-serif", letterSpacing: '3px' }}>
               {PLANET_LABELS[planet.id]?.emoji} {planet.name.toUpperCase()}
             </span>
             <span style={{ fontSize: '15px', fontFamily: 'sans-serif', letterSpacing: '1.5px', opacity: 0.85 }}>

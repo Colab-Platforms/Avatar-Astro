@@ -90,30 +90,30 @@ const ChadhawaPage = () => {
 
           {/* Eyebrow */}
           <div className="flex items-center justify-center gap-3 mb-5">
-            <div style={{ height: 1, width: 56, background: 'linear-gradient(to right, transparent, rgba(188,106,77,0.5))' }} />
-            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.32em', color: '#BC6A4D', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ height: 1, width: 56, background: 'linear-gradient(to right, transparent, #FBF5EC)' }} />
+            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.32em', color: '#592209', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6 }}>
               <span>✦</span> Sacred Offerings <span>✦</span>
             </p>
-            <div style={{ height: 1, width: 56, background: 'linear-gradient(to left, transparent, rgba(188,106,77,0.5))' }} />
+            <div style={{ height: 1, width: 56, background: 'linear-gradient(to left, transparent, #FBF5EC)' }} />
           </div>
 
           <h1 className="chadhawa-hero-title font-display font-bold tracking-widest uppercase leading-none mb-5"
             style={{ fontSize: 'clamp(54px, 8vw, 96px)' }}>
-            <span style={{ color: '#2C1810' }}>Offer A </span>
+            <span style={{ color: '#301607' }}>Offer A </span>
             <span style={{
-              background: 'linear-gradient(135deg, #BC6A4D 0%, #BC6A4D 60%, #BC6A4D 100%)',
+              background: '#592209',
               WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
             }}>Chadhawa</span>
           </h1>
 
-          <p style={{ fontSize: 16, color: 'rgba(44,24,16,0.55)', lineHeight: 1.7, marginBottom: 32 }}>
+          <p style={{ fontSize: 16, color: 'rgba(48,22,7,0.55)', lineHeight: 1.7, marginBottom: 32 }}>
             Make sacred offerings to the divine at India's holiest temples,<br />
             from anywhere in the world
           </p>
 
           <div className="chadhawa-search-wrap" style={{ maxWidth: 560, margin: '0 auto' }}>
             <div style={{ position: 'relative' }}>
-              <Search style={{ position: 'absolute', left: 18, top: '50%', transform: 'translateY(-50%)', width: 20, height: 20, color: '#BC6A4D', pointerEvents: 'none' }} />
+              <Search style={{ position: 'absolute', left: 18, top: '50%', transform: 'translateY(-50%)', width: 20, height: 20, color: '#592209', pointerEvents: 'none' }} />
               <input
                 type="text"
                 value={query}
@@ -121,12 +121,12 @@ const ChadhawaPage = () => {
                 placeholder="Search temples, locations, states…"
                 style={{
                   width: '100%', height: 56, paddingLeft: 52, paddingRight: 20,
-                  fontSize: 15, color: '#2C1810', background: '#FFFFFF',
-                  border: '1.5px solid rgba(188,106,77,0.22)', borderRadius: 16,
-                  boxShadow: '0 4px 20px rgba(188,106,77,0.08)', outline: 'none',
+                  fontSize: 15, color: '#301607', background: '#FFFFFF',
+                  border: '1.5px solid rgba(89,34,9,0.22)', borderRadius: 16,
+                  boxShadow: '0 4px 20px rgba(89,34,9,0.08)', outline: 'none',
                 }}
-                onFocus={e => { (e.target as HTMLInputElement).style.borderColor = 'rgba(188,106,77,0.55)'; }}
-                onBlur={e => { (e.target as HTMLInputElement).style.borderColor = 'rgba(188,106,77,0.22)'; }}
+                onFocus={e => { (e.target as HTMLInputElement).style.borderColor = 'rgba(89,34,9,0.55)'; }}
+                onBlur={e => { (e.target as HTMLInputElement).style.borderColor = 'rgba(89,34,9,0.22)'; }}
               />
             </div>
           </div>
@@ -156,8 +156,8 @@ const ChadhawaPage = () => {
                   style={{
                     background: '#FFFFFF',
                     borderRadius: 20,
-                    border: '1.5px solid rgba(188,106,77,0.13)',
-                    boxShadow: '0 4px 20px rgba(120,60,20,0.07), 0 1px 3px rgba(0,0,0,0.04)',
+                    border: '1.5px solid rgba(89,34,9,0.13)',
+                    boxShadow: '0 4px 20px rgba(89,34,9,0.2), 0 1px 3px rgba(89,34,9,0.2)',
                     overflow: 'hidden',
                     transition: 'transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease',
                     textDecoration: 'none',
@@ -166,13 +166,13 @@ const ChadhawaPage = () => {
                     const el = e.currentTarget as HTMLElement;
                     el.style.transform = 'translateY(-5px)';
                     el.style.boxShadow = '0 16px 48px rgba(120,60,20,0.13), 0 4px 12px rgba(0,0,0,0.06)';
-                    el.style.borderColor = 'rgba(188,106,77,0.38)';
+                    el.style.borderColor = 'rgba(89,34,9,0.38)';
                   }}
                   onMouseLeave={e => {
                     const el = e.currentTarget as HTMLElement;
                     el.style.transform = 'translateY(0)';
                     el.style.boxShadow = '0 4px 20px rgba(120,60,20,0.07), 0 1px 3px rgba(0,0,0,0.04)';
-                    el.style.borderColor = 'rgba(188,106,77,0.13)';
+                    el.style.borderColor = 'rgba(89,34,9,0.13)';
                   }}
                 >
                   {/* Image — 4:3 ratio, edge-to-edge cover (matches Live Darshan cards) */}
@@ -200,43 +200,43 @@ const ChadhawaPage = () => {
 
                     <span style={{
                       display: 'inline-flex', alignItems: 'center', gap: 5,
-                      fontSize: 11, fontWeight: 600, letterSpacing: '0.04em', color: '#BC6A4D',
-                      background: 'rgba(188,106,77,0.07)', border: '1px solid rgba(188,106,77,0.22)',
+                      fontSize: 11, fontWeight: 600, letterSpacing: '0.04em', color: '#592209',
+                      background: 'rgba(89,34,9,0.07)', border: '1px solid rgba(89,34,9,0.22)',
                       borderRadius: 99, padding: '4px 11px', width: 'fit-content',
                     }}>
                       <Flame style={{ width: 12, height: 12 }} /> {badge}
                     </span>
 
                     <h3 className="font-display uppercase tracking-wide leading-tight"
-                      style={{ fontSize: 30, fontWeight: 700, color: '#2C1810' }}>
+                      style={{ fontSize: 30, fontWeight: 700, color: '#301607' }}>
                       {temple.name}
                     </h3>
 
-                    <p style={{ fontSize: 15, fontWeight: 600, color: '#BC6A4D' }}>{subtitle}</p>
+                    <p style={{ fontSize: 15, fontWeight: 600, color: '#592209' }}>{subtitle}</p>
 
                     <p style={{ fontSize: 14, color: '#6B4E3D', display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <MapPin style={{ width: 14, height: 14, color: '#BC6A4D', flexShrink: 0 }} />
+                      <MapPin style={{ width: 14, height: 14, color: '#592209', flexShrink: 0 }} />
                       {temple.location}, {temple.state}
                     </p>
 
-                    <div style={{ height: 1, background: 'rgba(188,106,77,0.12)', marginTop: 2, marginBottom: 2 }} />
+                    <div style={{ height: 1, background: 'rgba(89,34,9,0.08)', marginTop: 2, marginBottom: 2 }} />
 
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                       <div>
                         <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', color: '#9C7B62', textTransform: 'uppercase', marginBottom: 2 }}>
                           Starting from
                         </p>
-                        <p style={{ fontSize: 26, fontWeight: 800, color: '#2C1810', fontFamily: 'Iceland, sans-serif' }}>
+                        <p style={{ fontSize: 26, fontWeight: 800, color: '#301607', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
                           ₹{temple.priceFrom}
                         </p>
                       </div>
                       <span style={{
                         display: 'inline-flex', alignItems: 'center', gap: 7,
-                        background: 'linear-gradient(135deg, #BC6A4D 0%, #BC6A4D 100%)',
-                        color: '#FFFFFF', fontSize: 13, fontWeight: 700,
+                        background: '#F5E9D6',
+                        color: '#301607', fontSize: 13, fontWeight: 700,
                         letterSpacing: '0.10em', textTransform: 'uppercase',
                         padding: '12px 20px', borderRadius: 12, flexShrink: 0,
-                        fontFamily: 'Iceland, sans-serif',
+                        fontFamily: "'DM Sans', system-ui, sans-serif",
                       }}>
                         Offer Chadhawa <ArrowRight style={{ width: 14, height: 14 }} />
                       </span>
@@ -250,7 +250,7 @@ const ChadhawaPage = () => {
 
           {!isLoading && isError && (
             <div style={{ textAlign: 'center', paddingTop: 80, paddingBottom: 80 }}>
-              <p style={{ fontSize: 22, color: '#9C7B62', fontFamily: 'Iceland, sans-serif', letterSpacing: '0.1em' }}>
+              <p style={{ fontSize: 22, color: '#9C7B62', fontFamily: "'DM Sans', system-ui, sans-serif", letterSpacing: '0.1em' }}>
                 Could not load temples
               </p>
               <p style={{ fontSize: 14, color: '#B09070', marginTop: 8 }}>
@@ -261,7 +261,7 @@ const ChadhawaPage = () => {
 
           {!isLoading && !isError && filtered.length === 0 && (
             <div style={{ textAlign: 'center', paddingTop: 80, paddingBottom: 80 }}>
-              <p style={{ fontSize: 22, color: '#9C7B62', fontFamily: 'Iceland, sans-serif', letterSpacing: '0.1em' }}>
+              <p style={{ fontSize: 22, color: '#9C7B62', fontFamily: "'DM Sans', system-ui, sans-serif", letterSpacing: '0.1em' }}>
                 No temples found
               </p>
               <p style={{ fontSize: 14, color: '#B09070', marginTop: 8 }}>Try a different search term</p>

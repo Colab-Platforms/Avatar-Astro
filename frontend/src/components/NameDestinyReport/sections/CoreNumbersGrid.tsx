@@ -31,7 +31,7 @@ export default function CoreNumbersGrid({ report, name }: { report: UseNameRepor
     <div className="px-6 sm:px-10 pb-12">
       <h3
         className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-8 uppercase tracking-wide"
-        style={{ fontFamily: "'Astra','Cinzel',serif" }}
+        style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
       >
         Inside Your Report
       </h3>
@@ -72,7 +72,7 @@ export default function CoreNumbersGrid({ report, name }: { report: UseNameRepor
                 <div className="text-xs font-semibold text-foreground/80">{p.planet}</div>
                 <div
                   className={`text-xs font-bold mt-1 ${
-                    p.verdict === "friendly" ? "text-emerald-500" : p.verdict === "friction" ? "text-rose-500" : "text-muted-foreground"
+                    p.verdict === "friendly" ? "text-emerald-800" : p.verdict === "friction" ? "text-rose-800" : "text-muted-foreground"
                   }`}
                 >
                   {p.score}%

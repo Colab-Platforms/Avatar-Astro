@@ -14,26 +14,26 @@ interface CategoryCardsProps {
 const STYLES = [
   {
     icon: Briefcase,
-    gradient: "from-[#7C3AED]/25 via-[#4C1D95]/10 to-transparent",
-    ring: "group-hover:ring-[#7C3AED]/40",
+    gradient: "from-[#592209]/25 via-[#F5E9D6] to-transparent",
+    ring: "group-hover:ring-[#E0C8B0]/40",
     ctaLabel: "Ask about your career growth",
   },
   {
     icon: Heart,
-    gradient: "from-[#EC4899]/25 via-[#831843]/10 to-transparent",
+    gradient: "from-[#EC4899]/25 via-[#F5E9D6] to-transparent",
     ring: "group-hover:ring-[#EC4899]/40",
     ctaLabel: "Ask about your relationship",
   },
   {
     icon: Leaf,
-    gradient: "from-[#14B8A6]/25 via-[#134E4A]/10 to-transparent",
-    ring: "group-hover:ring-[#14B8A6]/40",
+    gradient: "from-[#592209]/25 via-[#F5E9D6] to-transparent",
+    ring: "group-hover:ring-[#E0C8B0]/40",
     ctaLabel: "Ask about your health",
   },
   {
     icon: Flower2,
-    gradient: "from-[#FF9D4D]/25 via-[#7C2D12]/10 to-transparent",
-    ring: "group-hover:ring-[#FF9D4D]/40",
+    gradient: "from-[#592209]/25 via-[#F5E9D6] to-transparent",
+    ring: "group-hover:ring-[#592209]/40",
     ctaLabel: "Ask about your health path",
   },
 ];
@@ -58,18 +58,18 @@ const CategoryCards = ({ suggestions, onSelect }: CategoryCardsProps) => {
             whileHover={isPresent ? { y: -4, scale: 1.03 } : undefined}
             whileTap={isPresent ? { scale: 0.99 } : undefined}
             onClick={() => onSelect(s.sub)}
-            className={`group relative overflow-hidden rounded-[20px] border border-white/[0.08] bg-gradient-to-br ${style.gradient} bg-[#17181F] p-5 text-left ring-1 ring-transparent transition-all duration-300 ${style.ring}`}
+            className={`group relative overflow-hidden rounded-[20px] border border-primary/15 bg-gradient-to-br ${style.gradient} bg-[#FBF5EC] p-5 text-left ring-1 ring-transparent transition-all duration-300 ${style.ring}`}
           >
-            <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-white/10">
-              <Icon className="h-5 w-5 text-white" />
+            <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-card">
+              <Icon className="h-5 w-5 text-foreground" />
             </div>
-            <h3 className="mb-1.5 font-['Cormorant_Garamond'] text-xl font-semibold text-white">
+            <h3 className="mb-1.5 font-home-serif text-xl font-semibold text-foreground">
               {s.title}
             </h3>
-            <p className="mb-5 text-sm leading-relaxed text-[#A3A3B2]">{s.sub}</p>
-            <div className="flex items-center gap-2 text-xs font-medium text-white/85">
+            <p className="mb-5 text-sm leading-relaxed text-muted-foreground">{s.sub}</p>
+            <div className="flex items-center gap-2 text-xs font-medium text-foreground/85">
               {style.ctaLabel}
-              <span className="flex h-7 w-7 items-center justify-center rounded-full border border-white/25 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:border-[#FF9D4D]">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full border border-primary/35 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:border-[#592209]">
                 <ArrowRight className="h-3.5 w-3.5" />
               </span>
             </div>

@@ -10,25 +10,25 @@
 //   :root {
 //     --void: #03010a;
 //     --deep: #07030f;
-//     --nebula: #0d0520;
-//     --aurora-1: #BC6A4D;
-//     --aurora-2: #BC6A4D;
-//     --aurora-3: #BC6A4D;
-//     --gold: #BC6A4D;
-//     --stardust: rgba(255,255,255,0.07);
-//     --glass: rgba(255,255,255,0.05);
-//     --glass-border: rgba(255,255,255,0.12);
-//     --font-display: 'Astra','Iceland',sans-serif;
-//     --font-body: 'Astra','Iceland',sans-serif;
-//     --font-mono: 'Astra','Iceland',sans-serif;
+//     --nebula: #F0DFC7;
+//     --aurora-1: #592209;
+//     --aurora-2: #592209;
+//     --aurora-3: #592209;
+//     --gold: #592209;
+//     --stardust: rgba(89,34,9,0.05);
+//     --glass: rgba(89,34,9,0.05);
+//     --glass-border: rgba(89,34,9,0.2);
+//     --font-display: 'DM Sans', system-ui, sans-serif;
+//     --font-body: 'DM Sans', system-ui, sans-serif;
+//     --font-mono: 'DM Sans', system-ui, sans-serif;
 //   }
 //   * { box-sizing: border-box; margin: 0; padding: 0; }
 //   .universe-app {
-//     min-height: 100vh; background: var(--void); color: #e8e0f0;
+//     min-height: 100vh; background: var(--void); color: #301607;
 //     font-family: var(--font-body); font-size: 18px; overflow-x: hidden; position: relative;
 //   }
 //   .starfield { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
-//   .star { position: absolute; border-radius: 50%; background: white; animation: twinkle var(--d,3s) ease-in-out infinite; animation-delay: var(--delay,0s); opacity: var(--op,0.6); }
+//   .star { position: absolute; border-radius: 50%; background: rgba(89,34,9,0.25); animation: twinkle var(--d,3s) ease-in-out infinite; animation-delay: var(--delay,0s); opacity: var(--op,0.6); }
 //   @keyframes twinkle { 0%,100%{opacity:var(--op,0.6);transform:scale(1);}50%{opacity:0.1;transform:scale(0.5);} }
 //   .nebula-blob { position: fixed; border-radius: 50%; filter: blur(80px); pointer-events: none; z-index: 0; animation: drift 20s ease-in-out infinite alternate; }
 //   @keyframes drift { from{transform:translate(0,0) scale(1);}to{transform:translate(40px,30px) scale(1.1);} }
@@ -36,44 +36,44 @@
 //   .header { text-align: center; padding: 60px 20px 40px; }
 //   .header-tag { font-family: var(--font-mono); font-size: 11px; letter-spacing: 6px; color: var(--aurora-3); text-transform: uppercase; margin-bottom: 16px; opacity: 0.8; }
 //   .header h1 { font-family: var(--font-display); font-size: clamp(22px,4vw,44px); font-weight: 900; background: linear-gradient(135deg,var(--gold) 0%,var(--aurora-2) 40%,var(--aurora-1) 80%,var(--aurora-3) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.2; margin-bottom: 12px; }
-//   .header p { color: rgba(255,255,255,0.72); font-size: 17px; font-style: italic; letter-spacing: 0.5px; }
+//   .header p { color: #301607; font-size: 17px; font-style: italic; letter-spacing: 0.5px; }
 //   .form-container { max-width: 900px; margin: 0 auto; padding: 0 20px 60px; }
 //   .persons-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
 //   @media(max-width:680px){.persons-grid{grid-template-columns:1fr;}}
 //   .person-card { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 20px; padding: 28px 24px; backdrop-filter: blur(16px); position: relative; overflow: hidden; transition: border-color 0.3s, box-shadow 0.3s; }
 //   .person-card::before { content:''; position:absolute; inset:0; background:var(--grad); opacity:0.04; pointer-events:none; }
-//   .person-card:hover { border-color: rgba(255,255,255,0.22); box-shadow: 0 0 40px rgba(188,106,77,0.15); }
+//   .person-card:hover { border-color: rgba(89,34,9,0.3); box-shadow: 0 0 40px rgba(89,34,9,0.15); }
 //   .card-title { font-family: var(--font-display); font-size: 13px; letter-spacing: 2px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
 //   .card-icon { font-size: 20px; }
 //   .field { margin-bottom: 16px; }
-//   .field label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 3px; color: rgba(255,255,255,0.75); text-transform: uppercase; display: block; margin-bottom: 6px; }
-//   .field input,.field select { width:100%; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:11px 14px; color:#e8e0f0; font-family:var(--font-body); font-size:16px; outline:none; transition:border 0.3s,box-shadow 0.3s; -webkit-appearance:none; }
-//   .field input:focus,.field select:focus { border-color:var(--aurora-1); box-shadow:0 0 0 3px rgba(188,106,77,0.15); }
-//   .field input::placeholder { color:rgba(232,224,240,0.25); }
-//   .field select option { background:#1a0a2e; }
+//   .field label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 3px; color: rgba(48,22,7,1); text-transform: uppercase; display: block; margin-bottom: 6px; }
+//   .field input,.field select { width:100%; background:rgba(89,34,9,0.05); border:1px solid rgba(89,34,9,0.05); border-radius:10px; padding:11px 14px; color:#301607; font-family:var(--font-body); font-size:16px; outline:none; transition:border 0.3s,box-shadow 0.3s; -webkit-appearance:none; }
+//   .field input:focus,.field select:focus { border-color:var(--aurora-1); box-shadow:0 0 0 3px rgba(89,34,9,0.15); }
+//   .field input::placeholder { color:rgba(48,22,7,0.75); }
+//   .field select option { background:#FBF5EC; }
 //   .date-row { display:grid; grid-template-columns:2fr 2fr 3fr; gap:8px; }
 //   .time-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
 //   .place-wrap { position:relative; }
-//   .place-dropdown { position:absolute; top:calc(100% + 6px); left:0; right:0; background:#1a0a2e; border:1px solid rgba(188,106,77,0.4); border-radius:10px; z-index:100; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.6); }
-//   .place-item { padding:10px 14px; cursor:pointer; font-size:15px; color:rgba(255,255,255,0.9); transition:background 0.2s; border-bottom:1px solid rgba(255,255,255,0.05); }
-//   .place-item:hover { background:rgba(188,106,77,0.2); }
-//   .place-item small { display:block; font-size:12px; color:rgba(255,255,255,0.5); margin-top:2px; font-family:var(--font-mono); }
-//   .submit-btn { display:block; width:100%; max-width:400px; margin:0 auto; padding:18px 40px; background:linear-gradient(135deg,var(--aurora-1),var(--aurora-2)); border:none; border-radius:50px; color:white; font-family:var(--font-display); font-size:14px; letter-spacing:2px; cursor:pointer; position:relative; overflow:hidden; transition:transform 0.2s,box-shadow 0.3s; text-transform:uppercase; }
-//   .submit-btn:hover { transform:translateY(-2px); box-shadow:0 20px 60px rgba(188,106,77,0.4); }
+//   .place-dropdown { position:absolute; top:calc(100% + 6px); left:0; right:0; background:#FBF5EC; border:1px solid rgba(89,34,9,0.4); border-radius:10px; z-index:100; overflow:hidden; box-shadow:0 20px 60px rgba(89,34,9,0.2); }
+//   .place-item { padding:10px 14px; cursor:pointer; font-size:15px; color:#301607; transition:background 0.2s; border-bottom:1px solid rgba(89,34,9,0.05); }
+//   .place-item:hover { background:rgba(89,34,9,0.08); }
+//   .place-item small { display:block; font-size:12px; color:#301607; margin-top:2px; font-family:var(--font-mono); }
+//   .submit-btn { display:block; width:100%; max-width:400px; margin:0 auto; padding:18px 40px; background:linear-gradient(135deg,var(--aurora-1),var(--aurora-2)); border:none; border-radius:50px; color:#F5E9D6; font-family:var(--font-display); font-size:14px; letter-spacing:2px; cursor:pointer; position:relative; overflow:hidden; transition:transform 0.2s,box-shadow 0.3s; text-transform:uppercase; }
+//   .submit-btn:hover { transform:translateY(-2px); box-shadow:0 20px 60px rgba(89,34,9,0.4); }
 //   .submit-btn:active { transform:translateY(0); }
 //   .submit-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
 //   .loading-screen { position:fixed; inset:0; background:var(--void); z-index:200; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:32px; }
 //   .loading-cosmos { width:180px; height:180px; position:relative; }
 //   .orbit-ring { position:absolute; border-radius:50%; border:1px solid transparent; animation:orbit-spin linear infinite; }
-//   .orbit-ring:nth-child(1){inset:0;border-color:rgba(188,106,77,0.5);animation-duration:4s;}
-//   .orbit-ring:nth-child(2){inset:20px;border-color:rgba(188,106,77,0.5);animation-duration:3s;animation-direction:reverse;}
-//   .orbit-ring:nth-child(3){inset:40px;border-color:rgba(188,106,77,0.5);animation-duration:5s;}
+//   .orbit-ring:nth-child(1){inset:0;border-color:rgba(89,34,9,0.5);animation-duration:4s;}
+//   .orbit-ring:nth-child(2){inset:20px;border-color:rgba(89,34,9,0.5);animation-duration:3s;animation-direction:reverse;}
+//   .orbit-ring:nth-child(3){inset:40px;border-color:rgba(89,34,9,0.5);animation-duration:5s;}
 //   .orbit-dot { position:absolute; width:8px; height:8px; border-radius:50%; top:-4px; left:50%; transform:translateX(-50%); }
 //   @keyframes orbit-spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
 //   .orbit-center { position:absolute; inset:60px; border-radius:50%; background:radial-gradient(circle,var(--aurora-1),var(--aurora-2)); display:flex; align-items:center; justify-content:center; font-size:24px; animation:pulse-glow 2s ease-in-out infinite; }
-//   @keyframes pulse-glow{0%,100%{box-shadow:0 0 20px rgba(188,106,77,0.5);}50%{box-shadow:0 0 60px rgba(188,106,77,0.8),0 0 100px rgba(188,106,77,0.4);}}
+//   @keyframes pulse-glow{0%,100%{box-shadow:0 0 20px rgba(89,34,9,0.5);}50%{box-shadow:0 0 60px rgba(89,34,9,0.8),0 0 100px rgba(89,34,9,0.4);}}
 //   .loading-steps { display:flex; flex-direction:column; gap:10px; text-align:center; }
-//   .loading-step { font-family:var(--font-mono); font-size:12px; letter-spacing:2px; color:rgba(255,255,255,0.65); transition:color 0.5s,opacity 0.5s; display:flex; align-items:center; gap:10px; justify-content:center; }
+//   .loading-step { font-family:var(--font-mono); font-size:12px; letter-spacing:2px; color:#301607; transition:color 0.5s,opacity 0.5s; display:flex; align-items:center; gap:10px; justify-content:center; }
 //   .loading-step.active { color:var(--aurora-3); text-shadow:0 0 20px var(--aurora-3); }
 //   .loading-step.done { color:var(--gold); }
 //   .step-dot { width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0; }
@@ -90,29 +90,29 @@
 //     background-clip: text;
 //     margin-bottom: 16px;
 //     display: block;
-//     filter: drop-shadow(0 0 28px rgba(188,106,77,0.5));
+//     filter: drop-shadow(0 0 28px rgba(89,34,9,0.5));
 //     line-height: 1.3;
 //     white-space: nowrap;
 //     overflow: hidden;
 //     text-overflow: ellipsis;
 //     max-width: 100%;
 //   }
-//   .couple-sub { font-family:var(--font-mono); font-size:12px; letter-spacing:4px; color:rgba(255,255,255,0.65); text-transform:uppercase; display:block; }
+//   .couple-sub { font-family:var(--font-mono); font-size:12px; letter-spacing:4px; color:rgba(48,22,7,0.9); text-transform:uppercase; display:block; }
 
 //   /* ── SCORE CIRCLE ── */
 //   .score-hero { display:flex; justify-content:center; margin-bottom:48px; }
 //   .score-circle-wrap { text-align:center; }
 //   .score-circle { width:200px; height:200px; display:grid; place-items:center; margin:0 auto 16px; position:relative; }
 //   .score-svg { width:200px; height:200px; transform:rotate(-90deg); position:absolute; top:0; left:0; }
-//   .score-track { fill:none; stroke:rgba(255,255,255,0.08); stroke-width:10; }
+//   .score-track { fill:none; stroke:rgba(89,34,9,0.05); stroke-width:10; }
 //   .score-fill { fill:none; stroke-width:10; stroke-linecap:round; stroke:url(#scoreGrad); }
 //   .score-inner { display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; z-index:10; }
-//   .score-num { font-family:var(--font-display); font-size:54px; font-weight:900; color:#BC6A4D; line-height:1; display:block; text-shadow:0 0 32px rgba(188,106,77,0.7); }
-//   .score-pct { font-family:var(--font-mono); font-size:18px; color:rgba(255,255,255,0.82); margin-top:4px; display:block; }
+//   .score-num { font-family:var(--font-display); font-size:54px; font-weight:900; color:#592209; line-height:1; display:block; text-shadow:0 0 32px rgba(89,34,9,0.7); }
+//   .score-pct { font-family:var(--font-mono); font-size:18px; color:rgba(48,22,7,1); margin-top:4px; display:block; }
 //   .score-label { font-family:var(--font-display); font-size:15px; letter-spacing:2px; color:var(--gold); margin-bottom:4px; }
-//   .score-tag { font-family:var(--font-mono); font-size:11px; letter-spacing:3px; color:rgba(255,255,255,0.5); text-transform:uppercase; }
+//   .score-tag { font-family:var(--font-mono); font-size:11px; letter-spacing:3px; color:#301607; text-transform:uppercase; }
 //   .section-head { font-family:var(--font-display); font-size:13px; letter-spacing:3px; color:var(--aurora-3); text-transform:uppercase; margin-bottom:20px; display:flex; align-items:center; gap:12px; }
-//   .section-head::after { content:''; flex:1; height:1px; background:linear-gradient(to right,rgba(188,106,77,0.3),transparent); }
+//   .section-head::after { content:''; flex:1; height:1px; background:linear-gradient(to right,rgba(89,34,9,0.08),transparent); }
 //   .cards-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; margin-bottom:40px; }
 
 //   /* ── COMPAT CARD — HOVER GLOW ── */
@@ -136,67 +136,67 @@
 //     z-index: 0;
 //     pointer-events: none;
 //     border-radius: 16px;
-//     background: var(--hov, linear-gradient(135deg,rgba(188,106,77,.2),rgba(188,106,77,.14)));
+//     background: var(--hov, linear-gradient(135deg,rgba(89,34,9,0.08),rgba(89,34,9,0.08)));
 //   }
 //   .compat-card:hover::after { opacity: 1; }
 //   .compat-card:hover {
 //     transform: translateY(-8px) scale(1.025);
-//     border-color: rgba(255,255,255,0.4);
-//     box-shadow: 0 24px 70px var(--hov-shadow, rgba(188,106,77,.45)), 0 0 50px rgba(188,106,77,.2);
+//     border-color: rgba(89,34,9,0.3);
+//     box-shadow: 0 24px 70px var(--hov-shadow, rgba(89,34,9,.45)), 0 0 50px rgba(89,34,9,.2);
 //   }
 //   .compat-card > * { position: relative; z-index: 1; }
 
 //   .card-head { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
 //   .card-emoji { font-size:22px; }
-//   .card-name { font-family:var(--font-display); font-size:12px; letter-spacing:1px; color:rgba(255,255,255,0.95); flex:1; }
+//   .card-name { font-family:var(--font-display); font-size:12px; letter-spacing:1px; color:#301607; flex:1; }
 //   .card-score-num { font-family:var(--font-mono); font-size:18px; font-weight:700; color:var(--gold); }
-//   .prog-bar { height:6px; background:rgba(255,255,255,0.08); border-radius:3px; overflow:hidden; margin-bottom:8px; }
+//   .prog-bar { height:6px; background:rgba(89,34,9,0.2); border-radius:3px; overflow:hidden; margin-bottom:8px; }
 //   .prog-fill { height:100%; border-radius:3px; background:var(--bar-color,linear-gradient(to right,var(--aurora-1),var(--aurora-2))); transition:width 1.5s cubic-bezier(0.4,0,0.2,1); width:0; }
 //   .prog-fill.animate { width:var(--target-width,0%); }
-//   .prog-label { display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:10px; color:rgba(255,255,255,0.55); letter-spacing:1px; }
+//   .prog-label { display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:10px; color:#301607; letter-spacing:1px; }
 //   .sub-metrics { display:flex; flex-direction:column; gap:10px; }
 //   .sub-metric-row { display:flex; align-items:center; gap:10px; }
-//   .sub-metric-label { font-size:13px; color:rgba(255,255,255,0.88); width:130px; flex-shrink:0; font-style:italic; }
-//   .sub-metric-bar { flex:1; height:4px; background:rgba(255,255,255,0.07); border-radius:2px; overflow:hidden; }
+//   .sub-metric-label { font-size:13px; color:rgba(48,22,7,1); width:130px; flex-shrink:0; font-style:italic; }
+//   .sub-metric-bar { flex:1; height:4px; background:rgba(89,34,9,0.2); border-radius:2px; overflow:hidden; }
 //   .sub-metric-fill { height:100%; border-radius:2px; background:var(--fill-c,var(--aurora-3)); transition:width 1.8s cubic-bezier(0.4,0,0.2,1); width:0; }
 //   .sub-metric-fill.animate { width:var(--w,0%); }
 //   .sub-metric-val { font-family:var(--font-mono); font-size:11px; color:var(--fill-c,var(--aurora-3)); width:32px; text-align:right; }
-//   .insight-box { background:rgba(188,106,77,0.08); border:1px solid rgba(188,106,77,0.25); border-radius:12px; padding:14px 16px; margin-top:12px; font-size:14px; font-style:italic; color:rgba(255,255,255,0.82); line-height:1.6; }
+//   .insight-box { background:rgba(89,34,9,0.08); border:1px solid rgba(89,34,9,0.25); border-radius:12px; padding:14px 16px; margin-top:12px; font-size:14px; font-style:italic; color:#301607; line-height:1.6; }
 //   .insight-label { font-family:var(--font-mono); font-size:9px; letter-spacing:3px; color:var(--aurora-1); text-transform:uppercase; margin-bottom:6px; }
 //   .planet-row { display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:12px; margin-bottom:40px; }
 //   .planet-item { background:var(--glass); border:1px solid var(--glass-border); border-radius:14px; padding:14px 10px; text-align:center; backdrop-filter:blur(8px); transition:transform 0.2s; }
 //   .planet-item:hover { transform:translateY(-4px); }
 //   .planet-symbol { font-size:28px; margin-bottom:6px; }
-//   .planet-name { font-family:var(--font-mono); font-size:9px; letter-spacing:2px; color:rgba(255,255,255,0.75); text-transform:uppercase; margin-bottom:6px; }
+//   .planet-name { font-family:var(--font-mono); font-size:9px; letter-spacing:2px; color:#301607; text-transform:uppercase; margin-bottom:6px; }
 //   .planet-score { font-family:var(--font-display); font-size:16px; color:var(--gold); }
 //   .timeline { position:relative; padding:20px 0 20px 30px; margin-bottom:40px; }
 //   .timeline::before { content:''; position:absolute; left:8px; top:0; bottom:0; width:2px; background:linear-gradient(to bottom,var(--aurora-1),var(--aurora-2),var(--aurora-3)); }
 //   .tl-item { position:relative; margin-bottom:20px; padding-left:20px; }
 //   .tl-dot { position:absolute; left:-26px; top:6px; width:12px; height:12px; border-radius:50%; background:var(--dot-c,var(--aurora-1)); border:2px solid var(--void); box-shadow:0 0 12px var(--dot-c,var(--aurora-1)); }
 //   .tl-phase { font-family:var(--font-mono); font-size:10px; letter-spacing:2px; color:var(--dot-c,var(--aurora-1)); text-transform:uppercase; margin-bottom:3px; }
-//   .tl-desc { font-size:14px; color:rgba(255,255,255,0.82); font-style:italic; }
+//   .tl-desc { font-size:14px; color:rgba(48,22,7,1); font-style:italic; }
 //   .flags-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:40px; }
 //   @media(max-width:600px){.flags-grid{grid-template-columns:1fr;}}
 //   .flags-col { background:var(--glass); border:1px solid var(--glass-border); border-radius:16px; padding:20px; }
 //   .flags-col-title { font-family:var(--font-mono); font-size:10px; letter-spacing:3px; text-transform:uppercase; margin-bottom:14px; }
-//   .flag-item { display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; font-size:14px; color:rgba(255,255,255,0.85); font-style:italic; }
+//   .flag-item { display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; font-size:14px; color:#301607; font-style:italic; }
 //   .flag-icon { flex-shrink:0; font-size:16px; }
 //   .ai-insights-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; margin-bottom:40px; }
-//   .ai-card { background:linear-gradient(135deg,rgba(188,106,77,0.08),rgba(188,106,77,0.05)); border:1px solid rgba(188,106,77,0.2); border-radius:14px; padding:18px; }
+//   .ai-card { background:linear-gradient(135deg,rgba(89,34,9,0.08),rgba(89,34,9,0.05)); border:1px solid rgba(89,34,9,0.2); border-radius:14px; padding:18px; }
 //   .ai-card-title { font-family:var(--font-mono); font-size:10px; letter-spacing:3px; color:var(--aurora-1); text-transform:uppercase; margin-bottom:10px; }
-//   .ai-card-text { font-size:15px; color:rgba(255,255,255,0.85); line-height:1.65; font-style:italic; }
-//   .reset-btn { display:block; margin:0 auto; padding:14px 40px; background:transparent; border:1px solid rgba(255,255,255,0.2); border-radius:50px; color:rgba(255,255,255,0.75); font-family:var(--font-mono); font-size:11px; letter-spacing:3px; text-transform:uppercase; cursor:pointer; transition:all 0.3s; }
-//   .reset-btn:hover { border-color:var(--aurora-1); color:var(--aurora-3); box-shadow:0 0 30px rgba(188,106,77,0.2); }
-//   .error-box { background:rgba(188,106,77,0.1); border:1px solid rgba(188,106,77,0.3); border-radius:12px; padding:14px 18px; color:#ff8ab0; font-family:var(--font-mono); font-size:12px; letter-spacing:1px; margin-bottom:20px; text-align:center; }
+//   .ai-card-text { font-size:15px; color:#301607; line-height:1.65; font-style:italic; }
+//   .reset-btn { display:block; margin:0 auto; padding:14px 40px; background:transparent; border:1px solid rgba(89,34,9,0.1); border-radius:50px; color:rgba(48,22,7,0.75); font-family:var(--font-mono); font-size:11px; letter-spacing:3px; text-transform:uppercase; cursor:pointer; transition:all 0.3s; }
+//   .reset-btn:hover { border-color:var(--aurora-1); color:var(--aurora-3); box-shadow:0 0 30px rgba(89,34,9,0.2); }
+//   .error-box { background:rgba(89,34,9,0.1); border:1px solid rgba(89,34,9,0.3); border-radius:12px; padding:14px 18px; color:#592209; font-family:var(--font-mono); font-size:12px; letter-spacing:1px; margin-bottom:20px; text-align:center; }
 //   ::-webkit-scrollbar { width:6px; }
 //   ::-webkit-scrollbar-track { background:var(--void); }
-//   ::-webkit-scrollbar-thumb { background:rgba(188,106,77,0.4); border-radius:3px; }
+//   ::-webkit-scrollbar-thumb { background:rgba(89,34,9,0.4); border-radius:3px; }
 
 //   /* ── WHO LOVES MORE ── */
 //   .wlm-wrap { margin-bottom: 40px; }
 //   .wlm-card {
-//     background: linear-gradient(135deg, rgba(188,106,77,.07), rgba(188,106,77,.07));
-//     border: 1px solid rgba(188,106,77,.25);
+//     background: linear-gradient(135deg, rgba(89,34,9,0.07), rgba(89,34,9,0.07));
+//     border: 1px solid rgba(89,34,9,.25);
 //     border-radius: 20px;
 //     padding: 28px 24px;
 //     position: relative;
@@ -207,14 +207,14 @@
 //     position: absolute;
 //     right: 24px; top: 16px;
 //     font-size: 80px;
-//     color: rgba(188,106,77,.06);
+//     color: rgba(48,22,7,0.75);
 //     line-height: 1;
 //   }
 //   .wlm-disclaimer {
 //     font-family: var(--font-mono);
 //     font-size: 9px;
 //     letter-spacing: 2px;
-//     color: rgba(255,255,255,.35);
+//     color: rgba(48,22,7,0.72);
 //     text-transform: uppercase;
 //     margin-bottom: 20px;
 //     text-align: center;
@@ -238,7 +238,7 @@
 //     margin: 0 auto 14px;
 //   }
 //   .wlm-ring-svg { width: 130px; height: 130px; transform: rotate(-90deg); position: absolute; top:0; left:0; }
-//   .wlm-ring-bg { fill: none; stroke: rgba(255,255,255,.07); stroke-width: 10; }
+//   .wlm-ring-bg { fill: none; stroke: rgba(89,34,9,0.05); stroke-width: 10; }
 //   .wlm-ring-fg { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 1.8s cubic-bezier(.4,0,.2,1); }
 //   .wlm-ring-inner {
 //     position: absolute; inset: 0;
@@ -252,58 +252,58 @@
 //     font-weight: 900;
 //     line-height: 1;
 //   }
-//   .wlm-pct-sym { font-size: 14px; color: rgba(255,255,255,.6); font-family: var(--font-mono); margin-top: 2px; }
+//   .wlm-pct-sym { font-size: 14px; color: rgba(48,22,7,0.85); font-family: var(--font-mono); margin-top: 2px; }
 //   .wlm-label {
 //     font-family: var(--font-mono);
 //     font-size: 10px;
 //     letter-spacing: 2px;
 //     text-transform: uppercase;
-//     color: rgba(255,255,255,.5);
+//     color: rgba(48,22,7,0.75);
 //     margin-bottom: 6px;
 //   }
-//   .wlm-bar-wrap { height: 6px; background: rgba(255,255,255,.08); border-radius: 3px; overflow: hidden; margin-bottom: 6px; }
+//   .wlm-bar-wrap { height: 6px; background: rgba(89,34,9,0.2); border-radius: 3px; overflow: hidden; margin-bottom: 6px; }
 //   .wlm-bar-fill { height: 100%; border-radius: 3px; transition: width 1.8s cubic-bezier(.4,0,.2,1); width: 0; }
 //   .wlm-bar-fill.animate { width: var(--w, 0%); }
 //   .wlm-intensity-label {
 //     font-size: 12px;
 //     font-style: italic;
-//     color: rgba(255,255,255,.55);
+//     color: rgba(48,22,7,0.8);
 //     font-family: var(--font-body);
 //     margin-top: 4px;
 //   }
 //   .wlm-vs {
 //     position: relative;
 //     height: 6px;
-//     background: rgba(255,255,255,.06);
+//     background: rgba(89,34,9,0.05);
 //     border-radius: 3px;
 //     overflow: hidden;
 //     margin: 8px 0 20px;
 //   }
 //   .wlm-vs-fill1 { position: absolute; left: 0; top: 0; height: 100%; border-radius: 3px 0 0 3px; transition: width 1.8s cubic-bezier(.4,0,.2,1); }
 //   .wlm-vs-fill2 { position: absolute; right: 0; top: 0; height: 100%; border-radius: 0 3px 3px 0; transition: width 1.8s cubic-bezier(.4,0,.2,1); }
-//   .wlm-vs-labels { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 10px; color: rgba(255,255,255,.4); margin-bottom: 4px; }
+//   .wlm-vs-labels { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 10px; color: rgba(48,22,7,0.72); margin-bottom: 4px; }
 //   .wlm-insight {
-//     background: rgba(0,0,0,.25);
-//     border: 1px solid rgba(188,106,77,.18);
+//     background: rgba(89,34,9,0.08);
+//     border: 1px solid rgba(89,34,9,.18);
 //     border-radius: 12px;
 //     padding: 14px 16px;
 //     margin-bottom: 14px;
 //   }
-//   .wlm-insight-lbl { font-family: var(--font-mono); font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: rgba(188,106,77,.7); margin-bottom: 6px; }
-//   .wlm-insight-txt { font-size: 14px; color: rgba(255,255,255,.85); line-height: 1.7; font-style: italic; }
+//   .wlm-insight-lbl { font-family: var(--font-mono); font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #592209; margin-bottom: 6px; }
+//   .wlm-insight-txt { font-size: 14px; color: rgba(48,22,7,1); line-height: 1.7; font-style: italic; }
 //   .wlm-pattern-badge {
 //     display: inline-flex;
 //     align-items: center;
 //     gap: 8px;
-//     background: rgba(188,106,77,.1);
-//     border: 1px solid rgba(188,106,77,.25);
+//     background: rgba(89,34,9,0.08);
+//     border: 1px solid rgba(89,34,9,.25);
 //     border-radius: 50px;
 //     padding: 6px 16px;
 //     font-family: var(--font-mono);
 //     font-size: 10px;
 //     letter-spacing: 2px;
 //     text-transform: uppercase;
-//     color: #BC6A4D;
+//     color: #592209;
 //     margin-bottom: 14px;
 //   }
 //   .wlm-confidence {
@@ -312,13 +312,13 @@
 //     gap: 10px;
 //     font-family: var(--font-mono);
 //     font-size: 10px;
-//     color: rgba(255,255,255,.45);
+//     color: rgba(48,22,7,0.72);
 //     letter-spacing: 1px;
 //     text-transform: uppercase;
 //     margin-top: 4px;
 //   }
-//   .wlm-conf-bar { flex: 1; height: 3px; background: rgba(255,255,255,.08); border-radius: 2px; overflow: hidden; }
-//   .wlm-conf-fill { height: 100%; background: linear-gradient(to right, #BC6A4D, #BC6A4D); border-radius: 2px; transition: width 2s ease; width: 0; }
+//   .wlm-conf-bar { flex: 1; height: 3px; background: rgba(89,34,9,0.2); border-radius: 2px; overflow: hidden; }
+//   .wlm-conf-fill { height: 100%; background: #F5E9D6; border-radius: 2px; transition: width 2s ease; width: 0; }
 //   .wlm-conf-fill.animate { width: var(--w, 0%); }
 
 // `;
@@ -434,9 +434,9 @@
 //         <svg className="score-svg" viewBox="0 0 180 180">
 //           <defs>
 //             <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-//               <stop offset="0%" stopColor="#BC6A4D" />
-//               <stop offset="50%" stopColor="#BC6A4D" />
-//               <stop offset="100%" stopColor="#BC6A4D" />
+//               <stop offset="0%" stopColor="#592209" />
+//               <stop offset="50%" stopColor="#592209" />
+//               <stop offset="100%" stopColor="#592209" />
 //             </linearGradient>
 //           </defs>
 //           <circle className="score-track" cx="90" cy="90" r={r} />
@@ -467,7 +467,7 @@
 //   return (
 //     <div className="place-wrap">
 //       <input value={query} onChange={handleChange} onBlur={() => setTimeout(() => setOpen(false), 200)}
-//         placeholder="Type city name…" style={{ width:"100%", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, padding:"11px 14px", color:"#e8e0f0", fontFamily:"var(--font-body)", fontSize:16, outline:"none" }} />
+//         placeholder="Type city name…" style={{ width:"100%", background:"rgba(89,34,9,0.2)", border:"1px solid rgba(89,34,9,0.2)", borderRadius:10, padding:"11px 14px", color:"#301607", fontFamily:"var(--font-body)", fontSize:16, outline:"none" }} />
 //       {open && (
 //         <div className="place-dropdown">
 //           {results.map((r, i) => (
@@ -548,9 +548,9 @@
 //   return (
 //     <div className="loading-screen">
 //       <div className="loading-cosmos">
-//         <div className="orbit-ring"><div className="orbit-dot" style={{ background:"#BC6A4D" }}/></div>
-//         <div className="orbit-ring"><div className="orbit-dot" style={{ background:"#BC6A4D" }}/></div>
-//         <div className="orbit-ring"><div className="orbit-dot" style={{ background:"#BC6A4D" }}/></div>
+//         <div className="orbit-ring"><div className="orbit-dot" style={{ background:"#FBF5EC" }}/></div>
+//         <div className="orbit-ring"><div className="orbit-dot" style={{ background:"#FBF5EC" }}/></div>
+//         <div className="orbit-ring"><div className="orbit-dot" style={{ background:"#FBF5EC" }}/></div>
 //         <div className="orbit-center">💫</div>
 //       </div>
 //       <div className="loading-steps">
@@ -566,15 +566,15 @@
 
 // // Card hover colors config
 // const CARD_HOVERS = {
-//   love:     { hov:"linear-gradient(135deg,rgba(188,106,77,.22),rgba(188,106,77,.14))",  shadow:"rgba(188,106,77,.5)"  },
-//   emo:      { hov:"linear-gradient(135deg,rgba(188,106,77,.24),rgba(188,106,77,.14))",   shadow:"rgba(188,106,77,.5)"  },
-//   phys:     { hov:"linear-gradient(135deg,rgba(255,107,53,.24),rgba(188,106,77,.16))",  shadow:"rgba(255,107,53,.5)"  },
-//   fri:      { hov:"linear-gradient(135deg,rgba(188,106,77,.22),rgba(188,106,77,.14))",   shadow:"rgba(188,106,77,.45)"  },
-//   mar:      { hov:"linear-gradient(135deg,rgba(188,106,77,.22),rgba(188,106,77,.16))",  shadow:"rgba(188,106,77,.45)" },
-//   fin:      { hov:"linear-gradient(135deg,rgba(46,204,113,.22),rgba(188,106,77,.14))",  shadow:"rgba(46,204,113,.45)" },
-//   fam:      { hov:"linear-gradient(135deg,rgba(230,126,34,.22),rgba(188,106,77,.14))",  shadow:"rgba(230,126,34,.45)" },
-//   fam2:     { hov:"linear-gradient(135deg,rgba(188,106,77,.2),rgba(188,106,77,.14))",   shadow:"rgba(188,106,77,.4)"  },
-//   spi:      { hov:"linear-gradient(135deg,rgba(188,106,77,.24),rgba(188,106,77,.2))",    shadow:"rgba(188,106,77,.55)" },
+//   love:     { hov:"linear-gradient(135deg,rgba(89,34,9,.22),rgba(89,34,9,.14))",  shadow:"rgba(89,34,9,.5)"  },
+//   emo:      { hov:"linear-gradient(135deg,rgba(89,34,9,.24),rgba(89,34,9,.14))",   shadow:"rgba(89,34,9,.5)"  },
+//   phys:     { hov:"linear-gradient(135deg,rgba(255,107,53,.24),rgba(89,34,9,.16))",  shadow:"rgba(89,34,9,.5)"  },
+//   fri:      { hov:"linear-gradient(135deg,rgba(89,34,9,.22),rgba(89,34,9,.14))",   shadow:"rgba(89,34,9,.45)"  },
+//   mar:      { hov:"linear-gradient(135deg,rgba(89,34,9,.22),rgba(89,34,9,.16))",  shadow:"rgba(89,34,9,.45)" },
+//   fin:      { hov:"linear-gradient(135deg,rgba(46,204,113,.22),rgba(89,34,9,.14))",  shadow:"rgba(229,138,69,.45)" },
+//   fam:      { hov:"linear-gradient(135deg,rgba(230,126,34,.22),rgba(89,34,9,.14))",  shadow:"rgba(229,138,69,.45)" },
+//   fam2:     { hov:"linear-gradient(135deg,rgba(89,34,9,.2),rgba(89,34,9,.14))",   shadow:"rgba(89,34,9,.4)"  },
+//   spi:      { hov:"linear-gradient(135deg,rgba(89,34,9,.24),rgba(89,34,9,.2))",    shadow:"rgba(89,34,9,.55)" },
 // };
 
 // function CC({ type, children }) {
@@ -682,7 +682,7 @@
 //     return () => clearTimeout(timer);
 //   }, []);
 
-//   const c1 = "#BC6A4D", c2 = "#BC6A4D";
+//   const c1 = "#592209", c2 = "#592209";
 
 //   return (
 //     <div className="wlm-wrap">
@@ -727,14 +727,14 @@
 //         {/* VS bar */}
 //         <div className="wlm-vs-labels">
 //           <span style={{color:c1}}>{p1.name}</span>
-//           <span style={{color:"rgba(255,255,255,.3)"}}>vs</span>
+//           <span style={{color:"rgba(48,22,7,0.72)"}}>vs</span>
 //           <span style={{color:c2}}>{p2.name}</span>
 //         </div>
 //         <div className="wlm-vs">
-//           <div className="wlm-vs-fill1" style={{width:`${wlm.pct1}%`, background:`linear-gradient(to right,${c1},rgba(188,106,77,.5))`}}/>
-//           <div className="wlm-vs-fill2" style={{width:`${wlm.pct2}%`, background:`linear-gradient(to left,${c2},rgba(188,106,77,.5))`}}/>
+//           <div className="wlm-vs-fill1" style={{width:`${wlm.pct1}%`, background:`linear-gradient(to right,${c1},#FBF5EC)`}}/>
+//           <div className="wlm-vs-fill2" style={{width:`${wlm.pct2}%`, background:`linear-gradient(to left,${c2},#FBF5EC)`}}/>
 //         </div>
-//         <div style={{display:"flex",justifyContent:"space-between",fontFamily:"var(--font-mono)",fontSize:11,color:"rgba(255,255,255,.5)",marginBottom:20}}>
+//         <div style={{display:"flex",justifyContent:"space-between",fontFamily:"var(--font-mono)",fontSize:11,color:"#301607",marginBottom:20}}>
 //           <span style={{color:c1}}>{wlm.pct1}%</span>
 //           <span style={{color:c2}}>{wlm.pct2}%</span>
 //         </div>
@@ -746,7 +746,7 @@
 //         </div>
 
 //         {/* Summary message */}
-//         <div style={{fontSize:14,color:"rgba(255,255,255,.75)",lineHeight:1.7,fontStyle:"italic",marginBottom:16,textAlign:"center"}}>
+//         <div style={{fontSize:14,color:"rgba(48,22,7,1)",lineHeight:1.7,fontStyle:"italic",marginBottom:16,textAlign:"center"}}>
 //           Based on the relationship dynamics, <strong style={{color:wlm.moreInvested===p1.name?c1:c2}}>{wlm.moreInvested}</strong> appears to be {wlm.pattern === "Balanced Love" ? "equally" : "more"} emotionally invested{wlm.pattern !== "Balanced Love" ? ` at ${wlm.morePct}%` : ""}.
 //         </div>
 
@@ -756,7 +756,7 @@
 //           <div className="wlm-conf-bar">
 //             <div ref={refConf} className="wlm-conf-fill" style={{"--w":`${wlm.confidence}%`}}/>
 //           </div>
-//           <span style={{color:"#BC6A4D",minWidth:32}}>{wlm.confidence}%</span>
+//           <span style={{color:"#592209",minWidth:32}}>{wlm.confidence}%</span>
 //         </div>
 //       </div>
 //     </div>
@@ -777,12 +777,12 @@
 //     { symbol:"♄",  name:"Saturn",  score:deriveScore(s.marriage,  p1.name,p2.name,"sat")   },
 //   ];
 //   const TL = [
-//     { phase:"First Attraction",   desc:report.timeline?.attraction,  c:"#BC6A4D" },
-//     { phase:"Connection Phase",   desc:report.timeline?.connection,   c:"#BC6A4D" },
-//     { phase:"Relationship Growth",desc:report.timeline?.growth,       c:"#BC6A4D" },
-//     { phase:"Commitment Phase",   desc:report.timeline?.commitment,   c:"#BC6A4D" },
-//     { phase:"Marriage Potential", desc:report.timeline?.marriage,     c:"#BC6A4D" },
-//     { phase:"Long-Term Stability",desc:report.timeline?.stability,    c:"#BC6A4D" },
+//     { phase:"First Attraction",   desc:report.timeline?.attraction,  c:"#592209" },
+//     { phase:"Connection Phase",   desc:report.timeline?.connection,   c:"#592209" },
+//     { phase:"Relationship Growth",desc:report.timeline?.growth,       c:"#592209" },
+//     { phase:"Commitment Phase",   desc:report.timeline?.commitment,   c:"#592209" },
+//     { phase:"Marriage Potential", desc:report.timeline?.marriage,     c:"#592209" },
+//     { phase:"Long-Term Stability",desc:report.timeline?.stability,    c:"#592209" },
 //   ];
 //   return (
 //     <div className="results">
@@ -802,31 +802,31 @@
 //       <div className="cards-grid">
 //         <CC type="love">
 //           <div className="card-head"><span className="card-emoji">💕</span><span className="card-name">Love Score</span><span className="card-score-num">{s.love}%</span></div>
-//           <ProgBar value={s.love} color="linear-gradient(to right,#BC6A4D,#BC6A4D)"/>
+//           <ProgBar value={s.love} color="linear-gradient(to right,#592209,#592209)"/>
 //           <div className="sub-metrics" style={{marginTop:12}}>
-//             <SubMetric label="Emotional Bond"     value={deriveScore(s.love,p1.name,p2.name,"bond")}  color="#BC6A4D"/>
-//             <SubMetric label="Romantic Spark"     value={deriveScore(s.love,p1.name,p2.name,"spark")} color="#BC6A4D"/>
-//             <SubMetric label="Soulmate Potential" value={deriveScore(s.love,p1.name,p2.name,"soul")}  color="#BC6A4D"/>
+//             <SubMetric label="Emotional Bond"     value={deriveScore(s.love,p1.name,p2.name,"bond")}  color="#592209"/>
+//             <SubMetric label="Romantic Spark"     value={deriveScore(s.love,p1.name,p2.name,"spark")} color="#592209"/>
+//             <SubMetric label="Soulmate Potential" value={deriveScore(s.love,p1.name,p2.name,"soul")}  color="#592209"/>
 //           </div>
 //           {report.loveInsight && <div className="insight-box"><div className="insight-label">AI Insight</div>{report.loveInsight}</div>}
 //         </CC>
 //         <CC type="emo">
 //           <div className="card-head"><span className="card-emoji">🧠</span><span className="card-name">Emotional Compatibility</span><span className="card-score-num">{s.emotional}%</span></div>
-//           <ProgBar value={s.emotional} color="linear-gradient(to right,#BC6A4D,#BC6A4D)"/>
+//           <ProgBar value={s.emotional} color="linear-gradient(to right,#592209,#592209)"/>
 //           <div className="sub-metrics" style={{marginTop:12}}>
-//             <SubMetric label="Understanding" value={deriveScore(s.emotional,p1.name,p2.name,"und")}   color="#BC6A4D"/>
-//             <SubMetric label="Trust"         value={deriveScore(s.emotional,p1.name,p2.name,"trust")} color="#BC6A4D"/>
-//             <SubMetric label="Communication" value={deriveScore(s.emotional,p1.name,p2.name,"comm")}  color="#BC6A4D"/>
-//             <SubMetric label="Loyalty"       value={deriveScore(s.emotional,p1.name,p2.name,"loyal")} color="#BC6A4D"/>
+//             <SubMetric label="Understanding" value={deriveScore(s.emotional,p1.name,p2.name,"und")}   color="#592209"/>
+//             <SubMetric label="Trust"         value={deriveScore(s.emotional,p1.name,p2.name,"trust")} color="#592209"/>
+//             <SubMetric label="Communication" value={deriveScore(s.emotional,p1.name,p2.name,"comm")}  color="#592209"/>
+//             <SubMetric label="Loyalty"       value={deriveScore(s.emotional,p1.name,p2.name,"loyal")} color="#592209"/>
 //           </div>
 //         </CC>
 //         <CC type="phys">
 //           <div className="card-head"><span className="card-emoji">🔥</span><span className="card-name">Physical Attraction</span><span className="card-score-num">{s.physical}%</span></div>
-//           <ProgBar value={s.physical} color="linear-gradient(to right,#ff6b35,#BC6A4D)"/>
+//           <ProgBar value={s.physical} color="linear-gradient(to right,#ff6b35,#592209)"/>
 //           <div className="sub-metrics" style={{marginTop:12}}>
 //             <SubMetric label="Chemistry"       value={deriveScore(s.physical,p1.name,p2.name,"chem")} color="#ff6b35"/>
-//             <SubMetric label="Passion Index"   value={deriveScore(s.physical,p1.name,p2.name,"pass")} color="#BC6A4D"/>
-//             <SubMetric label="Attraction Score"value={deriveScore(s.physical,p1.name,p2.name,"attr")} color="#BC6A4D"/>
+//             <SubMetric label="Passion Index"   value={deriveScore(s.physical,p1.name,p2.name,"pass")} color="#592209"/>
+//             <SubMetric label="Attraction Score"value={deriveScore(s.physical,p1.name,p2.name,"attr")} color="#592209"/>
 //           </div>
 //         </CC>
 //       </div>
@@ -835,30 +835,30 @@
 //       <div className="cards-grid">
 //         <CC type="fri">
 //           <div className="card-head"><span className="card-emoji">🤝</span><span className="card-name">Friendship Score</span><span className="card-score-num">{s.friendship}%</span></div>
-//           <ProgBar value={s.friendship} color="linear-gradient(to right,#BC6A4D,#BC6A4D)"/>
+//           <ProgBar value={s.friendship} color="linear-gradient(to right,#592209,#592209)"/>
 //           <div className="sub-metrics" style={{marginTop:12}}>
-//             <SubMetric label="Support Level"  value={deriveScore(s.friendship,p1.name,p2.name,"sup")}  color="#BC6A4D"/>
-//             <SubMetric label="Long-Term Bond" value={deriveScore(s.friendship,p1.name,p2.name,"ltb")}  color="#BC6A4D"/>
-//             <SubMetric label="Teamwork"       value={deriveScore(s.friendship,p1.name,p2.name,"team")} color="#BC6A4D"/>
+//             <SubMetric label="Support Level"  value={deriveScore(s.friendship,p1.name,p2.name,"sup")}  color="#592209"/>
+//             <SubMetric label="Long-Term Bond" value={deriveScore(s.friendship,p1.name,p2.name,"ltb")}  color="#592209"/>
+//             <SubMetric label="Teamwork"       value={deriveScore(s.friendship,p1.name,p2.name,"team")} color="#592209"/>
 //           </div>
 //         </CC>
 //         <CC type="mar">
 //           <div className="card-head"><span className="card-emoji">💍</span><span className="card-name">Marriage Potential</span><span className="card-score-num">{s.marriage}%</span></div>
-//           <ProgBar value={s.marriage} color="linear-gradient(to right,#BC6A4D,#BC6A4D)"/>
+//           <ProgBar value={s.marriage} color="linear-gradient(to right,#592209,#592209)"/>
 //           <div className="sub-metrics" style={{marginTop:12}}>
-//             <SubMetric label="Marriage Readiness" value={deriveScore(s.marriage,p1.name,p2.name,"mrd")}  color="#BC6A4D"/>
-//             <SubMetric label="Commitment Score"   value={deriveScore(s.marriage,p1.name,p2.name,"com")}  color="#BC6A4D"/>
-//             <SubMetric label="Stability"          value={deriveScore(s.marriage,p1.name,p2.name,"stab")} color="#BC6A4D"/>
+//             <SubMetric label="Marriage Readiness" value={deriveScore(s.marriage,p1.name,p2.name,"mrd")}  color="#592209"/>
+//             <SubMetric label="Commitment Score"   value={deriveScore(s.marriage,p1.name,p2.name,"com")}  color="#592209"/>
+//             <SubMetric label="Stability"          value={deriveScore(s.marriage,p1.name,p2.name,"stab")} color="#592209"/>
 //           </div>
 //           {report.marriageWindow && <div className="insight-box"><div className="insight-label">Most Favorable Period</div>{report.marriageWindow}</div>}
 //         </CC>
 //         <CC type="fin">
 //           <div className="card-head"><span className="card-emoji">💰</span><span className="card-name">Financial Compatibility</span><span className="card-score-num">{s.financial}%</span></div>
-//           <ProgBar value={s.financial} color="linear-gradient(to right,#2ecc71,#BC6A4D)"/>
+//           <ProgBar value={s.financial} color="linear-gradient(to right,#2ecc71,#592209)"/>
 //           <div className="sub-metrics" style={{marginTop:12}}>
 //             <SubMetric label="Wealth Building"  value={deriveScore(s.financial,p1.name,p2.name,"wb")} color="#2ecc71"/>
-//             <SubMetric label="Money Management" value={deriveScore(s.financial,p1.name,p2.name,"mm")} color="#BC6A4D"/>
-//             <SubMetric label="Spending Style"   value={deriveScore(s.financial,p1.name,p2.name,"sp")} color="#BC6A4D"/>
+//             <SubMetric label="Money Management" value={deriveScore(s.financial,p1.name,p2.name,"mm")} color="#592209"/>
+//             <SubMetric label="Spending Style"   value={deriveScore(s.financial,p1.name,p2.name,"sp")} color="#592209"/>
 //           </div>
 //         </CC>
 //       </div>
@@ -867,31 +867,31 @@
 //       <div className="cards-grid">
 //         <CC type="fam">
 //           <div className="card-head"><span className="card-emoji">🏠</span><span className="card-name">Family Harmony</span><span className="card-score-num">{s.family}%</span></div>
-//           <ProgBar value={s.family} color="linear-gradient(to right,#e67e22,#BC6A4D)"/>
+//           <ProgBar value={s.family} color="linear-gradient(to right,#e67e22,#592209)"/>
 //           <div className="sub-metrics" style={{marginTop:12}}>
 //             <SubMetric label="Domestic Harmony"  value={deriveScore(s.family,p1.name,p2.name,"dh")} color="#e67e22"/>
-//             <SubMetric label="Family Acceptance" value={deriveScore(s.family,p1.name,p2.name,"fa")} color="#BC6A4D"/>
-//             <SubMetric label="Parenting Energy"  value={deriveScore(s.family,p1.name,p2.name,"pe")} color="#BC6A4D"/>
+//             <SubMetric label="Family Acceptance" value={deriveScore(s.family,p1.name,p2.name,"fa")} color="#592209"/>
+//             <SubMetric label="Parenting Energy"  value={deriveScore(s.family,p1.name,p2.name,"pe")} color="#592209"/>
 //           </div>
 //         </CC>
 //         <CC type="fam2">
 //           <div className="card-head"><span className="card-emoji">👶</span><span className="card-name">Future Family Energy</span><span className="card-score-num">{deriveScore(s.family,p1.name,p2.name,"ffe")}%</span></div>
-//           <ProgBar value={deriveScore(s.family,p1.name,p2.name,"ffe")} color="linear-gradient(to right,#BC6A4D,#BC6A4D)"/>
+//           <ProgBar value={deriveScore(s.family,p1.name,p2.name,"ffe")} color="linear-gradient(to right,#592209,#592209)"/>
 //           <div className="sub-metrics" style={{marginTop:12}}>
-//             <SubMetric label="Family Growth"      value={deriveScore(s.family,p1.name,p2.name,"fg")} color="#BC6A4D"/>
-//             <SubMetric label="Nurturing Potential"value={deriveScore(s.family,p1.name,p2.name,"np")} color="#BC6A4D"/>
-//             <SubMetric label="Child Compatibility"value={deriveScore(s.family,p1.name,p2.name,"cc")} color="#BC6A4D"/>
+//             <SubMetric label="Family Growth"      value={deriveScore(s.family,p1.name,p2.name,"fg")} color="#592209"/>
+//             <SubMetric label="Nurturing Potential"value={deriveScore(s.family,p1.name,p2.name,"np")} color="#592209"/>
+//             <SubMetric label="Child Compatibility"value={deriveScore(s.family,p1.name,p2.name,"cc")} color="#592209"/>
 //           </div>
 //           <div className="insight-box" style={{fontSize:13}}><div className="insight-label">Note</div>These are astrology-based compatibility indicators, not guarantees of future outcomes.</div>
 //         </CC>
 //         <CC type="spi">
 //           <div className="card-head"><span className="card-emoji">🌙</span><span className="card-name">Spiritual Connection</span><span className="card-score-num">{s.spiritual}%</span></div>
-//           <ProgBar value={s.spiritual} color="linear-gradient(to right,#BC6A4D,#BC6A4D)"/>
+//           <ProgBar value={s.spiritual} color="linear-gradient(to right,#592209,#592209)"/>
 //           <div className="sub-metrics" style={{marginTop:12}}>
-//             <SubMetric label="Karma Connection"    value={deriveScore(s.spiritual,p1.name,p2.name,"karma")} color="#BC6A4D"/>
-//             <SubMetric label="Soul Bond"            value={deriveScore(s.spiritual,p1.name,p2.name,"soul2")} color="#BC6A4D"/>
-//             <SubMetric label="Past Life Indicators" value={deriveScore(s.spiritual,p1.name,p2.name,"past")}  color="#BC6A4D"/>
-//             <SubMetric label="Destiny Connection"   value={deriveScore(s.spiritual,p1.name,p2.name,"dest")}  color="#BC6A4D"/>
+//             <SubMetric label="Karma Connection"    value={deriveScore(s.spiritual,p1.name,p2.name,"karma")} color="#592209"/>
+//             <SubMetric label="Soul Bond"            value={deriveScore(s.spiritual,p1.name,p2.name,"soul2")} color="#592209"/>
+//             <SubMetric label="Past Life Indicators" value={deriveScore(s.spiritual,p1.name,p2.name,"past")}  color="#592209"/>
+//             <SubMetric label="Destiny Connection"   value={deriveScore(s.spiritual,p1.name,p2.name,"dest")}  color="#592209"/>
 //           </div>
 //         </CC>
 //       </div>
@@ -921,11 +921,11 @@
 //       <div className="section-head">🚩 Compatibility Indicators</div>
 //       <div className="flags-grid">
 //         <div className="flags-col">
-//           <div className="flags-col-title" style={{color:"#2ecc71"}}>✅ Green Flags</div>
+//           <div className="flags-col-title" style={{color:"#2F6B3A"}}>✅ Green Flags</div>
 //           {(report.greenFlags||[]).map((f,i) => <div key={i} className="flag-item"><span className="flag-icon">✅</span>{f}</div>)}
 //         </div>
 //         <div className="flags-col">
-//           <div className="flags-col-title" style={{color:"#ff6b35"}}>⚠️ Areas to Navigate</div>
+//           <div className="flags-col-title" style={{color:"#592209"}}>⚠️ Areas to Navigate</div>
 //           {(report.redFlags||[]).map((f,i) => <div key={i} className="flag-item"><span className="flag-icon">⚠️</span>{f}</div>)}
 //         </div>
 //       </div>
@@ -1008,9 +1008,9 @@
 //   return (
 //     <div className="universe-app">
 //       <Starfield/>
-//       <div className="nebula-blob" style={{width:600,height:600,top:"-200px",left:"-200px",background:"radial-gradient(circle,rgba(188,106,77,0.15),transparent 70%)",animationDuration:"18s"}}/>
-//       <div className="nebula-blob" style={{width:500,height:500,bottom:"10%",right:"-150px",background:"radial-gradient(circle,rgba(188,106,77,0.12),transparent 70%)",animationDuration:"22s",animationDelay:"3s"}}/>
-//       <div className="nebula-blob" style={{width:400,height:400,top:"40%",left:"30%",background:"radial-gradient(circle,rgba(188,106,77,0.07),transparent 70%)",animationDuration:"25s",animationDelay:"6s"}}/>
+//       <div className="nebula-blob" style={{width:600,height:600,top:"-200px",left:"-200px",background:"radial-gradient(circle,rgba(89,34,9,0.08),transparent 70%)",animationDuration:"18s"}}/>
+//       <div className="nebula-blob" style={{width:500,height:500,bottom:"10%",right:"-150px",background:"radial-gradient(circle,rgba(89,34,9,0.08),transparent 70%)",animationDuration:"22s",animationDelay:"3s"}}/>
+//       <div className="nebula-blob" style={{width:400,height:400,top:"40%",left:"30%",background:"radial-gradient(circle,rgba(89,34,9,0.07),transparent 70%)",animationDuration:"25s",animationDelay:"6s"}}/>
 //       {phase==="loading" && <LoadingScreen/>}
 //       <div className="content" style={{display:phase==="loading"?"none":"block"}}>
 //         {phase==="form" && (
@@ -1023,8 +1023,8 @@
 //             <div className="form-container">
 //               {error && <div className="error-box">⚠ {error}</div>}
 //               <div className="persons-grid">
-//                 <PersonForm title="The Divine Masculine" icon="♂" grad="linear-gradient(135deg,#BC6A4D,#BC6A4D)" data={p1} onChange={setP1}/>
-//                 <PersonForm title="The Divine Feminine"  icon="♀" grad="linear-gradient(135deg,#BC6A4D,#BC6A4D)" data={p2} onChange={setP2}/>
+//                 <PersonForm title="The Divine Masculine" icon="♂" grad="linear-gradient(135deg,#592209,#592209)" data={p1} onChange={setP1}/>
+//                 <PersonForm title="The Divine Feminine"  icon="♀" grad="linear-gradient(135deg,#592209,#592209)" data={p2} onChange={setP2}/>
 //               </div>
 //               <button className="submit-btn" onClick={compute}>✦ Reveal Cosmic Compatibility ✦</button>
 //             </div>
@@ -1061,34 +1061,29 @@ import zodiacCapricorn from "@/assets/zodiac-gold/capricorn.png";
 import zodiacAquarius from "@/assets/zodiac-gold/aquarius.png";
 import zodiacPisces from "@/assets/zodiac-gold/pisces.png";
 
-const fontLink = document.createElement("link");
-fontLink.rel = "stylesheet";
-fontLink.href = "https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:wght@400;700&display=swap";
-document.head.appendChild(fontLink);
-
 const css = `
   :root {
-    --void: #080c1f;
-    --deep: #0b1030;
+    --void: #F5E9D6;
+    --deep: #FBF5EC;
     --nebula: #0d0520;
-    --aurora-1: #7b2fff;
-    --aurora-2: #ff2d78;
-    --aurora-3: #00e5ff;
-    --gold: #f5c842;
-    --stardust: rgba(255,255,255,0.07);
-    --glass: rgba(255,255,255,0.05);
-    --glass-border: rgba(255,255,255,0.12);
-    --font-display: 'Cinzel Decorative', serif;
-    --font-body: 'Cormorant Garamond', serif;
-    --font-mono: 'Space Mono', monospace;
+    --aurora-1: #592209;
+    --aurora-2: #E58A45;
+    --aurora-3: #461B07;
+    --gold: #592209;
+    --stardust: rgba(89,34,9,0.05);
+    --glass: rgba(89,34,9,0.05);
+    --glass-border: rgba(89,34,9,0.2);
+    --font-display: Cinzel, Georgia, serif;
+    --font-body: 'DM Sans', system-ui, sans-serif;
+    --font-mono: 'DM Sans', system-ui, sans-serif;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   .universe-app {
-    min-height: 100vh; background: var(--void); color: #e8e0f0;
+    min-height: 100vh; background: var(--void); color: #301607;
     font-family: var(--font-body); font-size: 18px; overflow-x: hidden; position: relative;
   }
   .starfield { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
-  .star { position: absolute; border-radius: 50%; background: white; animation: twinkle var(--d,3s) ease-in-out infinite; animation-delay: var(--delay,0s); opacity: var(--op,0.6); }
+  .star { position: absolute; border-radius: 50%; background: rgba(89,34,9,0.25); animation: twinkle var(--d,3s) ease-in-out infinite; animation-delay: var(--delay,0s); opacity: var(--op,0.6); }
   @keyframes twinkle { 0%,100%{opacity:var(--op,0.6);transform:scale(1);}50%{opacity:0.1;transform:scale(0.5);} }
   .nebula-blob { position: fixed; border-radius: 50%; filter: blur(80px); pointer-events: none; z-index: 0; animation: drift 20s ease-in-out infinite alternate; }
   @keyframes drift { from{transform:translate(0,0) scale(1);}to{transform:translate(40px,30px) scale(1.1);} }
@@ -1096,50 +1091,52 @@ const css = `
   .header { text-align: center; padding: 60px 20px 40px; }
   .header-tag { font-family: var(--font-mono); font-size: 11px; letter-spacing: 6px; color: var(--aurora-3); text-transform: uppercase; margin-bottom: 16px; opacity: 0.8; }
   .header h1 { font-family: var(--font-display); font-size: clamp(22px,4vw,44px); font-weight: 900; background: linear-gradient(135deg,var(--gold) 0%,var(--aurora-2) 40%,var(--aurora-1) 80%,var(--aurora-3) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.2; margin-bottom: 12px; }
-  .header p { color: rgba(255,255,255,0.72); font-size: 17px; font-style: italic; letter-spacing: 0.5px; }
+  .header p { color: #301607; font-size: 17px; font-style: italic; letter-spacing: 0.5px; }
   .form-container { max-width: 900px; margin: 0 auto; padding: 0 20px 60px; }
   .persons-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
   @media(max-width:680px){.persons-grid{grid-template-columns:1fr;}}
   .person-card { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 20px; padding: 28px 24px; backdrop-filter: blur(16px); position: relative; overflow: hidden; transition: border-color 0.3s, box-shadow 0.3s; }
   .person-card::before { content:''; position:absolute; inset:0; background:var(--grad); opacity:0.04; pointer-events:none; }
-  .person-card:hover { border-color: rgba(255,255,255,0.22); box-shadow: 0 0 40px rgba(123,47,255,0.15); }
+  .person-card:hover { border-color: rgba(89,34,9,0.3); box-shadow: 0 0 40px rgba(89,34,9,0.15); }
   .card-title { font-family: var(--font-display); font-size: 13px; letter-spacing: 2px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
   .card-icon { font-size: 20px; }
   .field { margin-bottom: 16px; }
-  .field label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 3px; color: rgba(255,255,255,0.75); text-transform: uppercase; display: block; margin-bottom: 6px; }
-  .field input,.field select { width:100%; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:11px 14px; color:#e8e0f0; font-family:var(--font-body); font-size:16px; outline:none; transition:border 0.3s,box-shadow 0.3s; -webkit-appearance:none; }
-  .field input:focus,.field select:focus { border-color:var(--aurora-1); box-shadow:0 0 0 3px rgba(123,47,255,0.15); }
-  .field input::placeholder { color:rgba(232,224,240,0.25); }
-  .field select option { background:#1a0a2e; }
+  .field label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 3px; color: rgba(48,22,7,1); text-transform: uppercase; display: block; margin-bottom: 6px; }
+  .field input,.field select { width:100%; background:rgba(89,34,9,0.05); border:1px solid rgba(89,34,9,0.05); border-radius:10px; padding:11px 14px; color:#301607; font-family:var(--font-body); font-size:16px; outline:none; transition:border 0.3s,box-shadow 0.3s; -webkit-appearance:none; }
+  .field input:focus,.field select:focus { border-color:var(--aurora-1); box-shadow:0 0 0 3px rgba(89,34,9,0.15); }
+  .field input::placeholder { color:rgba(48,22,7,0.75); }
+  .field select option { background:#FBF5EC; }
   .date-row { display:grid; grid-template-columns:2fr 2fr 3fr; gap:8px; }
   .time-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
   .place-wrap { position:relative; }
-  .place-dropdown { position:absolute; top:calc(100% + 6px); left:0; right:0; background:#1a0a2e; border:1px solid rgba(123,47,255,0.4); border-radius:10px; z-index:100; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.6); }
-  .place-item { padding:10px 14px; cursor:pointer; font-size:15px; color:rgba(255,255,255,0.9); transition:background 0.2s; border-bottom:1px solid rgba(255,255,255,0.05); }
-  .place-item:hover { background:rgba(123,47,255,0.2); }
-  .place-item small { display:block; font-size:12px; color:rgba(255,255,255,0.5); margin-top:2px; font-family:var(--font-mono); }
-  .submit-btn { display:block; width:100%; max-width:400px; margin:0 auto; padding:18px 40px; background:linear-gradient(135deg,var(--aurora-1),var(--aurora-2)); border:none; border-radius:50px; color:white; font-family:var(--font-display); font-size:14px; letter-spacing:2px; cursor:pointer; position:relative; overflow:hidden; transition:transform 0.2s,box-shadow 0.3s; text-transform:uppercase; }
-  .submit-btn:hover { transform:translateY(-2px); box-shadow:0 20px 60px rgba(255,45,120,0.4); }
+  .place-dropdown { position:absolute; top:calc(100% + 6px); left:0; right:0; background:#FBF5EC; border:1px solid rgba(89,34,9,0.4); border-radius:10px; z-index:100; overflow:hidden; box-shadow:0 20px 60px rgba(89,34,9,0.2); }
+  .place-item { padding:10px 14px; cursor:pointer; font-size:15px; color:#301607; transition:background 0.2s; border-bottom:1px solid rgba(89,34,9,0.05); }
+  .place-item:hover { background:rgba(89,34,9,0.2); }
+  .place-item small { display:block; font-size:12px; color:#301607; margin-top:2px; font-family:var(--font-mono); }
+  .submit-btn { display:block; width:100%; max-width:400px; margin:0 auto; padding:18px 40px; background:linear-gradient(135deg,var(--aurora-1),var(--aurora-2)); border:none; border-radius:50px; color:#F5E9D6; font-family:var(--font-display); font-size:14px; letter-spacing:2px; cursor:pointer; position:relative; overflow:hidden; transition:transform 0.2s,box-shadow 0.3s; text-transform:uppercase; }
+  .submit-btn:hover { transform:translateY(-2px); box-shadow:0 20px 60px rgba(89,34,9,0.4); }
   .submit-btn:active { transform:translateY(0); }
   .submit-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
-  .loading-screen { position:fixed; inset:0; background:var(--void); z-index:200; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:32px; }
-  .loading-cosmos { width:200px; height:200px; position:relative; }
-  .orbit-ring { position:absolute; border-radius:50%; border:1.5px solid transparent; animation:orbit-spin linear infinite; }
-  .orbit-ring:nth-child(1){inset:0;   border-color:rgba(230,228,245,.8); box-shadow:0 0 8px rgba(230,228,245,.55),0 0 18px rgba(230,228,245,.3); animation-duration:20s;}
-  .orbit-ring:nth-child(2){inset:24px;border-color:rgba(123,47,255,0.7); box-shadow:0 0 8px rgba(123,47,255,.55),0 0 18px rgba(123,47,255,.3); animation-duration:14s;animation-direction:reverse;}
-  .orbit-ring:nth-child(3){inset:52px;border-color:rgba(0,229,255,0.75); box-shadow:0 0 8px rgba(0,229,255,.6), 0 0 18px rgba(0,229,255,.32); animation-duration:8s;}
-  .orbit-ring:nth-child(4){inset:80px;border-color:rgba(0,255,170,.7);  box-shadow:0 0 8px rgba(0,255,170,.55),0 0 18px rgba(0,255,170,.3); animation-duration:4.5s;animation-direction:reverse;}
-  .orbit-dot { position:absolute; width:9px; height:9px; border-radius:50%; top:-4.5px; left:50%; transform:translateX(-50%); box-shadow:0 0 6px currentColor,0 0 14px currentColor,0 0 26px currentColor; }
+  .loading-screen { position:fixed; inset:0; background:#F5E9D6; z-index:200; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:32px; padding:0 16px; }
+  .loading-cosmos { width:min(280px,70vw); height:min(280px,70vw); position:relative; border-radius:50%; background:radial-gradient(circle at 50% 50%,#5A2208 0%,#3A1505 48%,#1F0B03 100%); box-shadow:0 0 0 1px rgba(233,184,114,.5),0 18px 48px rgba(89,34,9,.35),inset 0 0 40px rgba(0,0,0,.5); }
+  .orbit-ring { position:absolute; border-radius:50%; border:1.5px solid rgba(233,184,114,.75); box-shadow:0 0 10px rgba(229,138,69,.25); animation:orbit-spin linear infinite; }
+  .orbit-ring:nth-child(1){inset:5%;  animation-duration:20s; border-style:dashed;}
+  .orbit-ring:nth-child(2){inset:17%; animation-duration:14s; animation-direction:reverse;}
+  .orbit-ring:nth-child(3){inset:29%; animation-duration:8s;}
+  .orbit-ring:nth-child(4){inset:40%; border-color:rgba(229,138,69,.9); animation-duration:4.5s; animation-direction:reverse;}
+  .orbit-dot { position:absolute; width:10px; height:10px; border-radius:50%; top:-5px; left:50%; transform:translateX(-50%); background:#F5E9D6 !important; color:#F5E9D6 !important; box-shadow:0 0 8px 2px currentColor; }
+  .orbit-ring:nth-child(4) .orbit-dot { background:#E58A45 !important; color:#E58A45 !important; }
   @keyframes orbit-spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
-  .orbit-center { position:absolute; inset:88px; border-radius:50%; background:radial-gradient(circle at 36% 34%,#ffffff 0%,#fff6d0 14%,#ffd54f 42%,#ffb300 72%,#ff8f00 100%); animation:pulse-glow 2s ease-in-out infinite; z-index:2; }
+  .orbit-center { position:absolute; inset:45%; border-radius:50%; background:radial-gradient(circle at 36% 34%,#ffffff 0%,#fff6d0 14%,#F3B25F 42%,#E58A45 100%); animation:pulse-glow 2.4s ease-in-out infinite; z-index:2; }
   .orbit-center::after{ content:''; position:absolute; inset:-90%; border-radius:50%; background:linear-gradient(to right,transparent 0%,rgba(255,246,208,.85) 49.3%,rgba(255,246,208,.85) 50.7%,transparent 100%),linear-gradient(to bottom,transparent 0%,rgba(255,246,208,.85) 49.3%,rgba(255,246,208,.85) 50.7%,transparent 100%); mix-blend-mode:screen; -webkit-mask-image:radial-gradient(circle,black 12%,transparent 62%); mask-image:radial-gradient(circle,black 12%,transparent 62%); pointer-events:none; animation:flare-spin 24s linear infinite; }
   @keyframes flare-spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
-  @keyframes pulse-glow{0%,100%{box-shadow:0 0 8px 2px rgba(255,213,79,.6),0 0 20px 6px rgba(255,179,0,.35),0 0 44px 14px rgba(255,143,0,.18);opacity:.9;}50%{box-shadow:0 0 12px 3px rgba(255,213,79,.8),0 0 30px 10px rgba(255,179,0,.5),0 0 60px 20px rgba(255,143,0,.28);opacity:1;}}
+  @keyframes pulse-glow{0%,100%{box-shadow:0 0 10px 3px rgba(229,138,69,.55),0 0 26px 8px rgba(229,138,69,.35);}50%{box-shadow:0 0 16px 5px rgba(229,138,69,.8),0 0 40px 14px rgba(229,138,69,.5);}}
   .loading-steps { display:flex; flex-direction:column; gap:10px; text-align:center; }
-  .loading-step { font-family:var(--font-mono); font-size:12px; letter-spacing:2px; color:rgba(255,255,255,0.65); transition:color 0.5s,opacity 0.5s; display:flex; align-items:center; gap:10px; justify-content:center; }
-  .loading-step.active { color:var(--aurora-3); text-shadow:0 0 20px var(--aurora-3); }
-  .loading-step.done { color:var(--gold); }
+  .loading-step { font-family:'DM Sans', system-ui, sans-serif; font-size:14px; letter-spacing:1.5px; color:#301607; opacity:.6; transition:color 0.5s,opacity 0.5s; display:flex; align-items:center; gap:10px; justify-content:center; }
+  .loading-step.active { color:#592209; opacity:1; font-weight:700; }
+  .loading-step.done { color:#6B4A37; opacity:.9; }
   .step-dot { width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0; }
+  @media (prefers-reduced-motion: reduce) { .orbit-ring, .orbit-center, .orbit-center::after { animation:none; } }
   .results { max-width: 1000px; margin: 0 auto; padding: 20px 20px 80px; }
 
   /* ── COUPLE HEADER — LARGE VISIBLE NAMES ── */
@@ -1153,29 +1150,29 @@ const css = `
     background-clip: text;
     margin-bottom: 16px;
     display: block;
-    filter: drop-shadow(0 0 28px rgba(255,45,120,0.5));
+    filter: drop-shadow(0 0 28px rgba(89,34,9,0.5));
     line-height: 1.3;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 100%;
   }
-  .couple-sub { font-family:var(--font-mono); font-size:12px; letter-spacing:4px; color:rgba(255,255,255,0.65); text-transform:uppercase; display:block; }
+  .couple-sub { font-family:var(--font-mono); font-size:12px; letter-spacing:4px; color:rgba(48,22,7,0.9); text-transform:uppercase; display:block; }
 
   /* ── SCORE CIRCLE ── */
   .score-hero { display:flex; justify-content:center; margin-bottom:48px; }
   .score-circle-wrap { text-align:center; }
   .score-circle { width:200px; height:200px; display:grid; place-items:center; margin:0 auto 16px; position:relative; }
   .score-svg { width:200px; height:200px; transform:rotate(-90deg); position:absolute; top:0; left:0; }
-  .score-track { fill:none; stroke:rgba(255,255,255,0.08); stroke-width:10; }
+  .score-track { fill:none; stroke:rgba(89,34,9,0.05); stroke-width:10; }
   .score-fill { fill:none; stroke-width:10; stroke-linecap:round; stroke:url(#scoreGrad); }
   .score-inner { display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; z-index:10; }
-  .score-num { font-family:var(--font-display); font-size:54px; font-weight:900; color:#f5c842; line-height:1; display:block; text-shadow:0 0 32px rgba(245,200,66,0.7); }
-  .score-pct { font-family:var(--font-mono); font-size:18px; color:rgba(255,255,255,0.82); margin-top:4px; display:block; }
+  .score-num { font-family:var(--font-display); font-size:54px; font-weight:900; color:#301607; line-height:1; display:block; text-shadow:0 0 32px rgba(229,138,69,0.7); }
+  .score-pct { font-family:var(--font-mono); font-size:18px; color:rgba(48,22,7,1); margin-top:4px; display:block; }
   .score-label { font-family:var(--font-display); font-size:15px; letter-spacing:2px; color:var(--gold); margin-bottom:4px; }
-  .score-tag { font-family:var(--font-mono); font-size:11px; letter-spacing:3px; color:rgba(255,255,255,0.5); text-transform:uppercase; }
+  .score-tag { font-family:var(--font-mono); font-size:11px; letter-spacing:3px; color:#301607; text-transform:uppercase; }
   .section-head { font-family:var(--font-display); font-size:13px; letter-spacing:3px; color:var(--aurora-3); text-transform:uppercase; margin-bottom:20px; display:flex; align-items:center; gap:12px; }
-  .section-head::after { content:''; flex:1; height:1px; background:linear-gradient(to right,rgba(0,229,255,0.3),transparent); }
+  .section-head::after { content:''; flex:1; height:1px; background:linear-gradient(to right,rgba(89,34,9,0.3),transparent); }
   .cards-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; margin-bottom:40px; }
 
   /* ── COMPAT CARD — HOVER GLOW ── */
@@ -1199,67 +1196,67 @@ const css = `
     z-index: 0;
     pointer-events: none;
     border-radius: 16px;
-    background: var(--hov, linear-gradient(135deg,rgba(123,47,255,.2),rgba(255,45,120,.14)));
+    background: var(--hov, linear-gradient(135deg,rgba(89,34,9,.2),rgba(89,34,9,.14)));
   }
   .compat-card:hover::after { opacity: 1; }
   .compat-card:hover {
     transform: translateY(-8px) scale(1.025);
-    border-color: rgba(255,255,255,0.4);
-    box-shadow: 0 24px 70px var(--hov-shadow, rgba(123,47,255,.45)), 0 0 50px rgba(255,45,120,.2);
+    border-color: rgba(89,34,9,0.3);
+    box-shadow: 0 24px 70px var(--hov-shadow, rgba(89,34,9,.45)), 0 0 50px rgba(89,34,9,.2);
   }
   .compat-card > * { position: relative; z-index: 1; }
 
   .card-head { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
   .card-emoji { font-size:22px; }
-  .card-name { font-family:var(--font-display); font-size:12px; letter-spacing:1px; color:rgba(255,255,255,0.95); flex:1; }
+  .card-name { font-family:var(--font-display); font-size:12px; letter-spacing:1px; color:#301607; flex:1; }
   .card-score-num { font-family:var(--font-mono); font-size:18px; font-weight:700; color:var(--gold); }
-  .prog-bar { height:6px; background:rgba(255,255,255,0.08); border-radius:3px; overflow:hidden; margin-bottom:8px; }
+  .prog-bar { height:6px; background:rgba(89,34,9,0.2); border-radius:3px; overflow:hidden; margin-bottom:8px; }
   .prog-fill { height:100%; border-radius:3px; background:var(--bar-color,linear-gradient(to right,var(--aurora-1),var(--aurora-2))); transition:width 1.5s cubic-bezier(0.4,0,0.2,1); width:0; }
   .prog-fill.animate { width:var(--target-width,0%); }
-  .prog-label { display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:10px; color:rgba(255,255,255,0.55); letter-spacing:1px; }
+  .prog-label { display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:10px; color:#301607; letter-spacing:1px; }
   .sub-metrics { display:flex; flex-direction:column; gap:10px; }
   .sub-metric-row { display:flex; align-items:center; gap:10px; }
-  .sub-metric-label { font-size:13px; color:rgba(255,255,255,0.88); width:130px; flex-shrink:0; font-style:italic; }
-  .sub-metric-bar { flex:1; height:4px; background:rgba(255,255,255,0.07); border-radius:2px; overflow:hidden; }
+  .sub-metric-label { font-size:13px; color:rgba(48,22,7,1); width:130px; flex-shrink:0; font-style:italic; }
+  .sub-metric-bar { flex:1; height:4px; background:rgba(89,34,9,0.2); border-radius:2px; overflow:hidden; }
   .sub-metric-fill { height:100%; border-radius:2px; background:var(--fill-c,var(--aurora-3)); transition:width 1.8s cubic-bezier(0.4,0,0.2,1); width:0; }
   .sub-metric-fill.animate { width:var(--w,0%); }
   .sub-metric-val { font-family:var(--font-mono); font-size:11px; color:var(--fill-c,var(--aurora-3)); width:32px; text-align:right; }
-  .insight-box { background:rgba(123,47,255,0.08); border:1px solid rgba(123,47,255,0.25); border-radius:12px; padding:14px 16px; margin-top:12px; font-size:14px; font-style:italic; color:rgba(255,255,255,0.82); line-height:1.6; }
+  .insight-box { background:rgba(89,34,9,0.08); border:1px solid rgba(89,34,9,0.25); border-radius:12px; padding:14px 16px; margin-top:12px; font-size:14px; font-style:italic; color:#301607; line-height:1.6; }
   .insight-label { font-family:var(--font-mono); font-size:9px; letter-spacing:3px; color:var(--aurora-1); text-transform:uppercase; margin-bottom:6px; }
   .planet-row { display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:12px; margin-bottom:40px; }
   .planet-item { background:var(--glass); border:1px solid var(--glass-border); border-radius:14px; padding:14px 10px; text-align:center; backdrop-filter:blur(8px); transition:transform 0.2s; }
   .planet-item:hover { transform:translateY(-4px); }
   .planet-symbol { font-size:28px; margin-bottom:6px; }
-  .planet-name { font-family:var(--font-mono); font-size:9px; letter-spacing:2px; color:rgba(255,255,255,0.75); text-transform:uppercase; margin-bottom:6px; }
+  .planet-name { font-family:var(--font-mono); font-size:9px; letter-spacing:2px; color:#301607; text-transform:uppercase; margin-bottom:6px; }
   .planet-score { font-family:var(--font-display); font-size:16px; color:var(--gold); }
   .timeline { position:relative; padding:20px 0 20px 30px; margin-bottom:40px; }
   .timeline::before { content:''; position:absolute; left:8px; top:0; bottom:0; width:2px; background:linear-gradient(to bottom,var(--aurora-1),var(--aurora-2),var(--aurora-3)); }
   .tl-item { position:relative; margin-bottom:20px; padding-left:20px; }
   .tl-dot { position:absolute; left:-26px; top:6px; width:12px; height:12px; border-radius:50%; background:var(--dot-c,var(--aurora-1)); border:2px solid var(--void); box-shadow:0 0 12px var(--dot-c,var(--aurora-1)); }
   .tl-phase { font-family:var(--font-mono); font-size:10px; letter-spacing:2px; color:var(--dot-c,var(--aurora-1)); text-transform:uppercase; margin-bottom:3px; }
-  .tl-desc { font-size:14px; color:rgba(255,255,255,0.82); font-style:italic; }
+  .tl-desc { font-size:14px; color:rgba(48,22,7,1); font-style:italic; }
   .flags-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:40px; }
   @media(max-width:600px){.flags-grid{grid-template-columns:1fr;}}
   .flags-col { background:var(--glass); border:1px solid var(--glass-border); border-radius:16px; padding:20px; }
   .flags-col-title { font-family:var(--font-mono); font-size:10px; letter-spacing:3px; text-transform:uppercase; margin-bottom:14px; }
-  .flag-item { display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; font-size:14px; color:rgba(255,255,255,0.85); font-style:italic; }
+  .flag-item { display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; font-size:14px; color:#301607; font-style:italic; }
   .flag-icon { flex-shrink:0; font-size:16px; }
   .ai-insights-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; margin-bottom:40px; }
-  .ai-card { background:linear-gradient(135deg,rgba(123,47,255,0.08),rgba(255,45,120,0.05)); border:1px solid rgba(123,47,255,0.2); border-radius:14px; padding:18px; }
+  .ai-card { background:linear-gradient(135deg,rgba(89,34,9,0.08),rgba(89,34,9,0.05)); border:1px solid rgba(89,34,9,0.2); border-radius:14px; padding:18px; }
   .ai-card-title { font-family:var(--font-mono); font-size:10px; letter-spacing:3px; color:var(--aurora-1); text-transform:uppercase; margin-bottom:10px; }
-  .ai-card-text { font-size:15px; color:rgba(255,255,255,0.85); line-height:1.65; font-style:italic; }
-  .reset-btn { display:block; margin:0 auto; padding:14px 40px; background:transparent; border:1px solid rgba(255,255,255,0.2); border-radius:50px; color:rgba(255,255,255,0.75); font-family:var(--font-mono); font-size:11px; letter-spacing:3px; text-transform:uppercase; cursor:pointer; transition:all 0.3s; }
-  .reset-btn:hover { border-color:var(--aurora-1); color:var(--aurora-3); box-shadow:0 0 30px rgba(123,47,255,0.2); }
-  .error-box { background:rgba(255,45,120,0.1); border:1px solid rgba(255,45,120,0.3); border-radius:12px; padding:14px 18px; color:#ff8ab0; font-family:var(--font-mono); font-size:12px; letter-spacing:1px; margin-bottom:20px; text-align:center; }
+  .ai-card-text { font-size:15px; color:#301607; line-height:1.65; font-style:italic; }
+  .reset-btn { display:block; margin:0 auto; padding:14px 40px; background:transparent; border:1px solid rgba(89,34,9,0.1); border-radius:50px; color:rgba(48,22,7,0.75); font-family:var(--font-mono); font-size:11px; letter-spacing:3px; text-transform:uppercase; cursor:pointer; transition:all 0.3s; }
+  .reset-btn:hover { border-color:var(--aurora-1); color:var(--aurora-3); box-shadow:0 0 30px rgba(89,34,9,0.2); }
+  .error-box { background:rgba(89,34,9,0.1); border:1px solid rgba(89,34,9,0.3); border-radius:12px; padding:14px 18px; color:#592209; font-family:var(--font-mono); font-size:12px; letter-spacing:1px; margin-bottom:20px; text-align:center; }
   ::-webkit-scrollbar { width:6px; }
   ::-webkit-scrollbar-track { background:var(--void); }
-  ::-webkit-scrollbar-thumb { background:rgba(123,47,255,0.4); border-radius:3px; }
+  ::-webkit-scrollbar-thumb { background:rgba(89,34,9,0.4); border-radius:3px; }
 
   /* ── WHO LOVES MORE ── */
   .wlm-wrap { margin-bottom: 40px; }
   .wlm-card {
-    background: linear-gradient(135deg, rgba(255,45,120,.07), rgba(123,47,255,.07));
-    border: 1px solid rgba(255,45,120,.25);
+    background: linear-gradient(135deg, rgba(89,34,9,.07), rgba(89,34,9,.07));
+    border: 1px solid rgba(89,34,9,.25);
     border-radius: 20px;
     padding: 28px 24px;
     position: relative;
@@ -1270,14 +1267,14 @@ const css = `
     position: absolute;
     right: 24px; top: 16px;
     font-size: 80px;
-    color: rgba(255,45,120,.06);
+    color: rgba(48,22,7,0.75);
     line-height: 1;
   }
   .wlm-disclaimer {
     font-family: var(--font-mono);
     font-size: 9px;
     letter-spacing: 2px;
-    color: rgba(255,255,255,.35);
+    color: rgba(48,22,7,0.72);
     text-transform: uppercase;
     margin-bottom: 20px;
     text-align: center;
@@ -1301,7 +1298,7 @@ const css = `
     margin: 0 auto 14px;
   }
   .wlm-ring-svg { width: 130px; height: 130px; transform: rotate(-90deg); position: absolute; top:0; left:0; }
-  .wlm-ring-bg { fill: none; stroke: rgba(255,255,255,.07); stroke-width: 10; }
+  .wlm-ring-bg { fill: none; stroke: rgba(89,34,9,0.05); stroke-width: 10; }
   .wlm-ring-fg { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 1.8s cubic-bezier(.4,0,.2,1); }
   .wlm-ring-inner {
     position: absolute; inset: 0;
@@ -1315,58 +1312,58 @@ const css = `
     font-weight: 900;
     line-height: 1;
   }
-  .wlm-pct-sym { font-size: 14px; color: rgba(255,255,255,.6); font-family: var(--font-mono); margin-top: 2px; }
+  .wlm-pct-sym { font-size: 14px; color: rgba(48,22,7,0.85); font-family: var(--font-mono); margin-top: 2px; }
   .wlm-label {
     font-family: var(--font-mono);
     font-size: 10px;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: rgba(255,255,255,.5);
+    color: rgba(48,22,7,0.75);
     margin-bottom: 6px;
   }
-  .wlm-bar-wrap { height: 6px; background: rgba(255,255,255,.08); border-radius: 3px; overflow: hidden; margin-bottom: 6px; }
+  .wlm-bar-wrap { height: 6px; background: rgba(89,34,9,0.2); border-radius: 3px; overflow: hidden; margin-bottom: 6px; }
   .wlm-bar-fill { height: 100%; border-radius: 3px; transition: width 1.8s cubic-bezier(.4,0,.2,1); width: 0; }
   .wlm-bar-fill.animate { width: var(--w, 0%); }
   .wlm-intensity-label {
     font-size: 12px;
     font-style: italic;
-    color: rgba(255,255,255,.55);
+    color: rgba(48,22,7,0.8);
     font-family: var(--font-body);
     margin-top: 4px;
   }
   .wlm-vs {
     position: relative;
     height: 6px;
-    background: rgba(255,255,255,.06);
+    background: rgba(89,34,9,0.05);
     border-radius: 3px;
     overflow: hidden;
     margin: 8px 0 20px;
   }
   .wlm-vs-fill1 { position: absolute; left: 0; top: 0; height: 100%; border-radius: 3px 0 0 3px; transition: width 1.8s cubic-bezier(.4,0,.2,1); }
   .wlm-vs-fill2 { position: absolute; right: 0; top: 0; height: 100%; border-radius: 0 3px 3px 0; transition: width 1.8s cubic-bezier(.4,0,.2,1); }
-  .wlm-vs-labels { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 10px; color: rgba(255,255,255,.4); margin-bottom: 4px; }
+  .wlm-vs-labels { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 10px; color: rgba(48,22,7,0.72); margin-bottom: 4px; }
   .wlm-insight {
-    background: rgba(0,0,0,.25);
-    border: 1px solid rgba(255,45,120,.18);
+    background: rgba(89,34,9,0.08);
+    border: 1px solid rgba(89,34,9,.18);
     border-radius: 12px;
     padding: 14px 16px;
     margin-bottom: 14px;
   }
-  .wlm-insight-lbl { font-family: var(--font-mono); font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,45,120,.7); margin-bottom: 6px; }
-  .wlm-insight-txt { font-size: 14px; color: rgba(255,255,255,.85); line-height: 1.7; font-style: italic; }
+  .wlm-insight-lbl { font-family: var(--font-mono); font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #592209; margin-bottom: 6px; }
+  .wlm-insight-txt { font-size: 14px; color: rgba(48,22,7,1); line-height: 1.7; font-style: italic; }
   .wlm-pattern-badge {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: rgba(255,45,120,.1);
-    border: 1px solid rgba(255,45,120,.25);
+    background: rgba(89,34,9,.1);
+    border: 1px solid rgba(89,34,9,.25);
     border-radius: 50px;
     padding: 6px 16px;
     font-family: var(--font-mono);
     font-size: 10px;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: #ff2d78;
+    color: #592209;
     margin-bottom: 14px;
   }
   .wlm-confidence {
@@ -1375,13 +1372,13 @@ const css = `
     gap: 10px;
     font-family: var(--font-mono);
     font-size: 10px;
-    color: rgba(255,255,255,.45);
+    color: rgba(48,22,7,0.72);
     letter-spacing: 1px;
     text-transform: uppercase;
     margin-top: 4px;
   }
-  .wlm-conf-bar { flex: 1; height: 3px; background: rgba(255,255,255,.08); border-radius: 2px; overflow: hidden; }
-  .wlm-conf-fill { height: 100%; background: linear-gradient(to right, #7b2fff, #00e5ff); border-radius: 2px; transition: width 2s ease; width: 0; }
+  .wlm-conf-bar { flex: 1; height: 3px; background: rgba(89,34,9,0.2); border-radius: 2px; overflow: hidden; }
+  .wlm-conf-fill { height: 100%; background: linear-gradient(to right, #592209, #592209); border-radius: 2px; transition: width 2s ease; width: 0; }
   .wlm-conf-fill.animate { width: var(--w, 0%); }
 
 `;
@@ -1465,16 +1462,16 @@ function PlaceInput({ value, onChange }) {
   const pick = (r) => { setQuery(r.display); onChange(r); setOpen(false); };
   return (
     <div style={{position:"relative"}}>
-      <MapPin size={16} style={{position:"absolute", left:14, top:"50%", transform:"translateY(-50%)", color:"rgba(255,255,255,0.4)", zIndex:1, pointerEvents:"none"}}/>
+      <MapPin size={16} style={{position:"absolute", left:14, top:"50%", transform:"translateY(-50%)", color:"rgba(48,22,7,0.72)", zIndex:1, pointerEvents:"none"}}/>
       <input value={query} onChange={handleChange} onBlur={() => setTimeout(() => setOpen(false), 200)}
-        placeholder="Enter city or place of birth" style={{ width:"100%", background:"rgba(20,28,58,0.7)", border:"1px solid rgba(255,255,255,0.08)", borderBottom:"2px solid rgba(255,126,71,0.5)", borderRadius:10, padding:"14px 16px 14px 38px", color:"#fff", fontFamily:"'Inter',sans-serif", fontSize:15, outline:"none" }} />
+        placeholder="Enter city or place of birth" style={{ width:"100%", background:"#FBF5EC", border:"1px solid rgba(89,34,9,0.2)", borderBottom:"2px solid rgba(89,34,9,0.5)", borderRadius:10, padding:"14px 16px 14px 38px", color:"rgba(48,22,7,0.75)", fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:15, outline:"none" }} />
       {open && (
-        <div style={{position:"absolute", top:"calc(100% + 6px)", left:0, right:0, background:"#0d1226", border:"1px solid rgba(255,126,71,0.35)", borderRadius:10, zIndex:100, overflow:"hidden", boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}}>
+        <div style={{position:"absolute", top:"calc(100% + 6px)", left:0, right:0, background:"#FBF5EC", border:"1px solid rgba(89,34,9,0.35)", borderRadius:10, zIndex:100, overflow:"hidden", boxShadow:"0 20px 60px rgba(89,34,9,0.2)"}}>
           {results.map((r, i) => (
-            <div key={i} onMouseDown={() => pick(r)} style={{padding:"10px 14px", cursor:"pointer", fontSize:14, color:"rgba(255,255,255,0.9)", borderBottom:"1px solid rgba(255,255,255,0.05)"}}
+            <div key={i} onMouseDown={() => pick(r)} style={{padding:"10px 14px", cursor:"pointer", fontSize:14, color:"rgba(48,22,7,1)", borderBottom:"1px solid rgba(48,22,7,0.3)"}}
               onMouseEnter={e=>e.currentTarget.style.background="rgba(255,126,71,0.15)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
               {r.display}
-              <small style={{display:"block", fontSize:11, color:"rgba(255,255,255,0.5)", marginTop:2}}>{r.lat?.toFixed(4)}, {r.lon?.toFixed(4)}</small>
+              <small style={{display:"block", fontSize:11, color:"rgba(48,22,7,0.75)", marginTop:2}}>{r.lat?.toFixed(4)}, {r.lon?.toFixed(4)}</small>
             </div>
           ))}
         </div>
@@ -1484,25 +1481,25 @@ function PlaceInput({ value, onChange }) {
 }
 
 const ccInputStyle = {
-  width:"100%", background:"rgba(20,28,58,0.7)", border:"1px solid rgba(255,255,255,0.08)",
-  borderBottom:"2px solid rgba(255,126,71,0.5)", borderRadius:10, padding:"14px 16px",
-  color:"#fff", fontFamily:"'Inter',sans-serif", fontSize:15, outline:"none",
+  width:"100%", background:"#FBF5EC", border:"1px solid rgba(89,34,9,0.2)",
+  borderBottom:"2px solid rgba(89,34,9,0.5)", borderRadius:10, padding:"14px 16px",
+  color:"#301607", fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:15, outline:"none",
 };
-const ccLabelStyle:CSSProperties = { display:"block", color:"#ff7e47", fontWeight:700, fontSize:13, letterSpacing:"0.05em", textTransform:"uppercase", marginBottom:10 };
+const ccLabelStyle:CSSProperties = { display:"block", color:"#592209", fontWeight:700, fontSize:13, letterSpacing:"0.05em", textTransform:"uppercase", marginBottom:10 };
 
 function PersonForm({ title, symbol, accentColor, data, onChange }) {
   const up = (k, v) => onChange({ ...data, [k]: v });
   return (
-    <div style={{background:"rgba(15,20,45,0.55)", border:`1px solid ${accentColor}33`, borderRadius:20, padding:32}}>
+    <div style={{background:"#FBF5EC", border:`1px solid ${accentColor}33`, borderRadius:20, padding:32}}>
       <div style={{display:"flex", alignItems:"center", gap:14, marginBottom:28}}>
         <div style={{width:44, height:44, borderRadius:"50%", background:`${accentColor}22`, display:"flex", alignItems:"center", justifyContent:"center", color:accentColor, fontSize:20, flexShrink:0}}>{symbol}</div>
-        <div style={{fontFamily:"'Astra','Cinzel',serif", fontSize:20, fontWeight:700, color:"#fff", textTransform:"uppercase", letterSpacing:"0.05em"}}>{title}</div>
+        <div style={{fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:20, fontWeight:700, color:"#301607", textTransform:"uppercase", letterSpacing:"0.05em"}}>{title}</div>
       </div>
 
       <div style={{marginBottom:20}}>
         <label style={ccLabelStyle}>Full Name *</label>
         <div style={{position:"relative"}}>
-          <User size={16} style={{position:"absolute", left:14, top:"50%", transform:"translateY(-50%)", color:"rgba(255,255,255,0.4)", pointerEvents:"none"}}/>
+          <User size={16} style={{position:"absolute", left:14, top:"50%", transform:"translateY(-50%)", color:"rgba(48,22,7,0.72)", pointerEvents:"none"}}/>
           <input value={data.name} onChange={e => up("name", e.target.value)} placeholder="Enter full name" style={{...ccInputStyle, paddingLeft:38}} />
         </div>
       </div>
@@ -1526,7 +1523,7 @@ function PersonForm({ title, symbol, accentColor, data, onChange }) {
       </div>
 
       <div style={{marginBottom:20}}>
-        <label style={ccLabelStyle}>Time of Birth <span style={{opacity:0.6, fontWeight:400, textTransform:"none"}}>(Optional)</span></label>
+        <label style={ccLabelStyle}>Time of Birth <span style={{opacity:0.85, fontWeight:400, textTransform:"none"}}>(Optional)</span></label>
         <div style={{display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10}}>
           <select value={data.hour} onChange={e => up("hour", e.target.value)} style={ccInputStyle}>
             <option value="">HH</option>
@@ -1544,7 +1541,7 @@ function PersonForm({ title, symbol, accentColor, data, onChange }) {
       </div>
 
       <div style={{marginBottom:0}}>
-        <label style={ccLabelStyle}>Place of Birth <span style={{opacity:0.6, fontWeight:400, textTransform:"none"}}>(Optional)</span></label>
+        <label style={ccLabelStyle}>Place of Birth <span style={{opacity:0.85, fontWeight:400, textTransform:"none"}}>(Optional)</span></label>
         <PlaceInput value={data.place} onChange={v => up("place", v)} />
       </div>
     </div>
@@ -1563,10 +1560,10 @@ function LoadingScreen() {
   return (
     <div className="loading-screen">
       <div className="loading-cosmos">
-        <div className="orbit-ring"><div className="orbit-dot" style={{ background:"#e6e4f5", color:"#e6e4f5" }}/></div>
-        <div className="orbit-ring"><div className="orbit-dot" style={{ background:"#7b2fff", color:"#7b2fff" }}/></div>
-        <div className="orbit-ring"><div className="orbit-dot" style={{ background:"#00e5ff", color:"#00e5ff" }}/></div>
-        <div className="orbit-ring"><div className="orbit-dot" style={{ background:"#00ffaa", color:"#00ffaa" }}/></div>
+        <div className="orbit-ring"><div className="orbit-dot" style={{ background:"#592209", color:"#F5E9D6" }}/></div>
+        <div className="orbit-ring"><div className="orbit-dot" style={{ background:"#592209", color:"#F5E9D6" }}/></div>
+        <div className="orbit-ring"><div className="orbit-dot" style={{ background:"#592209", color:"#F5E9D6" }}/></div>
+        <div className="orbit-ring"><div className="orbit-dot" style={{ background:"#E58A45", color:"#301607" }}/></div>
         <div className="orbit-center"/>
       </div>
       <div className="loading-steps">
@@ -1693,15 +1690,15 @@ function ScoreRing({ score }) {
               <stop offset="100%" stopColor="#ff7e47"/>
             </linearGradient>
           </defs>
-          <circle cx="90" cy="90" r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="10"/>
+          <circle cx="90" cy="90" r={r} fill="none" stroke="rgba(89,34,9,0.05)" strokeWidth="10"/>
           <circle cx="90" cy="90" r={r} fill="none" stroke="url(#ccScoreGrad)" strokeWidth="10" strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={off} style={{transition:"stroke-dashoffset 2s cubic-bezier(.4,0,.2,1)"}}/>
         </svg>
         <div style={{position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center"}}>
-          <span style={{fontFamily:"'Astra','Cinzel',serif", fontSize:52, fontWeight:800, color:"#fff"}}>{score}<span style={{fontSize:20, color:"rgba(255,255,255,0.6)"}}>%</span></span>
+          <span style={{fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:52, fontWeight:800, color:"#301607"}}>{score}<span style={{fontSize:20, color:"rgba(48,22,7,0.85)"}}>%</span></span>
         </div>
       </div>
-      <div style={{fontFamily:"'Astra','Cinzel',serif", fontSize:20, color:"#ff7e47", fontWeight:700, marginTop:16, marginBottom:8}}>{tier.label}</div>
-      <div style={{color:"rgba(255,255,255,0.6)", fontSize:15, maxWidth:420, margin:"0 auto"}}>{tier.desc}</div>
+      <div style={{fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:20, color:"#592209", fontWeight:700, marginTop:16, marginBottom:8}}>{tier.label}</div>
+      <div style={{color:"rgba(48,22,7,0.85)", fontSize:15, maxWidth:420, margin:"0 auto"}}>{tier.desc}</div>
     </div>
   );
 }
@@ -1719,52 +1716,50 @@ function EmotionalBalance({ p1, p2, scores }) {
     }, 300);
     return () => clearTimeout(t);
   }, []);
-  const c1 = "#ff4d6d", c2 = "#a78bfa";
+  const c1 = "#592209", c2 = "#E58A45";
   const summary = wlm.pattern === "Balanced Love"
     ? `${p1.name} and ${p2.name} share an equally balanced emotional investment.`
     : "Both express love differently — one through emotions, the other through actions.";
 
   const Ring = ({ name, pct, color, r0, intensity }) => (
     <div style={{textAlign:"center"}}>
-      <div style={{color, fontFamily:"'Astra','Cinzel',serif", fontSize:16, fontWeight:700, marginBottom:16, textTransform:"uppercase"}}>{name}</div>
+      <div style={{color, fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:16, fontWeight:700, marginBottom:16, textTransform:"uppercase"}}>{name}</div>
       <div style={{position:"relative", width:130, height:130, margin:"0 auto"}}>
         <svg width={130} height={130} viewBox="0 0 120 120" style={{transform:"rotate(-90deg)"}}>
-          <circle cx="60" cy="60" r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="9"/>
+          <circle cx="60" cy="60" r={r} fill="none" stroke="rgba(89,34,9,0.05)" strokeWidth="9"/>
           <circle ref={r0} cx="60" cy="60" r={r} fill="none" stroke={color} strokeWidth="9" strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={circ} style={{transition:"stroke-dashoffset 1.8s cubic-bezier(.4,0,.2,1)"}}/>
         </svg>
         <div style={{position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center"}}>
-          <span style={{fontFamily:"'Astra','Cinzel',serif", fontSize:28, fontWeight:800, color}}>{pct}<span style={{fontSize:13}}>%</span></span>
+          <span style={{fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:28, fontWeight:800, color}}>{pct}<span style={{fontSize:13}}>%</span></span>
         </div>
       </div>
-      <div style={{color:"rgba(255,255,255,0.55)", fontSize:13, marginTop:14, fontStyle:"italic"}}>{intensity}</div>
+      <div style={{color:"rgba(48,22,7,0.8)", fontSize:13, marginTop:14, fontStyle:"italic"}}>{intensity}</div>
     </div>
   );
 
   return (
-    <div style={{background:"rgba(15,20,45,0.55)", border:"1px solid rgba(255,126,71,0.2)", borderRadius:20, padding:40}}>
+    <div style={{background:"#FBF5EC", border:"1px solid rgba(89,34,9,0.2)", borderRadius:20, padding:40}}>
       <div style={{display:"flex", alignItems:"center", justifyContent:"center", gap:60, flexWrap:"wrap"}}>
         <Ring name={p1.name} pct={wlm.pct1} color={c1} r0={ref1} intensity={wlm.intensity1}/>
-        <div style={{position:"relative", width:110, height:110, borderRadius:"50%", background:"radial-gradient(circle, rgba(255,126,71,0.22), transparent 70%)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, animation:"pulse-glow 3s ease-in-out infinite"}}>
-          <div style={{position:"absolute", inset:8, borderRadius:"50%", border:"1px solid rgba(255,126,71,0.3)"}}/>
-          <svg width={58} height={58} viewBox="0 0 24 24" style={{filter:"drop-shadow(0 0 14px rgba(255,126,71,0.65))", position:"relative"}}>
+        <div className="love-hub" aria-hidden="true">
+          <span className="love-hub-halo" />
+          <svg className="love-heart" width={64} height={64} viewBox="0 0 24 24">
             <defs>
-              <linearGradient id="ebHeartGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#ffd54f"/>
-                <stop offset="45%" stopColor="#ff8f00"/>
-                <stop offset="100%" stopColor="#BC6A4D"/>
+              <linearGradient id="ebHeartGrad" x1="15%" y1="0%" x2="85%" y2="100%">
+                <stop offset="0%" stopColor="#F3B25F"/>
+                <stop offset="55%" stopColor="#E58A45"/>
+                <stop offset="100%" stopColor="#C2561B"/>
               </linearGradient>
             </defs>
-            {/* faint twin outlines echoing each partner's ring color */}
-            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="none" stroke={c1} strokeOpacity={0.35} strokeWidth="1" transform="translate(-1.1,0)"/>
-            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="none" stroke={c2} strokeOpacity={0.35} strokeWidth="1" transform="translate(1.1,0)"/>
-            {/* main gradient heart */}
-            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="url(#ebHeartGrad)" stroke="#ffedc2" strokeOpacity={0.6} strokeWidth="0.6"/>
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="url(#ebHeartGrad)" stroke="#592209" strokeWidth="1.2" strokeLinejoin="round"/>
+            <path d="M6.2 7.6C6.6 6.1 8 5.2 9.4 5.4" fill="none" stroke="#FFF3D6" strokeWidth="1.1" strokeLinecap="round" opacity="0.85"/>
           </svg>
-          <Star size={12} color="#ffe9b0" fill="#ffe9b0" style={{position:"absolute", top:18, right:20, filter:"drop-shadow(0 0 5px rgba(255,213,79,0.9))"}}/>
+          <Star className="love-spark love-spark-1" size={11} color="#E9B872" fill="#E9B872"/>
+          <Star className="love-spark love-spark-2" size={8} color="#F5E9D6" fill="#F5E9D6"/>
         </div>
         <Ring name={p2.name} pct={wlm.pct2} color={c2} r0={ref2} intensity={wlm.intensity2}/>
       </div>
-      <div style={{textAlign:"center", color:"rgba(255,255,255,0.65)", fontSize:15, fontStyle:"italic", marginTop:32}}>{summary}</div>
+      <div style={{textAlign:"center", color:"rgba(48,22,7,0.9)", fontSize:15, fontStyle:"italic", marginTop:32}}>{summary}</div>
     </div>
   );
 }
@@ -1817,11 +1812,11 @@ function CompatChat({ p1, p2, scores }) {
   };
 
   return (
-    <div style={{background:"rgba(15,20,45,0.55)", border:"1px solid rgba(255,126,71,0.2)", borderRadius:20, padding:28}}>
+    <div style={{background:"#FBF5EC", border:"1px solid rgba(89,34,9,0.2)", borderRadius:20, padding:28}}>
       <div style={{display:"flex", gap:10, flexWrap:"wrap", marginBottom:20}}>
         {COMPAT_PRESET_QS.map(({ icon:Icon, text }) => (
           <button key={text} onClick={() => !loading && send(text)}
-            style={{display:"flex", alignItems:"center", gap:8, background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:30, padding:"10px 16px", color:"#e8e0f0", fontSize:13, cursor:"pointer"}}>
+            style={{display:"flex", alignItems:"center", gap:8, background:"rgba(89,34,9,0.2)", border:"1px solid rgba(89,34,9,0.2)", borderRadius:30, padding:"10px 16px", color:"#301607", fontSize:13, cursor:"pointer"}}>
             <Icon size={14} color="#ff7e47"/> {text}
           </button>
         ))}
@@ -1831,23 +1826,23 @@ function CompatChat({ p1, p2, scores }) {
         {msgs.map((m, i) => (
           <div key={i} style={{
             alignSelf: m.role === "user" ? "flex-end" : "flex-start", maxWidth:"85%", padding:"12px 16px", borderRadius:12, fontSize:14, lineHeight:1.6,
-            background: m.role === "user" ? "rgba(255,126,71,0.15)" : "rgba(255,255,255,0.04)",
-            border: m.role === "user" ? "1px solid rgba(255,126,71,0.3)" : "1px solid rgba(255,255,255,0.08)",
-            color:"#e8e0f0",
+            background: m.role === "user" ? "rgba(255,126,71,0.15)" : "rgba(89,34,9,0.05)",
+            border: m.role === "user" ? "1px solid rgba(255,126,71,0.3)" : "1px solid rgba(89,34,9,0.2)",
+            color:"#301607",
           }}>
             {m.text}
           </div>
         ))}
-        {loading && <div style={{fontSize:13, color:"rgba(255,255,255,0.4)", fontStyle:"italic"}}>Consulting the stars...</div>}
+        {loading && <div style={{fontSize:13, color:"rgba(48,22,7,0.72)", fontStyle:"italic"}}>Consulting the stars...</div>}
         <div ref={endRef}/>
       </div>
 
       <div style={{display:"flex", gap:10}}>
         <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && !loading && send()}
           placeholder="Ask anything about your compatibility..."
-          style={{flex:1, background:"rgba(20,28,58,0.7)", border:"1px solid rgba(255,255,255,0.08)", borderBottom:"2px solid rgba(255,126,71,0.5)", borderRadius:10, padding:"14px 16px", color:"#fff", fontFamily:"'Inter',sans-serif", fontSize:14, outline:"none"}}/>
+          style={{flex:1, background:"#FBF5EC", border:"1px solid rgba(89,34,9,0.2)", borderBottom:"2px solid rgba(89,34,9,0.5)", borderRadius:10, padding:"14px 16px", color:"rgba(48,22,7,0.75)", fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:14, outline:"none"}}/>
         <button onClick={() => send()} disabled={loading || !input.trim()}
-          style={{width:48, height:48, borderRadius:"50%", background:"#ff7e47", border:"none", color:"#fff", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, opacity:loading || !input.trim() ? 0.5 : 1}}>
+          style={{width:48, height:48, borderRadius:"50%", background:"#592209", border:"none", color:"#F5E9D6", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, opacity:loading || !input.trim() ? 0.5 : 1}}>
           <Send size={18}/>
         </button>
       </div>
@@ -1860,11 +1855,11 @@ function Results({ p1, p2, report, onReset }) {
   const communication = deriveScore(s.emotional, p1.name, p2.name, "comm2");
 
   const SNAPSHOT = [
-    { icon:Heart,         label:"Love & Romance",         value:s.love,      color:"#ff6b8a", desc:"Deep affection and romantic connection." },
-    { icon:Brain,         label:"Emotional Understanding",value:s.emotional, color:"#a78bfa", desc:"You understand each other well." },
-    { icon:Flame,         label:"Physical Chemistry",     value:s.physical,  color:"#ff7e47", desc:"Strong attraction and natural chemistry." },
-    { icon:Star,          label:"Long-Term Potential",    value:s.marriage,  color:"#60a5fa", desc:"Great potential for a lasting future." },
-    { icon:MessageCircle, label:"Communication",          value:communication,color:"#4ade80", desc:"Open conversations keep you connected." },
+    { icon:Heart,         label:"Love & Romance",         value:s.love,      color:"#9B2C1D", desc:"Deep affection and romantic connection." },
+    { icon:Brain,         label:"Emotional Understanding",value:s.emotional, color:"#592209", desc:"You understand each other well." },
+    { icon:Flame,         label:"Physical Chemistry",     value:s.physical,  color:"#592209", desc:"Strong attraction and natural chemistry." },
+    { icon:Star,          label:"Long-Term Potential",    value:s.marriage,  color:"#592209", desc:"Great potential for a lasting future." },
+    { icon:MessageCircle, label:"Communication",          value:communication,color:"#301607", desc:"Open conversations keep you connected." },
   ];
 
   const WORKS_WELL = [
@@ -1880,18 +1875,18 @@ function Results({ p1, p2, report, onReset }) {
   const DO_MORE = ["Talk openly", "Respect each other's emotional style", "Build trust through consistency"];
   const AVOID_L = ["Testing each other's love", "Expecting instant clarity", "Ignoring small issues"];
 
-  const cardStyle = { background:"rgba(15,20,45,0.55)", border:"1px solid rgba(255,126,71,0.2)", borderRadius:16, padding:28 };
-  const sectionTitle: CSSProperties = { fontFamily:"'Astra','Cinzel',serif", fontSize:26, color:"#fff", fontWeight:700, textAlign:"center", textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:36 };
+  const cardStyle = { background:"#FBF5EC", border:"1px solid rgba(89,34,9,0.2)", borderRadius:16, padding:28 };
+  const sectionTitle: CSSProperties = { fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:26, color:"#301607", fontWeight:700, textAlign:"center", textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:36 };
 
   return (
-    <div style={{maxWidth:1200, margin:"0 auto", padding:"20px 24px 100px", color:"#e8e0f0", fontFamily:"'Inter',sans-serif"}}>
+    <div style={{maxWidth:1200, margin:"0 auto", padding:"20px 24px 100px", color:"#301607", fontFamily:"'DM Sans', system-ui, sans-serif"}}>
 
       {/* ── HERO ── */}
       <div style={{textAlign:"center", marginBottom:20, paddingTop:20}}>
-        <div style={{fontFamily:"'Astra','Cinzel',serif", fontSize:"clamp(30px,5vw,48px)", color:"#fff", fontWeight:700, letterSpacing:"0.04em"}}>
-          {p1.name} <span style={{color:"#ff7e47"}}>✦</span> {p2.name}
+        <div style={{fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:"clamp(30px,5vw,48px)", color:"#301607", fontWeight:700, letterSpacing:"0.04em"}}>
+          {p1.name} <span style={{color:"#592209"}}>✦</span> {p2.name}
         </div>
-        <div style={{color:"#ff7e47", fontWeight:600, fontSize:15, letterSpacing:"0.05em", textTransform:"uppercase", marginTop:10}}>
+        <div style={{color:"#592209", fontWeight:600, fontSize:15, letterSpacing:"0.05em", textTransform:"uppercase", marginTop:10}}>
           Universe Compatibility Analysis · {p1.zodiac} & {p2.zodiac}
         </div>
       </div>
@@ -1911,9 +1906,9 @@ function Results({ p1, p2, report, onReset }) {
               <div style={{width:48, height:48, borderRadius:"50%", background:`${m.color}22`, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px"}}>
                 <Icon size={22} color={m.color}/>
               </div>
-              <div style={{color:"#fff", fontWeight:700, fontSize:15, textAlign:"center", marginBottom:10}}>{m.label}</div>
-              <div style={{fontFamily:"'Astra','Cinzel',serif", fontSize:28, fontWeight:800, color:m.color, textAlign:"center", marginBottom:10}}>{m.value}%</div>
-              <div style={{color:"rgba(255,255,255,0.55)", fontSize:13, textAlign:"center", lineHeight:1.5}}>{m.desc}</div>
+              <div style={{color:"#301607", fontWeight:700, fontSize:15, textAlign:"center", marginBottom:10}}>{m.label}</div>
+              <div style={{fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:28, fontWeight:800, color:m.color, textAlign:"center", marginBottom:10}}>{m.value}%</div>
+              <div style={{color:"rgba(48,22,7,0.8)", fontSize:13, textAlign:"center", lineHeight:1.5}}>{m.desc}</div>
             </div>
           );})}
         </div>
@@ -1929,20 +1924,20 @@ function Results({ p1, p2, report, onReset }) {
       <div style={{marginBottom:80}}>
         <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:24}}>
           <div style={cardStyle}>
-            <div style={{color:"#4ade80", fontWeight:700, fontSize:16, letterSpacing:"0.05em", textTransform:"uppercase", marginBottom:24, textAlign:"center"}}>What Works Well</div>
+            <div style={{color:"#301607", fontWeight:700, fontSize:16, letterSpacing:"0.05em", textTransform:"uppercase", marginBottom:24, textAlign:"center"}}>What Works Well</div>
             {WORKS_WELL.map(w => { const Icon = w.icon; return (
               <div key={w.title} style={{display:"flex", gap:14, marginBottom:20}}>
-                <div style={{width:40, height:40, borderRadius:"50%", background:"rgba(74,222,128,0.12)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0}}><Icon size={18} color="#4ade80"/></div>
-                <div><div style={{color:"#fff", fontWeight:700, fontSize:15, marginBottom:3}}>{w.title}</div><div style={{color:"rgba(255,255,255,0.55)", fontSize:14}}>{w.desc}</div></div>
+                <div style={{width:40, height:40, borderRadius:"50%", background:"rgba(229,138,69,0.12)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0}}><Icon size={18} color="#4ade80"/></div>
+                <div><div style={{color:"#301607", fontWeight:700, fontSize:15, marginBottom:3}}>{w.title}</div><div style={{color:"rgba(48,22,7,0.8)", fontSize:14}}>{w.desc}</div></div>
               </div>
             );})}
           </div>
           <div style={cardStyle}>
-            <div style={{color:"#f87171", fontWeight:700, fontSize:16, letterSpacing:"0.05em", textTransform:"uppercase", marginBottom:24, textAlign:"center"}}>What Needs Care</div>
+            <div style={{color:"#9B2C1D", fontWeight:700, fontSize:16, letterSpacing:"0.05em", textTransform:"uppercase", marginBottom:24, textAlign:"center"}}>What Needs Care</div>
             {NEEDS_CARE.map(w => { const Icon = w.icon; return (
               <div key={w.title} style={{display:"flex", gap:14, marginBottom:20}}>
                 <div style={{width:40, height:40, borderRadius:"50%", background:"rgba(248,113,113,0.12)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0}}><Icon size={18} color="#f87171"/></div>
-                <div><div style={{color:"#fff", fontWeight:700, fontSize:15, marginBottom:3}}>{w.title}</div><div style={{color:"rgba(255,255,255,0.55)", fontSize:14}}>{w.desc}</div></div>
+                <div><div style={{color:"#301607", fontWeight:700, fontSize:15, marginBottom:3}}>{w.title}</div><div style={{color:"rgba(48,22,7,0.8)", fontSize:14}}>{w.desc}</div></div>
               </div>
             );})}
           </div>
@@ -1955,12 +1950,12 @@ function Results({ p1, p2, report, onReset }) {
         <div style={cardStyle}>
           <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:32, alignItems:"start"}}>
             <div>
-              <div style={{color:"#4ade80", fontWeight:700, fontSize:14, letterSpacing:"0.05em", textTransform:"uppercase", marginBottom:16}}>Do More Of This</div>
-              {DO_MORE.map(t => (<div key={t} style={{display:"flex", alignItems:"center", gap:8, marginBottom:12, fontSize:14, color:"#f8f8f8"}}><CheckCircle2 size={16} color="#4ade80"/> {t}</div>))}
+              <div style={{color:"#301607", fontWeight:700, fontSize:14, letterSpacing:"0.05em", textTransform:"uppercase", marginBottom:16}}>Do More Of This</div>
+              {DO_MORE.map(t => (<div key={t} style={{display:"flex", alignItems:"center", gap:8, marginBottom:12, fontSize:14, color:"#301607"}}><CheckCircle2 size={16} color="#4ade80"/> {t}</div>))}
             </div>
             <div>
-              <div style={{color:"#f87171", fontWeight:700, fontSize:14, letterSpacing:"0.05em", textTransform:"uppercase", marginBottom:16}}>Avoid This</div>
-              {AVOID_L.map(t => (<div key={t} style={{display:"flex", alignItems:"center", gap:8, marginBottom:12, fontSize:14, color:"#f8f8f8"}}><XCircle size={16} color="#f87171"/> {t}</div>))}
+              <div style={{color:"#9B2C1D", fontWeight:700, fontSize:14, letterSpacing:"0.05em", textTransform:"uppercase", marginBottom:16}}>Avoid This</div>
+              {AVOID_L.map(t => (<div key={t} style={{display:"flex", alignItems:"center", gap:8, marginBottom:12, fontSize:14, color:"#301607"}}><XCircle size={16} color="#f87171"/> {t}</div>))}
             </div>
           </div>
         </div>
@@ -1972,10 +1967,10 @@ function Results({ p1, p2, report, onReset }) {
         <CompatChat p1={p1} p2={p2} scores={s}/>
       </div>
 
-      <button onClick={onReset} style={{display:"block", margin:"0 auto 16px", padding:"16px 44px", background:"#ff7e47", border:"none", borderRadius:40, color:"#fff", fontWeight:700, fontSize:16, cursor:"pointer"}}>
+      <button onClick={onReset} style={{display:"block", margin:"0 auto 16px", padding:"16px 44px", background:"#592209", border:"none", borderRadius:40, color:"#F5E9D6", fontWeight:700, fontSize:16, cursor:"pointer"}}>
         New Compatibility Reading ✦
       </button>
-      <div style={{textAlign:"center", color:"rgba(255,255,255,0.35)", fontSize:12, display:"flex", justifyContent:"center", gap:16, alignItems:"center"}}>
+      <div style={{textAlign:"center", color:"#301607", fontSize:12, display:"flex", justifyContent:"center", gap:16, alignItems:"center"}}>
         <span style={{display:"flex", alignItems:"center", gap:5}}><Lock size={12}/> AI-Powered</span>
         <span>·</span><span>Private</span><span>·</span><span>Secure</span>
       </div>
@@ -2033,35 +2028,35 @@ export default function App() {
   return (
     <div className="universe-app">
       <Starfield/>
-      <div className="nebula-blob" style={{width:600,height:600,top:"-200px",left:"-200px",background:"radial-gradient(circle,rgba(123,47,255,0.15),transparent 70%)",animationDuration:"18s"}}/>
-      <div className="nebula-blob" style={{width:500,height:500,bottom:"10%",right:"-150px",background:"radial-gradient(circle,rgba(255,45,120,0.12),transparent 70%)",animationDuration:"22s",animationDelay:"3s"}}/>
-      <div className="nebula-blob" style={{width:400,height:400,top:"40%",left:"30%",background:"radial-gradient(circle,rgba(0,229,255,0.07),transparent 70%)",animationDuration:"25s",animationDelay:"6s"}}/>
+      <div className="nebula-blob" style={{width:600,height:600,top:"-200px",left:"-200px",background:"radial-gradient(circle,rgba(89,34,9,0.15),transparent 70%)",animationDuration:"18s"}}/>
+      <div className="nebula-blob" style={{width:500,height:500,bottom:"10%",right:"-150px",background:"radial-gradient(circle,rgba(89,34,9,0.12),transparent 70%)",animationDuration:"22s",animationDelay:"3s"}}/>
+      <div className="nebula-blob" style={{width:400,height:400,top:"40%",left:"30%",background:"radial-gradient(circle,rgba(89,34,9,0.07),transparent 70%)",animationDuration:"25s",animationDelay:"6s"}}/>
       {phase==="loading" && <LoadingScreen/>}
       <div className="content" style={{display:phase==="loading"?"none":"block"}}>
         {phase==="form" && (
           <>
             <div style={{textAlign:"center", padding:"60px 20px 40px"}}>
               <div style={{display:"flex", alignItems:"center", justifyContent:"center", gap:16, marginBottom:24}}>
-                <div style={{width:80, height:1, background:"linear-gradient(90deg, transparent, rgba(255,126,71,0.6))"}}></div>
-                <div style={{color:"#f8f8f8", fontStyle:"italic", fontSize:15, whiteSpace:"nowrap", letterSpacing:"0.1em", textTransform:"uppercase"}}>
-                  <span style={{color:"#ff7e47"}}>✦</span> Universe Relationship Analyzer <span style={{color:"#ff7e47"}}>✦</span>
+                <div style={{width:80, height:1, background:"linear-gradient(90deg, transparent, rgba(89,34,9,0.6))"}}></div>
+                <div style={{color:"#301607", fontStyle:"italic", fontSize:15, whiteSpace:"nowrap", letterSpacing:"0.1em", textTransform:"uppercase"}}>
+                  <span style={{color:"#592209"}}>✦</span> Universe Relationship Analyzer <span style={{color:"#592209"}}>✦</span>
                 </div>
-                <div style={{width:80, height:1, background:"linear-gradient(90deg, rgba(255,126,71,0.6), transparent)"}}></div>
+                <div style={{width:80, height:1, background:"linear-gradient(90deg, rgba(89,34,9,0.6), transparent)"}}></div>
               </div>
-              <h1 style={{fontFamily:"'Astra','Cinzel',serif", fontSize:"clamp(30px,5vw,48px)", fontWeight:700, color:"#fff", letterSpacing:"0.05em", textTransform:"uppercase", lineHeight:1.25, marginBottom:20}}>
-                Cosmic Compatibility<br/><span style={{color:"#ff7e47"}}>Oracle</span>
+              <h1 style={{fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:"clamp(30px,5vw,48px)", fontWeight:700, color:"#301607", letterSpacing:"0.05em", textTransform:"uppercase", lineHeight:1.25, marginBottom:20}}>
+                Cosmic Compatibility<br/><span style={{color:"#592209"}}>Oracle</span>
               </h1>
-              <p style={{color:"#f8f8f8", fontStyle:"italic", fontSize:18}}>Let The Universe Reveal The Truth Of Your Connection</p>
+              <p style={{color:"#301607", fontStyle:"italic", fontSize:18}}>Let The Universe Reveal The Truth Of Your Connection</p>
             </div>
             <div style={{maxWidth:1000, margin:"0 auto", padding:"20px 24px 80px"}}>
-              {error && <div style={{background:"rgba(248,113,113,0.08)", border:"1px solid rgba(248,113,113,0.3)", borderRadius:10, padding:"12px 16px", color:"#f87171", fontSize:14, marginBottom:24, textAlign:"center"}}>⚠ {error}</div>}
+              {error && <div style={{background:"rgba(248,113,113,0.08)", border:"1px solid rgba(248,113,113,0.3)", borderRadius:10, padding:"12px 16px", color:"#9B2C1D", fontSize:14, marginBottom:24, textAlign:"center"}}>⚠ {error}</div>}
               <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:24, marginBottom:32}}>
-                <PersonForm title="Divine Feminine" symbol="♀" accentColor="#c084fc" data={p2} onChange={setP2}/>
+                <PersonForm title="Divine Feminine" symbol="♀" accentColor="#592209" data={p2} onChange={setP2}/>
                 <PersonForm title="Divine Masculine" symbol="♂" accentColor="#60a5fa" data={p1} onChange={setP1}/>
               </div>
               <button
                 onClick={compute}
-                style={{display:"flex", alignItems:"center", justifyContent:"center", gap:8, width:"100%", maxWidth:420, margin:"0 auto", padding:"18px", background:"#ff7e47", border:"none", borderRadius:40, color:"#fff", fontWeight:700, fontSize:16, cursor:"pointer", transition:"transform 0.2s ease, box-shadow 0.2s ease"}}
+                style={{display:"flex", alignItems:"center", justifyContent:"center", gap:8, width:"100%", maxWidth:420, margin:"0 auto", padding:"18px", background:"#592209", border:"none", borderRadius:40, color:"#F5E9D6", fontWeight:700, fontSize:16, cursor:"pointer", transition:"transform 0.2s ease, box-shadow 0.2s ease"}}
                 onMouseOver={e=>{e.currentTarget.style.transform="translateY(-2px)";}}
                 onMouseOut={e=>{e.currentTarget.style.transform="translateY(0)";}}
               >

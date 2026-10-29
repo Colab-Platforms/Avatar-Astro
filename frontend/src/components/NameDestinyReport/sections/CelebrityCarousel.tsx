@@ -56,7 +56,7 @@ export default function CelebrityCarousel() {
     <div className="px-6 sm:px-10 py-12">
       <h3
         className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-2 uppercase tracking-wide"
-        style={{ fontFamily: "'Astra','Cinzel',serif" }}
+        style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
       >
         ⭐ Real-Life Celebrity Name Changes
       </h3>
@@ -119,20 +119,20 @@ export default function CelebrityCarousel() {
 
                 <div className="absolute inset-x-0 bottom-0 p-6 pt-16 bg-gradient-to-t from-black/90 via-black/60 to-transparent text-center">
                   {c.isStageName && (
-                    <div className="text-white/50 text-[10px] font-semibold uppercase tracking-widest mb-1">Birth Name</div>
+                    <div className="text-foreground/70 text-[10px] font-semibold uppercase tracking-widest mb-1">Birth Name</div>
                   )}
-                  <div className="text-white/80 text-lg font-medium leading-tight">{c.previousSpelling}</div>
+                  <div className="text-foreground/80 text-lg font-medium leading-tight">{c.previousSpelling}</div>
                   <div className="flex justify-center my-2">
-                    <ArrowDown size={16} className="text-white/50" />
+                    <ArrowDown size={16} className="text-foreground/70" />
                   </div>
                   <div
-                    className="text-white font-extrabold text-3xl sm:text-4xl leading-tight uppercase tracking-wide mb-3"
-                    style={{ fontFamily: "'Astra','Cinzel',serif" }}
+                    className="text-foreground font-extrabold text-3xl sm:text-4xl leading-tight uppercase tracking-wide mb-3"
+                    style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
                   >
                     {c.currentName}
-                    {c.isStageName && <span className="block text-xs tracking-widest text-white/50 normal-case mt-1">(Stage Name)</span>}
+                    {c.isStageName && <span className="block text-xs tracking-widest text-foreground/70 normal-case mt-1">(Stage Name)</span>}
                   </div>
-                  <p className="text-white/85 text-sm leading-relaxed">{c.description}</p>
+                  <p className="text-foreground/85 text-sm leading-relaxed">{c.description}</p>
                 </div>
               </div>
             </motion.div>
@@ -159,7 +159,7 @@ export default function CelebrityCarousel() {
               className={`block rounded-full transition-all duration-[350ms] ease-out ${
                 i === index
                   ? "w-8 h-3 bg-gold opacity-100 shadow-[0_0_10px_2px_hsl(var(--gold)/0.6)]"
-                  : "w-3 h-3 bg-white/40 opacity-100 hover:bg-white/60"
+                  : "w-3 h-3 bg-primary/10 opacity-100 hover:bg-primary/10"
               }`}
             />
           </button>

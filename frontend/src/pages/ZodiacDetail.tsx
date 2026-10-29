@@ -140,19 +140,19 @@
 // }
 
 // // ─── Circle Gauge ─────────────────────────────────────────────────────────────
-// function CircleGauge({value,label,color="#BC6A4D"}:{value:number;label:string;color?:string}) {
+// function CircleGauge({value,label,color="#592209"}:{value:number;label:string;color?:string}) {
 //   const animated = useCountUp(value);
 //   const r=52; const circ=2*Math.PI*r; const dash=(animated/100)*circ;
 //   return (
 //     <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:10}}>
 //       <svg width={130} height={130}>
-//         <circle cx={65} cy={65} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={10}/>
+//         <circle cx={65} cy={65} r={r} fill="none" stroke="rgba(89,34,9,0.05)" strokeWidth={10}/>
 //         <circle cx={65} cy={65} r={r} fill="none" stroke={color} strokeWidth={10}
 //           strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" strokeDashoffset={circ/4}
 //           style={{transition:"stroke-dasharray 1.2s ease",filter:`drop-shadow(0 0 8px ${color})`}}/>
 //         <text x="65" y="70" textAnchor="middle" fill="#fff" fontSize="20" fontWeight="800">{animated}%</text>
 //       </svg>
-//       <span style={{fontSize:16,color:"rgba(188,106,77,0.85)",textTransform:"uppercase",letterSpacing:"0.08em",textAlign:"center",fontWeight:700}}>{label}</span>
+//       <span style={{fontSize:16,color:"#592209",textTransform:"uppercase",letterSpacing:"0.08em",textAlign:"center",fontWeight:700}}>{label}</span>
 //     </div>
 //   );
 // }
@@ -163,14 +163,14 @@
 //   return (
 //     <div style={{perspective:700,cursor:"pointer"}} onClick={()=>setFlipped(f=>!f)}>
 //       <div style={{width:200,height:310,position:"relative",transformStyle:"preserve-3d",transition:"transform 0.7s ease",transform:flipped?"rotateY(180deg)":"rotateY(0)"}}>
-//         <div style={{position:"absolute",inset:0,backfaceVisibility:"hidden",borderRadius:18,background:"linear-gradient(135deg,#1a0533,#2d1b4e)",border:"2px solid #BC6A4D",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:12}}>
+//         <div style={{position:"absolute",inset:0,backfaceVisibility:"hidden",borderRadius:18,background:"#F5E9D6",border:"2px solid #592209",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:12}}>
 //           <div style={{fontSize:60}}>🔮</div>
-//           <div style={{color:"rgba(188,106,77,0.7)",fontSize:15,letterSpacing:"0.15em",fontWeight:600}}>TAP TO REVEAL</div>
+//           <div style={{color:"#592209",fontSize:15,letterSpacing:"0.15em",fontWeight:600}}>TAP TO REVEAL</div>
 //         </div>
-//         <div style={{position:"absolute",inset:0,backfaceVisibility:"hidden",borderRadius:18,background:"linear-gradient(160deg,#1a0533,#0d0d1a)",border:"2px solid #BC6A4D",transform:"rotateY(180deg)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16,padding:28,textAlign:"center"}}>
+//         <div style={{position:"absolute",inset:0,backfaceVisibility:"hidden",borderRadius:18,background:"#F5E9D6",border:"2px solid #592209",transform:"rotateY(180deg)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16,padding:28,textAlign:"center"}}>
 //           <div style={{fontSize:44}}>✨</div>
-//           <div style={{color:"#BC6A4D",fontWeight:800,fontSize:22,letterSpacing:"0.08em"}}>{card}</div>
-//           <div style={{color:"rgba(232,224,240,0.8)",fontSize:16,lineHeight:1.7}}>{meaning}</div>
+//           <div style={{color:"#592209",fontWeight:800,fontSize:22,letterSpacing:"0.08em"}}>{card}</div>
+//           <div style={{color:"#592209",fontSize:16,lineHeight:1.7}}>{meaning}</div>
 //         </div>
 //       </div>
 //     </div>
@@ -198,12 +198,12 @@
 //       const start=(i/rewards.length)*2*Math.PI-Math.PI/2;const end=((i+1)/rewards.length)*2*Math.PI-Math.PI/2;
 //       ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,start,end);ctx.closePath();
 //       ctx.fillStyle=segColors[i%segColors.length];ctx.fill();
-//       ctx.strokeStyle="#BC6A4D";ctx.lineWidth=2;ctx.stroke();
+//       ctx.strokeStyle="#592209";ctx.lineWidth=2;ctx.stroke();
 //       ctx.save();ctx.translate(cx,cy);ctx.rotate((start+end)/2);
-//       ctx.fillStyle="#BC6A4D";ctx.font="bold 12px sans-serif";ctx.textAlign="right";
+//       ctx.fillStyle="#592209";ctx.font="bold 12px sans-serif";ctx.textAlign="right";
 //       ctx.fillText("✨",r-20,5);ctx.restore();
 //     });
-//     ctx.beginPath();ctx.arc(cx,cy,18,0,2*Math.PI);ctx.fillStyle="#BC6A4D";ctx.fill();
+//     ctx.beginPath();ctx.arc(cx,cy,18,0,2*Math.PI);ctx.fillStyle="#592209";ctx.fill();
 //     ctx.fillStyle="#000";ctx.font="bold 13px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("★",cx,cy);
 //   }
 //   function spin(){
@@ -217,11 +217,11 @@
 //   return (
 //     <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:24}}>
 //       <div style={{position:"relative"}}>
-//         <canvas ref={canvasRef} width={300} height={300} style={{borderRadius:"50%",border:"3px solid #BC6A4D",boxShadow:"0 0 40px rgba(188,106,77,0.3)",transform:`rotate(${rotation}deg)`,transition:spinning?"transform 3s cubic-bezier(0.17,0.67,0.12,0.99)":"none"}}/>
-//         <div style={{position:"absolute",top:-18,left:"50%",transform:"translateX(-50%)",color:"#BC6A4D",fontSize:28}}>▼</div>
+//         <canvas ref={canvasRef} width={300} height={300} style={{borderRadius:"50%",border:"3px solid #592209",boxShadow:"0 0 40px rgba(89,34,9,0.3)",transform:`rotate(${rotation}deg)`,transition:spinning?"transform 3s cubic-bezier(0.17,0.67,0.12,0.99)":"none"}}/>
+//         <div style={{position:"absolute",top:-18,left:"50%",transform:"translateX(-50%)",color:"#592209",fontSize:28}}>▼</div>
 //       </div>
-//       {result&&<div style={{background:"rgba(188,106,77,0.1)",border:"1px solid rgba(188,106,77,0.4)",borderRadius:14,padding:"18px 28px",textAlign:"center",maxWidth:320}}><div style={{color:"#BC6A4D",fontSize:17,fontWeight:700,marginBottom:6}}>Your Fortune</div><div style={{color:"#e8e0f0",fontSize:16}}>{result}</div></div>}
-//       <button onClick={spin} disabled={spinning||spunToday} style={{padding:"16px 44px",background:spunToday?"rgba(255,255,255,0.05)":"linear-gradient(135deg,#BC6A4D,#BC6A4D)",border:"none",borderRadius:30,color:spunToday?"rgba(255,255,255,0.3)":"#000",fontWeight:800,fontSize:18,cursor:spunToday?"not-allowed":"pointer",letterSpacing:"0.05em"}}>
+//       {result&&<div style={{background:"rgba(89,34,9,0.1)",border:"1px solid rgba(89,34,9,0.4)",borderRadius:14,padding:"18px 28px",textAlign:"center",maxWidth:320}}><div style={{color:"#592209",fontSize:17,fontWeight:700,marginBottom:6}}>Your Fortune</div><div style={{color:"#301607",fontSize:16}}>{result}</div></div>}
+//       <button onClick={spin} disabled={spinning||spunToday} style={{padding:"16px 44px",background:spunToday?"rgba(89,34,9,0.2)":"linear-gradient(135deg,#592209,#592209)",border:"none",borderRadius:30,color:spunToday?"rgba(89,34,9,0.3)":"#000",fontWeight:800,fontSize:18,cursor:spunToday?"not-allowed":"pointer",letterSpacing:"0.05em"}}>
 //         {spunToday?"Come Back Tomorrow":spinning?"Spinning...":"🎡 Spin the Wheel"}
 //       </button>
 //     </div>
@@ -253,44 +253,44 @@
 //   const zodiacImg = zodiacImages[signLower];
 
 //   // Shared styles
-//   const sec:React.CSSProperties = {background:"rgba(255,255,255,0.025)",border:"1px solid rgba(188,106,77,0.18)",borderRadius:24,padding:"36px 40px",marginBottom:28};
-//   const ttl:React.CSSProperties = {color:"#BC6A4D",fontWeight:800,fontSize:16,letterSpacing:"0.2em",textTransform:"uppercase",display:"flex",alignItems:"center",gap:12,marginBottom:28};
-//   const crd:React.CSSProperties = {background:"rgba(255,255,255,0.035)",border:"1px solid rgba(188,106,77,0.14)",borderRadius:16,padding:"24px"};
+//   const sec:React.CSSProperties = {background:"rgba(89,34,9,0.2)",border:"1px solid rgba(89,34,9,0.18)",borderRadius:24,padding:"36px 40px",marginBottom:28};
+//   const ttl:React.CSSProperties = {color:"#592209",fontWeight:800,fontSize:16,letterSpacing:"0.2em",textTransform:"uppercase",display:"flex",alignItems:"center",gap:12,marginBottom:28};
+//   const crd:React.CSSProperties = {background:"rgba(89,34,9,0.2)",border:"1px solid rgba(89,34,9,0.14)",borderRadius:16,padding:"24px"};
 
 //   if (!zodiac || !daily) return (
 //     <Layout>
-//       <div style={{minHeight:"60vh",display:"flex",alignItems:"center",justifyContent:"center",color:"#BC6A4D",fontSize:24}}>Loading cosmic data...</div>
+//       <div style={{minHeight:"60vh",display:"flex",alignItems:"center",justifyContent:"center",color:"#592209",fontSize:24}}>Loading cosmic data...</div>
 //     </Layout>
 //   );
 
 //   return (
 //     <Layout>
 //       <style>{`
-//         @keyframes pulse-glow{0%,100%{box-shadow:0 0 24px rgba(188,106,77,0.35)}50%{box-shadow:0 0 60px rgba(188,106,77,0.75)}}
+//         @keyframes pulse-glow{0%,100%{box-shadow:0 0 24px rgba(89,34,9,0.35)}50%{box-shadow:0 0 60px rgba(89,34,9,0.75)}}
 //         @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
 //         @keyframes shimmer{0%{background-position:200% center}100%{background-position:-200% center}}
 //         @keyframes fade-in{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-//         @keyframes word-glow{0%,100%{text-shadow:0 0 14px rgba(188,106,77,0.4)}50%{text-shadow:0 0 36px rgba(188,106,77,0.95),0 0 70px rgba(188,106,77,0.45)}}
+//         @keyframes word-glow{0%,100%{text-shadow:0 0 14px rgba(89,34,9,0.4)}50%{text-shadow:0 0 36px rgba(89,34,9,0.95),0 0 70px rgba(89,34,9,0.45)}}
 //         .zd-sec{animation:fade-in 0.55s ease both}
 //         .pword{animation:word-glow 2s ease-in-out infinite}
 //         .hcard{transition:transform 0.2s ease,border-color 0.2s ease}
-//         .hcard:hover{transform:translateY(-4px);border-color:rgba(188,106,77,0.4)!important}
+//         .hcard:hover{transform:translateY(-4px);border-color:rgba(89,34,9,0.4)!important}
 //         .bfill{transition:width 1.4s cubic-bezier(0.4,0,0.2,1)}
-//         .back-link:hover{color:#BC6A4D!important}
-//         .signav:hover{color:#BC6A4D!important}
+//         .back-link:hover{color:#592209!important}
+//         .signav:hover{color:#592209!important}
 //       `}</style>
 
 //       {/* ══ Full-width page wrapper ══ */}
-//       <div style={{width:"100%",maxWidth:1280,margin:"0 auto",padding:"0 40px 80px",color:"#e8e0f0",boxSizing:"border-box"}}>
+//       <div style={{width:"100%",maxWidth:1280,margin:"0 auto",padding:"0 40px 80px",color:"#301607",boxSizing:"border-box"}}>
 
 //         {/* ── SUB-NAV: sits below the Layout navbar, no overlap ── */}
-//         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"20px 0 32px",borderBottom:"1px solid rgba(188,106,77,0.1)",marginBottom:36}}>
+//         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"20px 0 32px",borderBottom:"1px solid rgba(89,34,9,0.1)",marginBottom:36}}>
 //           <Link to="/zodiac" className="back-link"
-//             style={{color:"rgba(188,106,77,0.8)",textDecoration:"none",fontSize:16,letterSpacing:"0.12em",fontWeight:700,display:"flex",alignItems:"center",gap:8,transition:"color 0.2s"}}>
+//             style={{color:"#592209",textDecoration:"none",fontSize:16,letterSpacing:"0.12em",fontWeight:700,display:"flex",alignItems:"center",gap:8,transition:"color 0.2s"}}>
 //             ← ALL SIGNS
 //           </Link>
 //           {/* Date — centred between the two sides */}
-//           <div style={{color:"rgba(255,255,255,0.6)",fontSize:16,fontWeight:500,letterSpacing:"0.04em"}}>
+//           <div style={{color:"rgba(48,22,7,0.85)",fontSize:16,fontWeight:500,letterSpacing:"0.04em"}}>
 //             {todayStr}
 //           </div>
 //           {/* Spacer to balance left side width */}
@@ -300,25 +300,25 @@
 //         {/* ── HERO ── */}
 //         <div style={{display:"grid",gridTemplateColumns:"420px 1fr",gap:48,marginBottom:36,alignItems:"center"}}>
 //           {/* Zodiac image box */}
-//           <div style={{background:"rgba(255,255,255,0.025)",borderRadius:24,padding:44,display:"flex",alignItems:"center",justifyContent:"center",border:"1px solid rgba(188,106,77,0.14)",animation:"float 6s ease-in-out infinite",minHeight:340}}>
+//           <div style={{background:"rgba(89,34,9,0.2)",borderRadius:24,padding:44,display:"flex",alignItems:"center",justifyContent:"center",border:"1px solid rgba(89,34,9,0.14)",animation:"float 6s ease-in-out infinite",minHeight:340}}>
 //             {zodiacImg && !imgError ? (
 //               <img src={zodiacImg} alt={zodiac.name} onError={()=>setImgError(true)}
-//                 style={{width:"100%",maxWidth:300,maxHeight:300,objectFit:"contain",filter:"drop-shadow(0 0 28px rgba(188,106,77,0.5))"}}/>
+//                 style={{width:"100%",maxWidth:300,maxHeight:300,objectFit:"contain",filter:"drop-shadow(0 0 28px rgba(89,34,9,0.5))"}}/>
 //             ) : (
-//               <div style={{fontSize:140,filter:"drop-shadow(0 0 28px rgba(188,106,77,0.55))",lineHeight:1}}>{zodiac.symbol}</div>
+//               <div style={{fontSize:140,filter:"drop-shadow(0 0 28px rgba(89,34,9,0.55))",lineHeight:1}}>{zodiac.symbol}</div>
 //             )}
 //           </div>
 //           {/* Sign details */}
 //           <div>
-//             <div style={{fontSize:14,color:"rgba(188,106,77,0.55)",letterSpacing:"0.25em",marginBottom:12,fontWeight:600}}>DAILY COSMIC READING</div>
-//             <h1 style={{fontSize:72,fontWeight:900,letterSpacing:"0.12em",color:"#fff",margin:"0 0 10px",textTransform:"uppercase",lineHeight:1}}>{zodiac.name}</h1>
-//             <div style={{color:"rgba(188,106,77,0.9)",fontSize:20,marginBottom:22,fontWeight:600}}>{zodiac.dates}</div>
+//             <div style={{fontSize:14,color:"#592209",letterSpacing:"0.25em",marginBottom:12,fontWeight:600}}>DAILY COSMIC READING</div>
+//             <h1 style={{fontSize:72,fontWeight:900,letterSpacing:"0.12em",color:"#301607",margin:"0 0 10px",textTransform:"uppercase",lineHeight:1}}>{zodiac.name}</h1>
+//             <div style={{color:"#592209",fontSize:20,marginBottom:22,fontWeight:600}}>{zodiac.dates}</div>
 //             <div style={{display:"flex",gap:12,marginBottom:22,flexWrap:"wrap"}}>
-//               <span style={{background:"rgba(188,106,77,0.1)",border:"1px solid rgba(188,106,77,0.35)",borderRadius:24,padding:"7px 20px",fontSize:16,color:"#BC6A4D",fontWeight:600}}>Element: {zodiac.element}</span>
-//               <span style={{background:"rgba(188,106,77,0.1)",border:"1px solid rgba(188,106,77,0.35)",borderRadius:24,padding:"7px 20px",fontSize:16,color:"#BC6A4D",fontWeight:600}}>Ruler: {zodiac.ruling}</span>
-//               <span style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:24,padding:"7px 20px",fontSize:16,color:"rgba(255,255,255,0.65)"}}>{daily.moonPhase}</span>
+//               <span style={{background:"rgba(89,34,9,0.1)",border:"1px solid rgba(89,34,9,0.35)",borderRadius:24,padding:"7px 20px",fontSize:16,color:"#592209",fontWeight:600}}>Element: {zodiac.element}</span>
+//               <span style={{background:"rgba(89,34,9,0.1)",border:"1px solid rgba(89,34,9,0.35)",borderRadius:24,padding:"7px 20px",fontSize:16,color:"#592209",fontWeight:600}}>Ruler: {zodiac.ruling}</span>
+//               <span style={{background:"rgba(89,34,9,0.2)",border:"1px solid rgba(89,34,9,0.2)",borderRadius:24,padding:"7px 20px",fontSize:16,color:"#F5E9D6"}}>{daily.moonPhase}</span>
 //             </div>
-//             <p style={{color:"rgba(232,224,240,0.7)",fontSize:18,lineHeight:1.85,margin:0}}>{zodiac.description}</p>
+//             <p style={{color:"#592209",fontSize:18,lineHeight:1.85,margin:0}}>{zodiac.description}</p>
 //           </div>
 //         </div>
 
@@ -327,15 +327,15 @@
 //           <div style={{display:"flex",alignItems:"center",gap:20}}>
 //             <span style={{fontSize:48}}>🔥</span>
 //             <div>
-//               <div style={{color:"#BC6A4D",fontWeight:800,fontSize:26}}>{streak}-Day Cosmic Streak</div>
-//               <div style={{color:"rgba(255,255,255,0.45)",fontSize:16,marginTop:4}}>Return daily to grow your streak</div>
+//               <div style={{color:"#592209",fontWeight:800,fontSize:26}}>{streak}-Day Cosmic Streak</div>
+//               <div style={{color:"#301607",fontSize:16,marginTop:4}}>Return daily to grow your streak</div>
 //             </div>
 //           </div>
-//           <div style={{display:"flex",alignItems:"center",gap:16,background:"rgba(188,106,77,0.07)",border:"1px solid rgba(188,106,77,0.24)",borderRadius:16,padding:"16px 28px"}}>
+//           <div style={{display:"flex",alignItems:"center",gap:16,background:"rgba(89,34,9,0.07)",border:"1px solid rgba(89,34,9,0.24)",borderRadius:16,padding:"16px 28px"}}>
 //             <span style={{fontSize:36}}>{badge.icon}</span>
 //             <div>
-//               <div style={{color:"#BC6A4D",fontWeight:800,fontSize:20}}>{badge.name}</div>
-//               <div style={{color:"rgba(255,255,255,0.4)",fontSize:15}}>Current Badge</div>
+//               <div style={{color:"#592209",fontWeight:800,fontSize:20}}>{badge.name}</div>
+//               <div style={{color:"rgba(48,22,7,0.72)",fontSize:15}}>Current Badge</div>
 //             </div>
 //           </div>
 //         </div>
@@ -345,17 +345,17 @@
 //           <div style={ttl}>⚡ Today's Cosmic Energy</div>
 //           <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:24}}>
 //             <div style={{position:"relative",width:200,height:200}}>
-//               <div style={{position:"absolute",inset:0,borderRadius:"50%",background:`conic-gradient(#BC6A4D ${energyCount*3.6}deg, rgba(255,255,255,0.05) 0)`,animation:"pulse-glow 3s ease-in-out infinite",display:"flex",alignItems:"center",justifyContent:"center"}}>
-//                 <div style={{width:162,height:162,borderRadius:"50%",background:"#0d0d1a",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
-//                   <div style={{fontSize:46,fontWeight:900,color:"#BC6A4D",lineHeight:1}}>{energyCount}%</div>
-//                   <div style={{fontSize:13,color:"rgba(255,255,255,0.4)",letterSpacing:"0.12em",marginTop:4}}>ENERGY</div>
+//               <div style={{position:"absolute",inset:0,borderRadius:"50%",background:`conic-gradient(#592209 ${energyCount*3.6}deg, rgba(89,34,9,0.2) 0)`,animation:"pulse-glow 3s ease-in-out infinite",display:"flex",alignItems:"center",justifyContent:"center"}}>
+//                 <div style={{width:162,height:162,borderRadius:"50%",background:"#FBF5EC",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
+//                   <div style={{fontSize:46,fontWeight:900,color:"#592209",lineHeight:1}}>{energyCount}%</div>
+//                   <div style={{fontSize:13,color:"#301607",letterSpacing:"0.12em",marginTop:4}}>ENERGY</div>
 //                 </div>
 //               </div>
 //             </div>
-//             <div style={{color:"rgba(232,224,240,0.8)",fontSize:20,fontStyle:"italic",maxWidth:500}}>"{daily.cosmicMessage}"</div>
+//             <div style={{color:"#592209",fontSize:20,fontStyle:"italic",maxWidth:500}}>"{daily.cosmicMessage}"</div>
 //             <div style={{display:"flex",gap:32,flexWrap:"wrap",justifyContent:"center"}}>
-//               <span style={{fontSize:17,color:"rgba(255,255,255,0.5)"}}>☽ {daily.moonPhase}</span>
-//               <span style={{fontSize:17,color:"rgba(255,255,255,0.5)"}}>🪐 {daily.dominantPlanet}</span>
+//               <span style={{fontSize:17,color:"rgba(48,22,7,0.75)"}}>☽ {daily.moonPhase}</span>
+//               <span style={{fontSize:17,color:"rgba(48,22,7,0.75)"}}>🪐 {daily.dominantPlanet}</span>
 //             </div>
 //           </div>
 //         </div>
@@ -371,14 +371,14 @@
 //                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
 //                     <div style={{display:"flex",alignItems:"center",gap:10}}>
 //                       <span style={{fontSize:24}}>{HORO_ICONS[key]}</span>
-//                       <span style={{fontSize:15,fontWeight:700,letterSpacing:"0.08em",color:"#BC6A4D",textTransform:"uppercase"}}>{HORO_LABELS[key]}</span>
+//                       <span style={{fontSize:15,fontWeight:700,letterSpacing:"0.08em",color:"#592209",textTransform:"uppercase"}}>{HORO_LABELS[key]}</span>
 //                     </div>
-//                     <span style={{fontSize:20,fontWeight:800,color:h.score>=80?"#4ade80":h.score>=65?"#BC6A4D":"#f87171"}}>{h.score}%</span>
+//                     <span style={{fontSize:20,fontWeight:800,color:h.score>=80?"#4ade80":h.score>=65?"#592209":"#f87171"}}>{h.score}%</span>
 //                   </div>
-//                   <div style={{background:"rgba(255,255,255,0.06)",borderRadius:6,height:6,overflow:"hidden",marginBottom:14}}>
-//                     <div className="bfill" style={{height:"100%",width:`${h.score}%`,background:"linear-gradient(90deg,#BC6A4D,#D9895F)",borderRadius:6}}/>
+//                   <div style={{background:"rgba(89,34,9,0.2)",borderRadius:6,height:6,overflow:"hidden",marginBottom:14}}>
+//                     <div className="bfill" style={{height:"100%",width:`${h.score}%`,background:"linear-gradient(90deg,#592209,#592209)",borderRadius:6}}/>
 //                   </div>
-//                   <p style={{fontSize:16,color:"rgba(232,224,240,0.7)",lineHeight:1.65,margin:0}}>{h.advice}</p>
+//                   <p style={{fontSize:16,color:"rgba(48,22,7,0.72)",lineHeight:1.65,margin:0}}>{h.advice}</p>
 //                 </div>
 //               );
 //             })}
@@ -399,8 +399,8 @@
 //             ].map(item=>(
 //               <div key={item.label} style={{...crd,textAlign:"center"}}>
 //                 <div style={{fontSize:32,marginBottom:10}}>{item.icon}</div>
-//                 <div style={{fontSize:12,color:"rgba(188,106,77,0.65)",letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:8}}>{item.label}</div>
-//                 <div style={{fontSize:15,fontWeight:700,color:"#e8e0f0",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+//                 <div style={{fontSize:12,color:"#592209",letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:8}}>{item.label}</div>
+//                 <div style={{fontSize:15,fontWeight:700,color:"#301607",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
 //                   {item.value}
 //                   {item.dot&&<span style={{width:12,height:12,borderRadius:"50%",background:item.dot,display:"inline-block",flexShrink:0}}/>}
 //                 </div>
@@ -414,7 +414,7 @@
 //           <div style={ttl}>📊 Daily Opportunity Meter</div>
 //           <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:20,justifyItems:"center"}}>
 //             <CircleGauge value={daily.opportunities.love} label="Love" color="#e879a0"/>
-//             <CircleGauge value={daily.opportunities.career} label="Career" color="#BC6A4D"/>
+//             <CircleGauge value={daily.opportunities.career} label="Career" color="#592209"/>
 //             <CircleGauge value={daily.opportunities.money} label="Money" color="#4ade80"/>
 //             <CircleGauge value={daily.opportunities.health} label="Health" color="#60a5fa"/>
 //           </div>
@@ -426,9 +426,9 @@
 //             <div style={ttl}>✅ Things To Do Today</div>
 //             <div style={{display:"flex",flexDirection:"column",gap:14}}>
 //               {daily.todo.map((t,i)=>(
-//                 <div key={i} style={{display:"flex",alignItems:"flex-start",gap:14,background:"rgba(74,222,128,0.05)",border:"1px solid rgba(74,222,128,0.18)",borderRadius:14,padding:"16px 20px"}}>
-//                   <span style={{color:"#4ade80",fontSize:20,marginTop:1,flexShrink:0}}>✓</span>
-//                   <span style={{fontSize:17,color:"rgba(232,224,240,0.85)",lineHeight:1.55}}>{t}</span>
+//                 <div key={i} style={{display:"flex",alignItems:"flex-start",gap:14,background:"rgba(229,138,69,0.05)",border:"1px solid rgba(229,138,69,0.18)",borderRadius:14,padding:"16px 20px"}}>
+//                   <span style={{color:"#301607",fontSize:20,marginTop:1,flexShrink:0}}>✓</span>
+//                   <span style={{fontSize:17,color:"rgba(48,22,7,0.85)",lineHeight:1.55}}>{t}</span>
 //                 </div>
 //               ))}
 //             </div>
@@ -438,8 +438,8 @@
 //             <div style={{display:"flex",flexDirection:"column",gap:14}}>
 //               {daily.avoid.map((a,i)=>(
 //                 <div key={i} style={{display:"flex",alignItems:"flex-start",gap:14,background:"rgba(248,113,113,0.05)",border:"1px solid rgba(248,113,113,0.18)",borderRadius:14,padding:"16px 20px"}}>
-//                   <span style={{color:"#f87171",fontSize:20,marginTop:1,flexShrink:0}}>⚠</span>
-//                   <span style={{fontSize:17,color:"rgba(232,224,240,0.85)",lineHeight:1.55}}>{a}</span>
+//                   <span style={{color:"#9B2C1D",fontSize:20,marginTop:1,flexShrink:0}}>⚠</span>
+//                   <span style={{fontSize:17,color:"rgba(48,22,7,0.85)",lineHeight:1.55}}>{a}</span>
 //                 </div>
 //               ))}
 //             </div>
@@ -451,7 +451,7 @@
 //           <div style={{...ttl,justifyContent:"center"}}>💫 Today's Power Words</div>
 //           <div style={{display:"flex",justifyContent:"center",gap:48,flexWrap:"wrap",padding:"10px 0"}}>
 //             {daily.powerWords.map((w,i)=>(
-//               <div key={i} className="pword" style={{fontSize:36,fontWeight:900,color:"#BC6A4D",letterSpacing:"0.1em",textTransform:"uppercase",animationDelay:`${i*0.7}s`}}>{w}</div>
+//               <div key={i} className="pword" style={{fontSize:36,fontWeight:900,color:"#592209",letterSpacing:"0.1em",textTransform:"uppercase",animationDelay:`${i*0.7}s`}}>{w}</div>
 //             ))}
 //           </div>
 //         </div>
@@ -460,17 +460,17 @@
 //         <div className="zd-sec" style={{...sec,textAlign:"center"}}>
 //           <div style={{...ttl,justifyContent:"center"}}>🌀 Cosmic Mood Detector</div>
 //           <div style={{fontSize:72,marginBottom:18}}>{daily.moodIcon}</div>
-//           <div style={{fontSize:34,fontWeight:900,color:"#BC6A4D",letterSpacing:"0.1em",marginBottom:10}}>{daily.mood}</div>
-//           <div style={{fontSize:17,color:"rgba(232,224,240,0.45)"}}>Your cosmic frequency for today</div>
+//           <div style={{fontSize:34,fontWeight:900,color:"#592209",letterSpacing:"0.1em",marginBottom:10}}>{daily.mood}</div>
+//           <div style={{fontSize:17,color:"rgba(48,22,7,0.72)"}}>Your cosmic frequency for today</div>
 //         </div>
 
 //         {/* ── CHALLENGE ── */}
 //         <div className="zd-sec" style={sec}>
 //           <div style={ttl}>🎯 AI Daily Challenge</div>
-//           <div style={{background:"rgba(188,106,77,0.05)",border:"1px solid rgba(188,106,77,0.2)",borderRadius:18,padding:"32px",textAlign:"center"}}>
+//           <div style={{background:"rgba(89,34,9,0.05)",border:"1px solid rgba(89,34,9,0.2)",borderRadius:18,padding:"32px",textAlign:"center"}}>
 //             <div style={{fontSize:44,marginBottom:14}}>⚡</div>
-//             <div style={{fontSize:20,color:"rgba(232,224,240,0.88)",fontStyle:"italic",lineHeight:1.75,marginBottom:18}}>"{daily.challenge}"</div>
-//             <div style={{fontSize:15,color:"rgba(188,106,77,0.7)",letterSpacing:"0.12em",fontWeight:600}}>REWARD: +10 Cosmic Energy</div>
+//             <div style={{fontSize:20,color:"rgba(48,22,7,0.88)",fontStyle:"italic",lineHeight:1.75,marginBottom:18}}>"{daily.challenge}"</div>
+//             <div style={{fontSize:15,color:"#592209",letterSpacing:"0.12em",fontWeight:600}}>REWARD: +10 Cosmic Energy</div>
 //           </div>
 //         </div>
 
@@ -480,28 +480,28 @@
 //           <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:40,flexWrap:"wrap"}}>
 //             <div style={{textAlign:"center"}}>
 //               <div style={{fontSize:64}}>{SIGN_SYMBOLS[signLower]}</div>
-//               <div style={{color:"#BC6A4D",fontWeight:700,fontSize:20,marginTop:10,textTransform:"capitalize"}}>{zodiac.name}</div>
+//               <div style={{color:"#592209",fontWeight:700,fontSize:20,marginTop:10,textTransform:"capitalize"}}>{zodiac.name}</div>
 //             </div>
 //             <div style={{textAlign:"center"}}>
-//               <div style={{fontSize:44,fontWeight:900,color:"#BC6A4D"}}>{daily.compatibility.score}%</div>
-//               <div style={{fontSize:14,color:"rgba(255,255,255,0.35)",letterSpacing:"0.1em",marginTop:4}}>TODAY</div>
+//               <div style={{fontSize:44,fontWeight:900,color:"#592209"}}>{daily.compatibility.score}%</div>
+//               <div style={{fontSize:14,color:"rgba(48,22,7,0.72)",letterSpacing:"0.1em",marginTop:4}}>TODAY</div>
 //             </div>
 //             <div style={{textAlign:"center"}}>
 //               <div style={{fontSize:64}}>{SIGN_SYMBOLS[daily.compatibility.sign.toLowerCase()]}</div>
-//               <div style={{color:"#BC6A4D",fontWeight:700,fontSize:20,marginTop:10}}>{daily.compatibility.sign}</div>
+//               <div style={{color:"#592209",fontWeight:700,fontSize:20,marginTop:10}}>{daily.compatibility.sign}</div>
 //             </div>
 //           </div>
-//           <div style={{marginTop:22,color:"rgba(232,224,240,0.6)",fontSize:18,fontStyle:"italic"}}>{daily.compatibility.reason}</div>
+//           <div style={{marginTop:22,color:"rgba(48,22,7,0.72)",fontSize:18,fontStyle:"italic"}}>{daily.compatibility.reason}</div>
 //         </div>
 
 //         {/* ── CELEBRITY ── */}
 //         <div className="zd-sec" style={sec}>
 //           <div style={ttl}>⭐ {zodiac.name} Inspiration</div>
 //           <div style={{display:"flex",alignItems:"center",gap:24,flexWrap:"wrap"}}>
-//             <div style={{width:80,height:80,borderRadius:"50%",background:"linear-gradient(135deg,#BC6A4D,#D9895F)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:36,flexShrink:0}}>⭐</div>
+//             <div style={{width:80,height:80,borderRadius:"50%",background:"linear-gradient(135deg,#592209,#592209)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:36,flexShrink:0}}>⭐</div>
 //             <div>
-//               <div style={{color:"#BC6A4D",fontWeight:800,fontSize:24,marginBottom:8}}>{daily.celebrity.name}</div>
-//               <div style={{color:"rgba(232,224,240,0.7)",fontSize:18,lineHeight:1.65}}>{daily.celebrity.fact}</div>
+//               <div style={{color:"#592209",fontWeight:800,fontSize:24,marginBottom:8}}>{daily.celebrity.name}</div>
+//               <div style={{color:"#592209",fontSize:18,lineHeight:1.65}}>{daily.celebrity.fact}</div>
 //             </div>
 //           </div>
 //         </div>
@@ -509,21 +509,21 @@
 //         {/* ── FORTUNE WHEEL ── */}
 //         <div className="zd-sec" style={{...sec,textAlign:"center"}}>
 //           <div style={{...ttl,justifyContent:"center"}}>🎡 Cosmic Fortune Wheel</div>
-//           <div style={{fontSize:17,color:"rgba(232,224,240,0.4)",marginBottom:28}}>Spin once daily to reveal your cosmic fortune</div>
+//           <div style={{fontSize:17,color:"rgba(48,22,7,0.72)",marginBottom:28}}>Spin once daily to reveal your cosmic fortune</div>
 //           <div style={{display:"flex",justifyContent:"center"}}><FortuneWheel rewards={daily.fortuneRewards} sign={signLower}/></div>
 //         </div>
 
 //         {/* ── TAROT ── */}
 //         <div className="zd-sec" style={{...sec,textAlign:"center"}}>
 //           <div style={{...ttl,justifyContent:"center"}}>🃏 Daily Tarot Reveal</div>
-//           <div style={{fontSize:17,color:"rgba(232,224,240,0.4)",marginBottom:28}}>Tap the card to reveal today's cosmic message</div>
+//           <div style={{fontSize:17,color:"rgba(48,22,7,0.72)",marginBottom:28}}>Tap the card to reveal today's cosmic message</div>
 //           <div style={{display:"flex",justifyContent:"center"}}><TarotCard card={daily.tarot.card} meaning={daily.tarot.meaning}/></div>
 //         </div>
 
 //         {/* ── MANIFESTATION ── */}
 //         <div className="zd-sec" style={{...sec,textAlign:"center"}}>
 //           <div style={{...ttl,justifyContent:"center"}}>🌌 Today's Manifestation</div>
-//           <div style={{fontSize:22,fontStyle:"italic",lineHeight:1.85,maxWidth:620,margin:"0 auto",background:"linear-gradient(135deg,#BC6A4D,#D9895F,#BC6A4D)",backgroundSize:"200% auto",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",animation:"shimmer 4s linear infinite"}}>
+//           <div style={{fontSize:22,fontStyle:"italic",lineHeight:1.85,maxWidth:620,margin:"0 auto",background:"linear-gradient(135deg,#592209,#592209,#592209)",backgroundSize:"200% auto",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",animation:"shimmer 4s linear infinite"}}>
 //             "{daily.manifestation}"
 //           </div>
 //         </div>
@@ -533,28 +533,28 @@
 //           <div className="zd-sec" style={{...sec,marginBottom:0}}>
 //             <div style={ttl}>👤 Personality</div>
 //             <div style={{marginBottom:18}}>
-//               <div style={{fontSize:13,color:"rgba(188,106,77,0.65)",letterSpacing:"0.18em",marginBottom:12,fontWeight:600}}>CORE TRAITS</div>
+//               <div style={{fontSize:13,color:"#592209",letterSpacing:"0.18em",marginBottom:12,fontWeight:600}}>CORE TRAITS</div>
 //               <div style={{display:"flex",flexWrap:"wrap",gap:10}}>
-//                 {zodiac.traits.map(t=><span key={t} style={{background:"rgba(188,106,77,0.09)",border:"1px solid rgba(188,106,77,0.24)",borderRadius:22,padding:"6px 16px",fontSize:15,color:"#BC6A4D",fontWeight:600}}>{t}</span>)}
+//                 {zodiac.traits.map(t=><span key={t} style={{background:"rgba(89,34,9,0.09)",border:"1px solid rgba(89,34,9,0.24)",borderRadius:22,padding:"6px 16px",fontSize:15,color:"#592209",fontWeight:600}}>{t}</span>)}
 //               </div>
 //             </div>
 //             <div style={{marginBottom:18}}>
-//               <div style={{fontSize:13,color:"rgba(188,106,77,0.65)",letterSpacing:"0.18em",marginBottom:12,fontWeight:600}}>STRENGTHS</div>
-//               {zodiac.strengths.map(s=><div key={s} style={{color:"rgba(232,224,240,0.7)",fontSize:17,marginBottom:6}}>☆ {s}</div>)}
+//               <div style={{fontSize:13,color:"#592209",letterSpacing:"0.18em",marginBottom:12,fontWeight:600}}>STRENGTHS</div>
+//               {zodiac.strengths.map(s=><div key={s} style={{color:"#592209",fontSize:17,marginBottom:6}}>☆ {s}</div>)}
 //             </div>
 //             <div>
-//               <div style={{fontSize:13,color:"rgba(188,106,77,0.65)",letterSpacing:"0.18em",marginBottom:12,fontWeight:600}}>CHALLENGES</div>
-//               {zodiac.weaknesses.map(w=><div key={w} style={{color:"rgba(232,224,240,0.55)",fontSize:17,marginBottom:6}}>• {w}</div>)}
+//               <div style={{fontSize:13,color:"#592209",letterSpacing:"0.18em",marginBottom:12,fontWeight:600}}>CHALLENGES</div>
+//               {zodiac.weaknesses.map(w=><div key={w} style={{color:"#592209",fontSize:17,marginBottom:6}}>• {w}</div>)}
 //             </div>
 //           </div>
 //           <div className="zd-sec" style={{...sec,marginBottom:0}}>
 //             <div style={ttl}>♥ Love & Relationships</div>
-//             <p style={{color:"rgba(232,224,240,0.7)",fontSize:17,lineHeight:1.8,marginBottom:22}}>{zodiac.description}</p>
-//             <div style={{fontSize:13,color:"rgba(188,106,77,0.65)",letterSpacing:"0.18em",marginBottom:12,fontWeight:600}}>BEST MATCHES</div>
+//             <p style={{color:"#592209",fontSize:17,lineHeight:1.8,marginBottom:22}}>{zodiac.description}</p>
+//             <div style={{fontSize:13,color:"#592209",letterSpacing:"0.18em",marginBottom:12,fontWeight:600}}>BEST MATCHES</div>
 //             <div style={{display:"flex",flexWrap:"wrap",gap:12}}>
 //               {zodiac.compatibility.map(m=>(
 //                 <Link key={m} to={`/zodiac/${m.toLowerCase()}`}
-//                   style={{background:"rgba(188,106,77,0.09)",border:"1px solid rgba(188,106,77,0.24)",borderRadius:22,padding:"7px 16px",fontSize:15,color:"#BC6A4D",textDecoration:"none",display:"flex",alignItems:"center",gap:8,fontWeight:600}}>
+//                   style={{background:"rgba(89,34,9,0.09)",border:"1px solid rgba(89,34,9,0.24)",borderRadius:22,padding:"7px 16px",fontSize:15,color:"#592209",textDecoration:"none",display:"flex",alignItems:"center",gap:8,fontWeight:600}}>
 //                   {SIGN_SYMBOLS[m.toLowerCase()]} {m}
 //                 </Link>
 //               ))}
@@ -563,27 +563,27 @@
 //         </div>
 
 //         {/* ── TOMORROW PREVIEW ── */}
-//         <div className="zd-sec" style={{...sec,textAlign:"center",border:"1px solid rgba(188,106,77,0.25)",background:"linear-gradient(135deg,rgba(188,106,77,0.05),rgba(0,0,0,0))"}}>
+//         <div className="zd-sec" style={{...sec,textAlign:"center",border:"1px solid rgba(89,34,9,0.25)",background:"linear-gradient(135deg,rgba(89,34,9,0.05),rgba(89,34,9,0))"}}>
 //           <div style={{...ttl,justifyContent:"center"}}>🔭 Tomorrow's Preview</div>
-//           <div style={{color:"rgba(232,224,240,0.7)",fontSize:19,fontStyle:"italic",marginBottom:20}}>{daily.tomorrowTeaser}</div>
+//           <div style={{color:"#592209",fontSize:19,fontStyle:"italic",marginBottom:20}}>{daily.tomorrowTeaser}</div>
 //           <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:12}}>
-//             <span style={{fontSize:15,color:"rgba(255,255,255,0.35)",letterSpacing:"0.12em"}}>UNLOCKS IN</span>
-//             <span style={{fontSize:22,fontWeight:800,color:"#BC6A4D",fontVariantNumeric:"tabular-nums"}}>{countdown}</span>
+//             <span style={{fontSize:15,color:"rgba(48,22,7,0.72)",letterSpacing:"0.12em"}}>UNLOCKS IN</span>
+//             <span style={{fontSize:22,fontWeight:800,color:"#592209",fontVariantNumeric:"tabular-nums"}}>{countdown}</span>
 //           </div>
 //         </div>
 
 //         {/* ── SIGN NAVIGATION ── */}
 //         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:16,flexWrap:"wrap",gap:16}}>
 //           <Link to={`/zodiac/${prevSign}`} className="signav"
-//             style={{display:"flex",alignItems:"center",gap:10,color:"rgba(188,106,77,0.7)",textDecoration:"none",fontSize:18,fontWeight:700,transition:"color 0.2s"}}>
+//             style={{display:"flex",alignItems:"center",gap:10,color:"#592209",textDecoration:"none",fontSize:18,fontWeight:700,transition:"color 0.2s"}}>
 //             ← {SIGN_SYMBOLS[prevSign]} {prevSign.charAt(0).toUpperCase()+prevSign.slice(1)}
 //           </Link>
 //           <Link to="/compatibility"
-//             style={{background:"linear-gradient(135deg,#BC6A4D,#BC6A4D)",color:"#000",fontWeight:800,fontSize:17,letterSpacing:"0.1em",padding:"16px 36px",borderRadius:32,textDecoration:"none"}}>
+//             style={{background:"#F5E9D6",color:"#000",fontWeight:800,fontSize:17,letterSpacing:"0.1em",padding:"16px 36px",borderRadius:32,textDecoration:"none"}}>
 //             CHECK COMPATIBILITY ♡
 //           </Link>
 //           <Link to={`/zodiac/${nextSign}`} className="signav"
-//             style={{display:"flex",alignItems:"center",gap:10,color:"rgba(188,106,77,0.7)",textDecoration:"none",fontSize:18,fontWeight:700,transition:"color 0.2s"}}>
+//             style={{display:"flex",alignItems:"center",gap:10,color:"#592209",textDecoration:"none",fontSize:18,fontWeight:700,transition:"color 0.2s"}}>
 //             {nextSign.charAt(0).toUpperCase()+nextSign.slice(1)} {SIGN_SYMBOLS[nextSign]} →
 //           </Link>
 //         </div>
@@ -753,22 +753,22 @@ function useCountUpOnVisible<T extends HTMLElement>(target: number, duration = 1
 function HoroscopeCard({icon, label, score, advice, color}:{icon:string; label:string; score:number; advice:string; color:string}) {
   const [count, ref] = useCountUpOnVisible<HTMLDivElement>(score, 1200);
   return (
-    <div ref={ref} className="hcard" style={{background:"rgba(10, 15, 30, 0.4)", border:"1px solid rgba(255,126,71,0.25)", borderRadius: 16, padding: "30px 24px"}}>
+    <div ref={ref} className="hcard" style={{background:"rgba(89,34,9,0.07)", border:"1px solid rgba(89,34,9,0.25)", borderRadius: 16, padding: "30px 24px"}}>
       <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom: 24}}>
         <div style={{display:"flex", alignItems:"center", gap: 14}}>
           <span style={{fontSize: 28, opacity: 0.9}}>{icon}</span>
-          <span style={{color:"#fff", fontSize: 22, fontWeight: 700}}>{label}</span>
+          <span style={{color:"#301607", fontSize: 22, fontWeight: 700}}>{label}</span>
         </div>
         <span style={{color: color, fontSize: 24, fontWeight: 800}}>{count}%</span>
       </div>
 
-      <div style={{height: 4, background:"rgba(255,255,255,0.1)", borderRadius: 2, marginBottom: 24, position:"relative"}}>
-        <div style={{width:`${count}%`, height:"100%", background:"linear-gradient(90deg, rgba(255,126,71,0.3), #ff7e47)", borderRadius: 2, position:"relative"}}>
-          <div style={{position:"absolute", right: -4, top: -2, width: 8, height: 8, background:"#fff", borderRadius:"50%", boxShadow:"0 0 10px rgba(255,255,255,0.8)"}}></div>
+      <div style={{height: 4, background:"rgba(89,34,9,0.2)", borderRadius: 2, marginBottom: 24, position:"relative"}}>
+        <div style={{width:`${count}%`, height:"100%", background:"linear-gradient(90deg, rgba(89,34,9,0.3), #592209)", borderRadius: 2, position:"relative"}}>
+          <div style={{position:"absolute", right: -4, top: -2, width: 8, height: 8, background:"rgba(89,34,9,0.25)", borderRadius:"50%", boxShadow:"0 0 10px rgba(89,34,9,0.3)"}}></div>
         </div>
       </div>
 
-      <div style={{color:"rgba(232,224,240,0.85)", fontSize: 16, lineHeight: 1.6, fontStyle:"italic"}}>
+      <div style={{color:"#592209", fontSize: 16, lineHeight: 1.6, fontStyle:"italic"}}>
         {advice}
       </div>
     </div>
@@ -781,14 +781,14 @@ function OpportunityCircle({label, value}:{label:string; value:number}) {
   const circumference = 2 * Math.PI * 85;
   return (
     <div ref={ref} style={{display:"flex", flexDirection:"column", alignItems:"center", gap: 30}}>
-      <div style={{fontSize: 20, color:"#fff", fontWeight: 700, letterSpacing:"0.2em"}}>{label}</div>
+      <div style={{fontSize: 20, color:"#301607", fontWeight: 700, letterSpacing:"0.2em"}}>{label}</div>
       <div style={{position:"relative", width: 200, height: 200}}>
         <svg width={200} height={200} style={{transform: "rotate(-90deg)"}}>
           <circle cx={100} cy={100} r={85} fill="none" stroke="rgba(255,126,71,0.15)" strokeWidth={10} />
           <circle cx={100} cy={100} r={85} fill="none" stroke="#ff7e47" strokeWidth={10} strokeLinecap="round" strokeDasharray={`${(count/100) * circumference} ${circumference}`} />
         </svg>
         <div style={{position:"absolute", inset: 0, display:"flex", alignItems:"center", justifyContent:"center"}}>
-          <span style={{fontFamily:"'Astra', 'Cinzel', serif", fontSize: 48, color:"#fff", fontWeight: 800, letterSpacing:"0.05em"}}>{count}%</span>
+          <span style={{fontFamily:"'DM Sans', system-ui, sans-serif", fontSize: 48, color:"#301607", fontWeight: 800, letterSpacing:"0.05em"}}>{count}%</span>
         </div>
       </div>
     </div>
@@ -812,10 +812,10 @@ function TarotCard({card,meaning}:{card:string;meaning:string}) {
   return (
     <div style={{perspective:700,cursor:"pointer"}} onClick={()=>setFlipped(f=>!f)}>
       <div style={{width:220,height:330,position:"relative",transformStyle:"preserve-3d",transition:"transform 0.7s ease",transform:flipped?"rotateY(180deg)":"rotateY(0)"}}>
-        <div style={{position:"absolute",inset:0,backfaceVisibility:"hidden",borderRadius:18,overflow:"hidden",border:"2px solid #ff7e47"}}>
+        <div style={{position:"absolute",inset:0,backfaceVisibility:"hidden",borderRadius:18,overflow:"hidden",border:"2px solid #592209"}}>
           <img src={tarotCardBackImg} alt="Tap to reveal" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
         </div>
-        <div style={{position:"absolute",inset:0,backfaceVisibility:"hidden",borderRadius:18,background:"radial-gradient(circle at 50% 30%, #0d1442 0%, #060a1e 65%, #05070f 100%)",border:"1.5px solid #d4af6a",transform:"rotateY(180deg)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"space-between",gap:10,padding:"26px 20px",textAlign:"center"}}>
+        <div style={{position:"absolute",inset:0,backfaceVisibility:"hidden",borderRadius:18,background:"radial-gradient(circle at 50% 30%, #FBF5EC 0%, #FBF5EC 65%, #FBF5EC 100%)",border:"1.5px solid #E58A45",transform:"rotateY(180deg)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"space-between",gap:10,padding:"26px 20px",textAlign:"center"}}>
           <svg width="54" height="54" viewBox="0 0 100 100" style={{flexShrink:0}}>
             <circle cx="50" cy="50" r="44" fill="none" stroke="#d4af6a" strokeWidth="1" strokeDasharray="2 5" opacity="0.6"/>
             {[0,90,180,270].map(deg => (
@@ -824,10 +824,10 @@ function TarotCard({card,meaning}:{card:string;meaning:string}) {
             <path d="M50 8 C53 38 53 38 84 42 C53 46 53 46 50 92 C47 46 47 46 16 42 C47 38 47 38 50 8 Z" fill="#e8c887"/>
             <path d="M50 26 C51.5 40 51.5 40 66 42 C51.5 44 51.5 44 50 74 C48.5 44 48.5 44 34 42 C48.5 40 48.5 40 50 26 Z" fill="#fff6e0" opacity="0.85"/>
           </svg>
-          <div style={{fontFamily:"'Astra','Cinzel',serif", color:"#e8c887", fontWeight:700, fontSize:24, letterSpacing:"0.04em"}}>{card}</div>
-          <div style={{width:70, height:1, background:"linear-gradient(90deg, transparent, #d4af6a, transparent)"}}></div>
-          <div style={{color:"rgba(232,230,240,0.9)", fontSize:14.5, lineHeight:1.6, padding:"0 4px"}}>{meaning}</div>
-          <div style={{color:"#d4af6a", fontSize:13, letterSpacing:"0.3em", opacity:0.75}}>•• ☾ ● ☽ ••</div>
+          <div style={{fontFamily:"'DM Sans', system-ui, sans-serif", color:"#6B4A37", fontWeight:700, fontSize:24, letterSpacing:"0.04em"}}>{card}</div>
+          <div style={{width:70, height:1, background:"linear-gradient(90deg, transparent, #592209, transparent)"}}></div>
+          <div style={{color:"rgba(48,22,7,0.9)", fontSize:14.5, lineHeight:1.6, padding:"0 4px"}}>{meaning}</div>
+          <div style={{color:"#6B4A37", fontSize:13, letterSpacing:"0.3em", opacity:0.75}}>•• ☾ ● ☽ ••</div>
         </div>
       </div>
     </div>
@@ -854,11 +854,11 @@ function FortuneWheel({rewards,sign}:{rewards:string[];sign:string}) {
   return (
     <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:24}}>
       <div style={{position:"relative"}}>
-        <img src={fortuneWheelImg} alt="Fortune wheel" width={300} height={300} style={{borderRadius:"50%",boxShadow:"0 0 40px rgba(255,126,71,0.3)",transform:`rotate(${rotation}deg)`,transition:spinning?"transform 3s cubic-bezier(0.17,0.67,0.12,0.99)":"none"}}/>
-        <div style={{position:"absolute",top:-18,left:"50%",transform:"translateX(-50%)",color:"#ff7e47",fontSize:28}}>▼</div>
+        <img src={fortuneWheelImg} alt="Fortune wheel" width={300} height={300} style={{borderRadius:"50%",boxShadow:"0 0 40px rgba(89,34,9,0.3)",transform:`rotate(${rotation}deg)`,transition:spinning?"transform 3s cubic-bezier(0.17,0.67,0.12,0.99)":"none"}}/>
+        <div style={{position:"absolute",top:-18,left:"50%",transform:"translateX(-50%)",color:"#592209",fontSize:28}}>▼</div>
       </div>
-      {result&&<div style={{background:"rgba(10, 15, 30, 0.4)",border:"1px solid rgba(255,126,71,0.3)",borderRadius:16,padding:"20px 30px",textAlign:"center",maxWidth:320}}><div style={{color:"#ff7e47",fontSize:17,fontWeight:700,marginBottom:6}}>Your Fortune</div><div style={{color:"#e8e0f0",fontSize:16}}>{result}</div></div>}
-      <button onClick={spin} disabled={spinning||spunToday} style={{padding:"16px 44px",background:spunToday?"rgba(255,255,255,0.05)":"linear-gradient(135deg,#ff7e47,#a07830)",border:"none",borderRadius:30,color:spunToday?"rgba(255,255,255,0.3)":"#000",fontWeight:800,fontSize:18,cursor:spunToday?"not-allowed":"pointer",letterSpacing:"0.05em"}}>
+      {result&&<div style={{background:"rgba(89,34,9,0.07)",border:"1px solid rgba(89,34,9,0.3)",borderRadius:16,padding:"20px 30px",textAlign:"center",maxWidth:320}}><div style={{color:"#592209",fontSize:17,fontWeight:700,marginBottom:6}}>Your Fortune</div><div style={{color:"#301607",fontSize:16}}>{result}</div></div>}
+      <button onClick={spin} disabled={spinning||spunToday} style={{padding:"16px 44px",background:spunToday?"rgba(89,34,9,0.2)":"linear-gradient(135deg,#ff7e47,#a07830)",border:"none",borderRadius:30,color:spunToday?"rgba(89,34,9,0.3)":"#000",fontWeight:800,fontSize:18,cursor:spunToday?"not-allowed":"pointer",letterSpacing:"0.05em"}}>
         {spunToday?"Come Back Tomorrow":spinning?"Spinning...":"🎡 Spin the Wheel"}
       </button>
     </div>
@@ -892,7 +892,7 @@ export default function ZodiacDetail() {
   const zodiacImg = zodiacImages[signLower];
 
   if (!zodiac || !daily) return (
-    <div style={{minHeight:"60vh",display:"flex",alignItems:"center",justifyContent:"center",color:"#ff7e47",fontSize:24}}>Loading cosmic data...</div>
+    <div style={{minHeight:"60vh",display:"flex",alignItems:"center",justifyContent:"center",color:"#592209",fontSize:24}}>Loading cosmic data...</div>
   );
 
   return (
@@ -901,15 +901,15 @@ export default function ZodiacDetail() {
         @keyframes fade-in { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes sun-glow-pulse {
           0%, 100% {
-            box-shadow: 0 0 14px 1px rgba(255,193,74,0.45), 0 0 28px 5px rgba(255,152,0,0.22), 0 0 46px 8px rgba(255,126,71,0.1);
+            box-shadow: 0 0 14px 1px rgba(229,138,69,0.45), 0 0 28px 5px rgba(229,138,69,0.22), 0 0 46px 8px rgba(89,34,9,0.1);
           }
           50% {
-            box-shadow: 0 0 17px 2px rgba(255,213,110,0.6), 0 0 34px 6px rgba(255,167,38,0.28), 0 0 54px 10px rgba(255,126,71,0.13);
+            box-shadow: 0 0 17px 2px rgba(229,138,69,0.6), 0 0 34px 6px rgba(229,138,69,0.28), 0 0 54px 10px rgba(89,34,9,0.13);
           }
         }
         .zd-sec { animation: fade-in 0.6s ease-out both; }
         .hcard { transition: transform 0.2s ease, border-color 0.2s ease; }
-        .hcard:hover { transform: translateY(-4px); border-color: rgba(255,126,71,0.6)!important; }
+        .hcard:hover { transform: translateY(-4px); border-color: rgba(89,34,9,0.6)!important; }
         .meter-circle { transition: stroke-dasharray 1.5s cubic-bezier(0.4,0,0.2,1); }
         @keyframes sun-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.015); } }
         .sun-breathe.sun-glow { animation: sun-breathe 4.5s ease-in-out infinite, sun-glow-pulse 3.5s ease-in-out infinite; }
@@ -917,42 +917,42 @@ export default function ZodiacDetail() {
       `}</style>
 
       {/* ══ Full-width page wrapper ══ */}
-      <div style={{width:"100%",maxWidth:1200,margin:"0 auto",padding:"40px 20px 80px",color:"#e8e0f0",boxSizing:"border-box", fontFamily: "'Astra', 'Cinzel', serif"}}>
+      <div style={{width:"100%",maxWidth:1200,margin:"0 auto",padding:"40px 20px 80px",color:"#301607",boxSizing:"border-box", fontFamily: "'DM Sans', system-ui, sans-serif"}}>
 
         {/* ── HEADER ── */}
         <div className="zd-sec" style={{textAlign:"center", marginBottom: 70, animationDelay: "0.1s"}}>
-          <div style={{fontSize: 32, color: "#f8f8f8", fontWeight: 400, marginBottom: 6}}>Todays Horoscope</div>
-          <div style={{fontSize: 28, color: "#ff7e47", fontWeight: 400}}>{todayStr}</div>
+          <div style={{fontSize: 32, color: "#301607", fontWeight: 400, marginBottom: 6}}>Todays Horoscope</div>
+          <div style={{fontSize: 28, color: "#592209", fontWeight: 400}}>{todayStr}</div>
         </div>
 
         {/* ── HERO (Daily Cosmic Reading) ── */}
         <div className="zd-sec" style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:60, alignItems:"center", marginBottom: 80, animationDelay: "0.2s"}}>
           <div style={{position:"relative", display:"flex", justifyContent:"center"}}>
-            <div style={{position:"absolute", inset:"-15%", borderRadius:"50%", background:"radial-gradient(circle, rgba(255,126,71,0.09) 0%, rgba(255,126,71,0.04) 40%, transparent 70%)", filter:"blur(10px)", zIndex:0}}></div>
+            <div style={{position:"absolute", inset:"-15%", borderRadius:"50%", background:"radial-gradient(circle, rgba(89,34,9,0.09) 0%, rgba(89,34,9,0.04) 40%, transparent 70%)", filter:"blur(10px)", zIndex:0}}></div>
             {zodiacImg && !imgError ? (
               <img src={zodiacImg} alt={zodiac.name} onError={()=>setImgError(true)} style={{position:"relative", zIndex:1, width:"100%", maxWidth:450, objectFit:"contain"}}/>
             ) : (
-              <div style={{position:"relative", zIndex:1, fontSize:180, color:"#ff7e47"}}>{zodiac.symbol}</div>
+              <div style={{position:"relative", zIndex:1, fontSize:180, color:"#592209"}}>{zodiac.symbol}</div>
             )}
           </div>
           <div>
-            <div style={{fontSize: 18, color:"#fff", letterSpacing: "0.08em", marginBottom: 20, textTransform: "uppercase"}}>DAILY COSMIC READING</div>
+            <div style={{fontSize: 18, color:"#301607", letterSpacing: "0.08em", marginBottom: 20, textTransform: "uppercase"}}>DAILY COSMIC READING</div>
 
             <div style={{display:"flex", alignItems:"center", gap:16, marginBottom: 6}}>
-              <div style={{fontFamily:"'Astra', 'Cinzel', serif", fontSize: 48, color:"#fff", fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase", lineHeight: 1}}>{zodiac.name}</div>
+              <div style={{fontFamily:"'DM Sans', system-ui, sans-serif", fontSize: 48, color:"#301607", fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase", lineHeight: 1}}>{zodiac.name}</div>
             </div>
 
-            <div style={{fontSize: 22, color:"#fff", marginBottom: 30}}>{zodiac.dates}</div>
+            <div style={{fontSize: 22, color:"#301607", marginBottom: 30}}>{zodiac.dates}</div>
 
             <div style={{display:"flex", gap:16, flexWrap:"nowrap", marginBottom: 36}}>
-              <span style={{border:"1px solid rgba(255,126,71,0.5)", borderRadius: 30, padding:"10px 24px", fontSize: 18, color:"#fff", background:"rgba(255,255,255,0.02)", whiteSpace:"nowrap"}}>Element : {zodiac.element}</span>
-              <span style={{border:"1px solid rgba(255,126,71,0.5)", borderRadius: 30, padding:"10px 24px", fontSize: 18, color:"#fff", background:"rgba(255,255,255,0.02)", whiteSpace:"nowrap"}}>Ruler: {zodiac.ruling}</span>
-              <span style={{border:"1px solid rgba(255,126,71,0.5)", borderRadius: 30, padding:"10px 24px", fontSize: 18, color:"#fff", background:"rgba(255,255,255,0.02)", display:"flex", alignItems:"center", gap:8, whiteSpace:"nowrap"}}>
+              <span style={{border:"1px solid rgba(89,34,9,0.5)", borderRadius: 30, padding:"10px 24px", fontSize: 18, color:"rgba(48,22,7,0.75)", background:"rgba(89,34,9,0.2)", whiteSpace:"nowrap"}}>Element : {zodiac.element}</span>
+              <span style={{border:"1px solid rgba(89,34,9,0.5)", borderRadius: 30, padding:"10px 24px", fontSize: 18, color:"rgba(48,22,7,0.75)", background:"rgba(89,34,9,0.2)", whiteSpace:"nowrap"}}>Ruler: {zodiac.ruling}</span>
+              <span style={{border:"1px solid rgba(89,34,9,0.5)", borderRadius: 30, padding:"10px 24px", fontSize: 18, color:"rgba(48,22,7,0.75)", background:"rgba(89,34,9,0.2)", display:"flex", alignItems:"center", gap:8, whiteSpace:"nowrap"}}>
                 {daily.moonPhase}
               </span>
             </div>
 
-            <div style={{fontSize: 18, color:"#f8f8f8", lineHeight: 1.6}}>{zodiac.description}</div>
+            <div style={{fontSize: 18, color:"#301607", lineHeight: 1.6}}>{zodiac.description}</div>
           </div>
         </div>
 
@@ -960,53 +960,53 @@ export default function ZodiacDetail() {
         <div className="zd-sec" style={{display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:20, marginBottom: 80, padding: "0 20px", animationDelay: "0.3s"}}>
           <div>
             <div style={{display:"flex", alignItems:"center", gap:16, marginBottom: 12}}>
-              <div style={{border:"1px solid rgba(255,126,71,0.6)", borderRadius: 16, width: 60, height: 60, display:"flex", alignItems:"center", justifyContent:"center"}}>
+              <div style={{border:"1px solid rgba(89,34,9,0.6)", borderRadius: 16, width: 60, height: 60, display:"flex", alignItems:"center", justifyContent:"center"}}>
                 <span style={{fontSize: 28}}>🔥</span>
               </div>
               <div style={{fontSize: 28, fontWeight: 700}}>
-                <span style={{color:"#fff"}}>{streak}-Days </span>
-                <span style={{color:"#ff7e47"}}>Cosmic Streak</span>
+                <span style={{color:"#301607"}}>{streak}-Days </span>
+                <span style={{color:"#592209"}}>Cosmic Streak</span>
               </div>
             </div>
             <div style={{display:"flex", gap:10, paddingLeft: 76}}>
               {[...Array(6)].map((_, i) => (
-                <div key={i} style={{width: 32, height: 32, borderRadius:"50%", border:"1px solid rgba(255,255,255,0.2)", display:"flex", alignItems:"center", justifyContent:"center"}}>
-                  <span style={{fontSize: 14, color: i < (streak % 6 || 6) ? "#ff7e47" : "rgba(255,255,255,0.2)"}}>★</span>
+                <div key={i} style={{width: 32, height: 32, borderRadius:"50%", border:"1px solid rgba(89,34,9,0.2)", display:"flex", alignItems:"center", justifyContent:"center"}}>
+                  <span style={{fontSize: 14, color: i < (streak % 6 || 6) ? "#ff7e47" : "rgba(48,22,7,0.45)"}}>★</span>
                 </div>
               ))}
             </div>
           </div>
           
-          <div style={{border:"1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding:"14px 24px", display:"flex", alignItems:"center", gap:20, background:"rgba(0,0,0,0.2)", minWidth: 220}}>
-            <span style={{fontSize: 24, color:"#ff7e47"}}>✨</span>
+          <div style={{border:"1px solid rgba(89,34,9,0.2)", borderRadius: 12, padding:"14px 24px", display:"flex", alignItems:"center", gap:20, background:"rgba(89,34,9,0.07)", minWidth: 220}}>
+            <span style={{fontSize: 24, color:"#592209"}}>✨</span>
             <div style={{flex: 1}}>
-              <div style={{color:"#ff7e47", fontSize: 14, fontWeight: 700, textTransform:"uppercase"}}>{badge.name}</div>
-              <div style={{color:"rgba(255,255,255,0.6)", fontSize: 13}}>Current Badge</div>
+              <div style={{color:"#592209", fontSize: 14, fontWeight: 700, textTransform:"uppercase"}}>{badge.name}</div>
+              <div style={{color:"rgba(48,22,7,0.85)", fontSize: 13}}>Current Badge</div>
             </div>
-            <span style={{color:"rgba(255,255,255,0.3)", fontSize: 18}}>&gt;</span>
+            <span style={{color:"rgba(48,22,7,0.72)", fontSize: 18}}>&gt;</span>
           </div>
         </div>
 
         {/* ── TODAY'S COSMIC ENERGY ── */}
         <div className="zd-sec" style={{textAlign:"center", marginBottom: 100, animationDelay: "0.4s"}}>
-          <div style={{fontSize: 28, color:"#fff", fontWeight: 700, marginBottom: 50}}>Today's Cosmic Energy</div>
+          <div style={{fontSize: 28, color:"#301607", fontWeight: 700, marginBottom: 50}}>Today's Cosmic Energy</div>
           
           <div style={{display:"flex", justifyContent:"center", marginBottom: 40}}>
-            <div className="sun-breathe sun-glow" style={{width: 260, height: 260, borderRadius:"50%", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", border:"5px solid #ffc94a"}}>
+            <div className="sun-breathe sun-glow" style={{width: 260, height: 260, borderRadius:"50%", position:"relative", display:"flex", alignItems:"center", justifyContent:"center", border:"5px solid #E58A45"}}>
               <div style={{textAlign:"center", zIndex: 10, display:"flex", flexDirection:"column", alignItems:"center", gap: 4}}>
-                <div style={{fontFamily:"'Astra', 'Cinzel', serif", fontSize: 64, fontWeight: 700, color:"#fff", lineHeight: 1, letterSpacing: "0.05em"}}>{energyCount}%</div>
-                <div style={{fontSize: 16, color:"#ff7e47", fontWeight: 700, letterSpacing: "0.1em", marginTop: 4}}>ENERGY</div>
+                <div style={{fontFamily:"'DM Sans', system-ui, sans-serif", fontSize: 64, fontWeight: 700, color:"#301607", lineHeight: 1, letterSpacing: "0.05em"}}>{energyCount}%</div>
+                <div style={{fontSize: 16, color:"#592209", fontWeight: 700, letterSpacing: "0.1em", marginTop: 4}}>ENERGY</div>
               </div>
             </div>
           </div>
           
-          <div style={{fontSize: 22, color:"#f8f8f8", fontStyle:"italic", marginBottom: 30}}>"{daily.cosmicMessage}"</div>
+          <div style={{fontSize: 22, color:"#301607", fontStyle:"italic", marginBottom: 30}}>"{daily.cosmicMessage}"</div>
           
           <div style={{display:"flex", justifyContent:"center", gap:40}}>
-            <span style={{color:"#f8f8f8", fontSize: 20, display:"flex", alignItems:"center", gap:10}}>
+            <span style={{color:"#301607", fontSize: 20, display:"flex", alignItems:"center", gap:10}}>
               {daily.moonPhase}
             </span>
-            <span style={{color:"#f8f8f8", fontSize: 20, display:"flex", alignItems:"center", gap:10}}>
+            <span style={{color:"#301607", fontSize: 20, display:"flex", alignItems:"center", gap:10}}>
               <span style={{fontSize: 24}}>🪐</span> {daily.dominantPlanet}
             </span>
           </div>
@@ -1014,7 +1014,7 @@ export default function ZodiacDetail() {
 
         {/* ── DAILY HOROSCOPE ── */}
         <div className="zd-sec" style={{marginBottom: 100, animationDelay: "0.5s"}}>
-          <div style={{fontSize: 32, color:"#fff", fontWeight: 700, marginBottom: 40, marginLeft: 10}}>Daily Horoscope</div>
+          <div style={{fontSize: 32, color:"#301607", fontWeight: 700, marginBottom: 40, marginLeft: 10}}>Daily Horoscope</div>
           
           <div style={{display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap: 24}}>
             {(Object.keys(daily.horoscope) as Array<keyof typeof daily.horoscope>).map((key) => {
@@ -1030,7 +1030,7 @@ export default function ZodiacDetail() {
         {/* ── TODAY'S LUCKY PREDICTIONS ── */}
         <div className="zd-sec" style={{marginBottom: 100, animationDelay: "0.6s"}}>
           <div style={{marginBottom: 40}}>
-            <div style={{fontSize: 32, color:"#fff", fontWeight: 700}}>TODAY'S LUCKY PREDICTIONS</div>
+            <div style={{fontSize: 32, color:"#301607", fontWeight: 700}}>TODAY'S LUCKY PREDICTIONS</div>
           </div>
           
           <div style={{display:"grid", gridTemplateColumns:"repeat(6, 1fr)", gap: 20}}>
@@ -1042,10 +1042,10 @@ export default function ZodiacDetail() {
               {icon:directionIcon, label:"DIRECTION", value:daily.lucky.direction},
               {icon:luckyPlanetIcon, label:"LUCKY PLANET", value:daily.lucky.planet},
             ].map(item => (
-              <div key={item.label} style={{background:"rgba(10, 15, 30, 0.4)", border:"1px solid rgba(255,126,71,0.3)", borderRadius: 16, padding:"30px 10px", textAlign:"center", display:"flex", flexDirection:"column", alignItems:"center", gap: 24, transition:"transform 0.2s ease"}} onMouseOver={(e)=>e.currentTarget.style.transform="translateY(-4px)"} onMouseOut={(e)=>e.currentTarget.style.transform="translateY(0)"}>
+              <div key={item.label} style={{background:"rgba(89,34,9,0.07)", border:"1px solid rgba(89,34,9,0.3)", borderRadius: 16, padding:"30px 10px", textAlign:"center", display:"flex", flexDirection:"column", alignItems:"center", gap: 24, transition:"transform 0.2s ease"}} onMouseOver={(e)=>e.currentTarget.style.transform="translateY(-4px)"} onMouseOut={(e)=>e.currentTarget.style.transform="translateY(0)"}>
                 <img src={item.icon} alt={item.label} style={{width:70, height:70, objectFit:"contain"}}/>
-                <div style={{fontSize: 12, color:"#ff7e47", fontWeight: 700, letterSpacing:"0.05em"}}>{item.label}</div>
-                <div style={{fontSize: 16, color:"#fff", fontWeight: 700, display:"flex", alignItems:"center", justifyContent:"center", gap:10}}>
+                <div style={{fontSize: 12, color:"#592209", fontWeight: 700, letterSpacing:"0.05em"}}>{item.label}</div>
+                <div style={{fontSize: 16, color:"#301607", fontWeight: 700, display:"flex", alignItems:"center", justifyContent:"center", gap:10}}>
                   {item.value}
                   {item.dot && <span style={{width:12, height:12, borderRadius:"50%", background:item.dot, display:"inline-block", flexShrink:0}}></span>}
                 </div>
@@ -1057,7 +1057,7 @@ export default function ZodiacDetail() {
         {/* ── DAILY OPPORTUNITY METER ── */}
         <div className="zd-sec" style={{marginBottom: 100, animationDelay: "0.7s"}}>
           <div style={{marginBottom: 50}}>
-            <div style={{fontSize: 32, color:"#fff", fontWeight: 700}}>DAILY OPPORTUNITY METER</div>
+            <div style={{fontSize: 32, color:"#301607", fontWeight: 700}}>DAILY OPPORTUNITY METER</div>
           </div>
           
           <div style={{display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap: 20, justifyItems:"center"}}>
@@ -1074,10 +1074,10 @@ export default function ZodiacDetail() {
 
         {/* ── COSMIC ALIGNMENT BANNER ── */}
         <div className="zd-sec" style={{marginBottom: 80, animationDelay: "0.8s"}}>
-          <div style={{display:"flex", alignItems:"flex-start", gap: 16, padding: "24px 30px", border:"1px solid rgba(255,126,71,0.3)", borderRadius: 16, background:"rgba(10,15,30,0.4)"}}>
-            <div style={{width: 20, height: 20, borderRadius:"50%", border:"2px solid #ff7e47", flexShrink: 0, marginTop: 4}}></div>
-            <div style={{fontSize: 18, color:"#e8e0f0", lineHeight: 1.7, fontStyle:"italic"}}>
-              Your cosmic alignment for <span style={{color:"#ff7e47", fontWeight: 700}}>Career</span> is reaching a peak of <span style={{color:"#ff7e47", fontWeight: 700}}>{daily.horoscope.career.score}%</span>. Today is an ideal time for negotiations or starting high-impact projects as {daily.dominantPlanet} enters your second house.
+          <div style={{display:"flex", alignItems:"flex-start", gap: 16, padding: "24px 30px", border:"1px solid rgba(89,34,9,0.3)", borderRadius: 16, background:"rgba(89,34,9,0.07)"}}>
+            <div style={{width: 20, height: 20, borderRadius:"50%", border:"2px solid #592209", flexShrink: 0, marginTop: 4}}></div>
+            <div style={{fontSize: 18, color:"#301607", lineHeight: 1.7, fontStyle:"italic"}}>
+              Your cosmic alignment for <span style={{color:"#592209", fontWeight: 700}}>Career</span> is reaching a peak of <span style={{color:"#592209", fontWeight: 700}}>{daily.horoscope.career.score}%</span>. Today is an ideal time for negotiations or starting high-impact projects as {daily.dominantPlanet} enters your second house.
             </div>
           </div>
         </div>
@@ -1085,56 +1085,56 @@ export default function ZodiacDetail() {
         {/* ── PERSONALITY & LOVE CARDS ── */}
         <div className="zd-sec" style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap: 30, marginBottom: 80, animationDelay: "0.9s"}}>
           {/* Personality Card */}
-          <div className="hcard" style={{background:"linear-gradient(180deg, rgba(20,25,50,0.6) 0%, rgba(10,15,30,0.8) 100%)", border:"1px solid rgba(255,126,71,0.25)", borderRadius: 16, padding: "36px 30px"}}>
+          <div className="hcard" style={{background:"linear-gradient(180deg, #FBF5EC 0%, #FBF5EC 100%)", border:"1px solid rgba(89,34,9,0.25)", borderRadius: 16, padding: "36px 30px"}}>
             <div style={{display:"flex", alignItems:"center", gap: 12, marginBottom: 30}}>
               <span style={{fontSize: 24}}>👤</span>
-              <span style={{color:"#fff", fontSize: 24, fontWeight: 700}}>Personality</span>
+              <span style={{color:"#301607", fontSize: 24, fontWeight: 700}}>Personality</span>
             </div>
             
-            <div style={{color:"#ff7e47", fontSize: 14, fontWeight: 700, letterSpacing:"0.08em", marginBottom: 14}}>CORE TRAITS</div>
+            <div style={{color:"#592209", fontSize: 14, fontWeight: 700, letterSpacing:"0.08em", marginBottom: 14}}>CORE TRAITS</div>
             <div style={{display:"flex", gap: 10, flexWrap:"wrap", marginBottom: 30}}>
               {zodiac.traits.map(t => (
-                <span key={t} style={{border:"1px solid rgba(255,126,71,0.4)", borderRadius: 20, padding:"6px 16px", fontSize: 14, color:"#e8e0f0"}}>{t}</span>
+                <span key={t} style={{border:"1px solid rgba(89,34,9,0.4)", borderRadius: 20, padding:"6px 16px", fontSize: 14, color:"#301607"}}>{t}</span>
               ))}
             </div>
             
-            <div style={{color:"#ff7e47", fontSize: 14, fontWeight: 700, letterSpacing:"0.08em", marginBottom: 14}}>STRENGTHS</div>
+            <div style={{color:"#592209", fontSize: 14, fontWeight: 700, letterSpacing:"0.08em", marginBottom: 14}}>STRENGTHS</div>
             <div style={{marginBottom: 30}}>
               {zodiac.strengths.map(s => (
-                <div key={s} style={{display:"flex", alignItems:"center", gap: 10, marginBottom: 6, color:"#e8e0f0", fontSize: 15}}>
-                  <span style={{color:"#ff7e47", fontSize: 12}}>☆</span> {s}
+                <div key={s} style={{display:"flex", alignItems:"center", gap: 10, marginBottom: 6, color:"#301607", fontSize: 15}}>
+                  <span style={{color:"#592209", fontSize: 12}}>☆</span> {s}
                 </div>
               ))}
             </div>
             
-            <div style={{color:"#ff7e47", fontSize: 14, fontWeight: 700, letterSpacing:"0.08em", marginBottom: 14}}>CHALLENGES</div>
+            <div style={{color:"#592209", fontSize: 14, fontWeight: 700, letterSpacing:"0.08em", marginBottom: 14}}>CHALLENGES</div>
             <div>
               {zodiac.weaknesses.map(w => (
-                <div key={w} style={{display:"flex", alignItems:"center", gap: 10, marginBottom: 6, color:"#e8e0f0", fontSize: 15}}>
-                  <span style={{color:"#ff7e47", fontSize: 12}}>☆</span> {w}
+                <div key={w} style={{display:"flex", alignItems:"center", gap: 10, marginBottom: 6, color:"#301607", fontSize: 15}}>
+                  <span style={{color:"#592209", fontSize: 12}}>☆</span> {w}
                 </div>
               ))}
             </div>
           </div>
 
           {/* Love & Relationships Card */}
-          <div className="hcard" style={{background:"linear-gradient(180deg, rgba(20,25,50,0.6) 0%, rgba(10,15,30,0.8) 100%)", border:"1px solid rgba(255,126,71,0.25)", borderRadius: 16, padding: "36px 30px"}}>
+          <div className="hcard" style={{background:"linear-gradient(180deg, #FBF5EC 0%, #FBF5EC 100%)", border:"1px solid rgba(89,34,9,0.25)", borderRadius: 16, padding: "36px 30px"}}>
             <div style={{display:"flex", alignItems:"center", gap: 12, marginBottom: 30}}>
               <span style={{fontSize: 24}}>❤️</span>
-              <span style={{color:"#fff", fontSize: 24, fontWeight: 700}}>Love & Relationships</span>
+              <span style={{color:"#301607", fontSize: 24, fontWeight: 700}}>Love & Relationships</span>
             </div>
             
-            <div style={{color:"rgba(232,224,240,0.85)", fontSize: 16, lineHeight: 1.7, marginBottom: 40}}>
+            <div style={{color:"#592209", fontSize: 16, lineHeight: 1.7, marginBottom: 40}}>
               {zodiac.description}
             </div>
             
-            <div style={{color:"#fff", fontSize: 16, fontWeight: 700, letterSpacing:"0.12em", marginBottom: 18}}>BEST MATCHES</div>
+            <div style={{color:"#301607", fontSize: 16, fontWeight: 700, letterSpacing:"0.12em", marginBottom: 18}}>BEST MATCHES</div>
             <div style={{display:"flex", gap: 12, flexWrap:"wrap"}}>
               {zodiac.compatibility.map(c => {
                 const matchSign = zodiacSigns.find(z => z.name === c);
                 return (
-                  <span key={c} style={{border:"1px solid rgba(255,126,71,0.4)", borderRadius: 20, padding:"8px 18px", fontSize: 14, color:"#e8e0f0", display:"flex", alignItems:"center", gap: 8}}>
-                    <span style={{color:"#ff7e47"}}>{matchSign?.symbol}</span> {c}
+                  <span key={c} style={{border:"1px solid rgba(89,34,9,0.4)", borderRadius: 20, padding:"8px 18px", fontSize: 14, color:"#301607", display:"flex", alignItems:"center", gap: 8}}>
+                    <span style={{color:"#592209"}}>{matchSign?.symbol}</span> {c}
                   </span>
                 );
               })}
@@ -1145,32 +1145,32 @@ export default function ZodiacDetail() {
         {/* ── DO TODAY & AVOID ── */}
         <div className="zd-sec" style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap: 30, marginBottom: 100, animationDelay: "1.0s"}}>
           {/* Do Today Card */}
-          <div className="hcard" style={{background:"rgba(10, 15, 30, 0.4)", border:"1px solid rgba(255,126,71,0.25)", borderRadius: 16, padding: "36px 30px"}}>
+          <div className="hcard" style={{background:"rgba(89,34,9,0.07)", border:"1px solid rgba(89,34,9,0.25)", borderRadius: 16, padding: "36px 30px"}}>
             <div style={{display:"flex", alignItems:"center", gap: 12, marginBottom: 30}}>
               <span style={{fontSize: 24}}>✅</span>
-              <span style={{color:"#fff", fontSize: 24, fontWeight: 700}}>Do Today</span>
+              <span style={{color:"#301607", fontSize: 24, fontWeight: 700}}>Do Today</span>
             </div>
             <div style={{display:"flex", flexDirection:"column", gap: 16}}>
               {daily.todo.map((t, i) => (
-                <div key={i} style={{background:"rgba(74, 222, 128, 0.05)", border:"1px solid rgba(74, 222, 128, 0.25)", borderRadius: 8, padding: "16px 20px", display:"flex", alignItems:"center", gap: 12}}>
-                  <span style={{color:"#4ade80", fontSize: 18, fontWeight: 600}}>✓</span>
-                  <span style={{color:"#fff", fontSize: 16, fontStyle:"italic"}}>{t}</span>
+                <div key={i} style={{background:"rgba(229,138,69,0.05)", border:"1px solid rgba(229,138,69,0.25)", borderRadius: 8, padding: "16px 20px", display:"flex", alignItems:"center", gap: 12}}>
+                  <span style={{color:"#301607", fontSize: 18, fontWeight: 600}}>✓</span>
+                  <span style={{color:"#301607", fontSize: 16, fontStyle:"italic"}}>{t}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Things To Avoid Card */}
-          <div className="hcard" style={{background:"rgba(10, 15, 30, 0.4)", border:"1px solid rgba(255,126,71,0.25)", borderRadius: 16, padding: "36px 30px"}}>
+          <div className="hcard" style={{background:"rgba(89,34,9,0.07)", border:"1px solid rgba(89,34,9,0.25)", borderRadius: 16, padding: "36px 30px"}}>
             <div style={{display:"flex", alignItems:"center", gap: 12, marginBottom: 30}}>
               <span style={{fontSize: 24}}>⚠️</span>
-              <span style=  {{color:"#fff", fontSize: 24, fontWeight: 700}}>Things To Avoid</span>
+              <span style=  {{color:"#301607", fontSize: 24, fontWeight: 700}}>Things To Avoid</span>
             </div>
             <div style={{display:"flex", flexDirection:"column", gap: 16}}>
               {daily.avoid.map((a, i) => (
                 <div key={i} style={{background:"rgba(248, 113, 113, 0.05)", border:"1px solid rgba(248, 113, 113, 0.25)", borderRadius: 8, padding: "16px 20px", display:"flex", alignItems:"center", gap: 12}}>
-                  <span style={{color:"#f87171", fontSize: 18, fontWeight: 600, paddingLeft: 2}}>!</span>
-                  <span style={{color:"#fff", fontSize: 16, fontStyle:"italic"}}>{a}</span>
+                  <span style={{color:"#9B2C1D", fontSize: 18, fontWeight: 600, paddingLeft: 2}}>!</span>
+                  <span style={{color:"#301607", fontSize: 16, fontStyle:"italic"}}>{a}</span>
                 </div>
               ))}
             </div>
@@ -1180,78 +1180,78 @@ export default function ZodiacDetail() {
         {/* ── POWER WORDS, MOOD, MANIFESTATION ── */}
         <div className="zd-sec" style={{display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap: 30, marginBottom: 100, animationDelay: "1.1s", textAlign:"center"}}>
           {/* Power Words */}
-          <div style={{borderRight:"1px solid rgba(255, 255, 255, 0.15)", paddingRight: 20}}>
+          <div style={{borderRight:"1px solid rgba(89,34,9,0.2)", paddingRight: 20}}>
             <div style={{marginBottom: 20}}>
-              <span style={{color:"#fff", fontSize: 22, fontWeight: 700}}>Today's Power Words</span>
+              <span style={{color:"#301607", fontSize: 22, fontWeight: 700}}>Today's Power Words</span>
             </div>
             <div style={{display:"flex", justifyContent:"center", gap: 16}}>
               {daily.powerWords.map(w => (
-                <span key={w} style={{color:"#ff7e47", fontSize: 20, fontStyle:"italic", fontWeight: 600}}>{w}</span>
+                <span key={w} style={{color:"#592209", fontSize: 20, fontStyle:"italic", fontWeight: 600}}>{w}</span>
               ))}
             </div>
           </div>
 
           {/* Mood Detector */}
-          <div style={{borderRight:"1px solid rgba(255, 255, 255, 0.15)", paddingRight: 20, paddingLeft: 20}}>
+          <div style={{borderRight:"1px solid rgba(89,34,9,0.2)", paddingRight: 20, paddingLeft: 20}}>
             <div style={{marginBottom: 20}}>
-              <span style={{color:"#fff", fontSize: 22, fontWeight: 700}}>Cosmic Mood Detector</span>
+              <span style={{color:"#301607", fontSize: 22, fontWeight: 700}}>Cosmic Mood Detector</span>
             </div>
-            <div style={{color:"#ff7e47", fontSize: 20, fontStyle:"italic", fontWeight: 600}}>{daily.mood}</div>
+            <div style={{color:"#592209", fontSize: 20, fontStyle:"italic", fontWeight: 600}}>{daily.mood}</div>
           </div>
 
           {/* Manifestation */}
           <div style={{paddingLeft: 20}}>
             <div style={{marginBottom: 20}}>
-              <span style={{color:"#fff", fontSize: 22, fontWeight: 700}}>Today's Manifestation</span>
+              <span style={{color:"#301607", fontSize: 22, fontWeight: 700}}>Today's Manifestation</span>
             </div>
-            <div style={{color:"#ff7e47", fontSize: 18, fontStyle:"italic", fontWeight: 600}}>"{daily.manifestation}"</div>
+            <div style={{color:"#592209", fontSize: 18, fontStyle:"italic", fontWeight: 600}}>"{daily.manifestation}"</div>
           </div>
         </div>
 
         {/* ── TODAY'S BEST COMPATIBILITY ── */}
         <div className="zd-sec" style={{textAlign:"center", marginBottom: 100, animationDelay: "1.2s"}}>
           <div style={{marginBottom: 30}}>
-            <div style={{fontSize: 28, color:"#fff", fontWeight: 700}}>Today's Best Compatibility</div>
+            <div style={{fontSize: 28, color:"#301607", fontWeight: 700}}>Today's Best Compatibility</div>
           </div>
-          <div style={{fontSize: 64, fontWeight: 800, color:"#fff", fontFamily:"'Astra', 'Cinzel', serif", marginBottom: 30}}>{daily.compatibility.score}%</div>
+          <div style={{fontSize: 64, fontWeight: 800, color:"#301607", fontFamily:"'DM Sans', system-ui, sans-serif", marginBottom: 30}}>{daily.compatibility.score}%</div>
           
           <div style={{display:"flex", justifyContent:"center", gap: 40, marginBottom: 30}}>
             {/* Current Sign */}
             <div style={{display:"flex", flexDirection:"column", alignItems:"center", gap: 10}}>
-              <div style={{width: 54, height: 54, background: "#8b5cf6", borderRadius: 12, display:"flex", alignItems:"center", justifyContent:"center", fontSize: 28, color:"#fff"}}>
+              <div style={{width: 54, height: 54, background: "#592209", borderRadius: 12, display:"flex", alignItems:"center", justifyContent:"center", fontSize: 28, color:"#F5E9D6"}}>
                 {zodiac.symbol}
               </div>
-              <div style={{color:"#fff", fontSize: 16, fontWeight: 600}}>{zodiac.name}</div>
+              <div style={{color:"#301607", fontSize: 16, fontWeight: 600}}>{zodiac.name}</div>
             </div>
             {/* Compatible Sign */}
             <div style={{display:"flex", flexDirection:"column", alignItems:"center", gap: 10}}>
-              <div style={{width: 54, height: 54, background: "#8b5cf6", borderRadius: 12, display:"flex", alignItems:"center", justifyContent:"center", fontSize: 28, color:"#fff"}}>
+              <div style={{width: 54, height: 54, background: "#592209", borderRadius: 12, display:"flex", alignItems:"center", justifyContent:"center", fontSize: 28, color:"#F5E9D6"}}>
                 {SIGN_SYMBOLS[daily.compatibility.sign.toLowerCase()]}
               </div>
-              <div style={{color:"#fff", fontSize: 16, fontWeight: 600}}>{daily.compatibility.sign}</div>
+              <div style={{color:"#301607", fontSize: 16, fontWeight: 600}}>{daily.compatibility.sign}</div>
             </div>
           </div>
 
-          <div style={{color:"#ff7e47", fontSize: 20, fontStyle:"italic", fontWeight: 600}}>{daily.compatibility.reason}</div>
+          <div style={{color:"#592209", fontSize: 20, fontStyle:"italic", fontWeight: 600}}>{daily.compatibility.reason}</div>
         </div>
 
         {/* ── COSMIC FORTUNE WHEEL ── */}
         <div className="zd-sec" style={{textAlign:"center", marginBottom: 100, animationDelay: "1.3s"}}>
           <div style={{marginBottom: 10}}>
-            <div style={{fontSize: 28, color:"#fff", fontWeight: 700}}>Cosmic Fortune Wheel</div>
+            <div style={{fontSize: 28, color:"#301607", fontWeight: 700}}>Cosmic Fortune Wheel</div>
           </div>
-          <div style={{fontSize: 16, color:"rgba(255,255,255,0.6)", marginBottom: 40}}>Spin once daily to reveal your cosmic fortune</div>
+          <div style={{fontSize: 16, color:"rgba(48,22,7,0.85)", marginBottom: 40}}>Spin once daily to reveal your cosmic fortune</div>
           <FortuneWheel rewards={daily.fortuneRewards} sign={signLower} />
         </div>
 
         {/* ── DAILY TAROT REVEAL ── */}
         <div className="zd-sec" style={{textAlign:"center", marginBottom: 100, animationDelay: "1.4s", display:"flex", flexDirection:"column", alignItems:"center"}}>
           <div style={{marginBottom: 10}}>
-            <div style={{fontSize: 28, color:"#fff", fontWeight: 700}}>Daily Tarot Reveal</div>
+            <div style={{fontSize: 28, color:"#301607", fontWeight: 700}}>Daily Tarot Reveal</div>
           </div>
-          <div style={{fontSize: 16, color:"rgba(255,255,255,0.6)", marginBottom: 40}}>Tap the card to reveal today's cosmic message</div>
+          <div style={{fontSize: 16, color:"rgba(48,22,7,0.85)", marginBottom: 40}}>Tap the card to reveal today's cosmic message</div>
           <TarotCard card={daily.tarot.card} meaning={daily.tarot.meaning} />
-          <Link to="/compatibility" style={{marginTop: 40, display:"inline-block", border:"1px solid rgba(255,126,71,0.6)", borderRadius: 30, padding:"16px 44px", color:"#fff", fontSize: 16, fontWeight: 700, letterSpacing:"0.1em", textDecoration:"none", textTransform:"uppercase", transition:"background 0.2s ease, transform 0.2s ease"}}
+          <Link to="/compatibility" style={{marginTop: 40, display:"inline-block", border:"1px solid rgba(89,34,9,0.6)", borderRadius: 30, padding:"16px 44px", color:"rgba(48,22,7,0.75)", fontSize: 16, fontWeight: 700, letterSpacing:"0.1em", textDecoration:"none", textTransform:"uppercase", transition:"background 0.2s ease, transform 0.2s ease"}}
             onMouseOver={(e)=>{e.currentTarget.style.background="rgba(255,126,71,0.12)"; e.currentTarget.style.transform="translateY(-2px)";}}
             onMouseOut={(e)=>{e.currentTarget.style.background="transparent"; e.currentTarget.style.transform="translateY(0)";}}>
             Check Compatibility
@@ -1261,11 +1261,11 @@ export default function ZodiacDetail() {
         {/* ── SIGN NAVIGATION ── */}
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:40,flexWrap:"wrap",gap:16}}>
           <Link to={`/zodiac/${prevSign}`} className="signav"
-            style={{display:"flex",alignItems:"center",gap:10,color:"rgba(255,126,71,0.7)",textDecoration:"none",fontSize:16,fontWeight:600,letterSpacing:"0.1em",transition:"color 0.2s"}}>
+            style={{display:"flex",alignItems:"center",gap:10,color:"rgba(89,34,9,0.7)",textDecoration:"none",fontSize:16,fontWeight:600,letterSpacing:"0.1em",transition:"color 0.2s"}}>
             ← {prevSign.toUpperCase()}
           </Link>
           <Link to={`/zodiac/${nextSign}`} className="signav"
-            style={{display:"flex",alignItems:"center",gap:10,color:"rgba(255,126,71,0.7)",textDecoration:"none",fontSize:16,fontWeight:600,letterSpacing:"0.1em",transition:"color 0.2s"}}>
+            style={{display:"flex",alignItems:"center",gap:10,color:"rgba(89,34,9,0.7)",textDecoration:"none",fontSize:16,fontWeight:600,letterSpacing:"0.1em",transition:"color 0.2s"}}>
             {nextSign.toUpperCase()} →
           </Link>
         </div>

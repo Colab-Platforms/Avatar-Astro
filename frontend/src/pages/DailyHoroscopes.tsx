@@ -149,7 +149,7 @@ const DailyHoroscopes = () => {
             {/* Error State */}
             {!loading && !horoscopeData && (
               <div className="text-center py-12">
-                <p className="text-red-400">Failed to generate horoscope. Please try again.</p>
+                <p className="text-red-800">Failed to generate horoscope. Please try again.</p>
               </div>
             )}
           </div>

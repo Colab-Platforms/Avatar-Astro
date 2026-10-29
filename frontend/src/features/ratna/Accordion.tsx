@@ -36,7 +36,7 @@ const Accordion = ({ title, children, defaultOpen = false }: Props) => {
         data-open={open}
       >
         <div className="ratna-acc-inner">
-          <div className="space-y-3 pb-4 pt-1 text-base text-slate-200">{children}</div>
+          <div className="space-y-3 pb-4 pt-1 text-base text-muted-foreground">{children}</div>
         </div>
       </div>
     </div>

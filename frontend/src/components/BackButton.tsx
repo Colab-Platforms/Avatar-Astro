@@ -69,23 +69,23 @@ const BackButton = () => {
             'group flex items-center gap-1.5',
             'px-3.5 py-2.5 rounded-xl',
             // glass surface
-            'bg-[rgba(8,10,18,0.62)] backdrop-blur-md',
+            'bg-[#FBF5EC] shadow-sm',
             // border — dim terracotta that brightens on hover
-            'border border-[rgba(188,106,77,0.16)]',
-            'hover:border-[rgba(188,106,77,0.44)]',
+            'border border-[rgba(89,34,9,0.28)]',
+            'hover:border-[#E58A45]',
             // text — dim terracotta → full terracotta
-            'text-[rgba(188,106,77,0.50)]',
-            'hover:text-[#BC6A4D]',
+            'text-[#592209]',
+            'hover:text-[#461B07]',
             // glow on hover
-            'hover:bg-[rgba(8,10,18,0.82)]',
-            'hover:shadow-[0_0_18px_rgba(188,106,77,0.10)]',
+            'hover:bg-[#F0DFC7]',
+            'hover:shadow-[0_0_18px_rgba(89,34,9,0.10)]',
             // transitions
             'transition-all duration-300 ease-out',
             // accessibility
             'cursor-pointer select-none',
             'focus:outline-none',
-            'focus-visible:ring-2 focus-visible:ring-[rgba(188,106,77,0.48)]',
-            'focus-visible:ring-offset-2 focus-visible:ring-offset-transparent',
+            'focus-visible:ring-2 focus-visible:ring-[#E58A45]',
+            'focus-visible:ring-offset-2 focus-visible:ring-offset-background',
             // minimum touch target
             'min-h-[44px] min-w-[44px]',
           ].join(' ')}
@@ -99,7 +99,7 @@ const BackButton = () => {
           {/* Label */}
           <span
             className="text-[10px] tracking-[3px] uppercase leading-none"
-            style={{ fontFamily: "'Astra','Iceland',sans-serif" }}
+            style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
           >
             Back
           </span>

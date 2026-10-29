@@ -156,7 +156,7 @@ export const ScrollytellingHero = () => {
             <h1
               className="text-center select-none uppercase mx-auto mb-6 flex flex-col justify-between w-full max-w-[1438px] lg:h-[200px] text-[48px] md:text-[68px] lg:text-[88px] leading-[58px] md:leading-[82px] lg:leading-[104px] tracking-[2.4px] md:tracking-[3.6px] lg:tracking-[4.8px] font-bold"
               style={{
-                fontFamily: "'Astra', 'Iceland', sans-serif",
+                fontFamily: "'DM Sans', system-ui, sans-serif",
               }}
             >
               <span className="text-[#D16B3C] block">Journey Through</span>

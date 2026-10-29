@@ -124,15 +124,15 @@ const RatnaJyotish = () => {
       <section className="mx-auto w-full max-w-3xl px-4 pb-16 pt-12 sm:px-6" aria-hidden={loading}>
         <header className="text-center">
           <RatnaEmblem size={84} className="mx-auto h-[64px] w-[64px] sm:h-[84px] sm:w-[84px]" />
-          <h1 className="mt-3 font-astra text-4xl text-[#f0d58a] sm:text-5xl">{RATNA_TITLE}</h1>
-          <p className="mx-auto mt-3 max-w-xl text-lg text-slate-200">{RATNA_SUBTITLE}</p>
-          <p className="mx-auto mt-2 max-w-2xl text-base text-slate-400">{RATNA_DESCRIPTION}</p>
+          <h1 className="mt-3 font-astra text-4xl text-[#301607] sm:text-5xl">{RATNA_TITLE}</h1>
+          <p className="mx-auto mt-3 max-w-xl text-lg text-muted-foreground">{RATNA_SUBTITLE}</p>
+          <p className="mx-auto mt-2 max-w-2xl text-base text-muted-foreground">{RATNA_DESCRIPTION}</p>
         </header>
 
         <form onSubmit={onSubmit} noValidate className="ratna-card mt-8 p-5 sm:p-7" aria-label="Birth details">
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
-              <label htmlFor="ratna-dob" className="mb-1.5 block text-base text-[#f0d58a]">
+              <label htmlFor="ratna-dob" className="mb-1.5 block text-base text-[#301607]">
                 Date of birth
               </label>
               <input
@@ -150,14 +150,14 @@ const RatnaJyotish = () => {
                 }}
               />
               {errors.date && (
-                <p id="ratna-dob-err" role="alert" className="mt-1 text-sm text-red-300">
+                <p id="ratna-dob-err" role="alert" className="mt-1 text-sm text-red-800">
                   {errors.date}
                 </p>
               )}
             </div>
 
             <div>
-              <label htmlFor="ratna-tob" className="mb-1.5 block text-base text-[#f0d58a]">
+              <label htmlFor="ratna-tob" className="mb-1.5 block text-base text-[#301607]">
                 Exact birth time
               </label>
               <input
@@ -173,10 +173,10 @@ const RatnaJyotish = () => {
                   setErrors((p) => ({ ...p, time: undefined }));
                 }}
               />
-              <label className="mt-2 flex cursor-pointer items-center gap-2 text-base text-slate-200">
+              <label className="mt-2 flex cursor-pointer items-center gap-2 text-base text-muted-foreground">
                 <input
                   type="checkbox"
-                  className="h-5 w-5 accent-[#d4a64a]"
+                  className="h-5 w-5 accent-[#592209]"
                   checked={timeUnknown}
                   onChange={(e) => {
                     setTimeUnknown(e.target.checked);
@@ -186,7 +186,7 @@ const RatnaJyotish = () => {
                 I don't know my exact birth time
               </label>
               {errors.time && (
-                <p id="ratna-tob-err" role="alert" className="mt-1 text-sm text-red-300">
+                <p id="ratna-tob-err" role="alert" className="mt-1 text-sm text-red-800">
                   {errors.time}
                 </p>
               )}
@@ -194,7 +194,7 @@ const RatnaJyotish = () => {
           </div>
 
           <div className="mt-5">
-            <label className="mb-1.5 block text-base text-[#f0d58a]">Birthplace</label>
+            <label className="mb-1.5 block text-base text-[#301607]">Birthplace</label>
             <LocationPicker
               value={place}
               onSelect={(p) => {
@@ -206,7 +206,7 @@ const RatnaJyotish = () => {
           </div>
 
           {apiError && (
-            <div role="alert" className="mt-5 rounded-lg border border-red-400/50 bg-red-950/40 p-3 text-red-200">
+            <div role="alert" className="mt-5 rounded-lg border border-red-400/50 bg-red-950/40 p-3 text-red-800">
               {apiError} Your details are still filled in, so you can try again.
             </div>
           )}

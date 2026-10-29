@@ -28,8 +28,8 @@ const GuruConversation = forwardRef<HTMLDivElement, GuruConversationProps>(
             <div
               className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-base ${
                 msg.role === "user"
-                  ? "bg-white/10 ring-1 ring-white/15"
-                  : "bg-gradient-to-br from-[#FF9D4D]/40 to-[#E88B3D]/15 ring-1 ring-[#FF9D4D]/30"
+                  ? "bg-card ring-1 ring-primary/25"
+                  : "bg-gradient-to-br from-[#592209]/40 to-[#592209]/15 ring-1 ring-[#592209]/30"
               }`}
             >
               {msg.role === "user" ? "🙏" : "🧘"}
@@ -37,8 +37,8 @@ const GuruConversation = forwardRef<HTMLDivElement, GuruConversationProps>(
             <div
               className={`max-w-[85%] rounded-2xl px-4 py-3 text-[15px] leading-relaxed ${
                 msg.role === "user"
-                  ? "rounded-tr-sm bg-gradient-to-br from-[#FF9D4D] to-[#E88B3D] text-[#1A0F08]"
-                  : "rounded-tl-sm border border-white/[0.08] bg-[#17181F] text-[#E5E5E5] shadow-[0_2px_16px_rgba(0,0,0,0.25)]"
+                  ? "rounded-tr-sm bg-gradient-to-br from-[#592209] to-[#592209] text-[#F5E9D6]"
+                  : "rounded-tl-sm border border-primary/15 bg-[#FBF5EC] text-[#301607] shadow-[0_2px_16px_rgba(89,34,9,0.12)] [&_a]:text-[#592209] [&_a]:underline [&_strong]:font-semibold [&_strong]:text-[#301607] [&_em]:text-[#301607] [&_blockquote]:border-l-2 [&_blockquote]:border-[#E58A45] [&_blockquote]:pl-3"
               }`}
             >
               {typeof msg.content === "string"
@@ -51,14 +51,14 @@ const GuruConversation = forwardRef<HTMLDivElement, GuruConversationProps>(
 
       {loading && (
         <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#FF9D4D]/40 to-[#E88B3D]/15 text-base ring-1 ring-[#FF9D4D]/30">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#592209]/40 to-[#592209]/15 text-base ring-1 ring-[#592209]/30">
             🧘
           </div>
-          <div className="flex items-center gap-1.5 rounded-2xl rounded-tl-sm border border-white/[0.08] bg-[#17181F] px-4 py-3.5">
+          <div className="flex items-center gap-1.5 rounded-2xl rounded-tl-sm border border-primary/15 bg-[#FBF5EC] px-4 py-3.5">
             {[0, 1, 2].map((d) => (
               <motion.span
                 key={d}
-                className="h-1.5 w-1.5 rounded-full bg-[#6B7280]"
+                className="h-1.5 w-1.5 rounded-full bg-[#592209]"
                 animate={{ opacity: [0.3, 1, 0.3], y: [0, -3, 0] }}
                 transition={{ duration: 0.9, repeat: Infinity, delay: d * 0.15 }}
               />

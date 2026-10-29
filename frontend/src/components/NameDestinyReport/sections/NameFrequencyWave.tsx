@@ -41,7 +41,7 @@ export default function NameFrequencyWave({
     <div className="px-6 sm:px-10 pb-12">
       <h3
         className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-2 uppercase tracking-wide"
-        style={{ fontFamily: "'Astra','Cinzel',serif" }}
+        style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
       >
         Name Frequency Wave
       </h3>
@@ -54,7 +54,7 @@ export default function NameFrequencyWave({
         </div>
         <div className="rounded-2xl border border-gold/30 bg-gold/5 p-5">
           <div className="text-xs font-bold text-gold uppercase mb-3 text-center">Recommended Wave</div>
-          <Wave seed={(topVariant?.score || profile.overallScore) * 23 + 7} color="#BC6A4D" />
+          <Wave seed={(topVariant?.score || profile.overallScore) * 23 + 7} color="#592209" />
         </div>
       </div>
       <p className="text-center text-sm text-muted-foreground max-w-xl mx-auto mt-6">

@@ -20,7 +20,7 @@ export default function AuraVisualization({ name, dob, report }: { name: string;
   const { selectedAuraSpelling, setSelectedAuraSpelling, topVariants } = report;
   const activeProfile = scoreNameAgainstProfile(selectedAuraSpelling, dob);
   const colors = LUCKY_COLOR_BY_NUMBER[activeProfile.destiny] || LUCKY_COLOR_BY_NUMBER[1];
-  const auraColor = COLOR_HEX[colors[0]] || "#BC6A4D";
+  const auraColor = COLOR_HEX[colors[0]] || "#592209";
 
   const options = [name, ...topVariants.slice(0, 3).map((v) => v.spelling)];
 
@@ -28,7 +28,7 @@ export default function AuraVisualization({ name, dob, report }: { name: string;
     <div className="px-6 sm:px-10 pb-12">
       <h3
         className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-2 uppercase tracking-wide"
-        style={{ fontFamily: "'Astra','Cinzel',serif" }}
+        style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
       >
         AI Aura Visualization
       </h3>

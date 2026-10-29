@@ -27,15 +27,15 @@ const Panel = ({
     data-testid={testId}
     aria-label={title}
   >
-    <h2 className="font-astra text-lg text-[#f0d58a] sm:text-xl">{title}</h2>
-    <div className="mt-3 text-base text-slate-200">{children}</div>
+    <h2 className="font-astra text-lg text-[#301607] sm:text-xl">{title}</h2>
+    <div className="mt-3 text-base text-muted-foreground">{children}</div>
   </section>
 );
 
 const Fact = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <li className="min-w-0 rounded-xl border border-[#d4a64a]/25 bg-[#081426]/60 p-3">
-    <p className="text-xs uppercase tracking-widest text-slate-400">{label}</p>
-    <div className="mt-1 break-words text-lg leading-snug text-white">{children}</div>
+  <li className="min-w-0 rounded-xl border border-[#592209]/25 bg-[#FBF5EC]/60 p-3">
+    <p className="text-xs uppercase tracking-widest text-muted-foreground">{label}</p>
+    <div className="mt-1 break-words text-lg leading-snug text-foreground">{children}</div>
   </li>
 );
 
@@ -60,32 +60,32 @@ const PrimaryCard = ({ result }: { result: RatnaResult }) => {
       <div className="grid items-center gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:gap-10">
         <GemStage stone={stone} />
         <div className="min-w-0 text-center md:text-left">
-          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#d4a64a] sm:text-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#592209] sm:text-sm">
             {dateBased ? "Your Birth-Date Gemstone" : "Your Lagna-Lord Gemstone"}
           </p>
           <h2
             id="ratna-primary-h"
             data-testid="recommended-stone"
-            className="mt-1 break-words font-astra text-3xl text-white sm:text-4xl lg:text-5xl"
+            className="mt-1 break-words font-astra text-3xl text-foreground sm:text-4xl lg:text-5xl"
           >
             {stone.name}
           </h2>
-          <p className="mt-1 text-base text-slate-300 sm:text-lg">
+          <p className="mt-1 text-base text-muted-foreground sm:text-lg">
             Traditionally associated with {primary.planet}
             <span className="text-slate-500"> · </span>
-            <span className="text-slate-400">{stone.sanskrit}</span>
+            <span className="text-muted-foreground">{stone.sanskrit}</span>
           </p>
-          <p className="mt-3 text-base text-slate-100 sm:text-lg">{whyLine(result)}</p>
+          <p className="mt-3 text-base text-muted-foreground sm:text-lg">{whyLine(result)}</p>
           <p
-            className="mt-3 inline-block max-w-full break-words rounded-full border border-[#d4a64a]/50 bg-[#d4a64a]/10 px-3.5 py-1 text-sm text-[#f0d58a]"
+            className="mt-3 inline-block max-w-full break-words rounded-full border border-[#592209]/50 bg-[#592209]/10 px-3.5 py-1 text-sm text-foreground"
             data-testid="method-label"
           >
             Method: {method.name}
           </p>
           {dateBased && (
-            <p className="mt-3 text-sm text-slate-400 sm:text-base">
+            <p className="mt-3 text-sm text-muted-foreground sm:text-base">
               Based on your birth date and birthplace; exact birth time was not used.{" "}
-              <Link to="/ratna-jyotish" className="ratna-link whitespace-nowrap font-semibold text-[#f0d58a] underline">
+              <Link to="/ratna-jyotish" className="ratna-link whitespace-nowrap font-semibold text-[#301607] underline">
                 Calculate again with an exact birth time
               </Link>
             </p>
@@ -95,20 +95,20 @@ const PrimaryCard = ({ result }: { result: RatnaResult }) => {
               {c}
             </p>
           ))}
-          {result.notice && <p className="mt-3 text-left text-sm text-amber-200">{result.notice}</p>}
+          {result.notice && <p className="mt-3 text-left text-sm text-amber-800">{result.notice}</p>}
           <div className="mt-4 text-left">
             <Accordion title="Why this gemstone?">
               {dateBased && <p>{dateBased.rule}</p>}
               <ul className="grid gap-2 sm:grid-cols-2">
                 {primary.factors.map((f) => (
-                  <li key={f.label} className="min-w-0 rounded-lg border border-[#d4a64a]/25 px-3 py-1.5 text-sm">
-                    <span className="text-slate-400">{f.label}: </span>
+                  <li key={f.label} className="min-w-0 rounded-lg border border-[#592209]/25 px-3 py-1.5 text-sm">
+                    <span className="text-muted-foreground">{f.label}: </span>
                     <span className="break-words">{f.value}</span>
                   </li>
                 ))}
               </ul>
               <p className="whitespace-pre-line">{result.explanation.text}</p>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-muted-foreground">
                 {result.explanation.source === "ai"
                   ? "Wording written by AI from your calculated details and checked against them. The gemstone itself comes from the calculation rules, not the AI."
                   : "Explanation generated from your calculated details using fixed rules."}
@@ -127,13 +127,13 @@ const Associations = ({ result }: { result: RatnaResult }) => {
     <Panel title="Traditional associations" index={2} testId="ratna-significance">
       <ul className="space-y-2">
         {stone.themes.slice(0, 3).map((t) => (
-          <li key={t.label} className="ratna-lift rounded-xl border border-[#d4a64a]/25 bg-[#081426]/60 px-3 py-2.5">
-            <h3 className="text-base font-semibold text-[#f0d58a]">{t.label}</h3>
-            <p className="text-sm text-slate-300">{t.note}</p>
+          <li key={t.label} className="ratna-lift rounded-xl border border-[#592209]/25 bg-[#FBF5EC]/60 px-3 py-2.5">
+            <h3 className="text-base font-semibold text-[#301607]">{t.label}</h3>
+            <p className="text-sm text-muted-foreground">{t.note}</p>
           </li>
         ))}
       </ul>
-      <p className="mt-3 text-xs text-slate-400">
+      <p className="mt-3 text-xs text-muted-foreground">
         Traditional interpretation in some Vedic astrology schools, not scientific evidence.
       </p>
     </Panel>
@@ -152,10 +152,10 @@ const Wearing = ({ result }: { result: RatnaResult }) => {
           <p>{w.finger}</p>
         </Fact>
         {w.sunrise && (
-          <li className="min-w-0 rounded-xl border border-[#d4a64a]/25 bg-[#081426]/60 p-3 sm:col-span-2 lg:col-span-1 xl:col-span-2">
-            <p className="text-xs uppercase tracking-widest text-slate-400">Next {w.weekday} sunrise</p>
-            <p className="mt-1 break-words text-lg leading-snug text-white">{w.sunrise.local}</p>
-            <p className="break-words text-xs text-slate-400">
+          <li className="min-w-0 rounded-xl border border-[#592209]/25 bg-[#FBF5EC]/60 p-3 sm:col-span-2 lg:col-span-1 xl:col-span-2">
+            <p className="text-xs uppercase tracking-widest text-muted-foreground">Next {w.weekday} sunrise</p>
+            <p className="mt-1 break-words text-lg leading-snug text-foreground">{w.sunrise.local}</p>
+            <p className="break-words text-xs text-muted-foreground">
               {w.sunrise.locationLabel} · {w.sunrise.timeZone}
             </p>
           </li>
@@ -172,16 +172,16 @@ const Secondary = ({ result }: { result: RatnaResult }) => {
     <Panel title="Other Traditional Perspectives" index={4}>
       <ul className="grid gap-2 sm:grid-cols-2">
         {list.map((s) => (
-          <li key={s.planet} className="ratna-lift min-w-0 rounded-xl border border-[#d4a64a]/25 bg-[#081426]/60 px-3 py-2.5">
-            <strong className="text-white">{s.stone.name}</strong>
-            <span className="text-sm text-slate-300">
+          <li key={s.planet} className="ratna-lift min-w-0 rounded-xl border border-[#592209]/25 bg-[#FBF5EC]/60 px-3 py-2.5">
+            <strong className="text-foreground">{s.stone.name}</strong>
+            <span className="text-sm text-muted-foreground">
               {" "}
               — {s.planet}, {ordinal(s.house)} house lord ({s.sign})
             </span>
           </li>
         ))}
       </ul>
-      <p className="mt-2 text-xs text-slate-400">Optional additional associations; none are required.</p>
+      <p className="mt-2 text-xs text-muted-foreground">Optional additional associations; none are required.</p>
     </Panel>
   );
 };
@@ -212,8 +212,8 @@ export const MethodDisclosure = ({ result }: { result: RatnaResult }) => {
           <p>{dateBased.rule}</p>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[320px] text-left text-base">
-              <caption className="pb-1 text-left text-slate-400">Traditional weekday rulers and gemstones</caption>
-              <thead className="text-slate-400">
+              <caption className="pb-1 text-left text-muted-foreground">Traditional weekday rulers and gemstones</caption>
+              <thead className="text-muted-foreground">
                 <tr>
                   <th className="py-1 pr-3">Weekday</th>
                   <th className="py-1 pr-3">Planet</th>
@@ -227,7 +227,7 @@ export const MethodDisclosure = ({ result }: { result: RatnaResult }) => {
                     <tr
                       key={r.weekday}
                       aria-current={mine ? "true" : undefined}
-                      className={`border-t border-white/10 ${mine ? "bg-[#d4a64a]/15 text-white" : ""}`}
+                      className={`border-t border-primary/15 ${mine ? "bg-[#592209]/15 text-foreground" : ""}`}
                     >
                       <td className="py-1 pr-3">{r.weekday}</td>
                       <td className="py-1 pr-3">{r.planet}</td>
@@ -240,18 +240,18 @@ export const MethodDisclosure = ({ result }: { result: RatnaResult }) => {
           </div>
           <p>{dateBased.classicalNote}</p>
           {dateBased.sunrise && (
-            <p className="text-slate-400">
+            <p className="text-muted-foreground">
               Local sunrise on your birth date: {dateBased.sunrise.local} ({dateBased.sunrise.timeZone}).
             </p>
           )}
           {result.stableSigns.length > 0 && (
             <div>
-              <p className="text-slate-300">
+              <p className="text-muted-foreground">
                 Background only: planets that stayed in one sidereal sign for your whole birth date.
               </p>
               <ul className="mt-2 flex flex-wrap gap-2 text-sm" aria-label="Planetary signs steady across the date">
                 {result.stableSigns.map((s) => (
-                  <li key={s.planet} className="rounded-full border border-[#d4a64a]/25 px-3 py-1 text-slate-300">
+                  <li key={s.planet} className="rounded-full border border-[#592209]/25 px-3 py-1 text-muted-foreground">
                     {s.planet} in {s.sign}
                   </li>
                 ))}
@@ -288,7 +288,7 @@ export const MethodDisclosure = ({ result }: { result: RatnaResult }) => {
       {result.chart && (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[320px] text-left text-base">
-            <thead className="text-slate-400">
+            <thead className="text-muted-foreground">
               <tr>
                 <th className="py-1 pr-3">Planet</th>
                 <th className="py-1 pr-3">Sign</th>
@@ -298,7 +298,7 @@ export const MethodDisclosure = ({ result }: { result: RatnaResult }) => {
             </thead>
             <tbody>
               {result.chart.planets.map((p) => (
-                <tr key={p.planet} className="border-t border-white/10">
+                <tr key={p.planet} className="border-t border-primary/15">
                   <td className="py-1 pr-3">{p.planet}</td>
                   <td className="py-1 pr-3">{p.sign}</td>
                   <td className="py-1 pr-3">{p.degree.toFixed(1)}°</td>
@@ -311,11 +311,11 @@ export const MethodDisclosure = ({ result }: { result: RatnaResult }) => {
       )}
       {wearing && (
         <>
-          <p className="text-slate-400">{wearing.sunriseNote}</p>
-          <p className="text-slate-400">{wearing.customNote}</p>
+          <p className="text-muted-foreground">{wearing.sunriseNote}</p>
+          <p className="text-muted-foreground">{wearing.customNote}</p>
         </>
       )}
-      <h4 className="pt-1 font-semibold text-[#f0d58a]">Limitations and alternate interpretations</h4>
+      <h4 className="pt-1 font-semibold text-[#301607]">Limitations and alternate interpretations</h4>
       <ul className="list-disc space-y-1 pl-5">
         {method.limitations.map((l) => (
           <li key={l}>{l}</li>
@@ -344,7 +344,7 @@ export const ResultView = ({ result }: { result: RatnaResult }) => (
       <p
         role="note"
         data-testid="ratna-notice"
-        className="rounded-xl border border-[#d4a64a]/30 bg-[#081426]/60 px-4 py-3 text-sm text-slate-300"
+        className="rounded-xl border border-[#592209]/30 bg-[#FBF5EC]/60 px-4 py-3 text-sm text-muted-foreground"
       >
         {SCIENCE_NOTICE}
       </p>

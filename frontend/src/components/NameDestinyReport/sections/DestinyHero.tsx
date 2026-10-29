@@ -71,7 +71,7 @@ export default function DestinyHero({
       </div>
       <h2
         className="ndr-gradient-text text-3xl sm:text-5xl font-extrabold leading-tight mb-3 uppercase tracking-wide"
-        style={{ fontFamily: "'Astra','Cinzel',serif" }}
+        style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
       >
         Your Cosmic Blueprint
       </h2>
@@ -81,7 +81,7 @@ export default function DestinyHero({
       </p>
 
       <div className="flex flex-wrap items-center justify-center gap-10 sm:gap-16">
-        <CircularGauge value={profile.overallScore} color="#BC6A4D" label="Current Alignment" sub={`"${profile?.destinyPlanet}" energy`} />
+        <CircularGauge value={profile.overallScore} color="#592209" label="Current Alignment" sub={`"${profile?.destinyPlanet}" energy`} />
         {topVariant && (
           <CircularGauge value={topVariant.score} color="#ff7e47" label="Recommended Alignment" sub={`"${topVariant.spelling}"`} />
         )}

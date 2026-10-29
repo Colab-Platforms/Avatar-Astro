@@ -1,52 +1,100 @@
-.loader {
-    width: 70px;
-    height: 40px;
-    outline: 2px solid #BC6A4D;
-    box-shadow: 0 0 20px rgba(188, 106, 77, 0.35);
-    background:
-        radial-gradient(farthest-side, #BC6A4D 90%, #0000) 0 0 / 8px 8px no-repeat,
-        radial-gradient(farthest-side, #fff 90%, #0000) 0 0 / 8px 8px no-repeat,
-        linear-gradient(#BC6A4D 0 0) 50% / 10px 100% no-repeat,
-        conic-gradient(from 90deg at 10px 10px, #0000 90deg, #BC6A4D 0),
-        conic-gradient(from -90deg at 60px 30px, #0000 90deg, #BC6A4D 0);
-
-    animation: l9 2s infinite;
+/* Orbital loader — deep gerua stage, gold rings, orbiting planets, pulsing core. */
+.orbital-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: "DM Sans", system-ui, sans-serif;
 }
 
-@keyframes l9 {
-    0% {
-        background-position: 50% 100%, 0 0, 50%;
-    }
+.orbital-stage {
+  position: relative;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, #5a2208 0%, #3a1505 45%, #1f0b03 100%);
+  box-shadow: 0 0 0 1px rgba(233, 184, 114, 0.45), 0 18px 48px rgba(89, 34, 9, 0.35), inset 0 0 40px rgba(0, 0, 0, 0.5);
+}
 
-    12.5% {
-        background-position: 0 100%, 50% 0, 50%;
-    }
+.orbital-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid rgba(233, 184, 114, 0.7);
+  box-shadow: 0 0 10px rgba(229, 138, 69, 0.25);
+}
+.orbital-ring-1 { inset: 8%; animation: orbital-spin 26s linear infinite; border-style: dashed; }
+.orbital-ring-2 { inset: 22%; animation: orbital-spin 18s linear infinite reverse; }
+.orbital-ring-3 { inset: 36%; animation: orbital-spin 12s linear infinite; border-color: rgba(229, 138, 69, 0.85); }
 
-    25% {
-        background-position: 0 0, 50% 100%, 50%;
-    }
+.orbital-track { position: absolute; border-radius: 50%; }
+.orbital-track-1 { inset: 8%; animation: orbital-spin 9s linear infinite; }
+.orbital-track-2 { inset: 22%; animation: orbital-spin 6s linear infinite reverse; }
+.orbital-track-3 { inset: 36%; animation: orbital-spin 4s linear infinite; }
 
-    37.5% {
-        background-position: 50% 0, 100% 100%, 50%;
-    }
+.orbital-planet {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+.orbital-planet-1 { width: 13px; height: 13px; background: #f5e9d6; box-shadow: 0 0 12px 3px rgba(245, 233, 214, 0.65); }
+.orbital-planet-2 { width: 10px; height: 10px; background: #e58a45; box-shadow: 0 0 10px 3px rgba(229, 138, 69, 0.75); }
+.orbital-planet-3 { width: 8px; height: 8px; background: #e9b872; box-shadow: 0 0 8px 2px rgba(233, 184, 114, 0.8); }
 
-    50% {
-        background-position: 50% 100%, 100% 0, 50%;
-    }
+.orbital-core {
+  position: absolute;
+  inset: 42%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff3d6 0%, #f3b25f 38%, #e58a45 70%, #592209 100%);
+  box-shadow: 0 0 24px 8px rgba(229, 138, 69, 0.55);
+  animation: orbital-pulse 2.8s ease-in-out infinite;
+}
 
-    62.5% {
-        background-position: 100% 100%, 50% 0, 50%;
-    }
+.orbital-steps {
+  list-style: none;
+  margin: 28px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+}
+.orbital-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  color: #301607;
+  opacity: 0.62;
+  animation-name: orbital-step;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+}
+.orbital-step-dot { width: 8px; height: 8px; border-radius: 50%; background: #592209; flex-shrink: 0; }
 
-    75% {
-        background-position: 100% 0, 50% 100%, 50%;
-    }
+@keyframes orbital-spin { to { transform: rotate(360deg); } }
+@keyframes orbital-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 20px 6px rgba(229, 138, 69, 0.45); }
+  50% { transform: scale(1.14); box-shadow: 0 0 32px 12px rgba(229, 138, 69, 0.7); }
+}
+@keyframes orbital-step {
+  0%, 30% { opacity: 1; }
+  45%, 100% { opacity: 0.62; }
+}
 
-    82.5% {
-        background-position: 50% 0, 0 100%, 50%;
-    }
+@media (prefers-reduced-motion: reduce) {
+  .orbital-ring, .orbital-track, .orbital-core { animation: none; }
+  .orbital-step { animation: none; opacity: 1; }
+  .orbital-track-1 { transform: rotate(35deg); }
+  .orbital-track-2 { transform: rotate(160deg); }
+  .orbital-track-3 { transform: rotate(280deg); }
+}
 
-    100% {
-        background-position: 50% 100%, 0 0, 50%;
-    }
+/* Full-page fallback (route suspense) */
+.orbital-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fbf5ec;
 }

@@ -25,7 +25,7 @@ export default function NameEvolutionLab({ report }: { report: UseNameReport }) 
         <FlaskConical size={22} className="text-gold" />
         <h3
           className="text-2xl sm:text-3xl font-bold text-foreground text-center uppercase tracking-wide"
-          style={{ fontFamily: "'Astra','Cinzel',serif" }}
+          style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
         >
           Name Evolution Lab
         </h3>
@@ -53,7 +53,7 @@ export default function NameEvolutionLab({ report }: { report: UseNameReport }) 
           {playgroundProfile.planetCompat.map((p) => (
             <div key={p.planet} className="rounded-xl bg-muted/60 p-2 text-center">
               <div className="text-[11px] font-semibold text-foreground/80">{p.planet}</div>
-              <div className={`text-xs font-bold ${p.verdict === "friendly" ? "text-emerald-500" : p.verdict === "friction" ? "text-rose-500" : "text-muted-foreground"}`}>
+              <div className={`text-xs font-bold ${p.verdict === "friendly" ? "text-emerald-800" : p.verdict === "friction" ? "text-rose-800" : "text-muted-foreground"}`}>
                 {p.score}%
               </div>
             </div>
@@ -79,7 +79,7 @@ export default function NameEvolutionLab({ report }: { report: UseNameReport }) 
                   <span className="font-medium text-foreground">{f.spelling}</span>
                   <div className="flex items-center gap-3">
                     <span className="text-xs font-bold text-gold">{f.score}%</span>
-                    <button onClick={() => removeFavorite(f.spelling)} className="text-muted-foreground hover:text-rose-400">
+                    <button onClick={() => removeFavorite(f.spelling)} className="text-muted-foreground hover:text-rose-800">
                       <X size={14} />
                     </button>
                   </div>

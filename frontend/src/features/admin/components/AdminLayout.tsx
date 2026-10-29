@@ -19,7 +19,7 @@ export function AdminLayout() {
   }, [location.pathname]);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#081426] text-white">
+    <div className="flex h-screen overflow-hidden bg-[#FBF5EC] text-foreground">
       <AdminSidebar
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}

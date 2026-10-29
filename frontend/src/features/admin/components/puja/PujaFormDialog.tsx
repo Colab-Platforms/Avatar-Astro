@@ -102,12 +102,12 @@ export function PujaFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => !isSubmitting && onOpenChange(next)}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto border-white/10 bg-[#0a1628] text-white sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto border-primary/15 bg-[#FBF5EC] text-foreground sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-display text-lg tracking-wide text-white">
+          <DialogTitle className="font-display text-lg tracking-wide text-foreground">
             {isEdit ? "Edit Puja" : "Add Puja"}
           </DialogTitle>
-          <DialogDescription className="text-white/60">
+          <DialogDescription className="text-foreground/70">
             {isEdit
               ? "Update this Puja's details and benefits."
               : "Create a new Puja for this temple."}
@@ -116,54 +116,54 @@ export function PujaFormDialog({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <Label className="text-sm text-white/80">
-              Puja Name<span className="ml-0.5 text-[#BC6A4D]">*</span>
+            <Label className="text-sm text-foreground/80">
+              Puja Name<span className="ml-0.5 text-[#592209]">*</span>
             </Label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Suprabhatam Seva"
-              className="border-white/10 bg-white/[0.03] text-white"
+              className="border-primary/15 bg-card text-foreground"
             />
-            {errors.name && <p className="text-xs text-red-400">{errors.name}</p>}
+            {errors.name && <p className="text-xs text-red-800">{errors.name}</p>}
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label className="text-sm text-white/80">
-                Price (₹)<span className="ml-0.5 text-[#BC6A4D]">*</span>
+              <Label className="text-sm text-foreground/80">
+                Price (₹)<span className="ml-0.5 text-[#592209]">*</span>
               </Label>
               <Input
                 type="number"
                 min={0}
                 value={price}
                 onChange={(e) => setPrice(Number(e.target.value))}
-                className="border-white/10 bg-white/[0.03] text-white"
+                className="border-primary/15 bg-card text-foreground"
               />
               {errors.price && (
-                <p className="text-xs text-red-400">{errors.price}</p>
+                <p className="text-xs text-red-800">{errors.price}</p>
               )}
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-sm text-white/80">
-                Duration<span className="ml-0.5 text-[#BC6A4D]">*</span>
+              <Label className="text-sm text-foreground/80">
+                Duration<span className="ml-0.5 text-[#592209]">*</span>
               </Label>
               <Input
                 value={duration}
                 onChange={(e) => setDuration(e.target.value)}
                 placeholder="30 min"
-                className="border-white/10 bg-white/[0.03] text-white"
+                className="border-primary/15 bg-card text-foreground"
               />
               {errors.duration && (
-                <p className="text-xs text-red-400">{errors.duration}</p>
+                <p className="text-xs text-red-800">{errors.duration}</p>
               )}
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label className="text-sm text-white/80">
-              Benefits<span className="ml-0.5 text-[#BC6A4D]">*</span>
+            <Label className="text-sm text-foreground/80">
+              Benefits<span className="ml-0.5 text-[#592209]">*</span>
             </Label>
 
             <div className="space-y-2">
@@ -173,14 +173,14 @@ export function PujaFormDialog({
                     value={benefit}
                     onChange={(e) => updateBenefit(index, e.target.value)}
                     placeholder="Divine awakening blessings"
-                    className="border-white/10 bg-white/[0.03] text-white"
+                    className="border-primary/15 bg-card text-foreground"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
                     onClick={() => removeBenefit(index)}
-                    className="shrink-0 text-white/60 hover:bg-white/5 hover:text-white"
+                    className="shrink-0 text-foreground/70 hover:bg-primary/10 hover:text-foreground"
                     aria-label="Remove benefit"
                   >
                     <X className="h-4 w-4" />
@@ -190,7 +190,7 @@ export function PujaFormDialog({
             </div>
 
             {errors.benefits && (
-              <p className="text-xs text-red-400">{errors.benefits}</p>
+              <p className="text-xs text-red-800">{errors.benefits}</p>
             )}
 
             <Button
@@ -198,7 +198,7 @@ export function PujaFormDialog({
               variant="outline"
               size="sm"
               onClick={() => setBenefits((prev) => [...prev, ""])}
-              className="border-white/10 bg-transparent text-white hover:bg-white/5 hover:text-white"
+              className="border-primary/15 bg-transparent text-foreground hover:bg-primary/10 hover:text-foreground"
             >
               <Plus className="h-3.5 w-3.5" />
               Add Benefit
@@ -211,14 +211,14 @@ export function PujaFormDialog({
               variant="ghost"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
-              className="text-white/70 hover:bg-white/5 hover:text-white"
+              className="text-foreground/70 hover:bg-primary/10 hover:text-foreground"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="bg-[#BC6A4D] text-white hover:bg-[#BC6A4D]/90"
+              className="bg-[#592209] text-[#F5E9D6] hover:bg-[#592209]/90"
             >
               {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
               {isEdit ? "Save Changes" : "Add Puja"}

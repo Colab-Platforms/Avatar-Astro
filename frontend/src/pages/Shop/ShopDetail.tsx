@@ -108,7 +108,7 @@ const ShopDetail = () => {
               {product.name}
             </h1>
 
-            <p className="text-foreground/60 text-sm leading-relaxed mb-6">
+            <p className="text-foreground/70 text-sm leading-relaxed mb-6">
               {product.description}
             </p>
 
@@ -144,7 +144,7 @@ const ShopDetail = () => {
               <div className="flex items-center border border-border/30 rounded-xl overflow-hidden">
                 <button
                   onClick={() => setQty(q => Math.max(1, q - 1))}
-                  className="px-4 py-3 text-foreground/60 hover:text-primary hover:bg-primary/10 transition-colors text-lg leading-none"
+                  className="px-4 py-3 text-foreground/70 hover:text-primary hover:bg-primary/10 transition-colors text-lg leading-none"
                   aria-label="Decrease quantity"
                 >
                   −
@@ -152,7 +152,7 @@ const ShopDetail = () => {
                 <span className="px-5 font-display text-foreground">{qty}</span>
                 <button
                   onClick={() => setQty(q => q + 1)}
-                  className="px-4 py-3 text-foreground/60 hover:text-primary hover:bg-primary/10 transition-colors text-lg leading-none"
+                  className="px-4 py-3 text-foreground/70 hover:text-primary hover:bg-primary/10 transition-colors text-lg leading-none"
                   aria-label="Increase quantity"
                 >
                   +
