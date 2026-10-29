@@ -121,19 +121,19 @@ const FloatingParticles: React.FC = () => (
   <>
     <div
       className="tarot-particle tarot-anim-drift"
-      style={{ width: 160, height: 160, left: "8%", top: "18%", background: "rgba(188,106,77,0.10)", animationDelay: "0s" }}
+      style={{ width: 160, height: 160, left: "8%", top: "18%", background: "rgba(89,34,9,0.08)", animationDelay: "0s" }}
     />
     <div
       className="tarot-particle tarot-anim-drift"
-      style={{ width: 200, height: 200, right: "10%", top: "10%", background: "rgba(139,111,216,0.09)", animationDelay: "2.5s" }}
+      style={{ width: 200, height: 200, right: "10%", top: "10%", background: "rgba(89,34,9,0.09)", animationDelay: "2.5s" }}
     />
     <div
       className="tarot-particle tarot-anim-drift"
-      style={{ width: 140, height: 140, left: "18%", bottom: "8%", background: "rgba(139,111,216,0.07)", animationDelay: "5s" }}
+      style={{ width: 140, height: 140, left: "18%", bottom: "8%", background: "rgba(89,34,9,0.07)", animationDelay: "5s" }}
     />
     <div
       className="tarot-particle tarot-anim-drift"
-      style={{ width: 130, height: 130, right: "16%", bottom: "12%", background: "rgba(188,106,77,0.08)", animationDelay: "1.2s" }}
+      style={{ width: 130, height: 130, right: "16%", bottom: "12%", background: "rgba(89,34,9,0.08)", animationDelay: "1.2s" }}
     />
   </>
 );
@@ -157,7 +157,7 @@ const MedallionFrame: React.FC<{ color: string; bg: string; children?: React.Rea
     <circle cx="60" cy="95" r="52" stroke={color} strokeWidth="0.7" strokeOpacity="0.25" strokeDasharray="2 5" fill="none" />
 
     {/* main ring */}
-    <circle cx="60" cy="95" r="44" stroke={color} strokeWidth="1" strokeOpacity="0.55" fill="rgba(255,255,255,0.015)" />
+    <circle cx="60" cy="95" r="44" stroke={color} strokeWidth="1" strokeOpacity="0.55" fill="rgba(89,34,9,0.05)" />
 
     {/* tick marks */}
     {Array.from({ length: 12 }).map((_, i) => {

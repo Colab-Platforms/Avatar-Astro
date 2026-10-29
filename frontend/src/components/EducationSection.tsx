@@ -39,57 +39,57 @@ export default function EducationSection({ title, blocks, faqs, disclaimer, idPr
     <section
       aria-labelledby={`${idPrefix}-edu-title`}
       data-testid="education-section"
-      className="relative mx-auto w-full max-w-3xl px-4 pb-24 pt-16 text-left text-white"
+      className="relative mx-auto w-full max-w-3xl px-4 pb-24 pt-16 text-left text-[#301607]"
     >
       <div className="mb-10 text-center">
         <p
           id={`${idPrefix}-edu-title`}
-          className="text-xs font-semibold uppercase tracking-[0.3em] text-[#D9895F]"
+          className="text-xs font-semibold uppercase tracking-[0.3em] text-[#592209]"
           style={{ fontFamily: "'Astra','Iceland',sans-serif" }}
         >
           {title}
         </p>
-        <div className="mx-auto mt-4 h-px w-24 bg-gradient-to-r from-transparent via-[#BC6A4D] to-transparent" />
+        <div className="mx-auto mt-4 h-px w-24 bg-gradient-to-r from-transparent via-[#592209] to-transparent" />
       </div>
 
       <div className="space-y-6">
         {blocks.map((b, i) => (
-          <article key={b.heading} className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 sm:p-7">
+          <article key={b.heading} className="rounded-2xl border border-[#592209]/10 bg-white/[0.04] p-5 sm:p-7">
             <h2
-              className="mb-3 text-xl leading-snug text-[#E8B79A] sm:text-2xl"
+              className="mb-3 text-xl leading-snug text-[#592209] sm:text-2xl"
               style={{ fontFamily: "'Astra','Iceland',sans-serif" }}
             >
-              <span aria-hidden="true" className="mr-2 text-[#BC6A4D]/70">
+              <span aria-hidden="true" className="mr-2 text-[#592209]/70">
                 {i + 1}.
               </span>
               {b.heading}
             </h2>
-            <div className="space-y-3 text-base leading-relaxed text-white/80">
+            <div className="space-y-3 text-base leading-relaxed text-[#4A2E1F]">
               {b.paragraphs?.map((p) => (
                 <p key={p}>{p}</p>
               ))}
               {b.list &&
                 (b.ordered ? (
-                  <ol className="list-decimal space-y-2 pl-6 marker:text-[#BC6A4D]">
+                  <ol className="list-decimal space-y-2 pl-6 marker:text-[#592209]">
                     {b.list.map((li, j) => (
                       <li key={j}>{li}</li>
                     ))}
                   </ol>
                 ) : (
-                  <ul className="list-disc space-y-2 pl-6 marker:text-[#BC6A4D]">
+                  <ul className="list-disc space-y-2 pl-6 marker:text-[#592209]">
                     {b.list.map((li, j) => (
                       <li key={j}>{li}</li>
                     ))}
                   </ul>
                 ))}
               {b.table && (
-                <div className="overflow-x-auto rounded-xl border border-white/10">
+                <div className="overflow-x-auto rounded-xl border border-[#592209]/10">
                   <table className="w-full min-w-[320px] border-collapse text-center text-sm">
-                    {b.table.caption && <caption className="p-2 text-xs text-white/55">{b.table.caption}</caption>}
+                    {b.table.caption && <caption className="p-2 text-xs text-[#6B4A37]">{b.table.caption}</caption>}
                     <thead>
-                      <tr className="bg-[#BC6A4D]/10 text-[#E8B79A]">
+                      <tr className="bg-[#592209]/10 text-[#592209]">
                         {b.table.head.map((h) => (
-                          <th key={h} scope="col" className="border-b border-white/10 px-3 py-2 font-semibold">
+                          <th key={h} scope="col" className="border-b border-[#592209]/10 px-3 py-2 font-semibold">
                             {h}
                           </th>
                         ))}
@@ -99,7 +99,7 @@ export default function EducationSection({ title, blocks, faqs, disclaimer, idPr
                       {b.table.rows.map((r, ri) => (
                         <tr key={ri} className="odd:bg-white/[0.02]">
                           {r.map((c, ci) => (
-                            <td key={ci} className="border-b border-white/5 px-3 py-2 text-white/80">
+                            <td key={ci} className="border-b border-[#592209]/10 px-3 py-2 text-[#4A2E1F]">
                               {c}
                             </td>
                           ))}
@@ -117,12 +117,12 @@ export default function EducationSection({ title, blocks, faqs, disclaimer, idPr
         ))}
 
         {!!faqs?.length && (
-          <article className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 sm:p-7">
+          <article className="rounded-2xl border border-[#592209]/10 bg-white/[0.04] p-5 sm:p-7">
             <h2
-              className="mb-3 text-xl leading-snug text-[#E8B79A] sm:text-2xl"
+              className="mb-3 text-xl leading-snug text-[#592209] sm:text-2xl"
               style={{ fontFamily: "'Astra','Iceland',sans-serif" }}
             >
-              <span aria-hidden="true" className="mr-2 text-[#BC6A4D]/70">
+              <span aria-hidden="true" className="mr-2 text-[#592209]/70">
                 {blocks.length + 1}.
               </span>
               Frequently Asked Questions
@@ -130,13 +130,13 @@ export default function EducationSection({ title, blocks, faqs, disclaimer, idPr
             <div className="divide-y divide-white/10">
               {faqs.map((f) => (
                 <details key={f.question} className="group py-3">
-                  <summary className="flex cursor-pointer list-none items-start justify-between gap-4 text-base font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#BC6A4D] [&::-webkit-details-marker]:hidden">
+                  <summary className="flex cursor-pointer list-none items-start justify-between gap-4 text-base font-semibold text-[#301607] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#592209] [&::-webkit-details-marker]:hidden">
                     <span>{f.question}</span>
-                    <span aria-hidden="true" className="mt-0.5 text-[#BC6A4D] transition group-open:rotate-45">
+                    <span aria-hidden="true" className="mt-0.5 text-[#592209] transition group-open:rotate-45">
                       +
                     </span>
                   </summary>
-                  <p className="mt-2 text-base leading-relaxed text-white/75">{f.answer}</p>
+                  <p className="mt-2 text-base leading-relaxed text-[#4A2E1F]">{f.answer}</p>
                 </details>
               ))}
             </div>
@@ -144,7 +144,7 @@ export default function EducationSection({ title, blocks, faqs, disclaimer, idPr
         )}
       </div>
 
-      <p className="mt-8 px-2 text-center text-sm italic leading-relaxed text-white/60">{disclaimer}</p>
+      <p className="mt-8 px-2 text-center text-sm italic leading-relaxed text-[#6B4A37]">{disclaimer}</p>
     </section>
   );
 }

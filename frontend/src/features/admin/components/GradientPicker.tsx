@@ -39,7 +39,7 @@ export function GradientPicker({ value, onChange }: GradientPickerProps) {
   const parsed = parseGradient(value);
   const [advanced, setAdvanced] = useState(Boolean(value) && !parsed);
   const [from, setFrom] = useState(parsed?.from ?? "#2D1B69");
-  const [to, setTo] = useState(parsed?.to ?? "#BC6A4D");
+  const [to, setTo] = useState(parsed?.to ?? "#592209");
   const [angle, setAngle] = useState(parsed?.angle ?? 135);
 
   // Re-sync local color state when a different product is loaded into the form.
@@ -68,7 +68,7 @@ export function GradientPicker({ value, onChange }: GradientPickerProps) {
   return (
     <div className="space-y-3">
       <div
-        className="h-10 w-full rounded-md border border-white/10"
+        className="h-10 w-full rounded-md border border-primary/15"
         style={{ background: preview || undefined }}
       />
 
@@ -76,37 +76,37 @@ export function GradientPicker({ value, onChange }: GradientPickerProps) {
         <>
           <div className="flex items-end gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs text-white/60">Start color</Label>
+              <Label className="text-xs text-foreground/70">Start color</Label>
               <div className="flex items-center gap-2">
                 <input
                   type="color"
                   value={from}
                   onChange={(e) => applyColors(e.target.value, to, angle)}
-                  className="h-9 w-9 cursor-pointer rounded border border-white/10 bg-transparent p-0"
+                  className="h-9 w-9 cursor-pointer rounded border border-primary/15 bg-transparent p-0"
                   aria-label="Start color"
                 />
                 <Input
                   value={from}
                   onChange={(e) => applyColors(e.target.value, to, angle)}
-                  className="w-24 border-white/10 bg-white/[0.03] text-white"
+                  className="w-24 border-primary/15 bg-card text-foreground"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs text-white/60">End color</Label>
+              <Label className="text-xs text-foreground/70">End color</Label>
               <div className="flex items-center gap-2">
                 <input
                   type="color"
                   value={to}
                   onChange={(e) => applyColors(from, e.target.value, angle)}
-                  className="h-9 w-9 cursor-pointer rounded border border-white/10 bg-transparent p-0"
+                  className="h-9 w-9 cursor-pointer rounded border border-primary/15 bg-transparent p-0"
                   aria-label="End color"
                 />
                 <Input
                   value={to}
                   onChange={(e) => applyColors(from, e.target.value, angle)}
-                  className="w-24 border-white/10 bg-white/[0.03] text-white"
+                  className="w-24 border-primary/15 bg-card text-foreground"
                 />
               </div>
             </div>
@@ -114,8 +114,8 @@ export function GradientPicker({ value, onChange }: GradientPickerProps) {
 
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label className="text-xs text-white/60">Angle</Label>
-              <span className="text-xs text-white/40">{angle}°</span>
+              <Label className="text-xs text-foreground/70">Angle</Label>
+              <span className="text-xs text-foreground/70">{angle}°</span>
             </div>
             <Slider
               value={[angle]}
@@ -133,7 +133,7 @@ export function GradientPicker({ value, onChange }: GradientPickerProps) {
                 type="button"
                 title={preset.label}
                 onClick={() => applyColors(preset.from, preset.to, preset.angle)}
-                className="h-7 w-7 rounded-full border border-white/20 transition hover:scale-110 hover:border-white/50"
+                className="h-7 w-7 rounded-full border border-primary/25 transition hover:scale-110 hover:border-primary/35"
                 style={{
                   background: buildGradient(preset.from, preset.to, preset.angle),
                 }}
@@ -145,8 +145,8 @@ export function GradientPicker({ value, onChange }: GradientPickerProps) {
         <Input
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="linear-gradient(135deg, #2D1B69 0%, #BC6A4D 100%)"
-          className="border-white/10 bg-white/[0.03] text-white"
+          placeholder="linear-gradient(135deg, #2D1B69 0%, #592209 100%)"
+          className="border-primary/15 bg-card text-foreground"
         />
       )}
 
@@ -162,7 +162,7 @@ export function GradientPicker({ value, onChange }: GradientPickerProps) {
           }
           setAdvanced((prev) => !prev);
         }}
-        className="flex items-center gap-1.5 text-xs text-white/50 hover:text-white/80"
+        className="flex items-center gap-1.5 text-xs text-foreground/70 hover:text-foreground/80"
       >
         <Palette className="h-3.5 w-3.5" />
         {advanced ? "Use color picker" : "Enter CSS gradient manually"}

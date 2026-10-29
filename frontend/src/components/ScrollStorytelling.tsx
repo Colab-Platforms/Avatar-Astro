@@ -126,7 +126,7 @@ const ScrollStorytelling = () => {
       className="fixed inset-0 overflow-hidden pointer-events-none"
       style={{
         zIndex: -1,
-        background: 'linear-gradient(to bottom, #1E1B4B 0%, #1a1845 15%, #151340 30%, #111035 50%, #0d0c2d 70%, #0F172A 100%)',
+        background: '#F5E9D6',
       }}
     >
       {/* Grain texture */}
@@ -143,7 +143,7 @@ const ScrollStorytelling = () => {
       <motion.div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: 'linear-gradient(to bottom, transparent 0%, rgba(49, 46, 129, 0.15) 40%, rgba(99, 102, 241, 0.06) 60%, rgba(15, 23, 42, 0.3) 100%)',
+          background: 'linear-gradient(to bottom, transparent 0%, rgba(89,34,9,0.08) 40%, rgba(89,34,9,0.06) 60%, rgba(89,34,9,0.08) 100%)',
           opacity: bgLighten,
         }}
       />
@@ -382,7 +382,7 @@ const ScrollStorytelling = () => {
 
         {/* Gradient sky shift — lighter moonlight blue */}
         <div className="absolute inset-0" style={{
-          background: 'linear-gradient(to bottom, transparent 0%, rgba(49, 46, 129, 0.15) 20%, rgba(79, 70, 229, 0.08) 50%, rgba(30, 27, 75, 0.2) 100%)',
+          background: 'linear-gradient(to bottom, transparent 0%, rgba(89,34,9,0.08) 20%, rgba(89,34,9,0.08) 50%, rgba(89,34,9,0.08) 100%)',
         }} />
 
         {/* Cloud layer 1 — back */}
@@ -468,7 +468,7 @@ const ScrollStorytelling = () => {
         >
           <div style={{
             width: '100%', height: '100%',
-            background: 'linear-gradient(to bottom, transparent 0%, rgba(67, 56, 202, 0.06) 30%, rgba(99, 102, 241, 0.1) 50%, rgba(49, 46, 129, 0.08) 70%, transparent 100%)',
+            background: 'linear-gradient(to bottom, transparent 0%, rgba(89,34,9,0.06) 30%, rgba(89,34,9,0.1) 50%, rgba(89,34,9,0.08) 70%, transparent 100%)',
             filter: 'blur(20px)',
           }} />
         </motion.div>
@@ -641,7 +641,7 @@ const ScrollStorytelling = () => {
       <motion.div className="absolute inset-0 pointer-events-none" style={{ opacity: civilizationOpacity }}>
 
         {/* Dark ground gradient */}
-        <div className="absolute bottom-0 w-full" style={{ height: '40%', background: 'linear-gradient(to top, #0a0e14 0%, #0F172A 50%, transparent 100%)' }} />
+        <div className="absolute bottom-0 w-full" style={{ height: '40%', background: '#F5E9D6' }} />
 
         {/* Village & Architecture */}
         <motion.svg
@@ -784,7 +784,7 @@ const ScrollStorytelling = () => {
       {/* Unifying gradient overlay */}
       <div
         className="absolute inset-0 pointer-events-none"
-        style={{ background: 'linear-gradient(to bottom, rgba(30, 27, 75, 0.05) 0%, rgba(15, 23, 42, 0.05) 40%, rgba(15, 23, 42, 0.1) 70%, rgba(10, 14, 20, 0.15) 100%)' }}
+        style={{ background: 'linear-gradient(to bottom, rgba(89,34,9,0.05) 0%, rgba(89,34,9,0.05) 40%, rgba(89,34,9,0.08) 70%, rgba(89,34,9,0.08) 100%)' }}
       />
 
       {/* Constellation tooltip */}
@@ -798,16 +798,16 @@ const ScrollStorytelling = () => {
             className="fixed z-50 pointer-events-none max-w-xs"
             style={{ left: Math.min(tooltipPosition.x + 20, window.innerWidth - 320), top: Math.min(tooltipPosition.y - 20, window.innerHeight - 250) }}
           >
-            <div className="p-4 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(30, 27, 75, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%)', border: '1px solid rgba(99, 102, 241, 0.4)', boxShadow: '0 0 30px rgba(99, 102, 241, 0.15), 0 20px 60px rgba(0, 0, 0, 0.8)' }}>
-              <h3 className="font-display text-lg tracking-wider mb-2" style={{ color: '#A5B4FC', textShadow: '0 0 10px rgba(165, 180, 252, 0.5)' }}>{hoveredConstellation.name}</h3>
+            <div className="p-4 rounded-xl" style={{ background: 'linear-gradient(135deg, #FBF5EC 0%, #FBF5EC 100%)', border: '1px solid rgba(89,34,9,0.4)', boxShadow: '0 0 30px rgba(89,34,9,0.15), 0 20px 60px rgba(89,34,9,0.2)' }}>
+              <h3 className="font-display text-lg tracking-wider mb-2" style={{ color: '#6B4A37', textShadow: '0 0 10px rgba(89,34,9,0.5)' }}>{hoveredConstellation.name}</h3>
               <p className="text-sm text-muted-foreground mb-3 leading-relaxed">{hoveredConstellation.mythology.origin}</p>
-              <div className="text-xs mb-3 p-2 rounded-lg" style={{ background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
-                <span style={{ color: '#818CF8' }} className="font-display tracking-wider">MEANING: </span>
+              <div className="text-xs mb-3 p-2 rounded-lg" style={{ background: 'rgba(89,34,9,0.1)', border: '1px solid rgba(89,34,9,0.2)' }}>
+                <span style={{ color: '#592209' }} className="font-display tracking-wider">MEANING: </span>
                 <span className="text-foreground/80">{hoveredConstellation.mythology.meaning}</span>
               </div>
               <div className="flex flex-wrap gap-2">
                 {hoveredConstellation.mythology.keyStars.map((star) => (
-                  <span key={star} className="text-xs px-2 py-1 rounded-full" style={{ background: 'rgba(99, 102, 241, 0.15)', color: '#C7D2FE', border: '1px solid rgba(99, 102, 241, 0.3)' }}>★ {star}</span>
+                  <span key={star} className="text-xs px-2 py-1 rounded-full" style={{ background: 'rgba(89,34,9,0.15)', color: '#6B4A37', border: '1px solid rgba(89,34,9,0.3)' }}>★ {star}</span>
                 ))}
               </div>
             </div>
@@ -852,7 +852,7 @@ const ConstellationGroup = ({ constellation, scrollProgress, isHovered, onHover 
           style={{ scale: useTransform(visibility, [0, 1], [0, 1]), transition: 'r 0.3s, fill 0.3s' }}
         />
       ))}
-      <motion.text x={`${constellation.stars[0].x + 3}%`} y={`${constellation.stars[0].y - 2}%`} fill={isHovered ? "#C7D2FE" : "#A5B4FC"} fontSize={isHovered ? "12" : "10"} fontFamily="Iceland, sans-serif" letterSpacing="0.2em"
+      <motion.text x={`${constellation.stars[0].x + 3}%`} y={`${constellation.stars[0].y - 2}%`} fill={isHovered ? "#C7D2FE" : "#A5B4FC"} fontSize={isHovered ? "12" : "10"} fontFamily="'DM Sans', system-ui, sans-serif" letterSpacing="0.2em"
         style={{ opacity: useTransform(visibility, [0.5, 1], [0, isHovered ? 1 : 0.7]), transition: 'font-size 0.3s, fill 0.3s' }}
       >{constellation.name.toUpperCase()}</motion.text>
     </motion.g>
@@ -866,7 +866,7 @@ const ShootingStarElement = ({ star }: { star: ShootingStar }) => (
     transition={{ duration: star.speed, ease: 'easeOut' }}
   >
     <div className="w-1 h-1 rounded-full" style={{
-      background: '#A5B4FC',
+      background: '#592209',
       boxShadow: `-${star.length / 4}px 0 ${star.length / 8}px rgba(165, 180, 252, 0.8), -${star.length / 2}px 0 ${star.length / 4}px rgba(99, 102, 241, 0.4)`,
       transform: `rotate(${star.angle}deg)`,
     }} />
@@ -877,7 +877,7 @@ const MilestoneItem = ({ scrollProgress, progress, text, topPercent }: { scrollP
   const opacity = useTransform(scrollProgress, [progress - 0.05, progress, progress + 0.08, progress + 0.15], [0, 0.8, 0.8, 0]);
   return (
     <motion.div className="absolute left-1/2 -translate-x-1/2 text-center" style={{ top: `${topPercent}%`, opacity }}>
-      <span className="text-xs tracking-[0.3em] uppercase" style={{ color: '#A5B4FC', textShadow: '0 0 20px rgba(165, 180, 252, 0.5)' }}>{text}</span>
+      <span className="text-xs tracking-[0.3em] uppercase" style={{ color: '#6B4A37', textShadow: '0 0 20px rgba(89,34,9,0.5)' }}>{text}</span>
     </motion.div>
   );
 };

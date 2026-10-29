@@ -30,8 +30,8 @@ const RatnaJyotishResult = () => {
     return (
       <section className="mx-auto max-w-xl px-4 pb-20 pt-10 text-center" data-testid="ratna-empty">
         <RatnaEmblem size={72} className="mx-auto" />
-        <h1 className="mt-4 font-astra text-3xl text-[#f0d58a]">No Ratna Jyotish result yet</h1>
-        <p className="mt-3 text-lg text-slate-300">
+        <h1 className="mt-4 font-astra text-3xl text-[#301607]">No Ratna Jyotish result yet</h1>
+        <p className="mt-3 text-lg text-muted-foreground">
           Enter your birth details to see the gemstone traditionally associated with your birth chart.
         </p>
         <Link to="/ratna-jyotish" className="ratna-btn mt-6 inline-flex items-center justify-center">

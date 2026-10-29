@@ -4,7 +4,7 @@ import { tools } from "@/data/tools";
 import ToolCard from "./ToolCard";
 
 const AstrologyToolsSection = () => (
-  <section className="relative w-full py-10 md:py-14" aria-labelledby="home-tools-h">
+  <section id="astrology-tools" tabIndex={-1} className="relative w-full scroll-mt-20 py-10 outline-none md:py-14" aria-labelledby="home-tools-h">
     <div className="container relative z-10 mx-auto px-4 md:px-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}

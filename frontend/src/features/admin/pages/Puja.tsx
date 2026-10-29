@@ -101,10 +101,10 @@ export default function AdminPujaPage() {
     <div className="mx-auto max-w-7xl space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-2">
-          <h2 className="font-display text-2xl tracking-wide text-white sm:text-3xl">
+          <h2 className="font-display text-2xl tracking-wide text-foreground sm:text-3xl">
             Puja Management
           </h2>
-          <p className="max-w-2xl text-sm text-white/60 sm:text-base">
+          <p className="max-w-2xl text-sm text-foreground/70 sm:text-base">
             Manage temples, their image galleries and the Pujas they offer.
           </p>
         </div>
@@ -112,7 +112,7 @@ export default function AdminPujaPage() {
         <Button
           type="button"
           onClick={openCreate}
-          className="shrink-0 bg-[#BC6A4D] text-white hover:bg-[#BC6A4D]/90"
+          className="shrink-0 bg-[#592209] text-[#F5E9D6] hover:bg-[#592209]/90"
         >
           <Plus className="h-4 w-4" />
           Add Temple
@@ -120,15 +120,15 @@ export default function AdminPujaPage() {
       </div>
 
       <div className="relative max-w-md">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/70" />
         <Input
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           placeholder="Search by name, location, state or deity…"
-          className="border-white/10 bg-white/[0.03] pl-9 text-white placeholder:text-white/35"
+          className="border-primary/15 bg-card pl-9 text-foreground placeholder:text-foreground/70"
         />
         {isFetching && !isLoading && (
-          <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-white/40" />
+          <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-foreground/70" />
         )}
       </div>
 
@@ -138,27 +138,27 @@ export default function AdminPujaPage() {
         </div>
       ) : isError ? (
         <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-6 text-center">
-          <p className="text-sm text-red-400">
+          <p className="text-sm text-red-800">
             {(error as Error)?.message ?? "Could not load temples"}
           </p>
         </div>
       ) : temples.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-white/10 py-16 text-center">
-          <Landmark className="h-10 w-10 text-white/25" />
+        <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-primary/15 py-16 text-center">
+          <Landmark className="h-10 w-10 text-foreground/70" />
           {isSearching ? (
-            <p className="text-sm text-white/60">
+            <p className="text-sm text-foreground/70">
               No temples match “{search}”.
             </p>
           ) : (
             <>
-              <p className="text-white/80">No temples added yet.</p>
-              <p className="text-sm text-white/50">
+              <p className="text-foreground/80">No temples added yet.</p>
+              <p className="text-sm text-foreground/70">
                 Add your first temple to start managing Puja services.
               </p>
               <Button
                 type="button"
                 onClick={openCreate}
-                className="mt-1 bg-[#BC6A4D] text-white hover:bg-[#BC6A4D]/90"
+                className="mt-1 bg-[#592209] text-[#F5E9D6] hover:bg-[#592209]/90"
               >
                 <Plus className="h-4 w-4" />
                 Add Temple
@@ -167,18 +167,18 @@ export default function AdminPujaPage() {
           )}
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-white/10">
+        <div className="overflow-x-auto rounded-lg border border-primary/15">
           <Table>
             <TableHeader>
-              <TableRow className="border-white/10 hover:bg-transparent">
-                <TableHead className="text-white/60">Temple</TableHead>
-                <TableHead className="text-white/60">Location</TableHead>
-                <TableHead className="hidden md:table-cell text-white/60">Deity</TableHead>
-                <TableHead className="text-white/60">From</TableHead>
-                <TableHead className="hidden sm:table-cell text-white/60">Pujas</TableHead>
-                <TableHead className="hidden sm:table-cell text-white/60">Images</TableHead>
-                <TableHead className="hidden lg:table-cell text-white/60">Created</TableHead>
-                <TableHead className="text-right text-white/60">
+              <TableRow className="border-primary/15 hover:bg-transparent">
+                <TableHead className="text-foreground/70">Temple</TableHead>
+                <TableHead className="text-foreground/70">Location</TableHead>
+                <TableHead className="hidden md:table-cell text-foreground/70">Deity</TableHead>
+                <TableHead className="text-foreground/70">From</TableHead>
+                <TableHead className="hidden sm:table-cell text-foreground/70">Pujas</TableHead>
+                <TableHead className="hidden sm:table-cell text-foreground/70">Images</TableHead>
+                <TableHead className="hidden lg:table-cell text-foreground/70">Created</TableHead>
+                <TableHead className="text-right text-foreground/70">
                   Actions
                 </TableHead>
               </TableRow>
@@ -187,12 +187,12 @@ export default function AdminPujaPage() {
               {temples.map((temple) => (
                 <TableRow
                   key={temple.id}
-                  className="border-white/10 hover:bg-white/[0.02]"
+                  className="border-primary/15 hover:bg-primary/10"
                 >
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div
-                        className="h-11 w-11 shrink-0 overflow-hidden rounded-md border border-white/10 bg-white/5"
+                        className="h-11 w-11 shrink-0 overflow-hidden rounded-md border border-primary/15 bg-card"
                         style={
                           !temple.coverImage && temple.gradient
                             ? { background: temple.gradient }
@@ -209,32 +209,32 @@ export default function AdminPujaPage() {
                         ) : null}
                       </div>
                       <div className="min-w-0">
-                        <p className="truncate font-medium text-white">
+                        <p className="truncate font-medium text-foreground">
                           {temple.name}
                         </p>
-                        <p className="truncate text-xs text-white/40">
+                        <p className="truncate text-xs text-foreground/70">
                           /{temple.slug}
                         </p>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-white/70">
+                  <TableCell className="text-foreground/70">
                     <p className="text-sm">{temple.location}</p>
-                    <p className="text-xs text-white/40">{temple.state}</p>
+                    <p className="text-xs text-foreground/70">{temple.state}</p>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell text-sm text-white/70">
+                  <TableCell className="hidden md:table-cell text-sm text-foreground/70">
                     {temple.deity}
                   </TableCell>
-                  <TableCell className="text-sm text-[#BC6A4D]">
+                  <TableCell className="text-sm text-[#592209]">
                     {formatPrice(temple.priceFrom)}
                   </TableCell>
-                  <TableCell className="hidden sm:table-cell text-sm text-white/70">
+                  <TableCell className="hidden sm:table-cell text-sm text-foreground/70">
                     {temple.pujaCount}
                   </TableCell>
-                  <TableCell className="hidden sm:table-cell text-sm text-white/70">
+                  <TableCell className="hidden sm:table-cell text-sm text-foreground/70">
                     {temple.imageCount}
                   </TableCell>
-                  <TableCell className="hidden lg:table-cell whitespace-nowrap text-sm text-white/50">
+                  <TableCell className="hidden lg:table-cell whitespace-nowrap text-sm text-foreground/70">
                     {formatDate(temple.createdAt)}
                   </TableCell>
                   <TableCell>
@@ -244,7 +244,7 @@ export default function AdminPujaPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => openEdit(temple)}
-                        className="text-white/60 hover:bg-white/5 hover:text-white"
+                        className="text-foreground/70 hover:bg-primary/10 hover:text-foreground"
                         aria-label={`Edit ${temple.name}`}
                         title="Edit"
                       >
@@ -255,7 +255,7 @@ export default function AdminPujaPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => setPujasTemple(temple)}
-                        className="text-white/60 hover:bg-white/5 hover:text-white"
+                        className="text-foreground/70 hover:bg-primary/10 hover:text-foreground"
                         aria-label={`Manage Pujas for ${temple.name}`}
                         title="Manage Pujas"
                       >
@@ -266,7 +266,7 @@ export default function AdminPujaPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => setImagesTemple(temple)}
-                        className="text-white/60 hover:bg-white/5 hover:text-white"
+                        className="text-foreground/70 hover:bg-primary/10 hover:text-foreground"
                         aria-label={`Manage images for ${temple.name}`}
                         title="Manage Images"
                       >
@@ -277,7 +277,7 @@ export default function AdminPujaPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => setTempleToDelete(temple)}
-                        className="text-white/60 hover:bg-red-500/10 hover:text-red-400"
+                        className="text-foreground/70 hover:bg-red-500/10 hover:text-red-800"
                         aria-label={`Delete ${temple.name}`}
                         title="Delete"
                       >
@@ -294,7 +294,7 @@ export default function AdminPujaPage() {
 
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-sm text-white/50">
+          <p className="text-sm text-foreground/70">
             Page {data?.page} of {totalPages} · {data?.total} temple(s)
           </p>
           <div className="flex gap-2">
@@ -304,7 +304,7 @@ export default function AdminPujaPage() {
               size="sm"
               disabled={page <= 1 || isFetching}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="border-white/10 bg-transparent text-white hover:bg-white/5 hover:text-white"
+              className="border-primary/15 bg-transparent text-foreground hover:bg-primary/10 hover:text-foreground"
             >
               Previous
             </Button>
@@ -314,7 +314,7 @@ export default function AdminPujaPage() {
               size="sm"
               disabled={page >= totalPages || isFetching}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              className="border-white/10 bg-transparent text-white hover:bg-white/5 hover:text-white"
+              className="border-primary/15 bg-transparent text-foreground hover:bg-primary/10 hover:text-foreground"
             >
               Next
             </Button>
@@ -346,13 +346,13 @@ export default function AdminPujaPage() {
         open={Boolean(templeToDelete)}
         onOpenChange={(next) => !next && setTempleToDelete(null)}
       >
-        <AlertDialogContent className="border-white/10 bg-[#0a1628] text-white">
+        <AlertDialogContent className="border-primary/15 bg-[#FBF5EC] text-foreground">
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-display text-lg tracking-wide text-white">
+            <AlertDialogTitle className="font-display text-lg tracking-wide text-foreground">
               Delete {templeToDelete?.name}?
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
-              <div className="space-y-2 text-white/60">
+              <div className="space-y-2 text-foreground/70">
                 <p>This will permanently delete:</p>
                 <ul className="list-disc space-y-1 pl-5">
                   <li>Temple details</li>
@@ -371,7 +371,7 @@ export default function AdminPujaPage() {
           <AlertDialogFooter>
             <AlertDialogCancel
               disabled={deleteTemple.isPending}
-              className="border-white/10 bg-transparent text-white hover:bg-white/5 hover:text-white"
+              className="border-primary/15 bg-transparent text-foreground hover:bg-primary/10 hover:text-foreground"
             >
               Cancel
             </AlertDialogCancel>
@@ -381,7 +381,7 @@ export default function AdminPujaPage() {
                 confirmDelete();
               }}
               disabled={deleteTemple.isPending}
-              className="bg-red-600 text-white hover:bg-red-600/90"
+              className="bg-red-600 text-[#F5E9D6] hover:bg-red-600/90"
             >
               {deleteTemple.isPending && (
                 <Loader2 className="h-4 w-4 animate-spin" />

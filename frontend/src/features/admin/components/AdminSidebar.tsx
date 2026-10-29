@@ -66,17 +66,17 @@ export function AdminSidebar({
 
   const renderSidebarContent = (showClose: boolean) => (
     <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b border-white/10 px-5 py-5">
+      <div className="flex items-center justify-between border-b border-primary/15 px-5 py-5">
         <div>
-          <p className="font-display text-lg tracking-wide text-white">Astro</p>
-          <p className="text-xs text-white/50">Admin Console</p>
+          <p className="font-display text-lg tracking-wide text-foreground">Astro</p>
+          <p className="text-xs text-foreground/70">Admin Console</p>
         </div>
         {showClose && (
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            className="text-white/70 hover:bg-white/10 hover:text-white lg:hidden"
+            className="text-foreground/70 hover:bg-primary/10 hover:text-foreground lg:hidden"
             onClick={onMobileClose}
             aria-label="Close sidebar"
           >
@@ -96,8 +96,8 @@ export function AdminSidebar({
               cn(
                 "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
                 isActive
-                  ? "bg-[#BC6A4D]/15 text-[#BC6A4D]"
-                  : "text-white/70 hover:bg-white/5 hover:text-white",
+                  ? "bg-[#592209]/15 text-foreground"
+                  : "text-foreground/70 hover:bg-primary/10 hover:text-foreground",
               )
             }
           >
@@ -113,8 +113,8 @@ export function AdminSidebar({
             className={cn(
               "flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
               isShopRoute
-                ? "bg-[#BC6A4D]/15 text-[#BC6A4D]"
-                : "text-white/70 hover:bg-white/5 hover:text-white",
+                ? "bg-[#592209]/15 text-foreground"
+                : "text-foreground/70 hover:bg-primary/10 hover:text-foreground",
             )}
             aria-expanded={shopExpanded}
           >
@@ -139,8 +139,8 @@ export function AdminSidebar({
                     cn(
                       "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
                       isActive
-                        ? "bg-[#BC6A4D]/15 text-[#BC6A4D]"
-                        : "text-white/60 hover:bg-white/5 hover:text-white",
+                        ? "bg-[#592209]/15 text-foreground"
+                        : "text-foreground/70 hover:bg-primary/10 hover:text-foreground",
                     )
                   }
                 >
@@ -153,11 +153,11 @@ export function AdminSidebar({
         </div>
       </nav>
 
-      <div className="border-t border-white/10 px-4 py-4">
+      <div className="border-t border-primary/15 px-4 py-4">
         <div className="mb-3 truncate px-1">
-          <p className="truncate text-sm text-white">{displayName}</p>
+          <p className="truncate text-sm text-foreground">{displayName}</p>
           {user?.email && (
-            <p className="truncate text-xs text-white/45">{user.email}</p>
+            <p className="truncate text-xs text-foreground/70">{user.email}</p>
           )}
         </div>
         <AlertDialog>
@@ -165,27 +165,27 @@ export function AdminSidebar({
             <Button
               type="button"
               variant="ghost"
-              className="w-full justify-start gap-3 px-3 text-white/70 hover:bg-white/5 hover:text-white"
+              className="w-full justify-start gap-3 px-3 text-foreground/70 hover:bg-primary/10 hover:text-foreground"
               disabled={logoutMutation.isPending}
             >
               <LogOut className="h-4 w-4" />
               Logout
             </Button>
           </AlertDialogTrigger>
-          <AlertDialogContent className="border-white/10 bg-[#0a1628] text-white">
+          <AlertDialogContent className="border-primary/15 bg-[#FBF5EC] text-foreground">
             <AlertDialogHeader>
-              <AlertDialogTitle className="font-display text-lg tracking-wide text-white">Confirm Logout</AlertDialogTitle>
-              <AlertDialogDescription className="text-white/60">
+              <AlertDialogTitle className="font-display text-lg tracking-wide text-foreground">Confirm Logout</AlertDialogTitle>
+              <AlertDialogDescription className="text-foreground/70">
                 Are you sure you want to log out of the admin console?
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel className="border-white/10 bg-transparent text-white hover:bg-white/5 hover:text-white">
+              <AlertDialogCancel className="border-primary/15 bg-transparent text-foreground hover:bg-primary/10 hover:text-foreground">
                 Cancel
               </AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleLogout}
-                className="bg-[#BC6A4D] text-white hover:bg-[#BC6A4D]/80"
+                className="bg-[#592209] text-[#F5E9D6] hover:bg-[#592209]/80"
               >
                 Logout
               </AlertDialogAction>
@@ -198,7 +198,7 @@ export function AdminSidebar({
 
   return (
     <>
-      <aside className="hidden h-screen w-64 shrink-0 border-r border-white/10 bg-[#0a1628] lg:block">
+      <aside className="hidden h-screen w-64 shrink-0 border-r border-primary/15 bg-[#FBF5EC] lg:block">
         {renderSidebarContent(false)}
       </aside>
 
@@ -218,7 +218,7 @@ export function AdminSidebar({
         />
         <aside
           className={cn(
-            "absolute left-0 top-0 h-full w-64 border-r border-white/10 bg-[#0a1628] transition-transform duration-200",
+            "absolute left-0 top-0 h-full w-64 border-r border-primary/15 bg-[#FBF5EC] transition-transform duration-200",
             mobileOpen ? "translate-x-0" : "-translate-x-full",
           )}
         >

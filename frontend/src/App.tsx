@@ -27,8 +27,6 @@ import InnerVoiceWisdom from "./pages/InnerVoiceWisdom";
 import TarotExperience from "./pages/TarotExperience";
 import SolarSystem from "./pages/SolarSystem";
 import NotFound from "./pages/NotFound";
-import CosmicBackground from "./components/CosmicBackground";
-import HideOnHome from "./components/HideOnHome";
 import { PublicRoute } from "./routes/PublicRoute";
 import { GoogleOnboardingRoute } from "./routes/ProtectedRoute";
 import SignInPrompt from "./components/SignInPrompt";
@@ -81,7 +79,7 @@ const FamilyPage       = lazy(() => import("./pages/AvatarLive/FamilyPage"));
 const LazyFallback = () => <div className="min-h-screen" />;
 
 const AdminLazyFallback = () => (
-  <div className="flex min-h-screen items-center justify-center bg-[#081426]">
+  <div className="flex min-h-screen items-center justify-center bg-[#FBF5EC]">
     <Loader />
   </div>
 );
@@ -532,7 +530,6 @@ const App = () => {
             path="*"
             element={
               <>
-                <HideOnHome><CosmicBackground /></HideOnHome>
                 <NavigationProvider>
                   <Layout>
                     <AnimatedRoutes />

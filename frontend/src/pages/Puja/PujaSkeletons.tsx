@@ -11,7 +11,7 @@ const SHIMMER_CSS = `
     }
   }
   .puja-shimmer-bg {
-    background: linear-gradient(90deg, #F2EAE0 25%, #FAF6EE 50%, #F2EAE0 75%);
+    background: linear-gradient(90deg, #F0DFC7 25%, #FBF5EC 50%, #F0DFC7 75%);
     background-size: 200% 100%;
     animation: puja-shimmer 1.6s infinite linear;
   }
@@ -23,8 +23,8 @@ export const PujaCardSkeleton = () => (
     style={{
       background: '#FFFFFF',
       borderRadius: 20,
-      border: '1.5px solid rgba(188,106,77,0.13)',
-      boxShadow: '0 4px 20px rgba(120,60,20,0.07), 0 1px 3px rgba(0,0,0,0.04)',
+      border: '1.5px solid rgba(89,34,9,0.13)',
+      boxShadow: '0 4px 20px rgba(89,34,9,0.2), 0 1px 3px rgba(89,34,9,0.2)',
       overflow: 'hidden',
       display: 'flex',
       flexDirection: 'column',
@@ -36,7 +36,7 @@ export const PujaCardSkeleton = () => (
         position: 'relative',
         width: '100%',
         paddingBottom: '75%',
-        background: '#F3ECE0',
+        background: '#F0DFC7',
         borderRadius: '18px 18px 0 0',
         overflow: 'hidden',
       }}
@@ -62,7 +62,7 @@ export const PujaCardSkeleton = () => (
       <div className="puja-shimmer-bg" style={{ width: '60%', height: 16, borderRadius: 4 }} />
 
       {/* Divider */}
-      <div style={{ height: 1, background: 'rgba(188,106,77,0.12)', marginTop: 8, marginBottom: 8 }} />
+      <div style={{ height: 1, background: 'rgba(89,34,9,0.08)', marginTop: 8, marginBottom: 8 }} />
 
       {/* Price & CTA */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
@@ -109,7 +109,7 @@ export const PujaDetailSkeleton = () => (
           
           {/* Left Column: Image Carousel Placeholder */}
           <div className="lg:w-[58%] flex flex-col gap-4">
-            <div className="rounded-2xl overflow-hidden relative" style={{ aspectRatio: '4/3', background: '#F3ECE0' }}>
+            <div className="rounded-2xl overflow-hidden relative" style={{ aspectRatio: '4/3', background: '#F0DFC7' }}>
               <div className="puja-shimmer-bg absolute inset-0" />
             </div>
             {/* Carousel Dots */}

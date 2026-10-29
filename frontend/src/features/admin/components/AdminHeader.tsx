@@ -15,23 +15,23 @@ export function AdminHeader({ title, onMenuClick }: AdminHeaderProps) {
     "Admin";
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-white/10 bg-[#081426]/90 px-4 backdrop-blur-sm sm:px-6">
+    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-primary/15 bg-[#FBF5EC]/90 px-4 backdrop-blur-sm sm:px-6">
       <div className="flex items-center gap-3">
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          className="text-white/70 hover:bg-white/10 hover:text-white lg:hidden"
+          className="text-foreground/70 hover:bg-primary/10 hover:text-foreground lg:hidden"
           onClick={onMenuClick}
           aria-label="Open sidebar"
         >
           <Menu className="h-5 w-5" />
         </Button>
-        <h1 className="font-display text-lg tracking-wide text-white sm:text-xl">
+        <h1 className="font-display text-lg tracking-wide text-foreground sm:text-xl">
           {title}
         </h1>
       </div>
-      <p className="hidden truncate text-sm text-white/60 sm:block">{displayName}</p>
+      <p className="hidden truncate text-sm text-foreground/70 sm:block">{displayName}</p>
     </header>
   );
 }

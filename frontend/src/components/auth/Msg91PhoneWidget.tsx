@@ -153,7 +153,7 @@ export function Msg91PhoneWidget({
   }, [phoneNo]);
 
   if (loadError) {
-    return <p className="text-[13px] text-red-400 text-center">{loadError}</p>;
+    return <p className="text-[13px] text-red-800 text-center">{loadError}</p>;
   }
 
   return (

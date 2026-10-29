@@ -7,7 +7,7 @@ const STARS: [number, number][] = [
 ];
 
 const Chip = ({ children }: { children: React.ReactNode }) => (
-  <li className="max-w-full break-words rounded-full border border-[#d4a64a]/35 bg-[#081426]/60 px-3 py-1 text-sm text-slate-200">
+  <li className="max-w-full break-words rounded-full border border-[#592209]/35 bg-[#FBF5EC]/60 px-3 py-1 text-sm text-muted-foreground">
     {children}
   </li>
 );
@@ -25,8 +25,8 @@ const ResultHero = ({ result }: { result: RatnaResult }) => (
     ))}
     <div className="ratna-reveal" style={{ ["--i" as string]: 0 }}>
       <RatnaEmblem size={48} className="mx-auto h-[40px] w-[40px] sm:h-[48px] sm:w-[48px]" />
-      <p className="mt-1 text-xs font-semibold tracking-[0.28em] text-[#d4a64a]">YOUR PERSONAL GEMSTONE</p>
-      <h1 className="mt-1 font-astra text-[1.4rem] leading-tight text-[#f0d58a] min-[420px]:text-2xl sm:text-3xl lg:text-4xl">Your Ratna Jyotish Reading</h1>
+      <p className="mt-1 text-xs font-semibold tracking-[0.28em] text-[#592209]">YOUR PERSONAL GEMSTONE</p>
+      <h1 className="mt-1 font-astra text-[1.4rem] leading-tight text-[#301607] min-[420px]:text-2xl sm:text-3xl lg:text-4xl">Your Ratna Jyotish Reading</h1>
     </div>
     <ul
       className="ratna-reveal mx-auto mt-3 flex max-w-3xl flex-wrap justify-center gap-1.5"

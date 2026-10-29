@@ -1,7 +1,7 @@
 @keyframes ratna-spin { to { transform: rotate(360deg); } }
 @keyframes ratna-pulse {
-  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(242, 183, 5, 0.35)); }
-  50% { transform: scale(1.06); filter: drop-shadow(0 0 22px rgba(242, 183, 5, 0.7)); }
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(229,138,69,0.35)); }
+  50% { transform: scale(1.06); filter: drop-shadow(0 0 22px rgba(229,138,69,0.7)); }
 }
 @keyframes ratna-twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.95; } }
 
@@ -21,19 +21,19 @@
   width: 100%;
   min-height: 48px;
   border-radius: 10px;
-  border: 1px solid rgba(212, 166, 74, 0.35);
-  background: rgba(8, 20, 38, 0.75);
+  border: 1px solid rgba(229,138,69,0.35);
+  background: #FBF5EC;
   padding: 0 14px;
-  color: #f4ecd8;
+  color: #301607;
   font-size: 1.05rem;
   color-scheme: dark;
 }
-.ratna-input:focus { outline: 2px solid #d4a64a; outline-offset: 1px; }
+.ratna-input:focus { outline: 2px solid #E58A45; outline-offset: 1px; }
 .ratna-input:disabled { opacity: 0.45; cursor: not-allowed; }
 .ratna-input[aria-invalid="true"] { border-color: #ff8a80; }
 .ratna-card {
-  border: 1px solid rgba(212, 166, 74, 0.28);
-  background: rgba(10, 24, 46, 0.72);
+  border: 1px solid rgba(229,138,69,0.28);
+  background: #FBF5EC;
   border-radius: 16px;
   backdrop-filter: blur(6px);
 }
@@ -44,19 +44,19 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   color: #1a1204;
-  background: linear-gradient(135deg, #f0d58a, #d4a64a);
+  background: linear-gradient(135deg, #E58A45, #E58A45);
 }
 .ratna-btn:hover:not(:disabled) { filter: brightness(1.08); }
 .ratna-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-.ratna-btn:focus-visible, .ratna-link:focus-visible { outline: 2px solid #fff2c4; outline-offset: 2px; }
+.ratna-btn:focus-visible, .ratna-link:focus-visible { outline: 2px solid #E58A45; outline-offset: 2px; }
 .ratna-btn-ghost {
   min-height: 48px;
   border-radius: 12px;
   padding: 0 22px;
-  border: 1px solid rgba(212, 166, 74, 0.5);
-  color: #f0d58a;
+  border: 1px solid rgba(229,138,69,0.5);
+  color: #301607;
 }
-.ratna-btn-ghost:hover { background: rgba(212, 166, 74, 0.12); }
+.ratna-btn-ghost:hover { background: rgba(229,138,69,0.12); }
 
 /* ---- Results page ---------------------------------------------------- */
 /* Everything below is transform/opacity only, so it stays on the compositor. */
@@ -73,29 +73,29 @@
 
 .ratna-hero-glow {
   position: absolute; inset: -20% 10% auto; height: 120%; z-index: -1;
-  background: radial-gradient(ellipse at 50% 30%, rgba(212, 166, 74, 0.16), transparent 62%);
+  background: radial-gradient(ellipse at 50% 30%, rgba(229,138,69,0.16), transparent 62%);
 }
 
-.ratna-gem-card { position: relative; overflow: hidden; border-color: rgba(212, 166, 74, 0.45); }
+.ratna-gem-card { position: relative; overflow: hidden; border-color: rgba(229,138,69,0.45); }
 .ratna-gem-card::after {
   content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 38%; pointer-events: none;
-  background: linear-gradient(100deg, transparent, rgba(240, 213, 138, 0.09), transparent);
+  background: linear-gradient(100deg, transparent, rgba(229,138,69,0.09), transparent);
   animation: ratna-shimmer 11s ease-in-out infinite;
 }
 
 .ratna-lift { transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease; }
-.ratna-lift:hover { transform: translateY(-4px); border-color: rgba(212, 166, 74, 0.6); box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35); }
+.ratna-lift:hover { transform: translateY(-4px); border-color: rgba(229,138,69,0.6); box-shadow: 0 10px 28px rgba(89,34,9,0.2); }
 .ratna-lift img { transition: transform 0.5s ease; }
 .ratna-lift:hover img { transform: scale(1.05); }
 
-.ratna-acc { border: 1px solid rgba(212, 166, 74, 0.3); border-radius: 12px; background: rgba(8, 20, 38, 0.6); }
+.ratna-acc { border: 1px solid rgba(229,138,69,0.3); border-radius: 12px; background: #FBF5EC; }
 .ratna-acc-btn {
   display: flex; width: 100%; min-height: 52px; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 10px 16px; text-align: left; font-size: 1.1rem; font-weight: 600; color: #f0d58a; border-radius: 12px;
+  padding: 10px 16px; text-align: left; font-size: 1.1rem; font-weight: 600; color: #6B4A37; border-radius: 12px;
 }
-.ratna-acc-btn:focus-visible { outline: 2px solid #fff2c4; outline-offset: 2px; }
+.ratna-acc-btn:focus-visible { outline: 2px solid #E58A45; outline-offset: 2px; }
 .ratna-acc-chev {
-  width: 10px; height: 10px; flex: none; border-right: 2px solid #d4a64a; border-bottom: 2px solid #d4a64a;
+  width: 10px; height: 10px; flex: none; border-right: 2px solid #E58A45; border-bottom: 2px solid #E58A45;
   transform: rotate(45deg); transition: transform 0.3s ease;
 }
 .ratna-acc[data-open="true"] .ratna-acc-chev { transform: rotate(-135deg); }

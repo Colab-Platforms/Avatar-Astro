@@ -46,7 +46,7 @@ export const temples: (Temple & { pujas: Puja[] })[] = [
     deity: 'Lord Venkateswara',
     description: "One of the world's most visited religious sites, perched atop the sacred Tirumala hills.",
     priceFrom: 116,
-    gradient: 'linear-gradient(135deg, #2D1B69 0%, #6B3FA0 50%, #BC6A4D 100%)',
+    gradient: 'linear-gradient(135deg, #2D1B69 0%, #6B3FA0 50%, #592209 100%)',
     image: 'tirupati-balaji.png',
     pujas: [
       {

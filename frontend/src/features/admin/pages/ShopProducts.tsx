@@ -111,10 +111,10 @@ export default function AdminShopProductsPage() {
     <div className="mx-auto max-w-7xl space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-2">
-          <h2 className="font-display text-2xl tracking-wide text-white sm:text-3xl">
+          <h2 className="font-display text-2xl tracking-wide text-foreground sm:text-3xl">
             Shop Products
           </h2>
-          <p className="max-w-2xl text-sm text-white/60 sm:text-base">
+          <p className="max-w-2xl text-sm text-foreground/70 sm:text-base">
             Manage gemstones, bracelets and other devotional products.
           </p>
         </div>
@@ -122,7 +122,7 @@ export default function AdminShopProductsPage() {
         <Button
           type="button"
           onClick={openCreate}
-          className="shrink-0 bg-[#BC6A4D] text-white hover:bg-[#BC6A4D]/90"
+          className="shrink-0 bg-[#592209] text-[#F5E9D6] hover:bg-[#592209]/90"
         >
           <Plus className="h-4 w-4" />
           Add Product
@@ -131,15 +131,15 @@ export default function AdminShopProductsPage() {
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative max-w-md flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/70" />
           <Input
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search by product name or slug…"
-            className="border-white/10 bg-white/[0.03] pl-9 text-white placeholder:text-white/35"
+            className="border-primary/15 bg-card pl-9 text-foreground placeholder:text-foreground/70"
           />
           {isFetching && !isLoading && (
-            <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-white/40" />
+            <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-foreground/70" />
           )}
         </div>
 
@@ -150,7 +150,7 @@ export default function AdminShopProductsPage() {
             setPage(1);
           }}
         >
-          <SelectTrigger className="border-white/10 bg-white/[0.03] text-white sm:w-52">
+          <SelectTrigger className="border-primary/15 bg-card text-foreground sm:w-52">
             <SelectValue placeholder="All categories" />
           </SelectTrigger>
           <SelectContent>
@@ -170,7 +170,7 @@ export default function AdminShopProductsPage() {
             setPage(1);
           }}
         >
-          <SelectTrigger className="border-white/10 bg-white/[0.03] text-white sm:w-40">
+          <SelectTrigger className="border-primary/15 bg-card text-foreground sm:w-40">
             <SelectValue placeholder="All statuses" />
           </SelectTrigger>
           <SelectContent>
@@ -187,27 +187,27 @@ export default function AdminShopProductsPage() {
         </div>
       ) : isError ? (
         <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-6 text-center">
-          <p className="text-sm text-red-400">
+          <p className="text-sm text-red-800">
             {(error as Error)?.message ?? "Could not load products"}
           </p>
         </div>
       ) : products.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-white/10 py-16 text-center">
-          <ShoppingBag className="h-10 w-10 text-white/25" />
+        <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-primary/15 py-16 text-center">
+          <ShoppingBag className="h-10 w-10 text-foreground/70" />
           {isFiltering ? (
-            <p className="text-sm text-white/60">
+            <p className="text-sm text-foreground/70">
               No products match your filters.
             </p>
           ) : (
             <>
-              <p className="text-white/80">No products added yet.</p>
-              <p className="text-sm text-white/50">
+              <p className="text-foreground/80">No products added yet.</p>
+              <p className="text-sm text-foreground/70">
                 Add your first product to start building the shop catalog.
               </p>
               <Button
                 type="button"
                 onClick={openCreate}
-                className="mt-1 bg-[#BC6A4D] text-white hover:bg-[#BC6A4D]/90"
+                className="mt-1 bg-[#592209] text-[#F5E9D6] hover:bg-[#592209]/90"
               >
                 <Plus className="h-4 w-4" />
                 Add Product
@@ -216,16 +216,16 @@ export default function AdminShopProductsPage() {
           )}
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-white/10">
+        <div className="overflow-x-auto rounded-lg border border-primary/15">
           <Table>
             <TableHeader>
-              <TableRow className="border-white/10 hover:bg-transparent">
-                <TableHead className="text-white/60">Product</TableHead>
-                <TableHead className="text-white/60">Category</TableHead>
-                <TableHead className="text-white/60">Price</TableHead>
-                <TableHead className="hidden sm:table-cell text-white/60">Status</TableHead>
-                <TableHead className="hidden lg:table-cell text-white/60">Created</TableHead>
-                <TableHead className="text-right text-white/60">
+              <TableRow className="border-primary/15 hover:bg-transparent">
+                <TableHead className="text-foreground/70">Product</TableHead>
+                <TableHead className="text-foreground/70">Category</TableHead>
+                <TableHead className="text-foreground/70">Price</TableHead>
+                <TableHead className="hidden sm:table-cell text-foreground/70">Status</TableHead>
+                <TableHead className="hidden lg:table-cell text-foreground/70">Created</TableHead>
+                <TableHead className="text-right text-foreground/70">
                   Actions
                 </TableHead>
               </TableRow>
@@ -234,12 +234,12 @@ export default function AdminShopProductsPage() {
               {products.map((product) => (
                 <TableRow
                   key={product.id}
-                  className="border-white/10 hover:bg-white/[0.02]"
+                  className="border-primary/15 hover:bg-primary/10"
                 >
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div
-                        className="h-11 w-11 shrink-0 overflow-hidden rounded-md border border-white/10 bg-white/5"
+                        className="h-11 w-11 shrink-0 overflow-hidden rounded-md border border-primary/15 bg-card"
                         style={
                           !product.image && product.gradient
                             ? { background: product.gradient }
@@ -256,24 +256,24 @@ export default function AdminShopProductsPage() {
                         ) : null}
                       </div>
                       <div className="min-w-0">
-                        <p className="truncate font-medium text-white">
+                        <p className="truncate font-medium text-foreground">
                           {product.name}
                         </p>
-                        <p className="truncate text-xs text-white/40">
+                        <p className="truncate text-xs text-foreground/70">
                           /{product.slug}
                         </p>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-sm text-white/70">
+                  <TableCell className="text-sm text-foreground/70">
                     {product.categoryName}
                   </TableCell>
                   <TableCell>
-                    <p className="text-sm text-[#BC6A4D]">
+                    <p className="text-sm text-[#592209]">
                       {formatPrice(product.price)}
                     </p>
                     {product.originalPrice && (
-                      <p className="text-xs text-white/40 line-through">
+                      <p className="text-xs text-foreground/70 line-through">
                         {formatPrice(product.originalPrice)}
                       </p>
                     )}
@@ -283,14 +283,14 @@ export default function AdminShopProductsPage() {
                       variant="outline"
                       className={
                         product.isActive
-                          ? "border-emerald-500/30 text-emerald-400"
-                          : "border-white/15 text-white/50"
+                          ? "border-emerald-500/30 text-emerald-800"
+                          : "border-primary/25 text-foreground/70"
                       }
                     >
                       {product.isActive ? "Active" : "Inactive"}
                     </Badge>
                   </TableCell>
-                  <TableCell className="hidden lg:table-cell whitespace-nowrap text-sm text-white/50">
+                  <TableCell className="hidden lg:table-cell whitespace-nowrap text-sm text-foreground/70">
                     {formatDate(product.createdAt)}
                   </TableCell>
                   <TableCell>
@@ -300,7 +300,7 @@ export default function AdminShopProductsPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => openEdit(product)}
-                        className="text-white/60 hover:bg-white/5 hover:text-white"
+                        className="text-foreground/70 hover:bg-primary/10 hover:text-foreground"
                         aria-label={`Edit ${product.name}`}
                         title="Edit"
                       >
@@ -311,7 +311,7 @@ export default function AdminShopProductsPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => setProductToDelete(product)}
-                        className="text-white/60 hover:bg-red-500/10 hover:text-red-400"
+                        className="text-foreground/70 hover:bg-red-500/10 hover:text-red-800"
                         aria-label={`Delete ${product.name}`}
                         title="Delete"
                       >
@@ -328,7 +328,7 @@ export default function AdminShopProductsPage() {
 
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-sm text-white/50">
+          <p className="text-sm text-foreground/70">
             Page {data?.page} of {totalPages} · {data?.total} product(s)
           </p>
           <div className="flex gap-2">
@@ -338,7 +338,7 @@ export default function AdminShopProductsPage() {
               size="sm"
               disabled={page <= 1 || isFetching}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="border-white/10 bg-transparent text-white hover:bg-white/5 hover:text-white"
+              className="border-primary/15 bg-transparent text-foreground hover:bg-primary/10 hover:text-foreground"
             >
               Previous
             </Button>
@@ -348,7 +348,7 @@ export default function AdminShopProductsPage() {
               size="sm"
               disabled={page >= totalPages || isFetching}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              className="border-white/10 bg-transparent text-white hover:bg-white/5 hover:text-white"
+              className="border-primary/15 bg-transparent text-foreground hover:bg-primary/10 hover:text-foreground"
             >
               Next
             </Button>
@@ -366,19 +366,19 @@ export default function AdminShopProductsPage() {
         open={Boolean(productToDelete)}
         onOpenChange={(next) => !next && setProductToDelete(null)}
       >
-        <AlertDialogContent className="border-white/10 bg-[#0a1628] text-white">
+        <AlertDialogContent className="border-primary/15 bg-[#FBF5EC] text-foreground">
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-display text-lg tracking-wide text-white">
+            <AlertDialogTitle className="font-display text-lg tracking-wide text-foreground">
               Delete {productToDelete?.name}?
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-white/60">
+            <AlertDialogDescription className="text-foreground/70">
               This will permanently delete the product. This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel
               disabled={deleteProduct.isPending}
-              className="border-white/10 bg-transparent text-white hover:bg-white/5 hover:text-white"
+              className="border-primary/15 bg-transparent text-foreground hover:bg-primary/10 hover:text-foreground"
             >
               Cancel
             </AlertDialogCancel>
@@ -388,7 +388,7 @@ export default function AdminShopProductsPage() {
                 confirmDelete();
               }}
               disabled={deleteProduct.isPending}
-              className="bg-red-600 text-white hover:bg-red-600/90"
+              className="bg-red-600 text-[#F5E9D6] hover:bg-red-600/90"
             >
               {deleteProduct.isPending && (
                 <Loader2 className="h-4 w-4 animate-spin" />

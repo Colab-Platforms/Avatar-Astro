@@ -115,7 +115,7 @@ const LocationPicker = ({ value, onSelect, error, disabled }: Props) => {
         onKeyDown={onKeyDown}
       />
       {value && (
-        <p className="mt-1 text-sm text-emerald-300">
+        <p className="mt-1 text-sm text-emerald-800">
           Selected: {value.label} ({value.timezone})
         </p>
       )}
@@ -123,12 +123,12 @@ const LocationPicker = ({ value, onSelect, error, disabled }: Props) => {
         <ul
           id={`${id}-list`}
           role="listbox"
-          className="absolute z-30 mt-1 max-h-64 w-full overflow-auto rounded-lg border border-[#d4a64a]/40 bg-[#0a1830] shadow-xl"
+          className="absolute z-30 mt-1 max-h-64 w-full overflow-auto rounded-lg border border-[#592209]/40 bg-[#FBF5EC] shadow-xl"
         >
-          {state === "loading" && <li className="px-4 py-3 text-slate-300">Searching…</li>}
-          {state === "empty" && <li className="px-4 py-3 text-slate-300">No places found. Try a nearby larger town.</li>}
+          {state === "loading" && <li className="px-4 py-3 text-muted-foreground">Searching…</li>}
+          {state === "empty" && <li className="px-4 py-3 text-muted-foreground">No places found. Try a nearby larger town.</li>}
           {state === "error" && (
-            <li className="px-4 py-3 text-red-300">
+            <li className="px-4 py-3 text-red-800">
               {errorMsg}{" "}
               <button
                 type="button"
@@ -148,7 +148,7 @@ const LocationPicker = ({ value, onSelect, error, disabled }: Props) => {
               id={`${id}-opt-${i}`}
               role="option"
               aria-selected={i === active}
-              className={`cursor-pointer px-4 py-2.5 text-slate-100 ${i === active ? "bg-[#d4a64a]/20" : "hover:bg-[#d4a64a]/10"}`}
+              className={`cursor-pointer px-4 py-2.5 text-muted-foreground ${i === active ? "bg-[#592209]/20" : "hover:bg-[#592209]/10"}`}
               onMouseDown={(e) => {
                 e.preventDefault();
                 choose(p);
@@ -160,7 +160,7 @@ const LocationPicker = ({ value, onSelect, error, disabled }: Props) => {
         </ul>
       )}
       {error && (
-        <p id={`${id}-err`} role="alert" className="mt-1 text-sm text-red-300">
+        <p id={`${id}-err`} role="alert" className="mt-1 text-sm text-red-800">
           {error}
         </p>
       )}

@@ -56,7 +56,7 @@ function SectionTitle({ icon, title }: { icon: string; title: string }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 28 }}>
       <span style={{ fontSize: 22 }}>{icon}</span>
-      <h2 style={{ color: "#BC6A4D", fontSize: 15, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", margin: 0 }}>{title}</h2>
+      <h2 style={{ color: "#592209", fontSize: 15, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", margin: 0 }}>{title}</h2>
     </div>
   );
 }
@@ -88,7 +88,7 @@ function LiveBlueprintOverlay({ landmarks, locked }: { landmarks: HandLandmarks 
       {/* Blueprint grid */}
       <div style={{
         position: "absolute", inset: 0,
-        backgroundImage: "linear-gradient(rgba(127,196,255,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(127,196,255,0.12) 1px, transparent 1px)",
+        backgroundImage: "linear-gradient(rgba(89,34,9,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(89,34,9,0.12) 1px, transparent 1px)",
         backgroundSize: "28px 28px",
         animation: "lp-grid-drift 7s linear infinite",
       }} />
@@ -381,9 +381,9 @@ export default function PalmReading() {
     reader.readAsDataURL(file);
   };
 
-  const sec: React.CSSProperties = { background: "rgba(255,255,255,0.025)", border: "1px solid rgba(188,106,77,0.18)", borderRadius: 24, padding: "36px 40px", marginBottom: 28 };
-  const card: React.CSSProperties = { background: "rgba(255,255,255,0.035)", border: "1px solid rgba(188,106,77,0.14)", borderRadius: 16, padding: "24px" };
-  const goldBtn: React.CSSProperties = { background: "linear-gradient(135deg,#BC6A4D,#BC6A4D,#BC6A4D)", color: "#000", fontWeight: 800, fontSize: 16, letterSpacing: "0.1em", padding: "16px 36px", borderRadius: 32, border: "none", cursor: "pointer", boxShadow: "0 0 24px rgba(188,106,77,0.4)" };
+  const sec: React.CSSProperties = { background: "rgba(89,34,9,0.2)", border: "1px solid rgba(89,34,9,0.18)", borderRadius: 24, padding: "36px 40px", marginBottom: 28 };
+  const card: React.CSSProperties = { background: "rgba(89,34,9,0.2)", border: "1px solid rgba(89,34,9,0.14)", borderRadius: 16, padding: "24px" };
+  const goldBtn: React.CSSProperties = { background: "#F5E9D6", color: "#000", fontWeight: 800, fontSize: 16, letterSpacing: "0.1em", padding: "16px 36px", borderRadius: 32, border: "none", cursor: "pointer", boxShadow: "0 0 24px rgba(89,34,9,0.4)" };
 
   // Shared across landing + retake so both can trigger the same upload dialog.
   const fileInput = <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" aria-label="Upload a photo of your palm" onChange={handleFile} style={{ display: "none" }} />;
@@ -393,26 +393,26 @@ export default function PalmReading() {
     <div>
       <style>{`
         @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
-        @keyframes pulse-glow{0%,100%{box-shadow:0 0 20px rgba(188,106,77,0.3)}50%{box-shadow:0 0 50px rgba(188,106,77,0.7)}}
+        @keyframes pulse-glow{0%,100%{box-shadow:0 0 20px rgba(89,34,9,0.3)}50%{box-shadow:0 0 50px rgba(89,34,9,0.7)}}
         @keyframes shimmer{0%{background-position:200% center}100%{background-position:-200% center}}
         @keyframes fade-in{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
         @keyframes fade-in-hero-img{from{opacity:0;transform:translateY(16px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
-        .pr-card:hover{transform:translateY(-6px);border-color:rgba(188,106,77,0.5)!important;transition:all 0.3s ease}
+        .pr-card:hover{transform:translateY(-6px);border-color:rgba(89,34,9,0.5)!important;transition:all 0.3s ease}
         .pr-card{transition:all 0.3s ease}
         .pr-hero-img-wrap{display:inline-block;width:480px;max-width:92vw;animation:float 5s ease-in-out infinite,pulse-glow 4s ease-in-out infinite,fade-in-hero-img 0.9s ease 0.15s both}
         @media (max-width:1024px){.pr-hero-img-wrap{width:380px}}
         @media (max-width:640px){.pr-hero-img-wrap{width:280px}}
       `}</style>
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 32px 80px", color: "#e8e0f0" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 32px 80px", color: "#301607" }}>
 
         {/* Hero */}
         <div style={{ textAlign: "center", marginBottom: 72, animation: "fade-in 0.7s ease" }}>
-          <div style={{ fontSize: 14, color: "rgba(188,106,77,0.6)", letterSpacing: "0.3em", marginBottom: 16, fontWeight: 600 }}>✦ HAND SHAPE ANALYSIS ✦</div>
-          <h1 style={{ fontSize: 58, fontWeight: 900, color: "#fff", letterSpacing: "0.06em", margin: "0 0 20px", lineHeight: 1.1 }}>
+          <div style={{ fontSize: 14, color: "#592209", letterSpacing: "0.3em", marginBottom: 16, fontWeight: 600 }}>✦ HAND SHAPE ANALYSIS ✦</div>
+          <h1 style={{ fontSize: 58, fontWeight: 900, color: "#301607", letterSpacing: "0.06em", margin: "0 0 20px", lineHeight: 1.1 }}>
             Palm Reading<br/>
-            <span style={{ background: "linear-gradient(135deg,#BC6A4D,#BC6A4D,#BC6A4D)", backgroundSize: "200% auto", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", animation: "shimmer 3s linear infinite" }}>Hand Shape</span>
+            <span style={{ background: "#592209", backgroundSize: "200% auto", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", animation: "shimmer 3s linear infinite" }}>Hand Shape</span>
           </h1>
-          <p style={{ fontSize: 20, color: "rgba(232,224,240,0.65)", maxWidth: 620, margin: "0 auto 40px", lineHeight: 1.8 }}>
+          <p style={{ fontSize: 20, color: "rgba(48,22,7,0.72)", maxWidth: 620, margin: "0 auto 40px", lineHeight: 1.8 }}>
             Upload a photo of your palm or use your camera. The tool detects your hand, measures its proportions and describes your hand shape (Earth, Air, Water or Fire) using classical palmistry rules. Your photo is processed on your device and is not uploaded.
           </p>
           {/* Premium palm hero image */}
@@ -433,15 +433,15 @@ export default function PalmReading() {
           <div className="pr-card" style={{ ...sec, textAlign: "center", cursor: "pointer", marginBottom: 0 }} onClick={() => fileRef.current?.click()}>
             {fileInput}
             <div style={{ fontSize: 56, marginBottom: 20 }}>🖼️</div>
-            <h3 style={{ color: "#BC6A4D", fontSize: 22, fontWeight: 800, marginBottom: 12 }}>Upload Palm Photo</h3>
-            <p style={{ color: "rgba(232,224,240,0.6)", fontSize: 16, lineHeight: 1.7, marginBottom: 28 }}>Choose a photo of your palm from your device. JPG, PNG or WebP, up to 10 MB.</p>
+            <h3 style={{ color: "#592209", fontSize: 22, fontWeight: 800, marginBottom: 12 }}>Upload Palm Photo</h3>
+            <p style={{ color: "#592209", fontSize: 16, lineHeight: 1.7, marginBottom: 28 }}>Choose a photo of your palm from your device. JPG, PNG or WebP, up to 10 MB.</p>
             <button style={goldBtn}>📤 Upload Photo</button>
           </div>
           {/* Live scan */}
           <div className="pr-card" style={{ ...sec, textAlign: "center", marginBottom: 0 }}>
             <div style={{ fontSize: 56, marginBottom: 20 }}>📷</div>
-            <h3 style={{ color: "#BC6A4D", fontSize: 22, fontWeight: 800, marginBottom: 12 }}>Live Palm Scan</h3>
-            <p style={{ color: "rgba(232,224,240,0.6)", fontSize: 16, lineHeight: 1.7, marginBottom: 28 }}>Use your camera. The scanner tracks your hand live and captures automatically once it has a clear view.</p>
+            <h3 style={{ color: "#592209", fontSize: 22, fontWeight: 800, marginBottom: 12 }}>Live Palm Scan</h3>
+            <p style={{ color: "#592209", fontSize: 16, lineHeight: 1.7, marginBottom: 28 }}>Use your camera. The scanner tracks your hand live and captures automatically once it has a clear view.</p>
             <button style={goldBtn} onClick={() => setStage("live")}>📱 Start Live Scan</button>
           </div>
         </div>
@@ -451,20 +451,20 @@ export default function PalmReading() {
           <SectionTitle icon="📋" title="Photo & Scan Guidelines for Best Results"/>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
             <div style={card}>
-              <div style={{ color: "#4ade80", fontWeight: 700, fontSize: 14, letterSpacing: "0.15em", marginBottom: 16 }}>✅ IDEAL</div>
+              <div style={{ color: "#301607", fontWeight: 700, fontSize: 14, letterSpacing: "0.15em", marginBottom: 16 }}>✅ IDEAL</div>
               {["Full palm clearly visible","Bright, even natural lighting","Fingers slightly spread apart","Palm centered in frame","Sharp, high-resolution image"].map(g=>(
                 <div key={g} style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 10 }}>
-                  <span style={{ color: "#4ade80", fontSize: 16 }}>✓</span>
-                  <span style={{ fontSize: 15, color: "rgba(232,224,240,0.8)" }}>{g}</span>
+                  <span style={{ color: "#301607", fontSize: 16 }}>✓</span>
+                  <span style={{ fontSize: 15, color: "rgba(48,22,7,0.8)" }}>{g}</span>
                 </div>
               ))}
             </div>
             <div style={card}>
-              <div style={{ color: "#f87171", fontWeight: 700, fontSize: 14, letterSpacing: "0.15em", marginBottom: 16 }}>❌ AVOID</div>
+              <div style={{ color: "#9B2C1D", fontWeight: 700, fontSize: 14, letterSpacing: "0.15em", marginBottom: 16 }}>❌ AVOID</div>
               {["Blurry or out-of-focus image","Dark or shadowed lighting","Fingers closed or curled","Palm partially cropped","Low resolution photos"].map(b=>(
                 <div key={b} style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 10 }}>
-                  <span style={{ color: "#f87171", fontSize: 16 }}>✗</span>
-                  <span style={{ fontSize: 15, color: "rgba(232,224,240,0.8)" }}>{b}</span>
+                  <span style={{ color: "#9B2C1D", fontSize: 16 }}>✗</span>
+                  <span style={{ fontSize: 15, color: "rgba(48,22,7,0.8)" }}>{b}</span>
                 </div>
               ))}
             </div>
@@ -478,9 +478,9 @@ export default function PalmReading() {
             {HAND_TYPE_LEGEND.map(h=>(
               <div key={h.type} style={{ ...card, textAlign: "center" }}>
                 <div style={{ fontSize: 32, marginBottom: 10 }}>{h.emoji}</div>
-                <div style={{ color: "#BC6A4D", fontWeight: 700, fontSize: 14, marginBottom: 6 }}>{h.label}</div>
-                <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 8 }}>{h.shape}</div>
-                <div style={{ color: "rgba(232,224,240,0.6)", fontSize: 13, lineHeight: 1.5 }}>{h.traits}</div>
+                <div style={{ color: "#592209", fontWeight: 700, fontSize: 14, marginBottom: 6 }}>{h.label}</div>
+                <div style={{ color: "rgba(48,22,7,0.72)", fontSize: 11, marginBottom: 8 }}>{h.shape}</div>
+                <div style={{ color: "#592209", fontSize: 13, lineHeight: 1.5 }}>{h.traits}</div>
               </div>
             ))}
           </div>
@@ -491,20 +491,20 @@ export default function PalmReading() {
           <SectionTitle icon="🖐️" title="What This Tool Does"/>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }} className="pr-scope">
             <div style={card}>
-              <div style={{ color: "#4ade80", fontWeight: 700, fontSize: 14, letterSpacing: "0.15em", marginBottom: 16 }}>✅ MEASURED FROM YOUR PHOTO</div>
+              <div style={{ color: "#2F6B3A", fontWeight: 700, fontSize: 14, letterSpacing: "0.15em", marginBottom: 16 }}>✅ MEASURED FROM YOUR PHOTO</div>
               {["Hand shape: palm width and length", "Finger length compared with the palm", "Thumb angle", "Whether the photo shows a left or right hand"].map(t => (
                 <div key={t} style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 10 }}>
-                  <span style={{ color: "#4ade80", fontSize: 16 }}>✓</span>
-                  <span style={{ fontSize: 15, color: "rgba(232,224,240,0.8)" }}>{t}</span>
+                  <span style={{ color: "#2F6B3A", fontSize: 16 }}>✓</span>
+                  <span style={{ fontSize: 15, color: "#4A2E1F" }}>{t}</span>
                 </div>
               ))}
             </div>
             <div style={card}>
-              <div style={{ color: "#f87171", fontWeight: 700, fontSize: 14, letterSpacing: "0.15em", marginBottom: 16 }}>❌ NOT READ</div>
+              <div style={{ color: "#9B2C1D", fontWeight: 700, fontSize: 14, letterSpacing: "0.15em", marginBottom: 16 }}>❌ NOT READ</div>
               {["The lines on your palm (heart, head, life, fate)", "Mounts, marks or skin features", "Any prediction of your future, health or relationships"].map(t => (
                 <div key={t} style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 10 }}>
-                  <span style={{ color: "#f87171", fontSize: 16 }}>✗</span>
-                  <span style={{ fontSize: 15, color: "rgba(232,224,240,0.8)" }}>{t}</span>
+                  <span style={{ color: "#9B2C1D", fontSize: 16 }}>✗</span>
+                  <span style={{ fontSize: 15, color: "#4A2E1F" }}>{t}</span>
                 </div>
               ))}
             </div>
@@ -520,12 +520,12 @@ export default function PalmReading() {
   if (stage === "processing") return (
     <div>
       <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
-      <div style={{ minHeight: "80vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px", color: "#e8e0f0" }}>
-        <div style={{ fontSize: 14, color: "rgba(188,106,77,0.6)", letterSpacing: "0.3em", marginBottom: 32, fontWeight: 600 }}>✦ AI VISION ENGINE ✦</div>
-        <div style={{ width: 64, height: 64, borderRadius: "50%", border: "3px solid rgba(188,106,77,0.18)", borderTopColor: "#BC6A4D", animation: "spin 0.9s linear infinite", marginBottom: 28 }}/>
-        <div style={{ color: "#BC6A4D", fontSize: 16, fontWeight: 700, letterSpacing: "0.04em", marginBottom: 22, textAlign: "center" }}>{processingMessage}</div>
-        <div style={{ width: "100%", maxWidth: 320, height: 6, background: "rgba(255,255,255,0.08)", borderRadius: 6, overflow: "hidden" }}>
-          <div style={{ height: "100%", width: `${processingPct}%`, background: "linear-gradient(90deg,#BC6A4D,#e8b23f)", borderRadius: 6, boxShadow: "0 0 10px rgba(232,178,63,0.5)", transition: "width 0.3s ease" }}/>
+      <div style={{ minHeight: "80vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px", color: "#301607" }}>
+        <div style={{ fontSize: 14, color: "#592209", letterSpacing: "0.3em", marginBottom: 32, fontWeight: 600 }}>✦ AI VISION ENGINE ✦</div>
+        <div style={{ width: 64, height: 64, borderRadius: "50%", border: "3px solid rgba(89,34,9,0.18)", borderTopColor: "#592209", animation: "spin 0.9s linear infinite", marginBottom: 28 }}/>
+        <div style={{ color: "#592209", fontSize: 16, fontWeight: 700, letterSpacing: "0.04em", marginBottom: 22, textAlign: "center" }}>{processingMessage}</div>
+        <div style={{ width: "100%", maxWidth: 320, height: 6, background: "rgba(89,34,9,0.2)", borderRadius: 6, overflow: "hidden" }}>
+          <div style={{ height: "100%", width: `${processingPct}%`, background: "linear-gradient(90deg,#592209,#E58A45)", borderRadius: 6, boxShadow: "0 0 10px rgba(89,34,9,0.5)", transition: "width 0.3s ease" }}/>
         </div>
       </div>
     </div>
@@ -536,19 +536,19 @@ export default function PalmReading() {
     <div>
       <style>{`@keyframes pulse-glow{0%,100%{opacity:0.6;transform:scale(1)}50%{opacity:1;transform:scale(1.3)}}`}</style>
       {fileInput}
-      <div style={{ minHeight: "80vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px", textAlign: "center", color: "#e8e0f0" }}>
-        <div style={{ fontSize: 14, color: "rgba(188,106,77,0.6)", letterSpacing: "0.3em", marginBottom: 32, fontWeight: 600 }}>✦ LIVE HAND SCANNER ✦</div>
-        <div style={{ width: "100%", maxWidth: 880, marginBottom: 28, position: "relative", borderRadius: 26, overflow: "hidden", border: "2px solid rgba(188,106,77,0.25)", boxShadow: "0 0 40px rgba(188,106,77,0.16)" }}>
+      <div style={{ minHeight: "80vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px", textAlign: "center", color: "#301607" }}>
+        <div style={{ fontSize: 14, color: "#592209", letterSpacing: "0.3em", marginBottom: 32, fontWeight: 600 }}>✦ LIVE HAND SCANNER ✦</div>
+        <div style={{ width: "100%", maxWidth: 880, marginBottom: 28, position: "relative", borderRadius: 26, overflow: "hidden", border: "2px solid rgba(89,34,9,0.25)", boxShadow: "0 0 40px rgba(89,34,9,0.16)" }}>
           <video
             ref={videoRef}
-            style={{ width: "100%", height: "auto", display: "block", background: "#000" }}
+            style={{ width: "100%", height: "auto", display: "block", background: "#FBF5EC" }}
             playsInline
             muted
           />
           {cameraReady && <LiveBlueprintOverlay landmarks={liveLandmarks} locked={liveLocked} />}
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.55), transparent 30%)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #FBF5EC, transparent 30%)", pointerEvents: "none" }} />
           <div style={{ position: "absolute", left: 18, top: 18, right: 18, display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 14, flexWrap: "wrap" }}>
-            <div style={{ color: "#fff", textAlign: "left", maxWidth: 520 }}>
+            <div style={{ color: "#301607", textAlign: "left", maxWidth: 520 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
                 <span style={{
                   width: 8, height: 8, borderRadius: "50%",
@@ -556,24 +556,24 @@ export default function PalmReading() {
                   boxShadow: `0 0 8px ${liveLocked ? "#4ade80" : "#e8b23f"}`,
                   animation: "pulse-glow 1.4s ease-in-out infinite",
                 }} />
-                <span style={{ fontSize: 13, color: liveLocked ? "#86efac" : "rgba(188,106,77,0.9)", letterSpacing: "0.2em", fontWeight: 700 }}>
+                <span style={{ fontSize: 13, color: liveLocked ? "#86efac" : "rgba(89,34,9,0.9)", letterSpacing: "0.2em", fontWeight: 700 }}>
                   {liveLocked ? "PALM LOCKED" : "SCANNING"}
                 </span>
               </div>
               <div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3 }}>{liveMessage}</div>
               {liveLandmarks && (
                 <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
-                  <span style={{ background: "rgba(0,0,0,0.5)", border: "1px solid rgba(127,196,255,0.4)", borderRadius: 20, padding: "4px 12px", fontSize: 12, color: "#7fc4ff" }}>
+                  <span style={{ background: "#FBF5EC", border: "1px solid rgba(89,34,9,0.4)", borderRadius: 20, padding: "4px 12px", fontSize: 12, color: "#6B4A37" }}>
                     ✋ {liveLandmarks.handedness} Hand
                   </span>
-                  <span style={{ background: "rgba(0,0,0,0.5)", border: "1px solid rgba(127,196,255,0.4)", borderRadius: 20, padding: "4px 12px", fontSize: 12, color: "#7fc4ff" }}>
+                  <span style={{ background: "#FBF5EC", border: "1px solid rgba(89,34,9,0.4)", borderRadius: 20, padding: "4px 12px", fontSize: 12, color: "#6B4A37" }}>
                     21/21 Landmarks Tracked
                   </span>
                 </div>
               )}
             </div>
             <button
-              style={{ ...goldBtn, background: "rgba(188,106,77,0.18)", color: "#fff", boxShadow: "none" }}
+              style={{ ...goldBtn, background: "rgba(89,34,9,0.08)", color: "#301607", boxShadow: "none" }}
               onClick={() => { cleanupCamera(); resetToLanding(); }}
             >
               ✕ Cancel Scan
@@ -582,20 +582,20 @@ export default function PalmReading() {
         </div>
         {cameraError ? (
           <div style={{ maxWidth: 640, marginTop: 24, display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-            <div style={{ color: "#fca5a5", fontSize: 15 }}>{cameraError}</div>
+            <div style={{ color: "#6B4A37", fontSize: 15 }}>{cameraError}</div>
             <button style={goldBtn} onClick={() => { setCameraError(null); setCameraRetryTick(t => t + 1); }}>🔄 Try Again</button>
           </div>
         ) : (
-          <div style={{ maxWidth: 640, marginTop: 24, color: "rgba(232,224,240,0.75)", fontSize: 15, lineHeight: 1.7 }}>
+          <div style={{ maxWidth: 640, marginTop: 24, color: "rgba(48,22,7,0.75)", fontSize: 15, lineHeight: 1.7 }}>
             Keep your palm centered, fingers slightly spread, and avoid strong reflections. The blueprint scanner locks on and captures automatically once detection is stable.
           </div>
         )}
         {/* Hand type reference while the user waits for a stable lock */}
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center", marginTop: 28, maxWidth: 880 }}>
           {HAND_TYPE_LEGEND.map(h => (
-            <div key={h.type} style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(188,106,77,0.16)", borderRadius: 20, padding: "6px 14px" }}>
+            <div key={h.type} style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(89,34,9,0.2)", border: "1px solid rgba(89,34,9,0.16)", borderRadius: 20, padding: "6px 14px" }}>
               <span style={{ fontSize: 16 }}>{h.emoji}</span>
-              <span style={{ fontSize: 12, color: "rgba(232,224,240,0.6)" }}>{h.label}</span>
+              <span style={{ fontSize: 12, color: "rgba(48,22,7,0.72)" }}>{h.label}</span>
             </div>
           ))}
         </div>
@@ -608,15 +608,15 @@ export default function PalmReading() {
   if (stage === "retake") return (
     <div>
       {fileInput}
-      <div style={{ minHeight: "80vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px", textAlign: "center", color: "#e8e0f0" }}>
+      <div style={{ minHeight: "80vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px", textAlign: "center", color: "#301607" }}>
         <div style={{ fontSize: 56, marginBottom: 20 }}>🖐️</div>
-        <h2 style={{ color: "#fff", fontSize: 26, fontWeight: 800, marginBottom: 14 }}>Let's Try That Again</h2>
-        <p style={{ color: "rgba(232,224,240,0.65)", fontSize: 16, maxWidth: 440, marginBottom: 32, lineHeight: 1.7 }}>
+        <h2 style={{ color: "#301607", fontSize: 26, fontWeight: 800, marginBottom: 14 }}>Let's Try That Again</h2>
+        <p style={{ color: "#592209", fontSize: 16, maxWidth: 440, marginBottom: 32, lineHeight: 1.7 }}>
           {retakeMessage ?? "We couldn't get a clear reading from this photo."}
         </p>
         <div style={{ display: "flex", gap: 16, flexWrap: "wrap", justifyContent: "center" }}>
           <button style={goldBtn} onClick={() => fileRef.current?.click()}>📤 Upload Another Photo</button>
-          <button style={{ ...goldBtn, background: "rgba(188,106,77,0.12)", color: "#BC6A4D", boxShadow: "none", border: "1px solid rgba(188,106,77,0.35)" }} onClick={resetToLanding}>← Back</button>
+          <button style={{ ...goldBtn, background: "rgba(89,34,9,0.12)", color: "#592209", boxShadow: "none", border: "1px solid rgba(89,34,9,0.35)" }} onClick={resetToLanding}>← Back</button>
         </div>
       </div>
     </div>
@@ -627,11 +627,11 @@ export default function PalmReading() {
     if (!imageUrl || !analysis) return null;
     return (
       <div>
-        <div style={{ minHeight: "80vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px", color: "#e8e0f0" }}>
-          <div style={{ fontSize: 14, color: "rgba(188,106,77,0.6)", letterSpacing: "0.3em", marginBottom: 32, fontWeight: 600 }}>✦ MEASURING YOUR HAND ✦</div>
+        <div style={{ minHeight: "80vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px", color: "#301607" }}>
+          <div style={{ fontSize: 14, color: "#592209", letterSpacing: "0.3em", marginBottom: 32, fontWeight: 600 }}>✦ MEASURING YOUR HAND ✦</div>
           <div style={{
             width: "100%", maxWidth: 440, aspectRatio: `${imageDims.width} / ${imageDims.height}`,
-            borderRadius: 20, overflow: "hidden", border: "2px solid rgba(188,106,77,0.4)", boxShadow: "0 0 40px rgba(188,106,77,0.25)",
+            borderRadius: 20, overflow: "hidden", border: "2px solid rgba(89,34,9,0.4)", boxShadow: "0 0 40px rgba(89,34,9,0.25)",
           }}>
             <ScanSequence imageUrl={imageUrl} result={analysis} onComplete={() => setStage("results")} />
           </div>
@@ -659,13 +659,13 @@ export default function PalmReading() {
         .pr-measure{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
         @media (max-width:860px){.pr-res-grid{grid-template-columns:1fr}.pr-measure{grid-template-columns:1fr 1fr}}
       `}</style>
-      <div data-testid="palm-results" style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 24px 40px", color: "#e8e0f0" }}>
+      <div data-testid="palm-results" style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 24px 40px", color: "#301607" }}>
 
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 40, animation: "fade-in 0.6s ease" }}>
           <div style={{ fontSize: 13, color: "rgba(188,106,77,0.75)", letterSpacing: "0.3em", marginBottom: 12, fontWeight: 600 }}>✦ YOUR HAND SHAPE READING ✦</div>
-          <h1 style={{ fontSize: "clamp(30px,5vw,44px)", fontWeight: 900, color: "#fff", margin: "0 0 12px" }}>{shape.label}</h1>
-          <p style={{ color: "rgba(232,224,240,0.7)", fontSize: 16, maxWidth: 620, margin: "0 auto" }}>
+          <h1 style={{ fontSize: "clamp(30px,5vw,44px)", fontWeight: 900, color: "#301607", margin: "0 0 12px" }}>{shape.label}</h1>
+          <p style={{ color: "#4A2E1F", fontSize: 16, maxWidth: 620, margin: "0 auto" }}>
             Based on measurements of the hand in your photo. {shape.shape}.
           </p>
         </div>
@@ -681,7 +681,7 @@ export default function PalmReading() {
                 ))}
               </svg>
             </div>
-            <p style={{ fontSize: 13, color: "rgba(232,224,240,0.6)", textAlign: "center", margin: "10px 0 0", lineHeight: 1.6 }}>
+            <p style={{ fontSize: 13, color: "#6B4A37", textAlign: "center", margin: "10px 0 0", lineHeight: 1.6 }}>
               The dots are the 21 hand landmarks detected in your photo. They are used to measure your hand's proportions.
             </p>
           </div>
@@ -689,35 +689,35 @@ export default function PalmReading() {
           <div>
             <div style={{ ...card, marginBottom: 20 }}>
               <div style={{ fontSize: 13, color: "rgba(188,106,77,0.8)", letterSpacing: "0.15em", marginBottom: 10, textTransform: "uppercase", fontWeight: 700 }}>The traditional meaning of the {shape.label}</div>
-              <p style={{ margin: "0 0 12px", fontSize: 17, lineHeight: 1.75, color: "rgba(232,224,240,0.9)" }}>{meaning}</p>
-              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "rgba(232,224,240,0.6)" }}>Traits traditionally linked with this hand shape: {shape.traits.toLowerCase()}.</p>
+              <p style={{ margin: "0 0 12px", fontSize: 17, lineHeight: 1.75, color: "#301607" }}>{meaning}</p>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "#6B4A37" }}>Traits traditionally linked with this hand shape: {shape.traits.toLowerCase()}.</p>
             </div>
 
             <div style={card}>
               <div style={{ fontSize: 13, color: "rgba(188,106,77,0.8)", letterSpacing: "0.15em", marginBottom: 14, textTransform: "uppercase", fontWeight: 700 }}>How your hand was classified</div>
               <div className="pr-measure" data-testid="palm-measures">
                 <div>
-                  <div style={{ fontSize: 12, color: "rgba(232,224,240,0.55)", marginBottom: 4 }}>Palm width ÷ length</div>
+                  <div style={{ fontSize: 12, color: "#6B4A37", marginBottom: 4 }}>Palm width ÷ length</div>
                   <div style={{ fontSize: 22, fontWeight: 800, color: "#fff" }}>{g.palmWidthToLengthRatio.toFixed(2)}</div>
                   <div style={{ fontSize: 13, color: "#BC6A4D" }}>{squarePalm ? "Square palm" : "Long palm"} (square at {SQUARE_PALM_MIN} or more)</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: 12, color: "rgba(232,224,240,0.55)", marginBottom: 4 }}>Average finger ÷ palm length</div>
+                  <div style={{ fontSize: 12, color: "#6B4A37", marginBottom: 4 }}>Average finger ÷ palm length</div>
                   <div style={{ fontSize: 22, fontWeight: 800, color: "#fff" }}>{avgFinger.toFixed(2)}</div>
                   <div style={{ fontSize: 13, color: "#BC6A4D" }}>{longFingers ? "Long fingers" : "Short fingers"} (long at {LONG_FINGERS_MIN} or more)</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: 12, color: "rgba(232,224,240,0.55)", marginBottom: 4 }}>Hand in the photo</div>
+                  <div style={{ fontSize: 12, color: "#6B4A37", marginBottom: 4 }}>Hand in the photo</div>
                   <div style={{ fontSize: 22, fontWeight: 800, color: "#fff" }}>{hand} hand</div>
-                  <div style={{ fontSize: 13, color: "rgba(232,224,240,0.6)" }}>We can't tell which is your dominant hand</div>
+                  <div style={{ fontSize: 13, color: "#6B4A37" }}>We can't tell which is your dominant hand</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: 12, color: "rgba(232,224,240,0.55)", marginBottom: 4 }}>Thumb angle</div>
+                  <div style={{ fontSize: 12, color: "#6B4A37", marginBottom: 4 }}>Thumb angle</div>
                   <div style={{ fontSize: 22, fontWeight: 800, color: "#fff" }}>{Math.round(g.thumbAngleDeg)}°</div>
-                  <div style={{ fontSize: 13, color: "rgba(232,224,240,0.6)" }}>Measured, not used in the shape</div>
+                  <div style={{ fontSize: 13, color: "#592209" }}>Measured, not used in the shape</div>
                 </div>
               </div>
-              <p style={{ margin: "16px 0 0", fontSize: 14, lineHeight: 1.65, color: "rgba(232,224,240,0.75)" }}>
+              <p style={{ margin: "16px 0 0", fontSize: 14, lineHeight: 1.65, color: "#4A2E1F" }}>
                 In classical palmistry, a {squarePalm ? "square" : "long"} palm with {longFingers ? "long" : "short"} fingers is classed as the {shape.label}. Camera angle, finger spread and distance can shift these measurements, so a different photo can give a different result.
               </p>
             </div>
@@ -726,12 +726,12 @@ export default function PalmReading() {
 
         <div style={{ ...card, marginTop: 28, borderColor: "rgba(188,106,77,0.4)" }}>
           <div style={{ fontSize: 13, color: "rgba(188,106,77,0.9)", letterSpacing: "0.15em", marginBottom: 10, textTransform: "uppercase", fontWeight: 700 }}>What this reading does not cover</div>
-          <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: "rgba(232,224,240,0.8)" }}>
+          <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: "#4A2E1F" }}>
             This tool does not read the lines or marks on your palm. It measures the shape of your hand and gives the traditional description for that shape. There is no AI interpretation, no score, and no prediction of your future, health, career or relationships.
           </p>
         </div>
 
-        <p style={{ margin: "28px auto 24px", maxWidth: 640, textAlign: "center", fontSize: 14, fontStyle: "italic", lineHeight: 1.7, color: "rgba(232,224,240,0.6)" }}>
+        <p style={{ margin: "28px auto 24px", maxWidth: 640, textAlign: "center", fontSize: 14, fontStyle: "italic", lineHeight: 1.7, color: "#592209" }}>
           This reading is for personal interest and reflection. Palmistry is a traditional practice that is not scientifically proven, and the result is not a prediction or professional advice.
         </p>
         <div style={{ textAlign: "center" }}>

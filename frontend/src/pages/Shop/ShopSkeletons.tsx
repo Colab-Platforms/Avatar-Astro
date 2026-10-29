@@ -10,7 +10,7 @@ const SHIMMER_CSS = `
     }
   }
   .shop-shimmer-bg {
-    background: linear-gradient(90deg, #F2EAE0 25%, #FAF6EE 50%, #F2EAE0 75%);
+    background: linear-gradient(90deg, #F0DFC7 25%, #FBF5EC 50%, #F0DFC7 75%);
     background-size: 200% 100%;
     animation: shop-shimmer 1.6s infinite linear;
   }
@@ -21,8 +21,8 @@ export const ShopCardSkeleton = () => (
     style={{
       background: '#FFFFFF',
       borderRadius: 18,
-      border: '1.5px solid rgba(188,106,77,0.13)',
-      boxShadow: '0 4px 20px rgba(120,60,20,0.07)',
+      border: '1.5px solid rgba(89,34,9,0.13)',
+      boxShadow: '0 4px 20px rgba(89,34,9,0.2)',
       overflow: 'hidden',
     }}
   >

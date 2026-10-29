@@ -47,14 +47,14 @@ const GemStage = ({ stone }: { stone: GemstoneInfo }) => (
   <div className="relative mx-auto aspect-square w-full max-w-[200px] min-[420px]:max-w-[240px] md:max-w-[300px] lg:max-w-[340px]">
     <div
       className="ratna-glow absolute inset-[14%] rounded-full blur-2xl"
-      style={{ background: `radial-gradient(circle, ${stone.colour}aa 0%, rgba(212,166,74,0.25) 55%, transparent 75%)` }}
+      style={{ background: `radial-gradient(circle, ${stone.colour}aa 0%, rgba(89,34,9,0.25) 55%, transparent 75%)` }}
       aria-hidden="true"
     />
     <Ring r={96} className="ratna-ring" />
     <Ring r={78} dash="2 5" className="ratna-ring ratna-ring-rev" />
     <div
-      className="absolute inset-[26%] rounded-full border border-[#d4a64a]/40"
-      style={{ boxShadow: "0 0 40px rgba(212,166,74,0.25) inset" }}
+      className="absolute inset-[26%] rounded-full border border-[#592209]/40"
+      style={{ boxShadow: "0 0 40px rgba(229,138,69,0.25) inset" }}
       aria-hidden="true"
     />
     <div className="absolute inset-[29%] flex items-center justify-center">

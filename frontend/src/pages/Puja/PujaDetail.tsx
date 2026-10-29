@@ -86,10 +86,10 @@ const Carousel = ({ images, gradient, name }: { images: string[]; gradient: stri
         {/* Arrows */}
         {total > 1 && (
           <>
-            <button onClick={prev} className="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/50 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-primary/50 hover:border-primary/60 transition-all">
+            <button onClick={prev} className="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/50 backdrop-blur-sm border border-primary/25 flex items-center justify-center text-white hover:bg-primary/50 hover:border-primary/60 transition-all">
               <ChevronLeft className="w-6 h-6" />
             </button>
-            <button onClick={next} className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/50 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-primary/50 hover:border-primary/60 transition-all">
+            <button onClick={next} className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/50 backdrop-blur-sm border border-primary/25 flex items-center justify-center text-white hover:bg-primary/50 hover:border-primary/60 transition-all">
               <ChevronRight className="w-6 h-6" />
             </button>
           </>
@@ -101,7 +101,7 @@ const Carousel = ({ images, gradient, name }: { images: string[]; gradient: stri
         <div className="flex justify-center gap-2">
           {images.map((_, i) => (
             <button key={i} onClick={() => setIdx(i)}
-              className={`h-1.5 rounded-full transition-all duration-300 ${i === idx ? 'w-8 bg-primary' : 'w-2 bg-white/25'}`}
+              className={`h-1.5 rounded-full transition-all duration-300 ${i === idx ? 'w-8 bg-primary' : 'w-2 bg-primary/10'}`}
             />
           ))}
         </div>
@@ -288,7 +288,7 @@ const PujaDetail = () => {
                 transition={{ delay: i * 0.12, duration: 0.5 }}
                 className="flex flex-col items-center text-center flex-1 relative z-10 px-3"
               >
-                <div className="w-20 h-20 rounded-2xl glass-card border border-primary/20 flex items-center justify-center text-3xl mb-4 hover:border-primary/60 hover:scale-105 transition-all duration-300 cursor-default shadow-[0_0_20px_rgba(188,106,77,0.08)]">
+                <div className="w-20 h-20 rounded-2xl glass-card border border-primary/20 flex items-center justify-center text-3xl mb-4 hover:border-primary/60 hover:scale-105 transition-all duration-300 cursor-default shadow-[0_0_20px_rgba(89,34,9,0.08)]">
                   {step.icon}
                 </div>
                 <p className="font-semibold text-primary uppercase tracking-wider mb-2" style={{ fontSize: 13 }}>{step.title}</p>
@@ -323,7 +323,7 @@ const PujaDetail = () => {
                   onClick={() => setSelectedPuja(puja)}
                   className={`glass-card-hover rounded-2xl p-8 flex flex-col cursor-pointer border transition-all duration-300 ${
                     isSelected
-                      ? 'border-primary shadow-[0_0_40px_rgba(188,106,77,0.18)]'
+                      ? 'border-primary shadow-[0_0_40px_rgba(89,34,9,0.18)]'
                       : 'border-border/20 hover:border-primary/40'
                   }`}
                 >
@@ -371,7 +371,7 @@ const PujaDetail = () => {
             BOOKING SUMMARY CARD
         ══════════════════════════════════════════════════════ */}
         <section className="mb-16">
-          <div className="glass-card rounded-2xl p-8 md:p-10 max-w-2xl mx-auto border border-primary/20 shadow-[0_0_60px_rgba(188,106,77,0.08)]">
+          <div className="glass-card rounded-2xl p-8 md:p-10 max-w-2xl mx-auto border border-primary/20 shadow-[0_0_60px_rgba(89,34,9,0.08)]">
 
             <div className="flex items-center gap-3 mb-8">
               <ShieldCheck className="w-6 h-6 text-primary" />
@@ -457,7 +457,7 @@ const PujaDetail = () => {
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-wider" style={{ color: '#9C7B62' }}>Selected</p>
-            <p className="font-semibold" style={{ fontSize: 15, color: '#2C1810' }}>{activePuja?.name ?? '—'}</p>
+            <p className="font-semibold" style={{ fontSize: 15, color: '#301607' }}>{activePuja?.name ?? '—'}</p>
           </div>
           <button
             className="btn-cosmic rounded-xl font-semibold flex-shrink-0"

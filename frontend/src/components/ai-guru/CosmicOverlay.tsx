@@ -20,15 +20,15 @@ const CosmicOverlay = () => (
     {/* Nebula glows */}
     <div
       className="absolute -top-32 -left-20 h-[520px] w-[520px] rounded-full opacity-[0.14] blur-3xl"
-      style={{ background: "radial-gradient(circle, #FF9D4D 0%, transparent 70%)" }}
+      style={{ background: "radial-gradient(circle, #592209 0%, transparent 70%)" }}
     />
     <div
       className="absolute bottom-0 right-0 h-[460px] w-[460px] rounded-full opacity-[0.10] blur-3xl"
-      style={{ background: "radial-gradient(circle, #F5C76E 0%, transparent 70%)" }}
+      style={{ background: "radial-gradient(circle, #E58A45 0%, transparent 70%)" }}
     />
     <div
       className="absolute top-1/3 right-1/4 h-[320px] w-[320px] rounded-full opacity-[0.08] blur-3xl"
-      style={{ background: "radial-gradient(circle, #E88B3D 0%, transparent 70%)" }}
+      style={{ background: "radial-gradient(circle, #592209 0%, transparent 70%)" }}
     />
 
     {/* Faint constellation lines */}
@@ -64,7 +64,7 @@ const CosmicOverlay = () => (
     {PARTICLES.map((p) => (
       <motion.span
         key={p.id}
-        className="absolute rounded-full bg-[#F5C76E]"
+        className="absolute rounded-full bg-[#592209]"
         style={{ left: `${p.left}%`, top: `${p.top}%`, width: p.size, height: p.size }}
         animate={{ y: [0, -18, 0], opacity: [0.15, 0.55, 0.15] }}
         transition={{ duration: p.duration, delay: p.delay, repeat: Infinity, ease: "easeInOut" }}

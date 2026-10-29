@@ -6,54 +6,66 @@
 
 @layer base {
   :root {
-    /* Premium Dark Charcoal Palette - NO PURPLE */
-    --background: 226 80% 8%;
-    --foreground: 40 20% 92%;
+    /* MyBhagya brand palette: gerua #592209, beige #F5E9D6, orange #E58A45, brown #301607.
+       Shared HSL tokens drive every Tailwind utility (bg-background, text-foreground, ...). */
+    --background: 37 61% 90%;
+    --foreground: 22 75% 11%;
 
-    --card: 215 20% 8%;
-    --card-foreground: 40 20% 92%;
+    --card: 36 65% 95%;
+    --card-foreground: 22 75% 11%;
 
-    --popover: 215 20% 8%;
-    --popover-foreground: 40 20% 92%;
+    --popover: 36 65% 95%;
+    --popover-foreground: 22 75% 11%;
 
-    /* Burnt-terracotta Accent #BC6A4D */
-    --primary: 16 45% 52%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 19 82% 19%;
+    --primary-foreground: 37 61% 90%;
 
-    --secondary: 16 45% 62%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 35 58% 86%;
+    --secondary-foreground: 22 75% 11%;
 
-    --muted: 215 15% 12%;
-    --muted-foreground: 0 0% 92%;
+    --muted: 35 58% 86%;
+    --muted-foreground: 22 32% 32%;
 
-    --accent: 16 50% 60%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 26 75% 58%;
+    --accent-foreground: 22 75% 11%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 7 68% 36%;
+    --destructive-foreground: 37 61% 90%;
 
-    --border: 215 15% 18%;
-    --input: 215 15% 12%;
-    --ring: 16 45% 52%;
+    --border: 30 44% 78%;
+    --input: 30 44% 78%;
+    --ring: 26 75% 58%;
 
     --radius: 0.75rem;
 
-    /* Custom Cosmic Colors - Terracotta Theme */
-    --cosmic-dark: 215 30% 5%;
-    --cosmic-charcoal: 215 20% 10%;
-    --star-white: 40 30% 95%;
-    --gold: 16 45% 52%;
-    --gold-dim: 16 40% 44%;
-    --gold-glow: 16 50% 60%;
+    /* Legacy cosmic tokens, re-pointed to the brand palette */
+    --cosmic-dark: 37 61% 90%; /* text on gerua fills (was dark text on gold) */
+    --cosmic-charcoal: 22 60% 18%;
+    --star-white: 37 61% 90%;
+    --gold: 19 82% 19%;
+    --gold-dim: 19 82% 15%;
+    --gold-glow: 26 75% 58%;
+
+    /* Brand design tokens (source of truth) */
+    --mb-primary: #592209;
+    --mb-background: #F5E9D6;
+    --mb-accent: #E58A45;
+    --mb-text: #301607;
+    --mb-surface: #FBF5EC;
+    --mb-surface-muted: #F0DFC7;
+    --mb-border: rgba(89, 34, 9, 0.18);
+    --mb-text-muted: #6B4A37;
+    --mb-primary-hover: #461B07;
+    --mb-focus-ring: #E58A45;
 
     /* Gradients */
-    --gradient-cosmic: linear-gradient(180deg, hsl(215 30% 5%) 0%, hsl(215 20% 8%) 50%, hsl(215 25% 10%) 100%);
+    --gradient-cosmic: linear-gradient(180deg, #F5E9D6 0%, #F0DFC7 100%);
     --gradient-gold: linear-gradient(135deg, hsl(var(--gold)) 0%, hsl(var(--gold-dim)) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(215 15% 10% / 0.8) 0%, hsl(215 15% 6% / 0.9) 100%);
+    --gradient-card: linear-gradient(180deg, #FBF5EC 0%, #F5E9D6 100%);
 
     /* Shadows */
     --shadow-glow: 0 0 40px hsl(var(--gold) / 0.3);
-    --shadow-cosmic: 0 20px 60px hsl(var(--cosmic-dark) / 0.8);
+    --shadow-cosmic: 0 20px 60px rgba(89, 34, 9, 0.16);
   }
 }
 
@@ -67,18 +79,16 @@
   }
 
   body {
-    background: #081426;
+    background: #F5E9D6;
     margin: 0;
     @apply text-foreground antialiased;
-    font-family: 'Iceland', sans-serif;
+    font-family: 'DM Sans', system-ui, sans-serif;
     min-height: 100vh;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Iceland', sans-serif;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
+  /* Homepage typography: Cinzel for page/section titles, DM Sans for everything else. */
+  h1, h2 { font-family: Cinzel, Georgia, serif; letter-spacing: 0; text-transform: none; }
+  h3, h4, h5, h6 { font-family: 'DM Sans', system-ui, sans-serif; letter-spacing: -0.01em; text-transform: none; }
 }
 
 @layer components {
@@ -170,15 +180,15 @@
   }
 
   .element-label {
-    font-family: 'Iceland', 'Cinzel', sans-serif;
+    font-family: 'DM Sans', system-ui, sans-serif;
     font-size: 13px;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.80);
+    color: rgba(48,22,7,1);
     padding: 5px 18px;
     border-radius: 99px;
     border: 1px solid rgba(188,106,77,0.32);
-    background: rgba(8, 20, 38, 0.65);
+    background: #FBF5EC;
     transition: border-color 260ms ease, background 260ms ease, color 260ms ease;
     white-space: nowrap;
     pointer-events: none;
@@ -186,14 +196,14 @@
 
   .element-btn:hover .element-label {
     border-color: rgba(188,106,77,0.65);
-    background: rgba(8, 20, 38, 0.85);
-    color: #fff;
+    background: #FBF5EC;
+    color: #301607;
   }
 
   .element-label--active {
     border-color: rgba(188,106,77,0.90);
     background: rgba(188,106,77,0.12);
-    color: #fff;
+    color: #301607;
   }
 
   .element-btn:focus-visible .element-label {
@@ -209,10 +219,9 @@
 
   /* Cosmic glass card effect */
   .glass-card {
-    background: linear-gradient(180deg, hsl(215 15% 10% / 0.6) 0%, hsl(215 15% 6% / 0.8) 100%);
-    backdrop-filter: blur(20px);
-    border: 1px solid hsl(215 15% 18% / 0.5);
-    box-shadow: 0 8px 32px hsl(215 30% 3% / 0.5), inset 0 1px 0 hsl(215 10% 25% / 0.2);
+    background: #FBF5EC;
+    border: 1px solid rgba(89, 34, 9, 0.18);
+    box-shadow: 0 10px 30px rgba(89, 34, 9, 0.10);
   }
 
   .glass-card-hover {
@@ -220,21 +229,21 @@
   }
 
   .glass-card-hover:hover {
-    border-color: hsl(var(--gold) / 0.4);
-    box-shadow: 0 12px 40px hsl(215 30% 3% / 0.6), 0 0 30px hsl(var(--gold) / 0.15), inset 0 1px 0 hsl(var(--gold) / 0.1);
+    border-color: rgba(229, 138, 69, 0.7);
+    box-shadow: 0 14px 36px rgba(89, 34, 9, 0.16);
     transform: translateY(-4px);
   }
 
   /* Cosmic text effects */
   .text-glow {
-    text-shadow: 0 0 20px hsl(var(--gold) / 0.5), 0 0 40px hsl(var(--gold) / 0.3);
+    text-shadow: none;
   }
 
+  /* Solid brand gerua (the old light-to-gold gradient is unreadable on beige). */
   .text-cosmic {
-    background: linear-gradient(135deg, hsl(var(--star-white)) 0%, hsl(var(--gold)) 50%, hsl(var(--gold-glow)) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--mb-primary);
+    background: none;
+    -webkit-text-fill-color: currentColor;
   }
 
   /* Star field background */
@@ -279,49 +288,50 @@
 
   /* Zodiac symbol styling */
   .zodiac-symbol {
-    font-family: 'Iceland', sans-serif;
+    font-family: 'DM Sans', system-ui, sans-serif;
     color: hsl(var(--gold));
     text-shadow: 0 0 10px hsl(var(--gold) / 0.5);
   }
 
   /* Input cosmic style */
   .input-cosmic {
-    background: hsl(215 15% 8% / 0.8);
-    border: 1px solid hsl(215 15% 18% / 0.5);
-    transition: all 0.3s ease;
+    background: var(--mb-surface);
+    color: var(--mb-text);
+    border: 1px solid rgba(89, 34, 9, 0.28);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
+  .input-cosmic::placeholder { color: var(--mb-text-muted); }
 
   .input-cosmic:focus {
-    border-color: hsl(var(--gold) / 0.5);
-    box-shadow: 0 0 20px hsl(var(--gold) / 0.2);
+    border-color: var(--mb-accent);
+    box-shadow: 0 0 0 3px rgba(229, 138, 69, 0.35);
     outline: none;
   }
 
   /* Button cosmic variants */
   .btn-cosmic {
-    background: linear-gradient(135deg, hsl(var(--gold)) 0%, hsl(var(--gold-dim)) 100%);
-    color: hsl(var(--cosmic-dark));
-    font-family: 'Iceland', sans-serif;
-    font-weight: 400;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 20px hsl(var(--gold) / 0.3);
+    background: var(--mb-primary);
+    color: var(--mb-background);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    transition: background-color 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease;
+    box-shadow: 0 4px 14px rgba(89, 34, 9, 0.25);
   }
 
   .btn-cosmic:hover {
-    box-shadow: 0 6px 30px hsl(var(--gold) / 0.5);
-    transform: translateY(-2px);
+    background: var(--mb-primary-hover);
+    box-shadow: 0 6px 20px rgba(89, 34, 9, 0.32);
+    transform: translateY(-1px);
   }
 
   .btn-outline-cosmic {
     background: transparent;
-    border: 1px solid hsl(var(--gold));
-    color: hsl(var(--gold));
-    font-family: 'Iceland', sans-serif;
-    font-weight: 400;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
+    border: 1px solid rgba(89, 34, 9, 0.5);
+    color: var(--mb-primary);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.02em;
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
@@ -331,7 +341,7 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: hsl(var(--gold) / 0.1);
+    background: rgba(229, 138, 69, 0.18);
     transform: scaleX(0);
     transform-origin: left;
     transition: transform 0.3s ease;
@@ -342,7 +352,7 @@
   }
 
   .btn-outline-cosmic:hover {
-    box-shadow: 0 0 20px hsl(var(--gold) / 0.3);
+    box-shadow: 0 4px 14px rgba(89, 34, 9, 0.18);
   }
 
   /* Pulsing button border */
@@ -374,11 +384,11 @@
   }
 
   ::-webkit-scrollbar-track {
-    background: hsl(var(--cosmic-dark));
+    background: var(--mb-background);
   }
 
   ::-webkit-scrollbar-thumb {
-    background: hsl(var(--gold-dim));
+    background: rgba(89,34,9,0.08);
     border-radius: 4px;
   }
 
@@ -453,7 +463,7 @@
   z-index: 0;
   background: radial-gradient(
     ellipse 68% 44% at 50% 22%,
-    rgba(78, 47, 36, 0.07) 0%,
+    rgba(89,34,9,0.07) 0%,
     transparent 68%
   );
 }
@@ -467,7 +477,7 @@
 
 /* Zodiac name — Astra, large bold uppercase, the visual focal point */
 .zodiac-card-name {
-  font-family: 'Astra', 'Cinzel', serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-size: 30px;
   font-weight: 700;
   letter-spacing: 0.10em;
@@ -512,7 +522,7 @@
 /* Dimmed state — inactive icons when a sign is highlighted */
 .zodiac-wheel--active .zodiac-wheel-icon:not(.zodiac-wheel-icon--selected) {
   opacity: 0.60;
-  filter: brightness(0.82) drop-shadow(0 0 3px rgba(180, 210, 255, 0.08));
+  filter: brightness(0.82) drop-shadow(0 0 3px rgba(89,34,9,0.08));
 }
 
 /* Hover — un-dim and brighten any icon */
@@ -537,7 +547,7 @@
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(180, 210, 255, 0.26) 0%,
+    rgba(89,34,9,0.26) 0%,
     rgba(245, 195, 106, 0.14) 38%,
     transparent 68%
   );
@@ -622,8 +632,8 @@
 }
 
 @keyframes cosmicPulse {
-  0%, 100% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.4), 0 8px 32px rgba(0,0,0,0.4); }
-  50%       { box-shadow: 0 0 60px rgba(255, 215, 0, 0.7), 0 12px 40px rgba(0,0,0,0.5); }
+  0%, 100% { box-shadow: 0 0 30px rgba(229,138,69,0.4), 0 8px 32px rgba(89,34,9,0.2); }
+  50%       { box-shadow: 0 0 60px rgba(229,138,69,0.7), 0 12px 40px rgba(89,34,9,0.2); }
 }
 
 @keyframes revealBurst {
@@ -632,13 +642,13 @@
 }
 
 @keyframes cardGlowPulse {
-  0%, 100% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.25); }
-  50%       { box-shadow: 0 0 30px rgba(255, 215, 0, 0.55), 0 0 60px rgba(255, 215, 0, 0.2); }
+  0%, 100% { box-shadow: 0 0 10px rgba(229,138,69,0.25); }
+  50%       { box-shadow: 0 0 30px rgba(229,138,69,0.55), 0 0 60px rgba(229,138,69,0.2); }
 }
 
 @keyframes orbGlow {
-  0%, 100% { box-shadow: 0 0 60px rgba(255,215,0,0.5), 0 0 120px rgba(255,215,0,0.2); transform: scale(1);    }
-  50%       { box-shadow: 0 0 90px rgba(255,215,0,0.8), 0 0 180px rgba(255,215,0,0.3); transform: scale(1.06); }
+  0%, 100% { box-shadow: 0 0 60px rgba(229,138,69,0.5), 0 0 120px rgba(229,138,69,0.2); transform: scale(1);    }
+  50%       { box-shadow: 0 0 90px rgba(229,138,69,0.8), 0 0 180px rgba(229,138,69,0.3); transform: scale(1.06); }
 }
 
 @keyframes shimmerGold {
@@ -699,19 +709,19 @@
 
 /* ── CSS Custom Properties ───────────────────────────────────────────────────── */
 :root {
-  --tarot-bg:           #060914;
-  --tarot-bg-mid:       #0a0f22;
-  --tarot-bg-card:      rgba(12, 16, 32, 0.55);
-  --tarot-gold:         #BC6A4D;
-  --tarot-gold-light:   #D08D6F;
-  --tarot-gold-mid:     #BC6A4D;
-  --tarot-gold-dark:    #954E36;
-  --tarot-purple:       #8B6FD8;
-  --tarot-purple-light: #B39EE8;
-  --tarot-purple-dark:  #6B4FB0;
-  --tarot-text-body:    #A9B2C6;
-  --tarot-text-muted:   #6E7690;
-  --tarot-white:        #F5F3EE;
+  --tarot-bg:#F5E9D6;
+  --tarot-bg-mid:#FBF5EC;
+  --tarot-bg-card:rgba(251, 245, 236, 0.92);
+  --tarot-gold:#592209;
+  --tarot-gold-light:#9A3F05;
+  --tarot-gold-mid:#592209;
+  --tarot-gold-dark:#461B07;
+  --tarot-purple:#461B07;
+  --tarot-purple-light: #461B07;
+  --tarot-purple-dark:#4A1C01;
+  --tarot-text-body:#4A3022;
+  --tarot-text-muted:#6B4A37;
+  --tarot-white:#301607;
   --tarot-card-radius:  10px;
 }
 
@@ -723,7 +733,7 @@
     180deg,
     var(--tarot-bg-mid) 0%,
     var(--tarot-bg)      45%,
-    #050810               100%
+    #F0DFC7               100%
   );
   display: flex;
   flex-direction: column;
@@ -731,7 +741,7 @@
   justify-content: center;
   overflow: hidden;
   color: var(--tarot-text-body);
-  font-family: 'Lato', 'Inter', system-ui, sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   padding: 76px 24px 32px;
   box-sizing: border-box;
 }
@@ -765,7 +775,7 @@
 
 /* ── Typography ──────────────────────────────────────────────────────────────── */
 .tarot-eyebrow {
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-weight: 600;
   font-size: 17px;
   letter-spacing: 0.2em;
@@ -775,7 +785,7 @@
 }
 
 .tarot-headline {
-  font-family: 'Iceland', 'Cinzel', sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-weight: 700;
   font-size: clamp(38px, 6vw, 68px);
   text-align: center;
@@ -803,7 +813,7 @@
 .tarot-card-title--purple { color: var(--tarot-purple-light); }
 
 .tarot-card-body {
-  font-family: 'Lato', 'Inter', sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-weight: 400;
   font-size: 17px;
   line-height: 1.7;
@@ -812,7 +822,7 @@
 }
 
 .tarot-cta {
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-weight: 700;
   font-size: 18px;
   letter-spacing: 0.1em;
@@ -832,7 +842,7 @@
 }
 
 .tarot-footer-label {
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-weight: 500;
   font-size: 9px;
   letter-spacing: 0.2em;
@@ -845,7 +855,7 @@
   display: inline-block;
   padding: 7px 16px;
   border-radius: 99px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-weight: 600;
   font-size: 14px;
   letter-spacing: 0.05em;
@@ -863,11 +873,11 @@
 .tarot-pill--gold:hover { background: rgba(188, 106, 77, 0.1); }
 
 .tarot-pill--purple {
-  border: 1px solid rgba(139, 111, 216, 0.55);
+  border: 1px solid rgba(89,34,9,0.55);
   color: var(--tarot-purple-light);
 }
 
-.tarot-pill--purple:hover { background: rgba(139, 111, 216, 0.1); }
+.tarot-pill--purple:hover { background: rgba(89,34,9,0.1); }
 
 /* ── Diamond / Star Separators ───────────────────────────────────────────────── */
 .tarot-diamond {
@@ -928,7 +938,7 @@
 
 .tarot-mode-card--gold {
   border: 1px solid rgba(188, 106, 77, 0.4);
-  box-shadow: 0 0 0 rgba(0,0,0,0);
+  box-shadow: 0 0 0 rgba(89,34,9,0.2);
 }
 
 .tarot-mode-card--gold:hover {
@@ -937,13 +947,13 @@
 }
 
 .tarot-mode-card--purple {
-  border: 1px solid rgba(139, 111, 216, 0.4);
-  box-shadow: 0 0 0 rgba(0,0,0,0);
+  border: 1px solid rgba(89,34,9,0.4);
+  box-shadow: 0 0 0 rgba(89,34,9,0.2);
 }
 
 .tarot-mode-card--purple:hover {
-  border-color: rgba(139, 111, 216, 0.75);
-  box-shadow: 0 8px 30px rgba(139, 111, 216, 0.14);
+  border-color: rgba(89,34,9,0.75);
+  box-shadow: 0 8px 30px rgba(89,34,9,0.14);
 }
 
 .tarot-card-illustration {
@@ -1063,38 +1073,9 @@
    Apply the .page-light class to the outer page wrapper div only.
    ═══════════════════════════════════════════════════════════════════════════════ */
 
-.page-light {
-  /* Warm cream background */
-  background: linear-gradient(180deg, #FAF8F5 0%, #F8F3EC 50%, #F3EDE4 100%);
-}
-
 .page-light,
 .devotion-bg {
-  /* Re-map CSS custom properties so every Tailwind util auto-adapts */
-  --foreground:       20 35% 13%;    /* deep warm brown — readable on cream */
-  --card:             36 50% 99%;
-  --card-foreground:  20 35% 13%;
-  --muted:            36 25% 93%;
-  --muted-foreground: 20 18% 42%;   /* medium warm brown */
-  --border:           16 22% 80%;   /* light terracotta-tinted border */
-  --input:            36 30% 96%;
-}
-
-/* ─────────────────────────────────────────────────────────────────────────
-   DEVOTION MODULE BACKGROUND — Puja · Chadhawa · Shop (list pages)
-   Same starry CosmicBackground canvas used behind the Home navbar, kept
-   visible through a translucent warm-cream overlay instead of the solid
-   .page-light fill, so the texture reads through the whole page/scroll.
-   Applied via <DevotionLayout>; text contrast is unaffected since the
-   --foreground/--card variables above stay identical to .page-light.
-   ───────────────────────────────────────────────────────────────────────── */
-.devotion-bg {
-  background: linear-gradient(
-    180deg,
-    rgba(250, 248, 245, 0.74) 0%,
-    rgba(248, 243, 236, 0.74) 50%,
-    rgba(243, 237, 228, 0.78) 100%
-  );
+  background: var(--mb-background);
 }
 
 /* Glass cards → white-cream on light background */
@@ -1103,7 +1084,7 @@
   background: rgba(255, 252, 248, 0.82);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(188, 106, 77, 0.14);
-  box-shadow: 0 4px 20px rgba(120, 60, 20, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 20px rgba(89,34,9,0.2), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .page-light .glass-card-hover,
@@ -1111,7 +1092,7 @@
   background: rgba(255, 252, 248, 0.82);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(188, 106, 77, 0.12);
-  box-shadow: 0 4px 20px rgba(120, 60, 20, 0.07);
+  box-shadow: 0 4px 20px rgba(89,34,9,0.2);
   transition: all 0.5s;
 }
 
@@ -1119,16 +1100,16 @@
 .devotion-bg .glass-card-hover:hover {
   border-color: rgba(188, 106, 77, 0.42);
   box-shadow:
-    0 14px 40px rgba(120, 60, 20, 0.12),
+    0 14px 40px rgba(89,34,9,0.2),
     0 0 28px rgba(188, 106, 77, 0.10),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    inset 0 1px 0 #FBF5EC;
   transform: translateY(-4px);
 }
 
-/* Input fields → white with warm border */
+/* Input fields → rgba(89,34,9,0.25) with warm border */
 .page-light .input-cosmic,
 .devotion-bg .input-cosmic {
-  background: rgba(255, 255, 255, 0.88);
+  background: #FBF5EC;
   border: 1px solid rgba(188, 106, 77, 0.24);
   color: hsl(20 35% 13%);
 }
@@ -1156,7 +1137,7 @@
 /* Textarea inherits same light treatment */
 .page-light textarea.input-cosmic,
 .devotion-bg textarea.input-cosmic {
-  background: rgba(255, 255, 255, 0.88);
+  background: #FBF5EC;
   color: hsl(20 35% 13%);
 }
 
@@ -1179,45 +1160,24 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   HOMEPAGE LIGHT THEME — Parchment · Gerua · Antique gold
-   A warm, traditional Vedic palette. Scoped to .home-light, which <Layout> applies
-   ONLY on "/". Other routes keep their existing styling. Contrast for every pairing
-   is asserted in home.test.tsx. Gold is decoration only (2.1-2.5:1 as text).
+   MYBHAGYA LIGHT THEME — Beige · Gerua · Orange · Brown
+   The brand palette (tokens on :root) applies to the whole site. .home-light, applied by
+   <Layout> on every route, carries the shared typography, navbar and focus rules that grew
+   out of the homepage. Contrast for every pairing is asserted in home.test.tsx. Orange is
+   decoration / fills (2.4:1 on beige), never body text.
    ═══════════════════════════════════════════════════════════════════════════════ */
 
-body.home-light-body { background: #EFE5D7; }
+body.home-light-body { background: #F5E9D6; }
 
 .home-light {
-  --mb-background: #EFE5D7;   /* parchment page */
-  --mb-surface: #FAF7F1;      /* ivory cards, navbar, footer */
-  --mb-primary: #8C3F18;      /* gerua / burnt saffron: actions, links, accents */
-  --mb-primary-hover: #713214;
-  --mb-text: #27231F;         /* warm charcoal */
-  --mb-text-muted: #645B52;
-  --mb-gold: #B99A64;         /* antique gold: rings, rules, glows (never text) */
-  --mb-border: #D9CABA;
-  --mb-cosmic-navy: #1C2740;  /* reserved for artwork; no large backgrounds use it */
-
-  /* Re-map the shared HSL tokens so Navbar/Footer utilities (text-foreground,
-     border-border, ring-offset-background…) adapt automatically. */
-  --background: 35 43% 89%;
-  --foreground: 30 12% 14%;
-  --card: 40 45% 96%;
-  --card-foreground: 30 12% 14%;
-  --muted: 35 43% 89%;
-  --muted-foreground: 30 10% 35%;
-  --border: 32 28% 80%;
-  --input: 32 28% 80%;
-
   background: var(--mb-background);
   color: var(--mb-text);
 }
 
-/* Headings: sentence case, no wide tracking (global base forces uppercase Iceland). */
+/* Headings: sentence case; the family comes from the base layer (Cinzel h1-h2, DM Sans h3+). */
 :where(.home-light) h1, :where(.home-light) h2, :where(.home-light) h3, :where(.home-light) h4 {
   text-transform: none;
   letter-spacing: -0.01em;
-  font-family: "DM Sans", system-ui, sans-serif;
 }
 .home-light .hl-serif { font-family: Cinzel, Georgia, serif; letter-spacing: 0; }
 
@@ -1233,7 +1193,7 @@ body.home-light-body { background: #EFE5D7; }
   background: var(--mb-surface);
   backdrop-filter: blur(14px);
   border: 1px solid var(--mb-border);
-  box-shadow: 0 12px 34px rgba(140, 63, 24, 0.12);
+  box-shadow: 0 12px 34px rgba(89, 34, 9, 0.12);
 }
 /* Navbar typography to match the page (DM Sans links, Uncial Antiqua wordmark). */
 .home-light nav .font-astra,
@@ -1245,22 +1205,24 @@ body.home-light-body { background: #EFE5D7; }
    Applied to the shared <nav> on every route. Only the bar and its own controls are
    coloured; page backgrounds are untouched. Layout, spacing and heights come from the
    component's classes and are not changed here. */
+.home-light nav.navbar-gerua,
 nav.navbar-gerua {
-  --nav-bg: #8C3F18;      /* gerua */
-  --nav-fg: #FAF7F1;      /* ivory: 6.9:1 on gerua */
-  --nav-accent: #F3D8AA;  /* soft antique gold: active / hover / focus */
-  --nav-menu-bg: #FAF7F1;
-  --nav-menu-text: #27231F;
-  --nav-menu-muted: #645B52;
+  --nav-bg: #592209;      /* gerua */
+  --nav-fg: #F5E9D6;      /* warm beige: 7.5:1 on gerua */
+  --nav-accent: #E58A45;  /* warm orange: active / hover / focus (3.4:1: always paired with an underline) */
+  --nav-menu-bg: #FBF5EC;
+  --nav-menu-text: #301607;
+  --nav-menu-muted: #6B4A37;
   --nav-menu-border: #E4D3BD;
-  --nav-rust: #8C3F18;
-  --nav-rust-tint: rgba(140, 63, 24, 0.09);
+  --nav-rust: #592209;
+  --nav-rust-tint: rgba(89, 34, 9, 0.09);
   --tw-ring-color: var(--nav-accent);
   --tw-ring-offset-color: var(--nav-bg);
   background: var(--nav-bg);
   border-color: rgba(243, 216, 170, 0.28);
   box-shadow: 0 1px 0 rgba(243, 216, 170, 0.16), 0 6px 18px rgba(80, 32, 8, 0.18);
   backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   color: var(--nav-fg);
 }
 /* Bar: ivory type, gold for active / hover */
@@ -1283,7 +1245,14 @@ nav.navbar-gerua a[class~="border-[#BC6A4D]/40"] {
   color: var(--nav-rust);
   transition: background-color 0.25s ease, transform 0.2s ease;
 }
-nav.navbar-gerua a[class~="border-[#BC6A4D]/40"]:hover { background: var(--nav-accent); transform: translateY(-1px); }
+nav.navbar-gerua a[class~="border-[#BC6A4D]/40"]:hover { background: var(--nav-accent); color: #301607; transform: translateY(-1px); }
+/* Hover cue beyond colour: orange on gerua is 3.4:1, so top-level hover also underlines */
+nav.navbar-gerua .lg:flex > a:not(.rounded-full):hover,
+nav.navbar-gerua .lg:flex > div > button:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 7px;
+}
 /* Dropdowns: ivory surface, charcoal text, rust highlights, warm border */
 nav.navbar-gerua [role="menu"] {
   background: var(--nav-menu-bg) !important;
@@ -1329,13 +1298,13 @@ nav.navbar-gerua [role="menu"] a { border-color: var(--nav-menu-border) !importa
   background: var(--mb-surface);
   border: 1px solid var(--mb-border);
   border-radius: 1.25rem;
-  box-shadow: 0 1px 2px rgba(39, 35, 31, 0.05), 0 8px 24px rgba(140, 63, 24, 0.08);
+  box-shadow: 0 1px 2px rgba(39, 35, 31, 0.05), 0 8px 24px rgba(89, 34, 9, 0.08);
   transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
 .hl-card:hover {
   transform: translateY(-4px);
   border-color: color-mix(in srgb, var(--mb-primary) 45%, var(--mb-border));
-  box-shadow: 0 2px 4px rgba(39, 35, 31, 0.06), 0 16px 36px rgba(140, 63, 24, 0.16);
+  box-shadow: 0 2px 4px rgba(39, 35, 31, 0.06), 0 16px 36px rgba(89, 34, 9, 0.16);
 }
 
 /* Primary: gerua with ivory text. Secondary: ivory with a gerua border and charcoal text. */
@@ -1345,8 +1314,8 @@ nav.navbar-gerua [role="menu"] a { border-color: var(--nav-menu-border) !importa
   font: 700 0.9375rem/1 "DM Sans", system-ui, sans-serif;
   transition: background 0.25s ease, color 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
-.hl-btn { background: var(--mb-primary); color: var(--mb-surface); box-shadow: 0 8px 20px rgba(140, 63, 24, 0.26); }
-.hl-btn:hover { background: var(--mb-primary-hover); transform: translateY(-1px); box-shadow: 0 10px 24px rgba(113, 50, 20, 0.34); }
+.hl-btn { background: var(--mb-primary); color: var(--mb-surface); box-shadow: 0 8px 20px rgba(89, 34, 9, 0.26); }
+.hl-btn:hover { background: var(--mb-primary-hover); transform: translateY(-1px); box-shadow: 0 10px 24px rgba(70, 27, 7, 0.34); }
 .hl-btn:active, .hl-btn-ghost:active { transform: translateY(0) scale(0.98); }
 .hl-btn-sm { min-height: 36px; padding: 0 1rem; font-size: 0.9rem; gap: 0.375rem; }
 .hl-btn-ghost { color: var(--mb-text); border: 1.5px solid var(--mb-primary); background: var(--mb-surface); }

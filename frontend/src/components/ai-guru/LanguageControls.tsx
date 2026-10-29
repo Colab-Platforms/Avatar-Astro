@@ -21,7 +21,7 @@ const LanguageControls = ({
   onReplyLanguageChange,
 }: LanguageControlsProps) => (
   <div className="mb-2.5 flex flex-wrap items-center gap-2">
-    <Languages className="h-3.5 w-3.5 shrink-0 text-[#6B7280]" aria-hidden="true" />
+    <Languages className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
     <LanguageSelector
       label="You type in"
       value={inputLanguage}
