@@ -5,6 +5,7 @@ import { useLanguageDetection, type Language } from "../hooks/useLanguageDetecti
 import { useConsultationGuard } from "../hooks/useConsultationGuard";
 import { API_BASE_URL } from "@/lib/api";
 import { aiChat } from "@/lib/aiClient";
+import { authedFetch, SignInRequiredError } from '@/lib/authedFetch';
 
 // ── API ──────────────────────────────────────────────────────────────────────
 
@@ -73,7 +74,7 @@ async function speakSarvam(
 ): Promise<"ok" | "error"> {
   try {
     console.log("[Sarvam TTS] Requesting — provider: sarvam, speaker: manan, lang:", ttsLang, "chars:", text.length);
-    const res = await fetch(`${API_BASE_URL}/tts`, {
+    const res = await authedFetch(`${API_BASE_URL}/tts`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text, language: ttsLang }),

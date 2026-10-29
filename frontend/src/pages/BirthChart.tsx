@@ -1056,15 +1056,10 @@
 //komal vedya
 import { useState, useEffect, useRef, useCallback, type CSSProperties } from "react";
 import { useBackOverride } from "../context/NavigationContext";
-import { API_BASE_URL } from "@/lib/api";
-import {
-  Calendar, MapPin, Globe, Heart, Briefcase, DollarSign, Activity, Star,
-  Target, Palette, Eye, RotateCcw, Hourglass, Shield, Compass,
-  CheckCircle2, XCircle, MessageCircle, Facebook, Instagram, Download,
-} from "lucide-react";
-import explorerIcon from "@/assets/archetypes/explorer.png";
-import creatorIcon from "@/assets/archetypes/creator.png";
-import leaderIcon from "@/assets/archetypes/leader.png";
+import { Link } from "react-router-dom";
+import { zodiacSigns } from "@/data/zodiacData";
+import BirthChartEducation from "@/components/BirthChartEducation";
+import { Calendar, MapPin, Heart, Star, Target, Compass } from "lucide-react";
 import loveInsightImg from "@/assets/insights/love.png";
 import careerInsightImg from "@/assets/insights/career.png";
 import moneyInsightImg from "@/assets/insights/money.png";
@@ -1082,6 +1077,7 @@ import zodiacSagittarius from "@/assets/zodiac-gold/sagittarius.png";
 import zodiacCapricorn from "@/assets/zodiac-gold/capricorn.png";
 import zodiacAquarius from "@/assets/zodiac-gold/aquarius.png";
 import zodiacPisces from "@/assets/zodiac-gold/pisces.png";
+import { requireSignIn } from "@/lib/authedFetch";
 
 // ── Google Fonts ─────────────────────────────────────────────────────────────
 
@@ -1379,52 +1375,8 @@ function getLP(dob){
   while(s>9&&s!==11&&s!==22)s=String(s).split("").map(Number).reduce((a,b)=>a+b,0);
   return s;
 }
-function hash(str){return str.split("").reduce((a,c)=>(a*31+c.charCodeAt(0))&0xffff,0);}
-function dv(base,seed,lo=55,hi=98){const h=hash(seed);return Math.min(hi,Math.max(lo,base+(h%22)-11));}
-
-// Counts 0 → target once the element scrolls into view.
-function useCountUpOnVisible(target:number,duration=1200){
-  const [val,setVal]=useState(0);
-  const ref=useRef<HTMLDivElement>(null);
-  useEffect(()=>{
-    const el=ref.current;if(!el)return;
-    let intervalId:ReturnType<typeof setInterval>|null=null;
-    const obs=new IntersectionObserver(([entry])=>{
-      if(entry.isIntersecting){
-        obs.disconnect();
-        let start=0;const step=target/(duration/16);
-        intervalId=setInterval(()=>{start+=step;if(start>=target){setVal(target);if(intervalId)clearInterval(intervalId);}else setVal(Math.floor(start));},16);
-      }
-    },{threshold:0.35});
-    obs.observe(el);
-    return ()=>{obs.disconnect();if(intervalId)clearInterval(intervalId);};
-  },[target,duration]);
-  return [val,ref] as const;
-}
-
-// One Life Energy Map badge — count-up + a very subtle glow pulse, triggers on scroll into view.
-function EnergyBadge({label,color,desc,Icon,value}){
-  const [count,ref]=useCountUpOnVisible(value,1200);
-  return(
-    <div ref={ref} className="r-sec" style={{textAlign:"center"}}>
-      <div className="energy-badge" style={{width:110,height:110,borderRadius:"50%",border:`2px solid ${color}`,boxShadow:`0 0 24px ${color}55`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px",background:"#FBF5EC"}}>
-        <Icon size={32} color={color}/>
-      </div>
-      <div style={{fontFamily:"'DM Sans', system-ui, sans-serif",fontSize:26,fontWeight:800,color:"#301607"}}>{count}%</div>
-      <div style={{color,fontWeight:700,fontSize:13,letterSpacing:"0.08em",marginBottom:10}}>{label}</div>
-      <div style={{color:"rgba(48,22,7,0.8)",fontSize:13,lineHeight:1.5}}>{desc}</div>
-    </div>
-  );
-}
-
 const ZODIAC_SYMBOLS={Aries:"♈",Taurus:"♉",Gemini:"♊",Cancer:"♋",Leo:"♌",Virgo:"♍",Libra:"♎",Scorpio:"♏",Sagittarius:"♐",Capricorn:"♑",Aquarius:"♒",Pisces:"♓"};
 const ZODIAC_IMAGES={Aries:zodiacAries,Taurus:zodiacTaurus,Gemini:zodiacGemini,Cancer:zodiacCancer,Leo:zodiacLeo,Virgo:zodiacVirgo,Libra:zodiacLibra,Scorpio:zodiacScorpio,Sagittarius:zodiacSagittarius,Capricorn:zodiacCapricorn,Aquarius:zodiacAquarius,Pisces:zodiacPisces};
-
-const ARCHETYPES=[
-  {icon:explorerIcon,name:"Explorer",tag:"Born to discover",detail:"You seek meaning, adventures, and new horizons."},
-  {icon:creatorIcon, name:"Creator", tag:"Born to build",    detail:"You transform ideas into reality and leave a lasting impact."},
-  {icon:leaderIcon,  name:"Leader",  tag:"Born to inspire",  detail:"You have a natural ability to guide, uplift, and empower."},
-];
 
 const ZODIAC_HERO_TRAITS={
   Aries:"boldness, energy, and pioneering spirit",Taurus:"steadiness, sensuality, and quiet determination",
@@ -1447,22 +1399,19 @@ const LIFE_PATH_TRAITS={
 // Nominatim place search
 async function searchPlaces(q){
   if(!q||q.length<2)return[];
-  const r=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=4&addressdetails=1`,{headers:{"Accept-Language":"en","User-Agent":"SpiritualAI/1.0"}});
-  const d=await r.json();
+  let d;
+  try{
+    const r=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=4&addressdetails=1`,{headers:{"Accept-Language":"en"}});
+    if(!r.ok)return[];
+    d=await r.json();
+  }catch{return[];}
   return d.map(x=>({display:x.display_name.split(",").slice(0,3).join(", "),city:x.address?.city||x.address?.town||x.address?.village||x.name,state:x.address?.state||"",country:x.address?.country||"",lat:parseFloat(x.lat),lon:parseFloat(x.lon)}));
-}
-
-// Backend AI call
-async function fetchBirthChartAI(payload){
-  const r=await fetch(`${API_BASE_URL}/birthchart/analyze`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
-  if(!r.ok)throw new Error("Backend error");
-  return r.json();
 }
 
 // ── Starfield ─────────────────────────────────────────────────────────────────
 function Starfield(){
   const stars=Array.from({length:140},(_,i)=>({id:i,x:Math.random()*100,y:Math.random()*100,sz:Math.random()*2+.4,d:(Math.random()*4+2).toFixed(1),dl:(Math.random()*6).toFixed(2),op:(Math.random()*.6+.2).toFixed(2)}));
-  return <div className="sf">{stars.map(s=><div key={s.id} className="st" style={{left:`${s.x}%`,top:`${s.y}%`,width:s.sz,height:s.sz,"--d":`${s.d}s`,"--dl":`${s.dl}s`,"--op":s.op}}/>)}</div>;
+  return <div className="sf">{stars.map(s=><div key={s.id} className="st" style={{left:`${s.x}%`,top:`${s.y}%`,width:s.sz,height:s.sz,"--d":`${s.d}s`,"--dl":`${s.dl}s`,"--op":s.op} as CSSProperties}/>)}</div>;
 }
 
 // ── Place input ───────────────────────────────────────────────────────────────
@@ -1480,17 +1429,17 @@ function PlaceInput({value,onChange}){
   const pick=r=>{setQ(r.display);onChange(r);setOpen(false);};
   return(
     <div className="pl-wrap">
-      <input className="f-input" value={q} onChange={handleChange} onBlur={()=>setTimeout(()=>setOpen(false),200)} placeholder="Type city name…"/>
+      <input id="bc-place" autoComplete="off" className="f-input" value={q} onChange={handleChange} onBlur={()=>setTimeout(()=>setOpen(false),200)} placeholder="Type city name…"/>
       {open&&<div className="pl-drop">{res.map((r,i)=><div key={i} className="pl-item" onMouseDown={()=>pick(r)}>{r.display}<small>{r.lat?.toFixed(4)}, {r.lon?.toFixed(4)}</small></div>)}</div>}
     </div>
   );
 }
 
 // ── Loading ───────────────────────────────────────────────────────────────────
-const LSTEPS=["Reading Cosmic Coordinates","Locating Birth Star Alignment","Mapping Planetary Positions","Calculating Soul Blueprint","Revealing Destiny Pattern","Unlocking Hidden Traits","Generating Cosmic Identity","Universe Report Ready"];
+const LSTEPS=["Finding your Sun sign","Adding up your Life Path number","Preparing your profile"];
 function Loading({name}){
   const [step,setStep]=useState(0);
-  useEffect(()=>{const t=setInterval(()=>setStep(s=>Math.min(s+1,LSTEPS.length-1)),700);return()=>clearInterval(t);},[]);
+  useEffect(()=>{const t=setInterval(()=>setStep(s=>Math.min(s+1,LSTEPS.length-1)),600);return()=>clearInterval(t);},[]);
   return(
     <div className="load-screen">
       <div className="load-name">✦ {name} ✦</div>
@@ -1501,7 +1450,7 @@ function Loading({name}){
         <div className="orb"><div className="orb-dot" style={{background:"var(--green)",color:"var(--green)"}}/></div>
         <div className="orb-core"/>
       </div>
-      <div className="load-steps">{LSTEPS.map((s,i)=><div key={s} className={`load-step ${i===step?"active":i<step?"done":""}`}><div className="ls-dot"/><span>✨ {s}</span></div>)}</div>
+      <div className="load-steps">{LSTEPS.map((s,i)=><div key={s} className={`load-step ${i===step?"active":i<step?"done":""}`}><div className="ls-dot"/><span>{s}</span></div>)}</div>
     </div>
   );
 }
@@ -1602,143 +1551,160 @@ function getInsightText(category, zodiac, name, lifePath){
 }
 
 // ── Results ───────────────────────────────────────────────────────────────────
+// Everything shown here depends on the user's inputs: the Sun sign (date lookup) and the Life Path
+// number (digit sum). The interpretive text is fixed per sign / number — nothing is generated at random
+// and no planetary positions, houses or ascendant are calculated.
+function lifePathWorking(dob:string){
+  const digits=dob.replace(/-/g,"").split("").map(Number);
+  const steps=[`${digits.join(" + ")} = ${digits.reduce((a,b)=>a+b,0)}`];
+  let s=digits.reduce((a,b)=>a+b,0);
+  while(s>9&&s!==11&&s!==22){
+    const d=String(s).split("").map(Number);
+    s=d.reduce((a,b)=>a+b,0);
+    steps.push(`${d.join(" + ")} = ${s}`);
+  }
+  return steps;
+}
+
+function formatCoord(v:number,pos:string,neg:string){return `${Math.abs(v).toFixed(2)}° ${v>=0?pos:neg}`;}
+
+const resultsCss=`
+.bcp-hero{display:grid;grid-template-columns:1.3fr 1fr;gap:48px;align-items:center;margin-bottom:56px;padding-top:20px;}
+.bcp-hero-art{display:flex;align-items:center;justify-content:center;position:relative;}
+.bcp-hero-art img{width:100%;max-width:380px;height:auto;object-fit:contain;filter:drop-shadow(0 0 40px rgba(255,126,71,0.4));}
+.bcp-facts{display:flex;gap:24px;flex-wrap:wrap;}
+.bcp-two{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:56px;}
+.bcp-tabs{display:flex;gap:8px;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:28px;flex-wrap:wrap;}
+.bcp-insight{display:grid;grid-template-columns:200px 1.6fr 1fr;gap:32px;align-items:start;}
+.bcp-chip{display:inline-block;padding:6px 14px;border:1px solid rgba(255,126,71,0.35);border-radius:20px;font-size:14px;color:#f8f8f8;background:rgba(255,126,71,0.06);margin:0 8px 8px 0;}
+@media(max-width:900px){.bcp-hero{grid-template-columns:1fr;gap:24px;text-align:center}.bcp-facts{justify-content:center}.bcp-insight{grid-template-columns:1fr}.bcp-insight>div:first-child{margin:0 auto}}
+@media(max-width:700px){.bcp-two{grid-template-columns:1fr}}
+`;
+
 function Results({data,onReset}){
   const {name,zodiac,lifePath,dob,time,place}=data;
-  const h=hash(name+dob);
-  const base=62+(h%30);
-  const sym=ZODIAC_SYMBOLS[zodiac]||"⭐";
+  const sign=zodiacSigns.find(z=>z.name===zodiac);
   const zodiacImg=ZODIAC_IMAGES[zodiac];
   const [insightTab,setInsightTab]=useState("love");
 
   const [dy,dm,dd]=dob.split("-");
   const dobFormatted=`${dd} ${MONTHS[+dm-1]} ${dy}`;
-  const heroDesc=`Your ${zodiac} energy brings ${ZODIAC_HERO_TRAITS[zodiac]||"a rare and powerful presence"}. Life Path ${lifePath} adds ${LIFE_PATH_TRAITS[lifePath]||"a unique blend of gifts that support your journey"}.`;
+  const heroDesc=`Your ${zodiac} Sun brings ${ZODIAC_HERO_TRAITS[zodiac]||"a distinctive presence"}. Life Path ${lifePath} adds ${LIFE_PATH_TRAITS[lifePath]||"its own blend of themes"}.`;
+  const working=lifePathWorking(dob);
 
-  const ENERGY_MAP=[
-    {key:"love",   label:"LOVE",   icon:Heart,      color:"#9B2C1D", desc:"You love deeply, and your loyalty drives all."},
-    {key:"career", label:"CAREER", icon:Briefcase,  color:"#301607", desc:"You're aligned with purpose and on the path."},
-    {key:"money",  label:"MONEY",  icon:DollarSign, color:"#301607", desc:"Financial flow is strong when you stay value-aligned."},
-    {key:"health", label:"HEALTH", icon:Activity,   color:"#592209", desc:"Focus on balance of mind, body, and emotions."},
-    {key:"growth", label:"GROWTH", icon:Star,       color:"#592209", desc:"Your soul is evolving and expanding beautifully."},
-  ].map(e=>({...e,value:dv(base,name+e.key)}));
-
-  const STRENGTHS=[
-    {icon:Target, name:"Natural Leadership",   desc:"You inspire trust and set the example."},
-    {icon:Palette,name:"Creative Intelligence",desc:"Your ideas bring vision into real impact."},
-    {icon:Eye,    name:"Strong Intuition",     desc:"You sense what others overlook or need."},
-  ];
-  const GROWTH_AREAS=[
-    {icon:RotateCcw,name:"Overthinking",   desc:"Trust yourself more and release mental noise."},
-    {icon:Hourglass,name:"Impatience",     desc:"Give things time. Grace is part of the journey."},
-    {icon:Shield,   name:"Emotional Guard",desc:"Let in more love. Vulnerability is your strength."},
-  ];
-
-  const DO_MORE=["Trust your intuition","Lead with kindness","Create and express","Take inspired action"];
-  const AVOID=["Settling for less","Overthinking decisions","Holding your true self","Ignoring inner voice"];
-
-  const cardStyle={background:"#FBF5EC",border:"1px solid rgba(89,34,9,0.2)",borderRadius:16,padding:32};
-  const sectionTitle:CSSProperties={fontFamily:"'DM Sans', system-ui, sans-serif",fontSize:28,color:"#301607",fontWeight:700,textAlign:"center",textTransform:"uppercase",marginBottom:36,letterSpacing:"0.03em"};
+  const cardStyle:CSSProperties={background:"#FBF5EC",border:"1px solid rgba(89,34,9,0.2)",borderRadius:16,padding:28};
+  const sectionTitle:CSSProperties={fontFamily:"'DM Sans', system-ui, sans-serif",fontSize:"clamp(22px,4vw,28px)",color:"#301607",fontWeight:700,textAlign:"center",textTransform:"uppercase",marginBottom:28,letterSpacing:"0.03em"};
+  const smallLabel:CSSProperties={color:"rgba(255,255,255,0.55)",fontWeight:700,fontSize:13,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:10};
 
   const activeTab=INSIGHT_TABS.find(t=>t.key===insightTab);
-  const insightScore=dv(base,name+insightTab+"score");
   const insightText=getInsightText(insightTab,zodiac,name,lifePath);
   const insightExtra=INSIGHT_EXTRA[insightTab];
 
   return(
-    <div style={{maxWidth:1200,margin:"0 auto",padding:"20px 24px 100px",color:"#301607",fontFamily:"'DM Sans', system-ui, sans-serif"}}>
+    <div data-testid="bc-results" style={{maxWidth:1100,margin:"0 auto",padding:"20px 20px 100px",color:"#301607",fontFamily:"'DM Sans',sans-serif"}}>
+      <style>{resultsCss}</style>
 
       {/* ── HERO ── */}
-      <div className="r-sec" style={{display:"grid",gridTemplateColumns:"1.3fr 1fr",gap:60,alignItems:"center",marginBottom:80,paddingTop:20,animationDelay:"0.05s"}}>
+      <div className="r-sec bcp-hero">
         <div>
-          <div style={{color:"rgba(48,22,7,0.75)",fontWeight:700,fontSize:15,letterSpacing:"0.15em",marginBottom:12}}>BIRTH CHART REPORT</div>
-          <div style={{fontFamily:"'DM Sans', system-ui, sans-serif",fontSize:"clamp(32px,5vw,52px)",color:"#301607",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.04em",marginBottom:16,lineHeight:1.1}}>{name}</div>
-          <div style={{color:"#592209",fontWeight:700,fontSize:18,marginBottom:24}}>{zodiac.toUpperCase()} SUN &nbsp;•&nbsp; LIFE PATH {lifePath}</div>
-          <div style={{fontSize:18,fontStyle:"italic",lineHeight:1.7,color:"#301607",marginBottom:32}}>{heroDesc}</div>
-
-          <div style={{display:"flex",gap:28,flexWrap:"nowrap"}}>
-            <div style={{display:"flex",alignItems:"center",gap:12,flexShrink:0}}>
-              <div style={{width:44,height:44,borderRadius:"50%",background:"rgba(89,34,9,0.12)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Calendar size={20} color="#ff7e47"/></div>
-              <div style={{whiteSpace:"nowrap"}}>
+          <div style={{color:"rgba(255,255,255,0.55)",fontWeight:700,fontSize:14,letterSpacing:"0.15em",marginBottom:12}}>SUN SIGN &amp; LIFE PATH PROFILE</div>
+          <h1 style={{fontFamily:"'DM Sans', system-ui, sans-serif",fontSize:"clamp(30px,5vw,52px)",color:"#301607",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.04em",marginBottom:16,lineHeight:1.1,wordBreak:"break-word"}}>{name}</h1>
+          <div style={{color:"#592209",fontWeight:700,fontSize:18,marginBottom:20}}>{zodiac.toUpperCase()} SUN &nbsp;•&nbsp; LIFE PATH {lifePath}</div>
+          <p style={{fontSize:18,fontStyle:"italic",lineHeight:1.7,color:"#301607",marginBottom:28}}>{heroDesc}</p>
+          <div className="bcp-facts">
+            <div style={{display:"flex",alignItems:"center",gap:12}}>
+              <div style={{width:44,height:44,borderRadius:"50%",background:"rgba(89,34,9,0.12)",display:"flex",alignItems:"center",justifyContent:"center"}}><Calendar size={20} color="#592209"/></div>
+              <div style={{textAlign:"left"}}>
                 <div style={{fontWeight:700,fontSize:15}}>Born {dobFormatted}</div>
-                <div style={{fontSize:13,color:"#301607"}}>{time||"Time unknown"}</div>
+                <div style={{fontSize:13,color:"rgba(255,255,255,0.6)"}}>{time||"Birth time not entered"}</div>
               </div>
             </div>
-            <div style={{display:"flex",alignItems:"center",gap:12,flexShrink:0}}>
-              <div style={{width:44,height:44,borderRadius:"50%",background:"rgba(89,34,9,0.12)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><MapPin size={20} color="#ff7e47"/></div>
-              <div style={{whiteSpace:"nowrap"}}>
-                <div style={{fontWeight:700,fontSize:15}}>{place?.city?`${place.city}${place.country?", "+place.country:""}`:"Location not provided"}</div>
-                <div style={{fontSize:13,color:"#301607"}}>{place?.lat!=null?`${place.lat.toFixed(2)}° N, ${place.lon.toFixed(2)}° E`:"—"}</div>
-              </div>
-            </div>
-            <div style={{display:"flex",alignItems:"center",gap:12,flexShrink:0}}>
-              <div style={{width:44,height:44,borderRadius:"50%",background:"rgba(89,34,9,0.12)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Globe size={20} color="#ff7e47"/></div>
-              <div style={{whiteSpace:"nowrap"}}>
-                <div style={{fontWeight:700,fontSize:15}}>Tropical</div>
-                <div style={{fontSize:13,color:"#301607"}}>Placidus Houses</div>
+            <div style={{display:"flex",alignItems:"center",gap:12}}>
+              <div style={{width:44,height:44,borderRadius:"50%",background:"rgba(89,34,9,0.12)",display:"flex",alignItems:"center",justifyContent:"center"}}><MapPin size={20} color="#ff7e47"/></div>
+              <div style={{textAlign:"left"}}>
+                <div style={{fontWeight:700,fontSize:15}}>{place?.city?`${place.city}${place.country?", "+place.country:""}`:"Birth place not entered"}</div>
+                <div style={{fontSize:13,color:"rgba(255,255,255,0.6)"}}>{place?.lat!=null?`${formatCoord(place.lat,"N","S")}, ${formatCoord(place.lon,"E","W")}`:"—"}</div>
               </div>
             </div>
           </div>
         </div>
-
-        <div style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"center",minHeight:460}}>
-          <div style={{position:"absolute",inset:"2%",borderRadius:"50%",background:"radial-gradient(circle,rgba(89,34,9,0.18),transparent 70%)",filter:"blur(20px)"}}></div>
-          <img src={zodiacImg} alt={zodiac} style={{position:"relative",width:460,height:460,objectFit:"contain",filter:"drop-shadow(0 0 40px rgba(89,34,9,0.4))"}}/>
+        <div className="bcp-hero-art">
+          <div style={{position:"absolute",inset:"2%",borderRadius:"50%",background:"radial-gradient(circle,rgba(89,34,9,0.18),transparent 70%)",filter:"blur(20px)"}}/>
+          <img src={zodiacImg} alt={`${zodiac} symbol`} style={{position:"relative"}}/>
         </div>
       </div>
 
-      {/* ── PERSONALITY TYPE ── */}
-      <div className="r-sec" style={{marginBottom:80,animationDelay:"0.15s"}}>
-        <div style={sectionTitle}>Your Personality Type</div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:24}}>
-          {ARCHETYPES.map((a,i)=>(
-            <div key={i} className="r-hcard" style={cardStyle}>
-              <div style={{width:80,height:80,borderRadius:"50%",background:"rgba(89,34,9,0.12)",display:"flex",alignItems:"center",justifyContent:"center",marginBottom:14}}>
-                <img src={a.icon} alt={a.name} style={{width:52,height:52,objectFit:"contain"}}/>
-              </div>
-              <div style={{color:"#301607",fontWeight:800,fontSize:18,marginBottom:4}}>{a.name.toUpperCase()}</div>
-              <div style={{color:"#592209",fontWeight:600,fontSize:14,marginBottom:16}}>{a.tag}</div>
-              <div style={{color:"rgba(48,22,7,0.85)",fontSize:15,lineHeight:1.6}}>{a.detail}</div>
-            </div>
-          ))}
+      {/* ── HOW THIS PROFILE WAS MADE ── */}
+      <div className="r-sec" style={{...cardStyle,marginBottom:56,borderColor:"rgba(255,126,71,0.35)"}}>
+        <div style={{...smallLabel,color:"#592209"}}>How this profile was made</div>
+        <p style={{fontSize:16,lineHeight:1.7,color:"rgba(255,255,255,0.8)"}}>
+          Your Sun sign comes from your birth date, using the standard Western (tropical) date ranges. Your Life Path number comes from adding the digits of your birth date. The descriptions are written text for each sign and number, so people with the same sign and Life Path see the same interpretation. Your birth time and place are shown for reference only. This profile does not calculate planetary positions, an ascendant or houses, and it is not generated by AI.
+        </p>
+      </div>
+
+      {/* ── SUN SIGN + LIFE PATH ── */}
+      <div className="r-sec bcp-two">
+        <div className="r-hcard" style={cardStyle}>
+          <div style={smallLabel}>Your Sun sign</div>
+          <div style={{color:"#301607",fontWeight:800,fontSize:26,marginBottom:4}}>{zodiac} {ZODIAC_SYMBOLS[zodiac]}</div>
+          {sign&&<>
+            <div style={{color:"rgba(48,22,7,0.85)",fontSize:15,marginBottom:14}}>{sign.dates} · {sign.element} · Ruler: {sign.traditionalRuling?`${sign.ruling} (modern), ${sign.traditionalRuling} (traditional)`:sign.ruling}</div>
+            <p style={{fontSize:16,lineHeight:1.65,color:"rgba(255,255,255,0.8)",marginBottom:16}}>{sign.description}</p>
+            <div style={{marginBottom:12}}>{sign.traits.map(t=><span key={t} className="bcp-chip">{t}</span>)}</div>
+            <div style={{fontSize:15,lineHeight:1.6,color:"rgba(255,255,255,0.7)"}}><b style={{color:"#301607"}}>Strengths:</b> {sign.strengths.join(", ")}.<br/><b style={{color:"#301607"}}>Areas to watch:</b> {sign.weaknesses.join(", ")}.</div>
+            <Link to={`/zodiac/${zodiac.toLowerCase()}`} style={{display:"inline-block",marginTop:16,color:"#592209",fontWeight:700,fontSize:14}}>Read the full {zodiac} profile →</Link>
+          </>}
+        </div>
+        <div className="r-hcard" style={cardStyle}>
+          <div style={smallLabel}>Your Life Path number</div>
+          <div style={{color:"#301607",fontWeight:800,fontSize:26,marginBottom:14}}>Life Path {lifePath}</div>
+          <p style={{fontSize:16,lineHeight:1.65,color:"rgba(255,255,255,0.8)",marginBottom:16}}>In numerology, Life Path {lifePath} is associated with {LIFE_PATH_TRAITS[lifePath]||"its own set of themes"}.</p>
+          <div style={{...smallLabel,marginBottom:6}}>The working</div>
+          <div data-testid="lp-working" style={{fontFamily:"'Space Mono',monospace",fontSize:14,lineHeight:1.9,color:"#f8f8f8",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,padding:"12px 14px"}}>
+            {working.map((w,i)=><div key={i}>{w}</div>)}
+            <div style={{color:"#592209"}}>Life Path = {lifePath}</div>
+          </div>
+          <p style={{fontSize:13,lineHeight:1.6,color:"rgba(255,255,255,0.5)",marginTop:10}}>Digits of {dob} are added, then reduced until one digit remains, except that 11 and 22 are kept as master numbers.</p>
         </div>
       </div>
 
       {/* ── DETAILED INSIGHTS ── */}
-      <div className="r-sec" style={{marginBottom:80,animationDelay:"0.25s"}}>
+      <div className="r-sec" style={{marginBottom:56}}>
         <div style={sectionTitle}>Detailed Insights</div>
-        <div style={{background:"#FBF5EC",border:"1px solid rgba(89,34,9,0.2)",borderRadius:20,padding:32}}>
-          <div style={{display:"flex",gap:8,borderBottom:"1px solid rgba(89,34,9,0.2)",marginBottom:32,flexWrap:"wrap"}}>
+        <div style={{...cardStyle,padding:"28px 24px"}}>
+          <div className="bcp-tabs" role="tablist" aria-label="Insight areas">
             {INSIGHT_TABS.map(t=>(
-              <button key={t.key} onClick={()=>setInsightTab(t.key)}
+              <button key={t.key} role="tab" aria-selected={insightTab===t.key} onClick={()=>setInsightTab(t.key)}
                 style={{background:"none",border:"none",cursor:"pointer",padding:"12px 18px",fontSize:15,fontWeight:600,
-                  color:insightTab===t.key?"#301607":"rgba(48,22,7,0.7)",
+                  color:insightTab===t.key?"#301607":"rgba(255,255,255,0.55)",
                   borderBottom:insightTab===t.key?`2px solid ${t.color}`:"2px solid transparent"}}>
                 {t.label}
               </button>
             ))}
           </div>
 
-          <div key={insightTab} className="r-sec" style={{display:"grid",gridTemplateColumns:"200px 1.6fr 1fr",gap:36,alignItems:"start",animationDuration:"0.35s"}}>
-            <div style={{width:200,height:200,borderRadius:"50%",overflow:"hidden",border:`1px solid ${activeTab.color}44`,boxShadow:`0 0 30px ${activeTab.color}33`,flexShrink:0}}>
-              <img src={activeTab.image} alt={activeTab.label} style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+          <div key={insightTab} role="tabpanel" className="r-sec bcp-insight" style={{animationDuration:"0.35s"}}>
+            <div style={{width:200,height:200,borderRadius:"50%",overflow:"hidden",border:`1px solid ${activeTab.color}44`,boxShadow:`0 0 30px ${activeTab.color}33`}}>
+              <img src={activeTab.image} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
             </div>
 
             <div>
-              <div style={{fontSize:26,fontWeight:800,color:"#301607",marginBottom:16}}>{activeTab.label} Energy: <span style={{color:activeTab.color}}>{insightScore}%</span></div>
-              <div style={{fontSize:16,lineHeight:1.7,color:"#301607",marginBottom:24}}>{insightText}</div>
-              <div style={{background:"rgba(89,34,9,0.06)",border:"1px solid rgba(89,34,9,0.25)",borderRadius:12,padding:"18px 20px"}}>
-                <div style={{color:"#592209",fontWeight:700,fontSize:14,marginBottom:6,display:"flex",alignItems:"center",gap:8}}><Star size={16}/> KEY ADVICE</div>
+              <div style={{fontSize:24,fontWeight:800,color:"#301607",marginBottom:6}}>{activeTab.label}</div>
+              <div style={{fontSize:13,color:"rgba(255,255,255,0.5)",marginBottom:14}}>Traditional {zodiac} themes, written for this area</div>
+              <div style={{fontSize:16,lineHeight:1.7,color:"rgba(255,255,255,0.8)",marginBottom:20}}>{insightText}</div>
+              <div style={{background:"rgba(89,34,9,0.06)",border:"1px solid rgba(89,34,9,0.25)",borderRadius:12,padding:"16px 18px"}}>
+                <div style={{color:"#592209",fontWeight:700,fontSize:14,marginBottom:6,display:"flex",alignItems:"center",gap:8}}><Star size={16}/> A REFLECTION PROMPT</div>
                 <div style={{fontSize:15,color:"#301607"}}>{insightExtra.advice}</div>
               </div>
             </div>
 
-            <div style={{display:"flex",flexDirection:"column",gap:20}}>
-              {[{label:"Your Pattern",text:insightExtra.pattern,Icon:Heart},{label:"Focus",text:insightExtra.focus,Icon:Target},{label:"Growth",text:insightExtra.growth,Icon:Compass}].map(({label,text,Icon})=>(
+            <div style={{display:"flex",flexDirection:"column",gap:18}}>
+              {[{label:"Pattern to notice",text:insightExtra.pattern,Icon:Heart},{label:"Focus",text:insightExtra.focus,Icon:Target},{label:"Growth",text:insightExtra.growth,Icon:Compass}].map(({label,text,Icon})=>(
                 <div key={label} style={{display:"flex",gap:12}}>
                   <div style={{width:36,height:36,borderRadius:"50%",background:"rgba(89,34,9,0.1)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon size={16} color="#ff7e47"/></div>
                   <div>
                     <div style={{color:"#301607",fontWeight:700,fontSize:15,marginBottom:3}}>{label}</div>
-                    <div style={{color:"#301607",fontSize:14,lineHeight:1.5}}>{text}</div>
+                    <div style={{color:"rgba(255,255,255,0.65)",fontSize:14,lineHeight:1.5}}>{text}</div>
                   </div>
                 </div>
               ))}
@@ -1747,92 +1713,11 @@ function Results({data,onReset}){
         </div>
       </div>
 
-      {/* ── SHARE + FINAL GUIDANCE ── */}
-      <div className="r-sec" style={{marginBottom:80,animationDelay:"0.35s"}}>
-        <div style={sectionTitle}>Share Your Identity</div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:24,alignItems:"stretch"}}>
-          <div className="r-hcard" style={cardStyle}>
-            <div style={{display:"flex",gap:20,marginBottom:24}}>
-              <div style={{width:130,height:130,borderRadius:"50%",border:"2px solid #592209",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,overflow:"hidden"}}>
-                <img src={zodiacImg} alt={zodiac} style={{width:98,height:98,objectFit:"contain"}}/>
-              </div>
-              <div>
-                <div style={{color:"#301607",fontWeight:800,fontSize:20,marginBottom:4}}>{name.toUpperCase()}</div>
-                <div style={{color:"#592209",fontWeight:600,fontSize:14,marginBottom:8}}>{zodiac.toUpperCase()} SUN • LIFE PATH {lifePath}</div>
-                <div style={{color:"rgba(48,22,7,0.8)",fontSize:14,lineHeight:1.5}}>
-                  Born to {ARCHETYPES.map(p=>(p.tag||"").replace(/^Born to /,"")).join(", ")} — here to Lead, Guide, and Make a Positive Impact.
-                </div>
-              </div>
-            </div>
-            <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-              {[{label:"WhatsApp",Icon:MessageCircle},{label:"Facebook",Icon:Facebook},{label:"Instagram",Icon:Instagram},{label:"Download Card",Icon:Download}].map(({label,Icon})=>(
-                <button key={label} style={{display:"flex",alignItems:"center",gap:8,background:"rgba(89,34,9,0.2)",border:"1px solid rgba(89,34,9,0.2)",borderRadius:10,padding:"10px 16px",color:"rgba(48,22,7,0.75)",fontSize:14,cursor:"pointer"}}>
-                  <Icon size={16}/> {label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="r-hcard" style={cardStyle}>
-            <div style={{color:"#301607",fontWeight:800,fontSize:18,marginBottom:20}}>FINAL GUIDANCE</div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:24,marginBottom:24}}>
-              <div>
-                <div style={{color:"#301607",fontWeight:700,fontSize:13,letterSpacing:"0.05em",marginBottom:12}}>DO MORE OF THIS</div>
-                {DO_MORE.map(t=>(
-                  <div key={t} style={{display:"flex",alignItems:"center",gap:8,marginBottom:10,fontSize:14,color:"#301607"}}><CheckCircle2 size={15} color="#4ade80"/> {t}</div>
-                ))}
-              </div>
-              <div>
-                <div style={{color:"#9B2C1D",fontWeight:700,fontSize:13,letterSpacing:"0.05em",marginBottom:12}}>AVOID THIS</div>
-                {AVOID.map(t=>(
-                  <div key={t} style={{display:"flex",alignItems:"center",gap:8,marginBottom:10,fontSize:14,color:"#301607"}}><XCircle size={15} color="#f87171"/> {t}</div>
-                ))}
-              </div>
-            </div>
-            <button style={{width:"100%",padding:"16px",background:"#592209",border:"none",borderRadius:12,color:"#F5E9D6",fontWeight:700,fontSize:16,cursor:"pointer"}}>
-              Embrace Your Cosmic Path ✦
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ── LIFE ENERGY MAP ── */}
-      <div style={{marginBottom:80}}>
-        <div className="r-sec" style={{...sectionTitle,animationDelay:"0.45s"}}>Life Energy Map</div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:20}}>
-          {ENERGY_MAP.map(e=>(
-            <EnergyBadge key={e.key} label={e.label} color={e.color} desc={e.desc} Icon={e.icon} value={e.value}/>
-          ))}
-        </div>
-      </div>
-
-      {/* ── HIDDEN SUPERPOWERS ── */}
-      <div className="r-sec" style={{marginBottom:60,animationDelay:"0.55s"}}>
-        <div style={sectionTitle}>Hidden Superpowers</div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:24}}>
-          <div className="r-hcard" style={cardStyle}>
-            <div style={{color:"#301607",fontWeight:700,fontSize:13,letterSpacing:"0.08em",marginBottom:20}}>YOUR STRENGTHS</div>
-            {STRENGTHS.map(s=>{const Icon=s.icon;return(
-              <div key={s.name} style={{display:"flex",gap:14,marginBottom:20}}>
-                <div style={{width:40,height:40,borderRadius:10,background:"rgba(89,34,9,0.1)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon size={18} color="#ff7e47"/></div>
-                <div><div style={{color:"#301607",fontWeight:700,fontSize:15,marginBottom:3}}>{s.name}</div><div style={{color:"#301607",fontSize:14}}>{s.desc}</div></div>
-              </div>
-            );})}
-          </div>
-          <div className="r-hcard" style={cardStyle}>
-            <div style={{color:"#301607",fontWeight:700,fontSize:13,letterSpacing:"0.08em",marginBottom:20}}>GROWTH AREAS</div>
-            {GROWTH_AREAS.map(s=>{const Icon=s.icon;return(
-              <div key={s.name} style={{display:"flex",gap:14,marginBottom:20}}>
-                <div style={{width:40,height:40,borderRadius:10,background:"rgba(89,34,9,0.1)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon size={18} color="#ff7e47"/></div>
-                <div><div style={{color:"#301607",fontWeight:700,fontSize:15,marginBottom:3}}>{s.name}</div><div style={{color:"#301607",fontSize:14}}>{s.desc}</div></div>
-              </div>
-            );})}
-          </div>
-        </div>
-      </div>
-
-      <button onClick={onReset} style={{display:"block",margin:"0 auto",padding:"14px 40px",background:"transparent",border:"1px solid rgba(89,34,9,0.2)",borderRadius:50,color:"#F5E9D6",fontSize:13,letterSpacing:"0.1em",textTransform:"uppercase",cursor:"pointer"}}>
-        ✦ New Reading
+      <p style={{maxWidth:640,margin:"0 auto 28px",textAlign:"center",fontSize:14,lineHeight:1.7,fontStyle:"italic",color:"rgba(255,255,255,0.55)"}}>
+        This profile is for personal interest and reflection. It describes traditional themes for your Sun sign and Life Path number and is not a prediction or professional advice.
+      </p>
+      <button onClick={onReset} style={{display:"block",margin:"0 auto",padding:"14px 40px",background:"transparent",border:"1px solid rgba(255,255,255,0.3)",borderRadius:50,color:"rgba(255,255,255,0.8)",fontSize:13,letterSpacing:"0.1em",textTransform:"uppercase",cursor:"pointer"}}>
+        ✦ New Profile
       </button>
     </div>
   );
@@ -1862,6 +1747,7 @@ export default function App(){
   const [phase,setPhase]=useState("form");
   const [chartData,setChartData]=useState(null);
   const [error,setError]=useState("");
+  const runRef=useRef(0);
 
   // Scroll offset carries over across phase changes (nothing resets it), so
   // without this the loading/results views can open scrolled down wherever
@@ -1870,40 +1756,54 @@ export default function App(){
 
   // Back button returns to form from loading/results phases
   useBackOverride(
-    phase !== "form" ? () => { setPhase("form"); setChartData(null); setError(""); } : null,
+    phase !== "form" ? () => { runRef.current++; setPhase("form"); setChartData(null); setError(""); } : null,
     [phase],
   );
   const up=(k,v)=>setForm(f=>({...f,[k]:v}));
 
   const generate=useCallback(async()=>{
+    if(phase!=="form")return; // ignore double submits
+    if(!requireSignIn())return; // account required to generate a reading
     setError("");
-    if(!form.firstName||!form.day||!form.month||!form.year){
-      setError("Please fill in your first name and date of birth.");
+    const day=+form.day, month=+form.month, year=+form.year;
+    if(!form.firstName.trim()||!form.day||!form.month||!form.year){
+      setError("Please enter your first name and complete date of birth.");
       return;
     }
+    const dt=new Date(year,month-1,day);
+    if(dt.getFullYear()!==year||dt.getMonth()!==month-1||dt.getDate()!==day){
+      setError("That date doesn't exist. Please check the day, month and year.");
+      return;
+    }
+    if(dt>new Date()){
+      setError("Your date of birth can't be in the future.");
+      return;
+    }
+    if(!!form.hour!==!!form.min){
+      setError("Please choose both the hour and the minute of birth, or leave both blank.");
+      return;
+    }
+    const run=++runRef.current;
     setPhase("loading");
-    const name=[form.firstName,form.lastName].filter(Boolean).join(" ");
-    const zodiac=getZodiac(+form.day,+form.month);
+    const name=[form.firstName.trim(),form.lastName.trim()].filter(Boolean).join(" ");
+    const zodiac=getZodiac(day,month);
     const dob=`${form.year}-${String(form.month).padStart(2,"0")}-${String(form.day).padStart(2,"0")}`;
     const lifePath=getLP(dob);
     const time=form.hour&&form.min?`${form.hour}:${form.min} ${form.ampm}`:"";
 
-    let report={};
-    try{
-      report=await fetchBirthChartAI({name,zodiac,lifePath,dob,place:form.place?.city});
-    }catch{/* use fallback data baked into Results */}
-
-    await new Promise(r=>setTimeout(r,5600));
-    setChartData({name,zodiac,lifePath,dob,time,place:form.place,report});
+    // Short pause so the progress steps can be read; the profile itself is computed instantly above.
+    await new Promise(r=>setTimeout(r,1800));
+    if(run!==runRef.current)return; // user went back while loading
+    setChartData({name,zodiac,lifePath,dob,time,place:form.place});
     setPhase("results");
-  },[form]);
+  },[form,phase]);
 
   return(
     <div className="bc-app">
       <Starfield/>
-      <div className="nb" style={{width:700,height:700,top:"-250px",left:"-200px",background:"radial-gradient(circle,rgba(229,138,69,.1),transparent 70%)","--nd":"20s"}}/>
-      <div className="nb" style={{width:500,height:500,bottom:"5%",right:"-100px",background:"radial-gradient(circle,rgba(89,34,9,.1),transparent 70%)","--nd":"25s"}}/>
-      <div className="nb" style={{width:400,height:400,top:"40%",left:"35%",background:"radial-gradient(circle,rgba(89,34,9,.06),transparent 70%)","--nd":"30s"}}/>
+      <div className="nb" style={{width:700,height:700,top:"-250px",left:"-200px",background:"radial-gradient(circle,rgba(229,138,69,.1),transparent 70%)","--nd":"20s"} as CSSProperties}/>
+      <div className="nb" style={{width:500,height:500,bottom:"5%",right:"-100px",background:"radial-gradient(circle,rgba(89,34,9,.1),transparent 70%)","--nd":"25s"} as CSSProperties}/>
+      <div className="nb" style={{width:400,height:400,top:"40%",left:"35%",background:"radial-gradient(circle,rgba(89,34,9,.06),transparent 70%)","--nd":"30s"} as CSSProperties}/>
 
       {phase==="loading"&&<Loading name={[form.firstName,form.lastName].filter(Boolean).join(" ")}/>}
 
@@ -1919,21 +1819,21 @@ export default function App(){
                 <div style={{width:80, height:1, background:"linear-gradient(90deg, rgba(89,34,9,0.6), transparent)"}}></div>
               </div>
               <h1 style={{fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:"clamp(30px,5vw,48px)", fontWeight:700, color:"#301607", letterSpacing:"0.06em", textTransform:"uppercase", lineHeight:1.25, marginBottom:20}}>
-                Your Birth<br/><span style={{color:"#592209"}}>Chart Awaits</span>
+                Your Sun Sign &amp;<br/><span style={{color:"#592209"}}>Life Path Profile</span>
               </h1>
-              <p style={{color:"#301607", fontStyle:"italic", fontSize:18}}>The stars remember the moment you arrived</p>
+              <p style={{color:"#301607", fontStyle:"italic", fontSize:18}}>Enter your birth date to see your Sun sign and Life Path number.</p>
             </div>
 
-            {error&&<div style={{background:"rgba(248,113,113,0.08)", border:"1px solid rgba(248,113,113,0.3)", borderRadius:10, padding:"12px 16px", color:"#9B2C1D", fontSize:14, marginBottom:24, textAlign:"center"}}>⚠ {error}</div>}
+            {error&&<div role="alert" style={{background:"rgba(248,113,113,0.08)", border:"1px solid rgba(248,113,113,0.3)", borderRadius:10, padding:"12px 16px", color:"#9B2C1D", fontSize:14, marginBottom:24, textAlign:"center"}}>⚠ {error}</div>}
 
             <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:20, marginBottom:8}}>
               <div>
-                <label style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>First Name *</label>
-                <input style={bcInputStyle} value={form.firstName} onChange={e=>up("firstName",e.target.value)} placeholder="e.g. Luna"/>
+                <label htmlFor="bc-first" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>First Name *</label>
+                <input id="bc-first" maxLength={60} autoComplete="given-name" style={bcInputStyle} value={form.firstName} onChange={e=>up("firstName",e.target.value)} placeholder="e.g. Luna"/>
               </div>
               <div>
-                <label style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Last Name *</label>
-                <input style={bcInputStyle} value={form.lastName} onChange={e=>up("lastName", e.target.value)} placeholder="e.g. Starlight"/>
+                <label htmlFor="bc-last" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Last Name <span style={{opacity:0.6, fontWeight:400}}>(Optional)</span></label>
+                <input id="bc-last" maxLength={60} autoComplete="family-name" style={bcInputStyle} value={form.lastName} onChange={e=>up("lastName", e.target.value)} placeholder="e.g. Starlight"/>
               </div>
             </div>
 
@@ -1941,20 +1841,20 @@ export default function App(){
 
             <div style={{display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:20, marginBottom:8}}>
               <div>
-                <label style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Day *</label>
-                <select style={bcInputStyle} value={form.day} onChange={e=>up("day",e.target.value)}>
+                <label htmlFor="bc-day" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Day *</label>
+                <select id="bc-day" style={bcInputStyle} value={form.day} onChange={e=>up("day",e.target.value)}>
                   <option value="">DD</option>{DAYS.map(d=><option key={d} value={d}>{String(d).padStart(2,"0")}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Month *</label>
-                <select style={bcInputStyle} value={form.month} onChange={e=>up("month",e.target.value)}>
+                <label htmlFor="bc-month" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Month *</label>
+                <select id="bc-month" style={bcInputStyle} value={form.month} onChange={e=>up("month",e.target.value)}>
                   <option value="">MM</option>{MONTHS.map((m,i)=><option key={m} value={i+1}>{m}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Year *</label>
-                <select style={bcInputStyle} value={form.year} onChange={e=>up("year", e.target.value)}>
+                <label htmlFor="bc-year" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Year *</label>
+                <select id="bc-year" style={bcInputStyle} value={form.year} onChange={e=>up("year", e.target.value)}>
                   <option value="">YYYY</option>{YEARS.map(y=><option key={y} value={y}>{y}</option>)}
                 </select>
               </div>
@@ -1964,30 +1864,30 @@ export default function App(){
 
             <div style={{display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:20, marginBottom:10}}>
               <div>
-                <label style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Hour</label>
-                <select style={bcInputStyle} value={form.hour} onChange={e=>up("hour",e.target.value)}>
+                <label htmlFor="bc-hour" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Hour</label>
+                <select id="bc-hour" style={bcInputStyle} value={form.hour} onChange={e=>up("hour",e.target.value)}>
                   <option value="">HH</option>{HOURS.map(h=><option key={h} value={h}>{h}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Minute</label>
-                <select style={bcInputStyle} value={form.min} onChange={e=>up("min",e.target.value)}>
+                <label htmlFor="bc-min" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Minute</label>
+                <select id="bc-min" style={bcInputStyle} value={form.min} onChange={e=>up("min",e.target.value)}>
                   <option value="">MM</option>{MINS.map(m=><option key={m} value={m}>{m}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Period</label>
-                <select style={bcInputStyle} value={form.ampm} onChange={e=>up("ampm",e.target.value)}>
+                <label htmlFor="bc-ampm" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Period</label>
+                <select id="bc-ampm" style={bcInputStyle} value={form.ampm} onChange={e=>up("ampm",e.target.value)}>
                   <option value="AM">AM</option><option value="PM">PM</option>
                 </select>
               </div>
             </div>
-            <div style={{color:"#592209", fontStyle:"italic", fontSize:14, opacity:0.85, marginBottom:8}}>Leave blank if unknown - your reading will still be powerful</div>
+            <div style={{color:"#592209", fontStyle:"italic", fontSize:14, opacity:0.85, marginBottom:8}}>Optional. Birth time and place are shown on your profile but do not change it.</div>
 
             <BcDivider/>
 
             <div style={{marginBottom:40}}>
-              <label style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Place of Birth <span style={{opacity:0.85, fontWeight:400}}>(Optional)</span></label>
+              <label htmlFor="bc-place" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Place of Birth <span style={{opacity:0.85, fontWeight:400}}>(Optional)</span></label>
               <PlaceInput value={form.place} onChange={v=>up("place",v)}/>
             </div>
 
@@ -2002,11 +1902,12 @@ export default function App(){
               onMouseOver={(e)=>{e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.boxShadow="0 0 40px rgba(255,126,71,0.5)";}}
               onMouseOut={(e)=>{e.currentTarget.style.transform="translateY(0)"; e.currentTarget.style.boxShadow="0 0 30px rgba(255,126,71,0.35)";}}
             >
-              ✦ Reveal My Cosmic Identity ✦
+              ✦ Show My Profile ✦
             </button>
           </div>
         )}
         {phase==="results"&&chartData&&<Results data={chartData} onReset={()=>{setPhase("form");setChartData(null);setForm(emptyForm());}}/>}
+        {(phase==="form"||phase==="results")&&<BirthChartEducation/>}
       </div>
     </div>
   );

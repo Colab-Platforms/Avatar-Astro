@@ -1,7 +1,10 @@
 import { Router, Request, Response } from "express";
 import { createRateLimiter } from "../utils/rateLimit.js";
+import { auth } from "../middleware/authMiddleware.js";
 
 const router = Router();
+// Life path readings and TTS are generated per user and spend provider credits.
+router.use(auth("USER"));
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const MODEL = "google/gemma-4-31b-it:free";
@@ -232,12 +235,15 @@ router.post("/life-path", createRateLimiter({ windowMs: 60_000, max: 10 }), asyn
 - Time of birth: ${tobStr || "not provided"}
 - Place of birth: ${pobStr || "not provided"}
 - Area of interest: ${focus}
+- Today's date: ${new Date().toISOString().slice(0, 10)}
 
 Rules:
 - This is interpretive guidance for reflection, not certain knowledge of the future. Use soft language ("may", "tends to", "could").
 - Do NOT state exact planetary degrees, house positions, or dasha dates; you have not computed a chart. If time/place are missing, do not pretend to know the ascendant.
 - Only give broad time-based themes if you can ground them in general astrological ideas; otherwise set "upcomingPeriods" to an empty array.
 - Never give medical, legal, or financial-product advice. No fear-based or fatalistic statements.
+- Present future-oriented statements as possibilities to reflect on, never as events that will happen. Keep each section specific and non-repetitive; avoid generic filler.
+- "nextSteps" must be practical, realistic actions the person can take in the next few weeks.
 
 Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this structure:
 {
@@ -247,6 +253,7 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
   "personalDevelopment": "2-3 sentences on areas for self-improvement",
   "focusInsight": "2-3 sentences specific to the area of interest (${focus})",
   "upcomingPeriods": [{"period": "a broad timeframe label", "theme": "1-2 sentence theme"}],
+  "nextSteps": ["a practical action for the next few weeks", "another", "another"],
   "reflectionQuestions": ["a question for self-reflection", "another question"]
 }`;
 
@@ -281,6 +288,9 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
         ? result.upcomingPeriods
             .filter((p: any) => p && typeof p.period === "string" && typeof p.theme === "string")
             .slice(0, 6)
+        : [],
+      nextSteps: Array.isArray(result.nextSteps)
+        ? result.nextSteps.filter((q: unknown) => typeof q === "string" && q.trim()).slice(0, 4)
         : [],
       reflectionQuestions: Array.isArray(result.reflectionQuestions)
         ? result.reflectionQuestions.filter((q: unknown) => typeof q === "string").slice(0, 5)

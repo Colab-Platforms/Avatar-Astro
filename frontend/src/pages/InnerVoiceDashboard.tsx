@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from "recharts";
-import { aiChat } from "@/lib/aiClient";
+import { useAuthStore } from "@/store/authStore";
+import { requireSignIn } from "@/lib/authedFetch";
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from "recharts";
+import { ACTIONS, MAX_POINTS, computeDailyScore, pointsFor, localDateKey, recentAverage, scoreMessage, type ScoreEntry } from "@/lib/karmaScore";
 
 
 
@@ -116,16 +118,6 @@ const CSS = `
 const ZODIAC = ["Aries","Taurus","Gemini","Cancer","Leo","Virgo","Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"];
 const NAKSHATRA = ["Ashwini","Bharani","Krittika","Rohini","Mrigashira","Ardra","Punarvasu","Pushya","Ashlesha","Magha","Purva Phalguni","Uttara Phalguni","Hasta","Chitra","Swati","Vishakha","Anuradha","Jyeshtha","Mula","Purva Ashadha","Uttara Ashadha","Shravana","Dhanishtha","Shatabhisha","Purva Bhadrapada","Uttara Bhadrapada","Revati"];
 const DASHAS = ["Sun Dasha","Moon Dasha","Mars Dasha","Rahu Dasha","Jupiter Dasha","Saturn Dasha","Mercury Dasha","Ketu Dasha","Venus Dasha"];
-const ACTIONS = [
-  { id:"mantra", name:"Chant today's prescribed mantra", pts:8, type:"mantra" },
-  { id:"meditation", name:"15 minutes of morning meditation", pts:5, type:"seva" },
-  { id:"truth", name:"Speak only truth today (Satya)", pts:6, type:"seva" },
-  { id:"feed", name:"Feed a cow, dog, or needy person", pts:10, type:"charity" },
-  { id:"fast", name:"Keep today's vrat (if applicable)", pts:12, type:"fast" },
-  { id:"pooja", name:"Perform morning pooja / aarti", pts:9, type:"pooja" },
-  { id:"anger", name:"Did not lose temper today", pts:7, type:"seva" },
-  { id:"charity", name:"Made a charitable donation or seva", pts:11, type:"charity" },
-];
 
 function StarCanvas() {
   const canvasRef = useRef(null);
@@ -168,109 +160,86 @@ function ScoreRing({ score }) {
 }
 
 export default function InnerVoiceDashboard() {
+  const signedIn = useAuthStore((s) => s.isAuthenticated);
   const [profile, setProfile] = useState(()=>{ try{return JSON.parse(localStorage.getItem("iv_profile")||"null")}catch{return null} });
   const [form, setForm] = useState({name:"",dob:"",sign:"",nakshatra:"",dasha:""});
-  const [history, setHistory] = useState(()=>{ try{return JSON.parse(localStorage.getItem("iv_karma_v2")||"[]")}catch{return[]} });
-  const [done, setDone] = useState(()=>{ const today=new Date().toISOString().slice(0,10); try{return JSON.parse(localStorage.getItem(`iv_done_${today}`)||"[]")}catch{return[]} });
-  const [aiData, setAiData] = useState(null);
-  const [loadingAI, setLoadingAI] = useState(false);
+  const [history, setHistory] = useState<ScoreEntry[]>(()=>{ try{return JSON.parse(localStorage.getItem("iv_karma_v2")||"[]")}catch{return[]} });
+  const [done, setDone] = useState<string[]>(()=>{ try{return JSON.parse(localStorage.getItem(`iv_done_${localDateKey()}`)||"[]")}catch{return[]} });
   const [saved, setSaved] = useState(false);
 
   useEffect(()=>{ const s=document.createElement("style"); s.textContent=CSS; document.head.appendChild(s); return()=>{ document.head.removeChild(s); }; },[]);
-  useEffect(()=>{ if(profile && !aiData) loadAI(); },[profile]);
 
-  const saveProfile=()=>{ if(!form.name||!form.sign) return; localStorage.setItem("iv_profile",JSON.stringify(form)); setProfile(form); };
+  const saveProfile=()=>{ if(!form.name.trim()) return; const p={...form,name:form.name.trim()}; try{localStorage.setItem("iv_profile",JSON.stringify(p));}catch{/* storage unavailable */} setProfile(p); };
 
-  const loadAI=async()=>{
-    setLoadingAI(true);
-    const today=new Date().toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
-    try {
-      const res=await aiChat({
-          temperature:0.7, max_tokens:1000,
-          json: true,
-          messages:[
-            {role:"system",content:"You are a Vedic astrology karma calculator. Return ONLY valid JSON."},
-            {role:"user",content:`Calculate karma score for: Name: ${profile.name}, Sun Sign: ${profile.sign}, Nakshatra: ${profile.nakshatra||"Unknown"}, Dasha: ${profile.dasha||"Unknown"}, DOB: ${profile.dob||"Unknown"}, Today: ${today}. Return JSON: {composite (0-100), natalBase (0-40), transitBonus (-20 to +30), behaviorBase (0-30), scoreMessage (2 sentences), currentDasha (string), transitAlerts [{planet,event,impact,tip}], radarData [{subject,value 1-10} for Dharma/Artha/Kama/Moksha/Karma/Seva]}`}
-          ]
-        });
-      const data=await res.json();
-      if(data.error) throw new Error(data.error.message);
-      const parsed=JSON.parse(data.choices?.[0]?.message?.content||"{}");
-      setAiData(parsed);
-    } catch (e) {
-      console.error("[Karma Dashboard] AI scoring failed, using fallback data:", e);
-      setAiData({composite:62,natalBase:28,transitBonus:5,behaviorBase:29,scoreMessage:"Your karma shows moderate alignment. Complete your daily remedies to elevate your score.",currentDasha:"Consult Pandit Ji for your current dasha reading.",transitAlerts:[{planet:"Saturn",event:"Saturn's transit requires patience and discipline",impact:"neutral",tip:"Perform Shani Puja on Saturday"},{planet:"Jupiter",event:"Jupiter blesses your dharmic efforts",impact:"positive",tip:"Wear yellow, donate to education"}],radarData:[{subject:"Dharma",value:6},{subject:"Artha",value:5},{subject:"Kama",value:4},{subject:"Moksha",value:7},{subject:"Karma",value:6},{subject:"Seva",value:5}]});
-    } finally { setLoadingAI(false); }
-  };
+  const toggleAction=(id:string)=>{ if(!requireSignIn()) return; const next=done.includes(id)?done.filter(d=>d!==id):[...done,id]; setDone(next); setSaved(false); try{localStorage.setItem(`iv_done_${localDateKey()}`,JSON.stringify(next));}catch{/* storage unavailable */} };
 
-  const toggleAction=(id)=>{ const today=new Date().toISOString().slice(0,10); const next=done.includes(id)?done.filter(d=>d!==id):[...done,id]; setDone(next); localStorage.setItem(`iv_done_${today}`,JSON.stringify(next)); };
+  const behaviorPts=pointsFor(done);
+  const composite=computeDailyScore(done);
+  const weekAvg=recentAverage(history,7);
 
-  const behaviorPts=done.reduce((s,id)=>s+(ACTIONS.find(a=>a.id===id)?.pts||0),0);
-  const composite=aiData?Math.min(100,aiData.natalBase+aiData.transitBonus+Math.round((behaviorPts/68)*aiData.behaviorBase)):null;
-
-  const saveToday=()=>{ if(!composite) return; const today=new Date().toISOString().slice(0,10); const entry={date:today,composite,behaviorPts,actionsCompleted:done.length}; const updated=[entry,...history.filter(e=>e.date!==today)].slice(0,60); setHistory(updated); localStorage.setItem("iv_karma_v2",JSON.stringify(updated)); setSaved(true); setTimeout(()=>setSaved(false),2500); };
+  const saveToday=()=>{ if(!requireSignIn()) return; const entry={date:localDateKey(),composite,behaviorPts,actionsCompleted:done.length}; const updated=[entry,...history.filter(e=>e.date!==entry.date)].slice(0,60); setHistory(updated); try{localStorage.setItem("iv_karma_v2",JSON.stringify(updated));}catch{/* storage unavailable */} setSaved(true); setTimeout(()=>setSaved(false),2500); };
 
   const lineData=[...history].reverse().slice(-14).map(e=>({date:e.date.slice(5),score:e.composite}));
 
-  if(!profile) return (
+  if(!signedIn) return (
     <div className="ivd-app"><style>{CSS}</style><StarCanvas />
       <div className="ivd-wrap">
-        <Link to="/inner-voice" className="ivd-back">← Inner Voice</Link>
-        <div className="ivd-hdr"><div className="ivd-eyebrow">One-time Setup</div><h1 className="ivd-title">Karma Score</h1><p className="ivd-sub">Your score is calculated from birth chart + today's transits + your daily dharmic actions</p></div>
+        <div className="ivd-hdr"><div className="ivd-eyebrow">Daily Karma Score</div><h1 className="ivd-title">Karma Score</h1><p className="ivd-sub">A simple daily score based on the mindful practices you complete. It is symbolic, meant to encourage consistency.</p></div>
         <div className="ivd-setup">
-          <div className="ivd-setup-title">Your Vedic Profile</div>
-          <div className="ivd-setup-sub">Needed to calculate your natal karma base</div>
-          <div className="ivd-grid2">
-            <div className="ivd-field"><label>Your Name</label><input className="ivd-input" placeholder="Enter your name" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))}/></div>
-            <div className="ivd-field"><label>Date of Birth</label><input className="ivd-input" type="date" value={form.dob} onChange={e=>setForm(f=>({...f,dob:e.target.value}))}/></div>
-            <div className="ivd-field"><label>Sun Sign / Rashi</label><select className="ivd-select" value={form.sign} onChange={e=>setForm(f=>({...f,sign:e.target.value}))}><option value="">Select...</option>{ZODIAC.map(s=><option key={s} value={s}>{s}</option>)}</select></div>
-            <div className="ivd-field"><label>Nakshatra (if known)</label><select className="ivd-select" value={form.nakshatra} onChange={e=>setForm(f=>({...f,nakshatra:e.target.value}))}><option value="">Select...</option>{NAKSHATRA.map(n=><option key={n} value={n}>{n}</option>)}</select></div>
-          </div>
-          <div className="ivd-field" style={{marginBottom:16}}><label>Current Mahadasha (if known)</label><select className="ivd-select" value={form.dasha} onChange={e=>setForm(f=>({...f,dasha:e.target.value}))}><option value="">Select...</option>{DASHAS.map(d=><option key={d} value={d}>{d}</option>)}</select></div>
-          <button className="ivd-setup-btn" onClick={saveProfile} disabled={!form.name||!form.sign}>Calculate My Karma Score →</button>
+          <div className="ivd-setup-title">Sign in to track your score</div>
+          <div className="ivd-setup-sub">Your practices and score history are personal, so they are kept for signed-in members only.</div>
+          <button className="ivd-setup-btn" onClick={()=>requireSignIn()}>Sign in to continue →</button>
         </div>
       </div>
     </div>
   );
 
-  if(loadingAI) return (
+  if(!profile) return (
     <div className="ivd-app"><style>{CSS}</style><StarCanvas />
-      <div className="ivd-wrap"><div className="ivd-loader-wrap"><div className="ivd-spin"/><div className="ivd-ltxt">Calculating from birth chart + transits...</div></div></div>
+      <div className="ivd-wrap">
+        <div className="ivd-hdr"><div className="ivd-eyebrow">One-time Setup</div><h1 className="ivd-title">Karma Score</h1><p className="ivd-sub">A simple daily score based on the mindful practices you complete. It is symbolic, meant to encourage consistency.</p></div>
+        <div className="ivd-setup">
+          <div className="ivd-setup-title">Your Profile</div>
+          <div className="ivd-setup-sub">Only your name is needed. Other details are optional and are not used in the score.</div>
+          <div className="ivd-grid2">
+            <div className="ivd-field"><label>Your Name</label><input className="ivd-input" placeholder="Enter your name" maxLength={60} value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))}/></div>
+            <div className="ivd-field"><label>Date of Birth (optional)</label><input className="ivd-input" type="date" value={form.dob} onChange={e=>setForm(f=>({...f,dob:e.target.value}))}/></div>
+            <div className="ivd-field"><label>Sun Sign / Rashi (optional)</label><select className="ivd-select" value={form.sign} onChange={e=>setForm(f=>({...f,sign:e.target.value}))}><option value="">Select...</option>{ZODIAC.map(s=><option key={s} value={s}>{s}</option>)}</select></div>
+            <div className="ivd-field"><label>Nakshatra (optional)</label><select className="ivd-select" value={form.nakshatra} onChange={e=>setForm(f=>({...f,nakshatra:e.target.value}))}><option value="">Select...</option>{NAKSHATRA.map(n=><option key={n} value={n}>{n}</option>)}</select></div>
+          </div>
+          <button className="ivd-setup-btn" onClick={saveProfile} disabled={!form.name.trim()}>Start Tracking →</button>
+        </div>
+      </div>
     </div>
   );
 
   return (
     <div className="ivd-app"><style>{CSS}</style><StarCanvas />
       <div className="ivd-wrap">
-        <Link to="/inner-voice" className="ivd-back">← Inner Voice</Link>
-        <div className="ivd-hdr"><div className="ivd-eyebrow">Daily Karma Score</div><h1 className="ivd-title">Karma Score</h1><p className="ivd-sub">{profile.name} · {profile.sign}{profile.nakshatra ? ` · ${profile.nakshatra}`:""}</p></div>
+        <div className="ivd-hdr"><div className="ivd-eyebrow">Daily Karma Score</div><h1 className="ivd-title">Karma Score</h1><p className="ivd-sub">{profile.name}{profile.sign ? ` · ${profile.sign}`:""}</p></div>
 
-        {composite!==null && (
-          <div className="ivd-score-section">
-            <ScoreRing score={composite}/>
-            <div className="ivd-score-meta">
-              <div className="ivd-score-name">Today's Composite Karma</div>
-              <div className="ivd-score-msg">{aiData?.scoreMessage}</div>
-              {aiData?.currentDasha && <div className="ivd-score-dasha">↳ {aiData.currentDasha}</div>}
-            </div>
+        <div className="ivd-score-section">
+          <ScoreRing score={composite}/>
+          <div className="ivd-score-meta">
+            <div className="ivd-score-name">Today's Practice Score</div>
+            <div className="ivd-score-msg">{scoreMessage(composite,done.length)}</div>
+            <div className="ivd-score-dasha">{behaviorPts} of {MAX_POINTS} points · {done.length} of {ACTIONS.length} practices</div>
           </div>
-        )}
+        </div>
 
-        {aiData && (
-          <div className="ivd-breakdown">
-            <div className="ivd-bk"><div className="ivd-bk-icon">🌟</div><div className="ivd-bk-val" style={{color:"#592209"}}>{aiData.natalBase}</div><div className="ivd-bk-lbl">Natal Base</div></div>
-            <div className="ivd-bk"><div className="ivd-bk-icon">🪐</div><div className="ivd-bk-val" style={{color:aiData.transitBonus>=0?"#592209":"#D9895F"}}>{aiData.transitBonus>=0?"+":""}{aiData.transitBonus}</div><div className="ivd-bk-lbl">Transit Bonus</div></div>
-            <div className="ivd-bk"><div className="ivd-bk-icon">⚡</div><div className="ivd-bk-val" style={{color:"#592209"}}>{behaviorPts}</div><div className="ivd-bk-lbl">Today's Actions</div></div>
-          </div>
-        )}
+        <div className="ivd-breakdown">
+          <div className="ivd-bk"><div className="ivd-bk-icon">⚡</div><div className="ivd-bk-val" style={{color:"#592209"}}>{behaviorPts}</div><div className="ivd-bk-lbl">Points Today</div></div>
+          <div className="ivd-bk"><div className="ivd-bk-icon">🗓</div><div className="ivd-bk-val" style={{color:"#592209"}}>{weekAvg===null?"–":weekAvg}</div><div className="ivd-bk-lbl">7-Day Average</div></div>
+          <div className="ivd-bk"><div className="ivd-bk-icon">📿</div><div className="ivd-bk-val" style={{color:"#592209"}}>{history.length}</div><div className="ivd-bk-lbl">Days Saved</div></div>
+        </div>
 
         <div className="ivd-actions-card">
-          <div className="ivd-card-title">Today's Karma Actions</div>
-          <div className="ivd-card-sub">Complete these to boost your score — each action has real karma value</div>
+          <div className="ivd-card-title">Today's Practices</div>
+          <div className="ivd-card-sub">Tick what you have done today. Each practice carries the points shown.</div>
           <div className="ivd-actions-list">
             {ACTIONS.map(a=>(
               <div key={a.id} className={`ivd-action-row${done.includes(a.id)?" done":""}`}>
-                <div className={`ivd-action-check${done.includes(a.id)?" done":""}`} onClick={()=>toggleAction(a.id)}>{done.includes(a.id)?"✓":""}</div>
+                <div role="checkbox" aria-checked={done.includes(a.id)} aria-label={a.name} tabIndex={0} className={`ivd-action-check${done.includes(a.id)?" done":""}`} onClick={()=>toggleAction(a.id)} onKeyDown={e=>{ if(e.key===" "||e.key==="Enter"){ e.preventDefault(); toggleAction(a.id); } }}>{done.includes(a.id)?"✓":""}</div>
                 <div className="ivd-action-name">{a.name}</div>
                 <div className="ivd-action-pts">+{a.pts} pts</div>
                 <span className={`ivd-action-type at-${a.type}`}>{a.type}</span>
@@ -278,43 +247,21 @@ export default function InnerVoiceDashboard() {
             ))}
           </div>
           <button className="ivd-save-btn" onClick={saveToday}>Save Today's Score</button>
-          {saved && <div className="ivd-saved">✓ Saved — {composite}/100 karma points</div>}
+          {saved && <div className="ivd-saved" role="status">✓ Saved — {composite}/100</div>}
         </div>
 
-        {aiData?.transitAlerts?.length>0 && (
-          <div className="ivd-transit">
-            <div className="ivd-transit-title">🪐 Today's Planetary Influences</div>
-            {aiData.transitAlerts.map((t,i)=>(
-              <div key={i} className="ivd-t-row">
-                <div className="ivd-t-icon">⭐</div>
-                <div style={{flex:1}}>
-                  <div className="ivd-t-text"><strong>{t.planet}:</strong> {t.event}</div>
-                  <div className="ivd-t-tip">↳ {t.tip}</div>
-                </div>
-                <span className={`ivd-t-impact ti-${t.impact==="positive"?"pos":t.impact==="negative"?"neg":"neu"}`}>{t.impact}</span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {aiData?.radarData && (
-          <div className="ivd-chart">
-            <div className="ivd-card-title" style={{marginBottom:4}}>Purushartha Balance</div>
-            <div className="ivd-card-sub" style={{marginBottom:18}}>The four goals of life — your alignment today</div>
-            <ResponsiveContainer width="100%" height={260}>
-              <RadarChart data={aiData.radarData}>
-                <PolarGrid stroke="rgba(89,34,9,0.05)"/>
-                <PolarAngleAxis dataKey="subject" tick={{fill:"rgba(89,34,9,0.1)",fontSize:11,fontFamily:"'DM Sans', system-ui, sans-serif"}}/>
-                <Radar dataKey="value" stroke="#592209" fill="#592209" fillOpacity={0.12} strokeWidth={2}/>
-              </RadarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
+        <div className="ivd-transit">
+          <div className="ivd-transit-title">How this score works</div>
+          <div className="ivd-t-row"><div style={{flex:1}}>
+            <div className="ivd-t-text">Score = points from the practices you tick ÷ {MAX_POINTS} total points × 100. It is a symbolic habit tracker, not a calculation from your birth chart or planetary positions, and it has no scientific or predictive meaning.</div>
+            <div className="ivd-t-tip">↳ Reflect: which practice felt most meaningful today, and why?</div>
+          </div></div>
+        </div>
 
         {lineData.length>1 && (
           <div className="ivd-chart">
-            <div className="ivd-card-title" style={{marginBottom:4}}>Karma Trend</div>
-            <div className="ivd-card-sub" style={{marginBottom:18}}>Your composite score over 14 days</div>
+            <div className="ivd-card-title" style={{marginBottom:4}}>Trend</div>
+            <div className="ivd-card-sub" style={{marginBottom:18}}>Your saved scores over the last 14 entries</div>
             <ResponsiveContainer width="100%" height={180}>
               <LineChart data={lineData}>
                 <XAxis dataKey="date" tick={{fill:"rgba(89,34,9,0.1)",fontSize:10,fontFamily:"'DM Sans', system-ui, sans-serif"}} axisLine={false} tickLine={false}/>
@@ -328,13 +275,13 @@ export default function InnerVoiceDashboard() {
 
         <div className="ivd-history">
           <div className="ivd-card-title" style={{marginBottom:4}}>Score History</div>
-          <div className="ivd-card-sub" style={{marginBottom:18}}>Last 30 days</div>
-          {history.length===0 ? <div className="ivd-empty">No history yet. Save your first score above.</div> :
+          <div className="ivd-card-sub" style={{marginBottom:18}}>Your most recent saved days</div>
+          {history.length===0 ? <div className="ivd-empty">No history yet. Tick today's practices and save your first score above.</div> :
             history.slice(0,15).map(e=>(
               <div key={e.date} className="ivd-h-row">
                 <div className="ivd-h-date">{new Date(e.date+"T00:00:00").toLocaleDateString("en-IN",{day:"numeric",month:"short"})}</div>
                 <div className="ivd-h-bar"><div className="ivd-h-fill" style={{width:`${e.composite}%`}}/></div>
-                <div><div className="ivd-h-score">{e.composite}</div><div className="ivd-h-acts">{e.actionsCompleted} actions</div></div>
+                <div><div className="ivd-h-score">{e.composite}</div><div className="ivd-h-acts">{e.actionsCompleted ?? 0} practices</div></div>
               </div>
             ))}
         </div>

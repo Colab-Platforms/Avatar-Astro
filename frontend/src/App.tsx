@@ -29,6 +29,7 @@ import SolarSystem from "./pages/SolarSystem";
 import NotFound from "./pages/NotFound";
 import { PublicRoute } from "./routes/PublicRoute";
 import { GoogleOnboardingRoute } from "./routes/ProtectedRoute";
+import SignInPrompt from "./components/SignInPrompt";
 import { AdminRoute } from "./routes/AdminRoute";
 import Loader from "./components/Loader/Loader";
 
@@ -410,6 +411,7 @@ const App = () => {
       <BrowserRouter>
         <Toaster />
         <Sonner />
+        <SignInPrompt />
         <Routes>
           {/* Full-screen standalone pages (no Layout/Navbar) */}
           <Route path="/solar-system" element={<SolarSystem />} />

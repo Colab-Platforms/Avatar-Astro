@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Facebook, Linkedin, Instagram, Twitter, ArrowRight } from 'lucide-react';
+import { subscribeNewsletter } from '@/lib/inquiry';
 
 const exploreLinks = [
   { label: 'Daily Horoscopes', path: '/horoscopes' },
@@ -16,12 +17,14 @@ const resourceLinks = [
   { label: 'FAQ', path: '/faq' },
 ];
 
+// Profile URLs come from env (VITE_SOCIAL_*). An icon is only shown when its URL is configured,
+// so the footer never renders a link that goes nowhere.
 const socialIcons = [
-  { Icon: Facebook, href: '#', label: 'Facebook' },
-  { Icon: Linkedin, href: '#', label: 'LinkedIn' },
-  { Icon: Instagram, href: '#', label: 'Instagram' },
-  { Icon: Twitter, href: '#', label: 'Twitter' },
-];
+  { Icon: Facebook, href: import.meta.env.VITE_SOCIAL_FACEBOOK as string | undefined, label: 'Facebook' },
+  { Icon: Linkedin, href: import.meta.env.VITE_SOCIAL_LINKEDIN as string | undefined, label: 'LinkedIn' },
+  { Icon: Instagram, href: import.meta.env.VITE_SOCIAL_INSTAGRAM as string | undefined, label: 'Instagram' },
+  { Icon: Twitter, href: import.meta.env.VITE_SOCIAL_TWITTER as string | undefined, label: 'Twitter' },
+].filter((s) => Boolean(s.href));
 
 /**
  * Shared footer, gerua on every route. Only the content width differs: the homepage
@@ -31,9 +34,19 @@ const Footer = () => {
   const [email, setEmail] = useState('');
   const home = useLocation().pathname === '/';
 
-  const handleNewsletter = (e: React.FormEvent) => {
+  const [newsletter, setNewsletter] = useState<{ state: 'idle' | 'sending' | 'done' | 'error'; message?: string }>({ state: 'idle' });
+  const handleNewsletter = async (e: React.FormEvent) => {
     e.preventDefault();
-    setEmail('');
+    if (newsletter.state === 'sending') return;
+    setNewsletter({ state: 'sending' });
+    const result = await subscribeNewsletter(email.trim());
+    if (result.ok) {
+      setEmail('');
+      setNewsletter({ state: 'done', message: 'Thanks, we have received your subscription request.' });
+    } else {
+      // Keep the typed address so the visitor can retry.
+      setNewsletter({ state: 'error', message: result.message || 'Something went wrong. Please try again.' });
+    }
   };
 
   const wrap = home ? 'max-w-[1400px]' : 'max-w-[1600px]';
@@ -82,12 +95,15 @@ const Footer = () => {
 
           {/* Social + newsletter */}
           <div className="sm:col-span-2 lg:col-span-1">
+            {socialIcons.length > 0 && (<>
             <p className={colHead} style={{ color: '#F5E9D6' }}>Social</p>
             <div className={`mb-8 flex w-fit gap-3 rounded-2xl border border-[#F5E9D6]/20 bg-[#F5E9D6]/5 p-4`}>
               {socialIcons.map(({ Icon, href, label }) => (
                 <a
                   key={label}
                   href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={label}
                   className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] transition-colors duration-200 border border-[#F5E9D6]/30 bg-[#F5E9D6]/10 text-[#F5E9D6] hover:border-[#E58A45] hover:text-[#E58A45] ${ring}`}
                 >
@@ -95,6 +111,7 @@ const Footer = () => {
                 </a>
               ))}
             </div>
+            </>)}
 
             <p className="mb-3 text-base md:text-lg" style={{ color: dim }}>
               Subscribe to our newsletter
@@ -111,12 +128,18 @@ const Footer = () => {
               />
               <button
                 type="submit"
+                disabled={newsletter.state === 'sending'}
                 aria-label="Subscribe"
                 className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors duration-200 bg-[#E58A45] text-[#301607] hover:bg-[#F5E9D6] ${ring}`}
               >
                 <ArrowRight size={18} />
               </button>
             </form>
+            {newsletter.message && (
+              <p role={newsletter.state === 'error' ? 'alert' : 'status'} className="mt-2 max-w-sm text-sm" style={{ color: newsletter.state === 'error' ? '#FFD2B8' : dim }}>
+                {newsletter.message}
+              </p>
+            )}
           </div>
         </div>
 

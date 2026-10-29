@@ -1,6 +1,13 @@
 import { Router, Request, Response } from "express";
+import { createRateLimiter } from "../utils/rateLimit.js";
+import { auth } from "../middleware/authMiddleware.js";
 
 const router = Router();
+router.use(auth("USER"));
+
+// The Cosmic Blueprint page now calculates everything in the browser and no longer calls this endpoint.
+// It is kept (rate-limited) only so older clients do not break; it still falls back to canned text, so do not build on it.
+router.use(createRateLimiter({ windowMs: 60_000, max: 10 }));
 
 interface NarrativeRequest {
   name: string;

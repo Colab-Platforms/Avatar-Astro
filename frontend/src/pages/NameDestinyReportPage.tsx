@@ -1,10 +1,9 @@
 import { useState } from "react";
 import NameDestinyReport from "@/components/NameDestinyReport";
-import CelebrityCarousel from "@/components/NameDestinyReport/sections/CelebrityCarousel";
 import FeatureIntro from "@/components/FeatureIntro";
-import PremiumHero from "@/components/NameDestinyReport/sections/PremiumHero";
-import StatsRow from "@/components/NameDestinyReport/sections/StatsRow";
-import { zodiacFromDob, lifePathNumber } from "@/lib/numerology";
+import NameNumerologyEducation from "@/components/NameNumerologyEducation";
+import { buildProfile, checkName, type NameProfile } from "@/lib/numerology";
+import { requireSignIn } from "@/lib/authedFetch";
 
 interface FormState {
   firstName: string;
@@ -28,127 +27,127 @@ const inputStyle: React.CSSProperties = {
 
 export default function NameDestinyReportPage() {
   const [form, setForm] = useState<FormState>(emptyForm());
-  const [submitted, setSubmitted] = useState<{ name: string; dob: string; zodiac: string; lifePath: number } | null>(null);
+  const [profile, setProfile] = useState<NameProfile | null>(null);
   const [error, setError] = useState("");
+
+  const today = new Date().toISOString().slice(0, 10);
 
   function up<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
   }
 
-  function handleSubmit() {
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!requireSignIn()) return; // account required to generate a report
     if (!form.firstName.trim() || !form.dob) {
       setError("Please enter your first name and date of birth.");
       return;
     }
+    if (form.dob > today || form.dob < "1900-01-01") {
+      setError("Please enter a valid date of birth (between 1900 and today).");
+      return;
+    }
+    const first = checkName(form.firstName);
+    if (!first.ok) {
+      setError(`First name: ${first.error}`);
+      return;
+    }
+    if (form.lastName.trim()) {
+      const last = checkName(form.lastName);
+      if (!last.ok) {
+        setError(`Last name: ${last.error}`);
+        return;
+      }
+    }
+    const result = buildProfile([form.firstName, form.lastName].filter((p) => p.trim()).join(" "), form.dob);
+    if ("error" in result) {
+      setError(result.error);
+      return;
+    }
     setError("");
-    const name = [form.firstName, form.lastName].filter(Boolean).join(" ");
-    setSubmitted({
-      name,
-      dob: form.dob,
-      zodiac: zodiacFromDob(form.dob),
-      lifePath: lifePathNumber(form.dob),
-    });
-  }
-
-  function scrollToId(id: string) {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setProfile(result);
+    window.scrollTo({ top: 0 });
   }
 
   return (
-    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "20px 24px 100px" }}>
-      {!submitted && (
+    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "20px 24px 40px" }}>
+      {!profile && (
         <>
-          <PremiumHero
-            onStart={() => scrollToId("destiny-form")}
-            onViewSample={() => scrollToId("celebrity-name-changes")}
-          />
+          <header className="mx-auto mb-8 max-w-3xl px-4 pt-10 text-center">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#592209]">Name Numerology</p>
+            <h1 className="mb-4 text-4xl text-[#301607] sm:text-6xl" style={{ fontFamily: "'Astra','Cinzel',serif" }}>
+              Cosmic Blueprint
+            </h1>
+          </header>
 
           <FeatureIntro
             className="mb-4"
-            description="Discover the cosmic influences that may shape your personality, strengths, challenges, and life journey. Cosmic Blueprint uses your name and date of birth to generate a personalized numerology and astrological interpretation."
+            description="Explore what the letters of your name and the digits of your birth date add up to in numerology. Cosmic Blueprint calculates your Destiny, Soul Urge, Personality, Chaldean, Life Path and Birth numbers, shows every step of the working, and gives the traditional meaning of each."
             steps={[
-              { title: "Enter Your Details", text: "Provide your name and date of birth. Your last name is optional." },
-              { title: "Generate Your Reading", text: "Your name and birth date are analysed using the tool's numerology and planetary-ruler logic." },
-              { title: "Explore Your Insights", text: "Review the personalized interpretation and the themes highlighted in your reading." },
+              { title: "Enter Your Details", text: "Provide your name in English letters and your date of birth. Your last name is optional." },
+              { title: "See the Calculations", text: "Each number is worked out from your letters or birth digits, with the arithmetic shown step by step." },
+              { title: "Explore the Meanings", text: "Read the traditional theme for each number, and try other spellings to see how the name numbers change." },
             ]}
-            disclaimer="Readings are interpretive guidance for reflection, not scientific fact or a guarantee of outcomes."
+            disclaimer="Numerology is a traditional belief system and is not scientifically proven. Readings are for reflection, not predictions or advice."
           />
 
-          <StatsRow />
-
-          <div id="destiny-form" style={{ maxWidth: 600, margin: "0 auto", padding: "32px 0 20px", scrollMarginTop: 100 }}>
+          <form id="destiny-form" onSubmit={handleSubmit} noValidate style={{ maxWidth: 600, margin: "0 auto", padding: "32px 0 20px", scrollMarginTop: 100 }}>
             <div style={{ textAlign: "center", marginBottom: 36 }}>
-              <h2 style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: "clamp(24px,3.5vw,34px)", fontWeight: 700, color: "#301607", textTransform: "uppercase", letterSpacing: "0.03em", lineHeight: 1.2, marginBottom: 12 }}>
-                Your Cosmic Blueprint
+              <h2 style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: "clamp(24px,3.5vw,34px)", fontWeight: 700, color: "#301607", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>
+                Your Details
               </h2>
-              <p style={{ color: "rgba(48,22,7,0.8)", fontStyle: "italic", fontSize: 16 }}>
-                Enter your details below to begin your free name analysis
-              </p>
+              <p style={{ color: "#6B4A37", fontStyle: "italic", fontSize: 16 }}>Free with an account. Your details stay in your browser.</p>
             </div>
 
             {error && (
-              <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.3)", borderRadius: 10, padding: "12px 16px", color: "#9B2C1D", fontSize: 14, marginBottom: 24, textAlign: "center" }}>
+              <div role="alert" style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.3)", borderRadius: 10, padding: "12px 16px", color: "#9B2C1D", fontSize: 14, marginBottom: 24, textAlign: "center" }}>
                 ⚠ {error}
               </div>
             )}
 
             <div style={{ background: "rgba(89,34,9,0.2)", border: "1px solid rgba(89,34,9,0.2)", borderRadius: 20, padding: "32px 28px", backdropFilter: "blur(16px)" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2" style={{ marginBottom: 20 }}>
                 <div>
                   <label htmlFor="nd-first" style={{ display: "block", color: "#592209", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>First Name *</label>
-                  <input id="nd-first" style={inputStyle} value={form.firstName} onChange={(e) => up("firstName", e.target.value)} placeholder="e.g. Rohan" />
+                  <input id="nd-first" style={inputStyle} maxLength={60} autoComplete="given-name" value={form.firstName} onChange={(e) => up("firstName", e.target.value)} placeholder="e.g. Rohan" />
                 </div>
                 <div>
-                  <label htmlFor="nd-last" style={{ display: "block", color: "#592209", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>Last Name</label>
-                  <input id="nd-last" style={inputStyle} value={form.lastName} onChange={(e) => up("lastName", e.target.value)} placeholder="e.g. Mehta" />
+                  <label htmlFor="nd-last" style={{ display: "block", color: "#592209", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>Last Name <span style={{ opacity: 0.6, fontWeight: 400 }}>(Optional)</span></label>
+                  <input id="nd-last" style={inputStyle} maxLength={60} autoComplete="family-name" value={form.lastName} onChange={(e) => up("lastName", e.target.value)} placeholder="e.g. Mehta" />
                 </div>
               </div>
 
               <div style={{ marginBottom: 28 }}>
                 <label htmlFor="nd-dob" style={{ display: "block", color: "#592209", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>Date of Birth *</label>
-                <input id="nd-dob" type="date" style={inputStyle} value={form.dob} onChange={(e) => up("dob", e.target.value)} />
+                <input id="nd-dob" type="date" min="1900-01-01" max={today} style={inputStyle} value={form.dob} onChange={(e) => up("dob", e.target.value)} />
               </div>
 
               <button
-                onClick={handleSubmit}
+                type="submit"
                 style={{
                   width: "100%", padding: "20px", background: "#592209", border: "none", borderRadius: 40,
                   color: "#F5E9D6", fontWeight: 800, fontSize: 18, letterSpacing: "0.05em", textTransform: "uppercase",
-                  cursor: "pointer", transition: "transform 0.2s ease, box-shadow 0.2s ease",
-                  boxShadow: "0 0 30px rgba(89,34,9,0.35)",
+                  cursor: "pointer", boxShadow: "0 0 30px rgba(89,34,9,0.35)",
                 }}
-                onMouseOver={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 0 40px rgba(255,126,71,0.5)"; }}
-                onMouseOut={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 0 30px rgba(255,126,71,0.35)"; }}
               >
-                ✦ Reveal My Cosmic Blueprint ✦
+                ✦ Show My Cosmic Blueprint ✦
               </button>
             </div>
-          </div>
+          </form>
         </>
       )}
 
-      {/*
-        Landing-page component — always rendered regardless of report
-        generation/unlock/API state, per product requirement. Sits
-        immediately after the Hero + Input Form and before any report
-        content (which internally contains its own "Everything Included"
-        section further down once generated).
-      */}
-      <div id="celebrity-name-changes" style={{ scrollMarginTop: 90 }}>
-        <CelebrityCarousel />
-      </div>
-
-      {submitted && (
+      {profile && (
         <>
-          <NameDestinyReport name={submitted.name} dob={submitted.dob} zodiac={submitted.zodiac} lifePath={submitted.lifePath} />
+          <NameDestinyReport profile={profile} />
           <button
             onClick={() => {
-              setSubmitted(null);
+              setProfile(null);
               setForm(emptyForm());
             }}
             style={{
               display: "block", margin: "0 auto", padding: "14px 40px", background: "transparent",
-              border: "1px solid rgba(89,34,9,0.2)", borderRadius: 50, color: "#F5E9D6",
+              border: "1px solid rgba(89,34,9,0.3)", borderRadius: 50, color: "#6B4A37",
               fontSize: 13, letterSpacing: "0.1em", textTransform: "uppercase", cursor: "pointer",
             }}
           >
@@ -156,6 +155,8 @@ export default function NameDestinyReportPage() {
           </button>
         </>
       )}
+
+      <NameNumerologyEducation />
     </div>
   );
 }

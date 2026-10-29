@@ -2,9 +2,30 @@ import { forwardRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { GuruMessage } from "./types";
 
+/** Renders paragraphs (blank-line separated) and "- " bullet lists as real elements. */
+function MessageText({ text }: { text: string }) {
+  const blocks = text.split(/\n{2,}/).filter((b) => b.trim());
+  return (
+    <div className="space-y-2.5 break-words">
+      {blocks.map((block, i) => {
+        const lines = block.split("\n").filter((l) => l.trim());
+        if (lines.length > 0 && lines.every((l) => /^\s*[-•*]\s+/.test(l))) {
+          return (
+            <ul key={i} className="list-disc space-y-1 pl-5">
+              {lines.map((l, j) => <li key={j}>{l.replace(/^\s*[-•*]\s+/, "")}</li>)}
+            </ul>
+          );
+        }
+        return <p key={i} className="whitespace-pre-line">{block}</p>;
+      })}
+    </div>
+  );
+}
+
 interface GuruConversationProps {
   messages: GuruMessage[];
   loading: boolean;
+  onRetry?: (text: string) => void;
 }
 
 /**
@@ -14,7 +35,7 @@ interface GuruConversationProps {
  * columns.
  */
 const GuruConversation = forwardRef<HTMLDivElement, GuruConversationProps>(
-  ({ messages, loading }, bottomRef) => (
+  ({ messages, loading, onRetry }, bottomRef) => (
     <div className="flex w-full flex-col gap-5 py-2">
       <AnimatePresence initial={false}>
         {messages.map((msg, i) => (
@@ -41,9 +62,16 @@ const GuruConversation = forwardRef<HTMLDivElement, GuruConversationProps>(
                   : "rounded-tl-sm border border-primary/15 bg-[#FBF5EC] text-[#301607] shadow-[0_2px_16px_rgba(89,34,9,0.12)] [&_a]:text-[#592209] [&_a]:underline [&_strong]:font-semibold [&_strong]:text-[#301607] [&_em]:text-[#301607] [&_blockquote]:border-l-2 [&_blockquote]:border-[#E58A45] [&_blockquote]:pl-3"
               }`}
             >
-              {typeof msg.content === "string"
-                ? msg.content
-                : msg.content?.message || msg.content?.guidance || "…"}
+              <MessageText text={typeof msg.content === "string" ? msg.content : msg.content?.message || msg.content?.guidance || "…"} />
+              {msg.error && msg.retryText && onRetry && (
+                <button
+                  type="button"
+                  onClick={() => onRetry(msg.retryText as string)}
+                  className="mt-2 rounded-full border border-[#FF9D4D]/40 px-3 py-1 text-sm text-[#FF9D4D] hover:bg-[#FF9D4D]/10"
+                >
+                  Try again
+                </button>
+              )}
             </div>
           </motion.div>
         ))}

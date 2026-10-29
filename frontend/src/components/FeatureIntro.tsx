@@ -37,7 +37,7 @@ export default function FeatureIntro({ description, steps, disclaimer, className
             <div className="mb-2 flex items-center gap-2">
               <span
                 aria-hidden="true"
-                className="flex h-7 w-7 items-center justify-center rounded-full border border-[#592209]/50 bg-[#592209]/10 text-sm text-[#D9895F]"
+                className="flex h-7 w-7 items-center justify-center rounded-full border border-[#592209]/50 bg-[#592209]/10 text-sm text-[#592209]"
               >
                 {i + 1}
               </span>

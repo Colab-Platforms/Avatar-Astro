@@ -1043,11 +1043,9 @@
 //komal nsp
 import { useState, useEffect, useRef, useCallback, type CSSProperties } from "react";
 import { useBackOverride } from "../context/NavigationContext";
-import {
-  User, MapPin, ArrowRight, Heart, Brain, Flame, Star, MessageCircle, MessageSquare,
-  Puzzle, TrendingUp, CalendarDays, CheckCircle2, XCircle, Send, Lock,
-  Infinity as InfinityIcon,
-} from "lucide-react";
+import { User, ArrowRight } from "lucide-react";
+import { zodiacSigns } from "@/data/zodiacData";
+import CompatibilityEducation from "@/components/CompatibilityEducation";
 import zodiacAries from "@/assets/zodiac-gold/aries.png";
 import zodiacTaurus from "@/assets/zodiac-gold/taurus.png";
 import zodiacGemini from "@/assets/zodiac-gold/gemini.png";
@@ -1060,6 +1058,7 @@ import zodiacSagittarius from "@/assets/zodiac-gold/sagittarius.png";
 import zodiacCapricorn from "@/assets/zodiac-gold/capricorn.png";
 import zodiacAquarius from "@/assets/zodiac-gold/aquarius.png";
 import zodiacPisces from "@/assets/zodiac-gold/pisces.png";
+import { requireSignIn } from "@/lib/authedFetch";
 
 const css = `
   :root {
@@ -1390,11 +1389,12 @@ document.head.appendChild(styleEl);
 const DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const YEARS = Array.from({ length: 120 }, (_, i) => new Date().getFullYear() - i);
-const HOURS = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"));
-const MINS = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, "0"));
 
-function getZodiac(day, month) {
-  const signs = [
+type Person = { name: string; day: string; month: string; year: string };
+const empty = (): Person => ({ name: "", day: "", month: "", year: "" });
+
+function getZodiac(day: number, month: number) {
+  const signs: [string, number, number][] = [
     ["Capricorn",1,19],["Aquarius",2,18],["Pisces",3,20],["Aries",4,19],
     ["Taurus",5,20],["Gemini",6,20],["Cancer",7,22],["Leo",8,22],
     ["Virgo",9,22],["Libra",10,22],["Scorpio",11,21],["Sagittarius",12,21],["Capricorn",12,31]
@@ -1403,34 +1403,55 @@ function getZodiac(day, month) {
   return "Capricorn";
 }
 
-function getLifePath(dob) {
-  const digits = dob.replace(/-/g, "").split("").map(Number);
-  let sum = digits.reduce((a, b) => a + b, 0);
-  while (sum > 9 && sum !== 11 && sum !== 22) {
-    sum = String(sum).split("").map(Number).reduce((a, b) => a + b, 0);
-  }
-  return sum;
+// ── The method (all deterministic; no scores, no randomness, no AI) ──────────
+// 1. Each person's Western (tropical) Sun sign comes from their birth date.
+// 2. Elements: same element or Fire+Air / Earth+Water are the traditionally harmonious pairings.
+// 3. Aspect: the distance between the two signs around the zodiac (0-6 signs apart) gives the traditional aspect.
+const ELEMENT_OF = Object.fromEntries(zodiacSigns.map(z => [z.name, z.element])) as Record<string, string>;
+const SIGN_INDEX = Object.fromEntries(zodiacSigns.map((z, i) => [z.name, i])) as Record<string, number>;
+
+type Aspect = { distance: number; name: string; tone: string; text: string };
+const ASPECTS: Aspect[] = [
+  { distance: 0, name: "Same sign", tone: "Mirror", text: "You share the same Sun sign, so you tend to react in similar ways and share the same blind spots. Traditionally this brings instant familiarity, and it can feel like looking in a mirror." },
+  { distance: 1, name: "Neighbouring signs", tone: "Different but close", text: "Neighbouring signs sit side by side on the zodiac but have different elements and qualities. Traditionally each partner can find the other a little puzzling at first, with plenty to learn from one another." },
+  { distance: 2, name: "Sextile (two signs apart)", tone: "Supportive", text: "Signs two apart share compatible elements (Fire with Air, or Earth with Water). Traditionally this is a supportive, cooperative link that works well when both put in some effort." },
+  { distance: 3, name: "Square (three signs apart)", tone: "Dynamic", text: "Signs three apart have clashing elements and styles. Traditionally this is a dynamic pairing with friction that can motivate growth when handled with patience." },
+  { distance: 4, name: "Trine (four signs apart)", tone: "Flowing", text: "Signs four apart share the same element. Traditionally this is the most natural fit, with a similar approach to life and an easy understanding." },
+  { distance: 5, name: "Quincunx (five signs apart)", tone: "Needs adjustment", text: "Signs five apart share neither element nor quality. Traditionally there is less common ground, so the pairing asks for more conscious adjustment on both sides." },
+  { distance: 6, name: "Opposition (opposite signs)", tone: "Magnetic opposites", text: "Opposite signs sit across the zodiac from each other. Traditionally they are strongly drawn to what the other has, and the lesson is balancing two contrasting approaches." },
+];
+
+const ELEMENT_NOTES: Record<string, string> = {
+  "Fire+Fire": "You share a fast, enthusiastic approach to life. Traditionally this is a lively match; the thing to watch is two strong wills with little patience.",
+  "Earth+Earth": "You share a practical, steady approach. Traditionally this is a stable match; the thing to watch is getting stuck in routine.",
+  "Air+Air": "You share a love of ideas and conversation. Traditionally this is a mentally stimulating match; the thing to watch is staying in the head and avoiding feelings.",
+  "Water+Water": "You share emotional depth and intuition. Traditionally this is a tender match; the thing to watch is moods feeding each other.",
+  "Air+Fire": "Air feeds Fire. Traditionally this is a lively, energetic and compatible pairing, where ideas fuel action.",
+  "Earth+Water": "Water nourishes Earth. Traditionally this is a supportive, compatible pairing, where feeling meets practicality.",
+  "Earth+Fire": "Fire is spontaneous and Earth is steady. Traditionally this is a contrasting pairing; each can ground or frustrate the other, and it works best with patience for the other's pace.",
+  "Air+Water": "Air is thoughtful and Water is feeling-led. Traditionally this is a contrasting pairing, where talk and emotion need translating for each other.",
+  "Fire+Water": "Fire is outward and Water is inward. Traditionally this is the most contrasting pairing; it asks for care with each other's sensitivities.",
+  "Air+Earth": "Earth is practical and Air is abstract. Traditionally this is a contrasting pairing, where realism and ideas can either complement or talk past each other.",
+};
+
+const HARMONIOUS = new Set(["Fire+Fire", "Earth+Earth", "Air+Air", "Water+Water", "Air+Fire", "Earth+Water"]);
+
+const CONVERSATION_STARTERS = [
+  "What does feeling cared for look like to each of us?",
+  "How do we each prefer to handle disagreements: talk straight away, or take time first?",
+  "What are we each hoping for in the next few years, and where do those hopes overlap?",
+];
+
+function comparePair(sign1: string, sign2: string) {
+  const d = (SIGN_INDEX[sign2] - SIGN_INDEX[sign1] + 12) % 12;
+  const distance = Math.min(d, 12 - d);
+  const aspect = ASPECTS[distance];
+  const e1 = ELEMENT_OF[sign1], e2 = ELEMENT_OF[sign2];
+  const key = [e1, e2].sort().join("+");
+  return { aspect, e1, e2, elementKey: key, elementNote: ELEMENT_NOTES[key], harmonious: HARMONIOUS.has(key) };
 }
 
-function deriveScore(base, name1, name2, seed) {
-  const n = (name1 + name2 + seed).split("").reduce((a, c) => a + c.charCodeAt(0), 0);
-  return Math.min(99, Math.max(52, base + (n % 20) - 10));
-}
-
-async function searchPlaces(q) {
-  if (!q || q.length < 2) return [];
-  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&addressdetails=1`;
-  const res = await fetch(url, { headers: { "Accept-Language": "en", "User-Agent": "SpiritualAIApp/1.0" } });
-  const data = await res.json();
-  return data.map(d => ({
-    display: d.display_name.split(",").slice(0, 3).join(", "),
-    city: d.address?.city || d.address?.town || d.address?.village || d.name,
-    state: d.address?.state || "",
-    country: d.address?.country || "",
-    lat: parseFloat(d.lat),
-    lon: parseFloat(d.lon),
-  }));
-}
+const ZODIAC_IMAGES: Record<string, string> = {Aries:zodiacAries,Taurus:zodiacTaurus,Gemini:zodiacGemini,Cancer:zodiacCancer,Leo:zodiacLeo,Virgo:zodiacVirgo,Libra:zodiacLibra,Scorpio:zodiacScorpio,Sagittarius:zodiacSagittarius,Capricorn:zodiacCapricorn,Aquarius:zodiacAquarius,Pisces:zodiacPisces};
 
 function Starfield() {
   const stars = Array.from({ length: 120 }, (_, i) => ({
@@ -1443,122 +1464,72 @@ function Starfield() {
   return (
     <div className="starfield">
       {stars.map(s => (
-        <div key={s.id} className="star" style={{ left:`${s.x}%`, top:`${s.y}%`, width:s.size, height:s.size, "--d":`${s.d}s`, "--delay":`${s.delay}s`, "--op":s.op }} />
+        <div key={s.id} className="star" style={{ left:`${s.x}%`, top:`${s.y}%`, width:s.size, height:s.size, "--d":`${s.d}s`, "--delay":`${s.delay}s`, "--op":s.op } as CSSProperties} />
       ))}
     </div>
   );
 }
 
-function PlaceInput({ value, onChange }) {
-  const [query, setQuery] = useState(value?.display || "");
-  const [results, setResults] = useState([]);
-  const [open, setOpen] = useState(false);
-  const timer = useRef(null);
-  const handleChange = (e) => {
-    const v = e.target.value; setQuery(v); clearTimeout(timer.current);
-    if (v.length < 2) { setResults([]); return; }
-    timer.current = setTimeout(async () => { const res = await searchPlaces(v); setResults(res); setOpen(res.length > 0); }, 400);
-  };
-  const pick = (r) => { setQuery(r.display); onChange(r); setOpen(false); };
-  return (
-    <div style={{position:"relative"}}>
-      <MapPin size={16} style={{position:"absolute", left:14, top:"50%", transform:"translateY(-50%)", color:"rgba(48,22,7,0.72)", zIndex:1, pointerEvents:"none"}}/>
-      <input value={query} onChange={handleChange} onBlur={() => setTimeout(() => setOpen(false), 200)}
-        placeholder="Enter city or place of birth" style={{ width:"100%", background:"#FBF5EC", border:"1px solid rgba(89,34,9,0.2)", borderBottom:"2px solid rgba(89,34,9,0.5)", borderRadius:10, padding:"14px 16px 14px 38px", color:"rgba(48,22,7,0.75)", fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:15, outline:"none" }} />
-      {open && (
-        <div style={{position:"absolute", top:"calc(100% + 6px)", left:0, right:0, background:"#FBF5EC", border:"1px solid rgba(89,34,9,0.35)", borderRadius:10, zIndex:100, overflow:"hidden", boxShadow:"0 20px 60px rgba(89,34,9,0.2)"}}>
-          {results.map((r, i) => (
-            <div key={i} onMouseDown={() => pick(r)} style={{padding:"10px 14px", cursor:"pointer", fontSize:14, color:"rgba(48,22,7,1)", borderBottom:"1px solid rgba(48,22,7,0.3)"}}
-              onMouseEnter={e=>e.currentTarget.style.background="rgba(255,126,71,0.15)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
-              {r.display}
-              <small style={{display:"block", fontSize:11, color:"rgba(48,22,7,0.75)", marginTop:2}}>{r.lat?.toFixed(4)}, {r.lon?.toFixed(4)}</small>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-const ccInputStyle = {
+const ccInputStyle: CSSProperties = {
   width:"100%", background:"#FBF5EC", border:"1px solid rgba(89,34,9,0.2)",
   borderBottom:"2px solid rgba(89,34,9,0.5)", borderRadius:10, padding:"14px 16px",
   color:"#301607", fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:15, outline:"none",
 };
-const ccLabelStyle:CSSProperties = { display:"block", color:"#592209", fontWeight:700, fontSize:13, letterSpacing:"0.05em", textTransform:"uppercase", marginBottom:10 };
+const ccLabelStyle: CSSProperties = { display:"block", color:"#592209", fontWeight:700, fontSize:13, letterSpacing:"0.05em", textTransform:"uppercase", marginBottom:10 };
 
-function PersonForm({ title, symbol, accentColor, data, onChange }) {
-  const up = (k, v) => onChange({ ...data, [k]: v });
+const formCss = `
+.cc-forms{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px;}
+.cc-hero{display:flex;align-items:center;justify-content:center;gap:clamp(12px,3vw,40px);margin-bottom:48px;}
+.cc-two{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:40px;}
+.cc-portrait{position:relative;width:clamp(120px,24vw,300px);height:clamp(120px,24vw,300px);flex-shrink:1;min-width:0;display:flex;align-items:center;justify-content:center;}
+@media(max-width:760px){.cc-forms,.cc-two{grid-template-columns:1fr}}
+`;
+
+function PersonForm({ idp, title, accentColor, data, onChange }: { idp: string; title: string; accentColor: string; data: Person; onChange: (p: Person) => void }) {
+  const up = (k: keyof Person, v: string) => onChange({ ...data, [k]: v });
   return (
-    <div style={{background:"#FBF5EC", border:`1px solid ${accentColor}33`, borderRadius:20, padding:32}}>
-      <div style={{display:"flex", alignItems:"center", gap:14, marginBottom:28}}>
-        <div style={{width:44, height:44, borderRadius:"50%", background:`${accentColor}22`, display:"flex", alignItems:"center", justifyContent:"center", color:accentColor, fontSize:20, flexShrink:0}}>{symbol}</div>
-        <div style={{fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:20, fontWeight:700, color:"#301607", textTransform:"uppercase", letterSpacing:"0.05em"}}>{title}</div>
+    <div style={{background:"#FBF5EC", border:`1px solid ${accentColor}33`, borderRadius:20, padding:"28px 24px"}}>
+      <div style={{display:"flex", alignItems:"center", gap:14, marginBottom:24}}>
+        <div aria-hidden="true" style={{width:44, height:44, borderRadius:"50%", background:`${accentColor}22`, display:"flex", alignItems:"center", justifyContent:"center", color:accentColor, fontSize:20, flexShrink:0}}>✦</div>
+        <h2 style={{fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:20, fontWeight:700, color:"#301607", textTransform:"uppercase", letterSpacing:"0.05em"}}>{title}</h2>
       </div>
 
       <div style={{marginBottom:20}}>
-        <label style={ccLabelStyle}>Full Name *</label>
+        <label htmlFor={`${idp}-name`} style={ccLabelStyle}>Name *</label>
         <div style={{position:"relative"}}>
           <User size={16} style={{position:"absolute", left:14, top:"50%", transform:"translateY(-50%)", color:"rgba(48,22,7,0.72)", pointerEvents:"none"}}/>
-          <input value={data.name} onChange={e => up("name", e.target.value)} placeholder="Enter full name" style={{...ccInputStyle, paddingLeft:38}} />
+          <input id={`${idp}-name`} maxLength={60} autoComplete="off" value={data.name} onChange={e => up("name", e.target.value)} placeholder="First name or nickname" style={{...ccInputStyle, paddingLeft:38}} />
         </div>
       </div>
 
-      <div style={{marginBottom:20}}>
-        <label style={ccLabelStyle}>Date of Birth *</label>
+      <div>
+        <label htmlFor={`${idp}-day`} style={ccLabelStyle}>Date of Birth *</label>
         <div style={{display:"grid", gridTemplateColumns:"1fr 1fr 1.3fr", gap:10}}>
-          <select value={data.day} onChange={e => up("day", e.target.value)} style={ccInputStyle}>
+          <select id={`${idp}-day`} aria-label={`${title} day of birth`} value={data.day} onChange={e => up("day", e.target.value)} style={ccInputStyle}>
             <option value="">DD</option>
             {DAYS.map(d => <option key={d} value={d}>{String(d).padStart(2,"0")}</option>)}
           </select>
-          <select value={data.month} onChange={e => up("month", e.target.value)} style={ccInputStyle}>
+          <select id={`${idp}-month`} aria-label={`${title} month of birth`} value={data.month} onChange={e => up("month", e.target.value)} style={ccInputStyle}>
             <option value="">MM</option>
             {MONTHS.map((m, i) => <option key={m} value={i+1}>{m}</option>)}
           </select>
-          <select value={data.year} onChange={e => up("year", e.target.value)} style={ccInputStyle}>
+          <select id={`${idp}-year`} aria-label={`${title} year of birth`} value={data.year} onChange={e => up("year", e.target.value)} style={ccInputStyle}>
             <option value="">YYYY</option>
             {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
         </div>
       </div>
-
-      <div style={{marginBottom:20}}>
-        <label style={ccLabelStyle}>Time of Birth <span style={{opacity:0.85, fontWeight:400, textTransform:"none"}}>(Optional)</span></label>
-        <div style={{display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10}}>
-          <select value={data.hour} onChange={e => up("hour", e.target.value)} style={ccInputStyle}>
-            <option value="">HH</option>
-            {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
-          </select>
-          <select value={data.min} onChange={e => up("min", e.target.value)} style={ccInputStyle}>
-            <option value="">MM</option>
-            {MINS.filter((_,i) => i%5===0).map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
-          <select value={data.ampm} onChange={e => up("ampm", e.target.value)} style={ccInputStyle}>
-            <option value="AM">AM</option>
-            <option value="PM">PM</option>
-          </select>
-        </div>
-      </div>
-
-      <div style={{marginBottom:0}}>
-        <label style={ccLabelStyle}>Place of Birth <span style={{opacity:0.85, fontWeight:400, textTransform:"none"}}>(Optional)</span></label>
-        <PlaceInput value={data.place} onChange={v => up("place", v)} />
-      </div>
     </div>
   );
 }
 
-const LOADING_STEPS = [
-  "Reading Birth Charts","Mapping Planetary Positions","Aligning Cosmic Energies",
-  "Matching Soul Frequencies","Calculating Love Compatibility","Analyzing Marriage Potential",
-  "Generating Personalized Insights","Preparing Universe Report",
-];
+const LOADING_STEPS = ["Finding both Sun signs", "Comparing the elements", "Comparing the signs' aspect"];
 
 function LoadingScreen() {
   const [step, setStep] = useState(0);
-  useEffect(() => { const t = setInterval(() => setStep(s => Math.min(s+1,LOADING_STEPS.length-1)), 700); return () => clearInterval(t); }, []);
+  useEffect(() => { const t = setInterval(() => setStep(s => Math.min(s+1,LOADING_STEPS.length-1)), 400); return () => clearInterval(t); }, []);
   return (
-    <div className="loading-screen">
+    <div className="loading-screen" role="status" aria-live="polite">
       <div className="loading-cosmos">
         <div className="orbit-ring"><div className="orbit-dot" style={{ background:"#592209", color:"#F5E9D6" }}/></div>
         <div className="orbit-ring"><div className="orbit-dot" style={{ background:"#592209", color:"#F5E9D6" }}/></div>
@@ -1569,7 +1540,7 @@ function LoadingScreen() {
       <div className="loading-steps">
         {LOADING_STEPS.map((s,i) => (
           <div key={s} className={`loading-step ${i===step?"active":i<step?"done":""}`}>
-            <div className="step-dot"/><span>✨ {s}</span>
+            <div className="step-dot"/><span>{s}</span>
           </div>
         ))}
       </div>
@@ -1577,453 +1548,142 @@ function LoadingScreen() {
   );
 }
 
-// ── WHO LOVES MORE — deterministic from compatibility factors ────────────────
-function computeWhoLovesMore(p1, p2, scores) {
-  // Factors that indicate emotional investment
-  const s = scores;
-
-  // P1 investment signals: emotional score relative to love, high friendship
-  // P2 investment signals: spiritual alignment, physical
-  const p1Base =
-    (s.emotional * 0.35) +
-    (s.love * 0.25) +
-    (s.friendship * 0.2) +
-    (s.marriage * 0.2);
-
-  const p2Base =
-    (s.spiritual * 0.35) +
-    (s.physical * 0.25) +
-    (s.family * 0.2) +
-    (s.financial * 0.2);
-
-  // Name-derived tiebreaker (deterministic)
-  const n1 = p1.name.split("").reduce((a,c)=>a+c.charCodeAt(0),0);
-  const n2 = p2.name.split("").reduce((a,c)=>a+c.charCodeAt(0),0);
-  const nameBias = ((n1 - n2) % 15); // -14 to +14 range
-
-  const raw1 = p1Base + nameBias;
-  const raw2 = p2Base - nameBias;
-  const total = raw1 + raw2;
-  let pct1 = Math.round((raw1 / total) * 100);
-  let pct2 = 100 - pct1;
-
-  // Clamp to 15-85 range (avoid extremes)
-  pct1 = Math.min(85, Math.max(15, pct1));
-  pct2 = 100 - pct1;
-
-  // Determine pattern label
-  const diff = Math.abs(pct1 - pct2);
-  const pattern =
-    diff <= 4  ? "Balanced Love" :
-    diff <= 12 ? "Slightly More Invested" :
-    diff <= 22 ? "Noticeably More Invested" :
-    diff <= 35 ? "Deeply Invested" :
-                 "One-Sided Attraction";
-
-  const patternEmoji =
-    diff <= 4  ? "⚖️" :
-    diff <= 12 ? "💛" :
-    diff <= 22 ? "💕" :
-    diff <= 35 ? "💗" : "❤️‍🔥";
-
-  // Confidence: higher when signals are clear (big diff = more confident)
-  const confidence = Math.min(95, 55 + diff * 1.2);
-
-  // Who loves more
-  const moreInvested = pct1 >= pct2 ? p1.name : p2.name;
-  const lessInvested = pct1 >= pct2 ? p2.name : p1.name;
-  const morePct = Math.max(pct1, pct2);
-  const lessPct = Math.min(pct1, pct2);
-
-  // Insight text
-  const insightMap = [
-    { max: 4,  text: `${p1.name} and ${p2.name} share a beautifully balanced emotional investment. Both are equally committed, creating a foundation of mutual love and stability. This rare equilibrium is one of the strongest indicators of lasting partnership.` },
-    { max: 12, text: `${moreInvested} tends to be slightly more emotionally expressive and invests just a little more in the relationship. ${lessInvested} is deeply caring too — the difference is subtle and reflects complementary love styles rather than imbalance.` },
-    { max: 22, text: `${moreInvested} is noticeably more emotionally invested at this stage, often being the initiator and emotional anchor. ${lessInvested} shows love through actions and loyalty rather than emotional expression. This dynamic can work beautifully when both understand each other's style.` },
-    { max: 35, text: `${moreInvested} carries significantly more of the emotional weight in this relationship. Their deep feelings drive the connection forward. ${lessInvested} values the relationship but expresses it differently — understanding this difference is key to harmony.` },
-    { max: 100, text: `The emotional intensity is strongly skewed toward ${moreInvested}. This doesn't mean ${lessInvested} doesn't care — it reflects a deeply different emotional expression style. Open communication about love languages could transform this dynamic significantly.` },
-  ];
-  const insight = insightMap.find(i => diff <= i.max)?.text || insightMap[insightMap.length-1].text;
-
-  // Intensity labels
-  const intensity = (pct) =>
-    pct >= 75 ? "Deeply Devoted" :
-    pct >= 62 ? "Strongly Invested" :
-    pct >= 52 ? "Warmly Engaged" :
-    pct >= 42 ? "Steadily Present" :
-                "Quietly Caring";
-
-  return { pct1, pct2, pattern, patternEmoji, confidence: Math.round(confidence), moreInvested, morePct, lessInvested, lessPct, insight, intensity1: intensity(pct1), intensity2: intensity(pct2) };
-}
-
-const ZODIAC_IMAGES = {Aries:zodiacAries,Taurus:zodiacTaurus,Gemini:zodiacGemini,Cancer:zodiacCancer,Leo:zodiacLeo,Virgo:zodiacVirgo,Libra:zodiacLibra,Scorpio:zodiacScorpio,Sagittarius:zodiacSagittarius,Capricorn:zodiacCapricorn,Aquarius:zodiacAquarius,Pisces:zodiacPisces};
-
-function ZodiacPortrait({ zodiac, color }) {
-  const img = ZODIAC_IMAGES[zodiac];
+function ZodiacPortrait({ zodiac, color }: { zodiac: string; color: string }) {
   return (
-    <div style={{position:"relative", width:"clamp(160px,30vw,400px)", height:"clamp(160px,30vw,400px)", flexShrink:1, minWidth:0, display:"flex", alignItems:"center", justifyContent:"center"}}>
+    <div className="cc-portrait">
       <div style={{position:"absolute", inset:0, borderRadius:"50%", background:`radial-gradient(circle, ${color}12, transparent 65%)`}}></div>
-      <img src={img} alt={zodiac} style={{position:"relative", width:"96%", height:"96%", objectFit:"contain", filter:`drop-shadow(0 0 14px ${color}33)`}}/>
+      <img src={ZODIAC_IMAGES[zodiac]} alt={`${zodiac} symbol`} style={{position:"relative", width:"96%", height:"96%", objectFit:"contain", filter:`drop-shadow(0 0 14px ${color}33)`}}/>
     </div>
   );
 }
 
-const SCORE_TIERS = [
-  { min:90, label:"Cosmic Soulmates", desc:"An extraordinary connection written in the stars — rare, deep, and destined." },
-  { min:75, label:"Strong Match",     desc:"A powerful connection built on attraction, curiosity, and emotional growth." },
-  { min:60, label:"Promising Pair",   desc:"A hopeful bond with real potential, ready to deepen with time and care." },
-  { min:0,  label:"Growing Bond",     desc:"An early connection still finding its rhythm — patience will reveal its shape." },
-];
+type Result = { p1: Person & { zodiac: string }; p2: Person & { zodiac: string } };
 
-function ScoreRing({ score }) {
-  const r = 80, circ = 2 * Math.PI * r;
-  const [off, setOff] = useState(circ);
-  useEffect(() => { const t = setTimeout(() => setOff(circ - (score / 100) * circ), 200); return () => clearTimeout(t); }, [score]);
-  const tier = SCORE_TIERS.find(t => score >= t.min);
-  return (
-    <div style={{textAlign:"center"}}>
-      <div style={{position:"relative", width:200, height:200, margin:"0 auto"}}>
-        <svg width={200} height={200} viewBox="0 0 180 180" style={{transform:"rotate(-90deg)"}}>
-          <defs>
-            <linearGradient id="ccScoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#ffc94a"/>
-              <stop offset="100%" stopColor="#ff7e47"/>
-            </linearGradient>
-          </defs>
-          <circle cx="90" cy="90" r={r} fill="none" stroke="rgba(89,34,9,0.05)" strokeWidth="10"/>
-          <circle cx="90" cy="90" r={r} fill="none" stroke="url(#ccScoreGrad)" strokeWidth="10" strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={off} style={{transition:"stroke-dashoffset 2s cubic-bezier(.4,0,.2,1)"}}/>
-        </svg>
-        <div style={{position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center"}}>
-          <span style={{fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:52, fontWeight:800, color:"#301607"}}>{score}<span style={{fontSize:20, color:"rgba(48,22,7,0.85)"}}>%</span></span>
-        </div>
-      </div>
-      <div style={{fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:20, color:"#592209", fontWeight:700, marginTop:16, marginBottom:8}}>{tier.label}</div>
-      <div style={{color:"rgba(48,22,7,0.85)", fontSize:15, maxWidth:420, margin:"0 auto"}}>{tier.desc}</div>
-    </div>
-  );
-}
+function Results({ result, onReset }: { result: Result; onReset: () => void }) {
+  const { p1, p2 } = result;
+  const c = comparePair(p1.zodiac, p2.zodiac);
+  const info1 = zodiacSigns.find(z => z.name === p1.zodiac);
+  const info2 = zodiacSigns.find(z => z.name === p2.zodiac);
 
-function EmotionalBalance({ p1, p2, scores }) {
-  const wlm = computeWhoLovesMore(p1, p2, scores);
-  const r = 52, circ = 2 * Math.PI * r;
-  const offset1 = circ - (wlm.pct1 / 100) * circ;
-  const offset2 = circ - (wlm.pct2 / 100) * circ;
-  const ref1 = useRef(null), ref2 = useRef(null);
-  useEffect(() => {
-    const t = setTimeout(() => {
-      if (ref1.current) ref1.current.style.strokeDashoffset = offset1;
-      if (ref2.current) ref2.current.style.strokeDashoffset = offset2;
-    }, 300);
-    return () => clearTimeout(t);
-  }, []);
-  const c1 = "#592209", c2 = "#E58A45";
-  const summary = wlm.pattern === "Balanced Love"
-    ? `${p1.name} and ${p2.name} share an equally balanced emotional investment.`
-    : "Both express love differently — one through emotions, the other through actions.";
-
-  const Ring = ({ name, pct, color, r0, intensity }) => (
-    <div style={{textAlign:"center"}}>
-      <div style={{color, fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:16, fontWeight:700, marginBottom:16, textTransform:"uppercase"}}>{name}</div>
-      <div style={{position:"relative", width:130, height:130, margin:"0 auto"}}>
-        <svg width={130} height={130} viewBox="0 0 120 120" style={{transform:"rotate(-90deg)"}}>
-          <circle cx="60" cy="60" r={r} fill="none" stroke="rgba(89,34,9,0.05)" strokeWidth="9"/>
-          <circle ref={r0} cx="60" cy="60" r={r} fill="none" stroke={color} strokeWidth="9" strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={circ} style={{transition:"stroke-dashoffset 1.8s cubic-bezier(.4,0,.2,1)"}}/>
-        </svg>
-        <div style={{position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center"}}>
-          <span style={{fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:28, fontWeight:800, color}}>{pct}<span style={{fontSize:13}}>%</span></span>
-        </div>
-      </div>
-      <div style={{color:"rgba(48,22,7,0.8)", fontSize:13, marginTop:14, fontStyle:"italic"}}>{intensity}</div>
-    </div>
-  );
+  const cardStyle: CSSProperties = { background:"#FBF5EC", border:"1px solid rgba(89,34,9,0.2)", borderRadius:16, padding:28 };
+  const sectionTitle: CSSProperties = { fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:"clamp(20px,4vw,26px)", color:"#301607", fontWeight:700, textAlign:"center", textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:28 };
+  const label: CSSProperties = { color:"#6B4A37", fontWeight:700, fontSize:13, letterSpacing:"0.08em", textTransform:"uppercase", marginBottom:10 };
+  const pill = (good: boolean): CSSProperties => ({ display:"inline-block", padding:"6px 16px", borderRadius:20, fontSize:14, fontWeight:700, border:`1px solid ${good ? "rgba(47,107,58,0.5)" : "rgba(89,34,9,0.5)"}`, color: good ? "#2F6B3A" : "#9B2C1D", background: good ? "rgba(47,107,58,0.08)" : "rgba(89,34,9,0.08)" });
 
   return (
-    <div style={{background:"#FBF5EC", border:"1px solid rgba(89,34,9,0.2)", borderRadius:20, padding:40}}>
-      <div style={{display:"flex", alignItems:"center", justifyContent:"center", gap:60, flexWrap:"wrap"}}>
-        <Ring name={p1.name} pct={wlm.pct1} color={c1} r0={ref1} intensity={wlm.intensity1}/>
-        <div className="love-hub" aria-hidden="true">
-          <span className="love-hub-halo" />
-          <svg className="love-heart" width={64} height={64} viewBox="0 0 24 24">
-            <defs>
-              <linearGradient id="ebHeartGrad" x1="15%" y1="0%" x2="85%" y2="100%">
-                <stop offset="0%" stopColor="#F3B25F"/>
-                <stop offset="55%" stopColor="#E58A45"/>
-                <stop offset="100%" stopColor="#C2561B"/>
-              </linearGradient>
-            </defs>
-            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="url(#ebHeartGrad)" stroke="#592209" strokeWidth="1.2" strokeLinejoin="round"/>
-            <path d="M6.2 7.6C6.6 6.1 8 5.2 9.4 5.4" fill="none" stroke="#FFF3D6" strokeWidth="1.1" strokeLinecap="round" opacity="0.85"/>
-          </svg>
-          <Star className="love-spark love-spark-1" size={11} color="#E9B872" fill="#E9B872"/>
-          <Star className="love-spark love-spark-2" size={8} color="#F5E9D6" fill="#F5E9D6"/>
-        </div>
-        <Ring name={p2.name} pct={wlm.pct2} color={c2} r0={ref2} intensity={wlm.intensity2}/>
-      </div>
-      <div style={{textAlign:"center", color:"rgba(48,22,7,0.9)", fontSize:15, fontStyle:"italic", marginTop:32}}>{summary}</div>
-    </div>
-  );
-}
-
-const COMPAT_PRESET_QS = [
-  { icon:Heart, text:"Why do we fight?" },
-  { icon:InfinityIcon, text:"Is this long-term?" },
-  { icon:MessageCircle, text:"How can we improve communication?" },
-  { icon:User, text:"What does my partner need emotionally?" },
-];
-
-function getCompatFallback(question, p1, p2, s) {
-  const q = question.toLowerCase();
-  if (q.includes("fight") || q.includes("argue") || q.includes("conflict")) {
-    return `${p1.name} and ${p2.name}, most friction between you likely stems from different emotional processing styles rather than a lack of care. With a ${s.emotional}% emotional compatibility score, small misunderstandings can escalate faster than they should — pausing before reacting, and naming what you actually feel instead of what you assume the other meant, resolves most of it.`;
-  }
-  if (q.includes("long") || q.includes("future") || q.includes("last")) {
-    return `With a ${s.marriage}% long-term potential score, ${p1.name} and ${p2.name} have real staying power — but longevity isn't guaranteed by the stars alone. Consistency, shared goals, and how you handle hard seasons together matter more than the initial spark.`;
-  }
-  if (q.includes("communicat")) {
-    return `Your communication compatibility sits at ${s.emotional}%. The biggest improvement usually comes from timing — raising sensitive topics when you're both calm, not mid-conflict — and reflecting back what you heard before responding.`;
-  }
-  if (q.includes("need") || q.includes("emotional")) {
-    return `${p1.name} tends to need to feel emotionally seen and acknowledged, while ${p2.name} often needs reassurance through consistency and follow-through. Naming these needs directly — instead of expecting the other to guess — closes most emotional gaps quickly.`;
-  }
-  return `${p1.name} and ${p2.name}, your ${s.overall}% overall compatibility suggests a genuinely strong foundation. Like any real connection, the specifics matter less than how you both choose to show up for each other, especially when things get hard.`;
-}
-
-function CompatChat({ p1, p2, scores }) {
-  const [msgs, setMsgs] = useState([{ role:"ai", text:`Ask me anything about ${p1.name} and ${p2.name}'s connection — every answer is based on your actual compatibility scores.` }]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const endRef = useRef(null);
-  const isFirstRender = useRef(true);
-  useEffect(() => {
-    if (isFirstRender.current) { isFirstRender.current = false; return; }
-    endRef.current?.scrollIntoView({ behavior:"smooth", block:"nearest" });
-  }, [msgs]);
-
-  const send = (q?: string) => {
-    const question = q || input.trim();
-    if (!question || loading) return;
-    setInput("");
-    setMsgs(m => [...m, { role:"user", text:question }]);
-    setLoading(true);
-    setTimeout(() => {
-      setMsgs(m => [...m, { role:"ai", text:getCompatFallback(question, p1, p2, scores) }]);
-      setLoading(false);
-    }, 900);
-  };
-
-  return (
-    <div style={{background:"#FBF5EC", border:"1px solid rgba(89,34,9,0.2)", borderRadius:20, padding:28}}>
-      <div style={{display:"flex", gap:10, flexWrap:"wrap", marginBottom:20}}>
-        {COMPAT_PRESET_QS.map(({ icon:Icon, text }) => (
-          <button key={text} onClick={() => !loading && send(text)}
-            style={{display:"flex", alignItems:"center", gap:8, background:"rgba(89,34,9,0.2)", border:"1px solid rgba(89,34,9,0.2)", borderRadius:30, padding:"10px 16px", color:"#301607", fontSize:13, cursor:"pointer"}}>
-            <Icon size={14} color="#ff7e47"/> {text}
-          </button>
-        ))}
-      </div>
-
-      <div style={{maxHeight:280, overflowY:"auto", display:"flex", flexDirection:"column", gap:12, marginBottom:16}}>
-        {msgs.map((m, i) => (
-          <div key={i} style={{
-            alignSelf: m.role === "user" ? "flex-end" : "flex-start", maxWidth:"85%", padding:"12px 16px", borderRadius:12, fontSize:14, lineHeight:1.6,
-            background: m.role === "user" ? "rgba(255,126,71,0.15)" : "rgba(89,34,9,0.05)",
-            border: m.role === "user" ? "1px solid rgba(255,126,71,0.3)" : "1px solid rgba(89,34,9,0.2)",
-            color:"#301607",
-          }}>
-            {m.text}
-          </div>
-        ))}
-        {loading && <div style={{fontSize:13, color:"rgba(48,22,7,0.72)", fontStyle:"italic"}}>Consulting the stars...</div>}
-        <div ref={endRef}/>
-      </div>
-
-      <div style={{display:"flex", gap:10}}>
-        <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && !loading && send()}
-          placeholder="Ask anything about your compatibility..."
-          style={{flex:1, background:"#FBF5EC", border:"1px solid rgba(89,34,9,0.2)", borderBottom:"2px solid rgba(89,34,9,0.5)", borderRadius:10, padding:"14px 16px", color:"rgba(48,22,7,0.75)", fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:14, outline:"none"}}/>
-        <button onClick={() => send()} disabled={loading || !input.trim()}
-          style={{width:48, height:48, borderRadius:"50%", background:"#592209", border:"none", color:"#F5E9D6", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, opacity:loading || !input.trim() ? 0.5 : 1}}>
-          <Send size={18}/>
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function Results({ p1, p2, report, onReset }) {
-  const s = report.scores;
-  const communication = deriveScore(s.emotional, p1.name, p2.name, "comm2");
-
-  const SNAPSHOT = [
-    { icon:Heart,         label:"Love & Romance",         value:s.love,      color:"#9B2C1D", desc:"Deep affection and romantic connection." },
-    { icon:Brain,         label:"Emotional Understanding",value:s.emotional, color:"#592209", desc:"You understand each other well." },
-    { icon:Flame,         label:"Physical Chemistry",     value:s.physical,  color:"#592209", desc:"Strong attraction and natural chemistry." },
-    { icon:Star,          label:"Long-Term Potential",    value:s.marriage,  color:"#592209", desc:"Great potential for a lasting future." },
-    { icon:MessageCircle, label:"Communication",          value:communication,color:"#301607", desc:"Open conversations keep you connected." },
-  ];
-
-  const WORKS_WELL = [
-    { icon:Heart,       title:"Strong Emotional Pull",         desc:"You naturally draw each other in." },
-    { icon:Puzzle,      title:"Different But Complementary",   desc:"Your differences make you stronger together." },
-    { icon:TrendingUp,  title:"Growth-Oriented Bond",          desc:"You inspire each other to grow." },
-  ];
-  const NEEDS_CARE = [
-    { icon:MessageSquare, title:"Communication Gaps", desc:"Misunderstandings can create distance." },
-    { icon:User,          title:"Personal Space",     desc:"Both need room to be independent." },
-    { icon:CalendarDays,  title:"Future Planning",    desc:"Align your goals and long-term vision." },
-  ];
-  const DO_MORE = ["Talk openly", "Respect each other's emotional style", "Build trust through consistency"];
-  const AVOID_L = ["Testing each other's love", "Expecting instant clarity", "Ignoring small issues"];
-
-  const cardStyle = { background:"#FBF5EC", border:"1px solid rgba(89,34,9,0.2)", borderRadius:16, padding:28 };
-  const sectionTitle: CSSProperties = { fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:26, color:"#301607", fontWeight:700, textAlign:"center", textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:36 };
-
-  return (
-    <div style={{maxWidth:1200, margin:"0 auto", padding:"20px 24px 100px", color:"#301607", fontFamily:"'DM Sans', system-ui, sans-serif"}}>
-
-      {/* ── HERO ── */}
+    <div data-testid="cc-results" style={{maxWidth:1100, margin:"0 auto", padding:"20px 20px 100px", color:"#301607", fontFamily:"'DM Sans', system-ui, sans-serif"}}>
+      <style>{formCss}</style>
       <div style={{textAlign:"center", marginBottom:20, paddingTop:20}}>
-        <div style={{fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:"clamp(30px,5vw,48px)", color:"#301607", fontWeight:700, letterSpacing:"0.04em"}}>
+        <h1 style={{fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:"clamp(26px,5vw,48px)", color:"#301607", fontWeight:700, letterSpacing:"0.04em", wordBreak:"break-word"}}>
           {p1.name} <span style={{color:"#592209"}}>✦</span> {p2.name}
-        </div>
+        </h1>
         <div style={{color:"#592209", fontWeight:600, fontSize:15, letterSpacing:"0.05em", textTransform:"uppercase", marginTop:10}}>
-          Universe Compatibility Analysis · {p1.zodiac} & {p2.zodiac}
+          Sun Sign Compatibility · {p1.zodiac} &amp; {p2.zodiac}
         </div>
       </div>
 
-      <div style={{display:"flex", alignItems:"center", justifyContent:"center", gap:"clamp(12px,3vw,40px)", marginBottom:80, flexWrap:"nowrap"}}>
-        <ZodiacPortrait zodiac={p1.zodiac} color="#60a5fa"/>
-        <ScoreRing score={s.overall}/>
-        <ZodiacPortrait zodiac={p2.zodiac} color="#60a5fa"/>
+      <div className="cc-hero">
+        <ZodiacPortrait zodiac={p1.zodiac} color="#592209"/>
+        <div aria-hidden="true" style={{fontSize:32, color:"#592209"}}>✦</div>
+        <ZodiacPortrait zodiac={p2.zodiac} color="#E58A45"/>
       </div>
 
-      {/* ── COMPATIBILITY SNAPSHOT ── */}
-      <div style={{marginBottom:80}}>
-        <div style={sectionTitle}>Compatibility Snapshot</div>
-        <div style={{display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:20}}>
-          {SNAPSHOT.map(m => { const Icon = m.icon; return (
-            <div key={m.label} style={cardStyle}>
-              <div style={{width:48, height:48, borderRadius:"50%", background:`${m.color}22`, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px"}}>
-                <Icon size={22} color={m.color}/>
-              </div>
-              <div style={{color:"#301607", fontWeight:700, fontSize:15, textAlign:"center", marginBottom:10}}>{m.label}</div>
-              <div style={{fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:28, fontWeight:800, color:m.color, textAlign:"center", marginBottom:10}}>{m.value}%</div>
-              <div style={{color:"rgba(48,22,7,0.8)", fontSize:13, textAlign:"center", lineHeight:1.5}}>{m.desc}</div>
-            </div>
-          );})}
-        </div>
+      <div className="r-note" style={{...cardStyle, marginBottom:40, borderColor:"rgba(89,34,9,0.35)"}}>
+        <div style={{...label, color:"#592209"}}>How this comparison was made</div>
+        <p style={{fontSize:16, lineHeight:1.7, color:"#4A2E1F"}}>
+          Each person's Sun sign comes from their birth date. The tool then compares the two signs' elements and the traditional aspect between them. It uses fixed written text, no AI, and it does not give a score or percentage, because no recognised formula turns two Sun signs into a single number. Names are shown only for display and do not affect the result.
+        </p>
       </div>
 
-      {/* ── EMOTIONAL BALANCE ── */}
-      <div style={{marginBottom:80}}>
-        <div style={sectionTitle}>Emotional Balance</div>
-        <EmotionalBalance p1={p1} p2={p2} scores={s}/>
-      </div>
-
-      {/* ── WHAT WORKS / NEEDS CARE ── */}
-      <div style={{marginBottom:80}}>
-        <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:24}}>
-          <div style={cardStyle}>
-            <div style={{color:"#301607", fontWeight:700, fontSize:16, letterSpacing:"0.05em", textTransform:"uppercase", marginBottom:24, textAlign:"center"}}>What Works Well</div>
-            {WORKS_WELL.map(w => { const Icon = w.icon; return (
-              <div key={w.title} style={{display:"flex", gap:14, marginBottom:20}}>
-                <div style={{width:40, height:40, borderRadius:"50%", background:"rgba(229,138,69,0.12)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0}}><Icon size={18} color="#4ade80"/></div>
-                <div><div style={{color:"#301607", fontWeight:700, fontSize:15, marginBottom:3}}>{w.title}</div><div style={{color:"rgba(48,22,7,0.8)", fontSize:14}}>{w.desc}</div></div>
-              </div>
-            );})}
+      <div className="cc-two">
+        {[{p:p1, i:info1}, {p:p2, i:info2}].map(({p,i}) => (
+          <div key={p.name + p.zodiac} style={cardStyle}>
+            <div style={label}>{p.name}</div>
+            <div style={{color:"#301607", fontWeight:800, fontSize:24, marginBottom:6}}>{p.zodiac}</div>
+            {i && <div style={{color:"#6B4A37", fontSize:15, lineHeight:1.6}}>{i.dates} · {i.element} · {i.traits.slice(0,3).join(", ")}</div>}
           </div>
-          <div style={cardStyle}>
-            <div style={{color:"#9B2C1D", fontWeight:700, fontSize:16, letterSpacing:"0.05em", textTransform:"uppercase", marginBottom:24, textAlign:"center"}}>What Needs Care</div>
-            {NEEDS_CARE.map(w => { const Icon = w.icon; return (
-              <div key={w.title} style={{display:"flex", gap:14, marginBottom:20}}>
-                <div style={{width:40, height:40, borderRadius:"50%", background:"rgba(248,113,113,0.12)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0}}><Icon size={18} color="#f87171"/></div>
-                <div><div style={{color:"#301607", fontWeight:700, fontSize:15, marginBottom:3}}>{w.title}</div><div style={{color:"rgba(48,22,7,0.8)", fontSize:14}}>{w.desc}</div></div>
-              </div>
-            );})}
+        ))}
+      </div>
+
+      <div style={{marginBottom:40}}>
+        <div style={sectionTitle}>The Sun Sign Pairing</div>
+        <div className="cc-two" style={{marginBottom:0}}>
+          <div data-testid="cc-aspect" style={cardStyle}>
+            <div style={label}>Aspect between the signs</div>
+            <div style={{color:"#301607", fontWeight:800, fontSize:22, marginBottom:10}}>{c.aspect.name}</div>
+            <div style={{marginBottom:14}}><span style={pill(["Flowing","Supportive","Mirror"].includes(c.aspect.tone))}>{c.aspect.tone}</span></div>
+            <p style={{fontSize:16, lineHeight:1.7, color:"#4A2E1F"}}>{c.aspect.text}</p>
+          </div>
+          <div data-testid="cc-elements" style={cardStyle}>
+            <div style={label}>Element pairing</div>
+            <div style={{color:"#301607", fontWeight:800, fontSize:22, marginBottom:10}}>{c.e1 === c.e2 ? `Two ${c.e1} signs` : `${c.e1} with ${c.e2}`}</div>
+            <div style={{marginBottom:14}}><span style={pill(c.harmonious)}>{c.harmonious ? "Traditionally harmonious" : "Traditionally contrasting"}</span></div>
+            <p style={{fontSize:16, lineHeight:1.7, color:"#4A2E1F"}}>{c.elementNote}</p>
           </div>
         </div>
       </div>
 
-      {/* ── BEST RELATIONSHIP ADVICE ── */}
-      <div style={{marginBottom:80}}>
-        <div style={sectionTitle}>Best Relationship Advice</div>
+      <div style={{marginBottom:40}}>
+        <div style={sectionTitle}>Questions to Talk About Together</div>
         <div style={cardStyle}>
-          <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:32, alignItems:"start"}}>
-            <div>
-              <div style={{color:"#301607", fontWeight:700, fontSize:14, letterSpacing:"0.05em", textTransform:"uppercase", marginBottom:16}}>Do More Of This</div>
-              {DO_MORE.map(t => (<div key={t} style={{display:"flex", alignItems:"center", gap:8, marginBottom:12, fontSize:14, color:"#301607"}}><CheckCircle2 size={16} color="#4ade80"/> {t}</div>))}
-            </div>
-            <div>
-              <div style={{color:"#9B2C1D", fontWeight:700, fontSize:14, letterSpacing:"0.05em", textTransform:"uppercase", marginBottom:16}}>Avoid This</div>
-              {AVOID_L.map(t => (<div key={t} style={{display:"flex", alignItems:"center", gap:8, marginBottom:12, fontSize:14, color:"#301607"}}><XCircle size={16} color="#f87171"/> {t}</div>))}
-            </div>
-          </div>
+          <p style={{fontSize:14, color:"#6B4A37", marginBottom:14}}>These conversation starters are the same for every pair. They are prompts for you both, not part of the astrological result.</p>
+          <ul style={{paddingLeft:20, display:"grid", gap:10, fontSize:16, lineHeight:1.6, color:"#301607"}}>
+            {CONVERSATION_STARTERS.map(q => <li key={q}>{q}</li>)}
+          </ul>
         </div>
       </div>
 
-      {/* ── ASK ABOUT YOUR CONNECTION ── */}
-      <div style={{marginBottom:60}}>
-        <div style={sectionTitle}>Ask About Your Connection</div>
-        <CompatChat p1={p1} p2={p2} scores={s}/>
-      </div>
-
-      <button onClick={onReset} style={{display:"block", margin:"0 auto 16px", padding:"16px 44px", background:"#592209", border:"none", borderRadius:40, color:"#F5E9D6", fontWeight:700, fontSize:16, cursor:"pointer"}}>
-        New Compatibility Reading ✦
+      <p style={{maxWidth:680, margin:"0 auto 28px", textAlign:"center", fontSize:14, lineHeight:1.7, fontStyle:"italic", color:"#6B4A37"}}>
+        Sun sign compatibility is a traditional idea for personal interest and reflection. It does not predict whether a relationship will succeed, and people with any pairing can have a good relationship.
+      </p>
+      <button onClick={onReset} style={{display:"block", margin:"0 auto", padding:"16px 44px", background:"#592209", border:"none", borderRadius:40, color:"#F5E9D6", fontWeight:700, fontSize:16, cursor:"pointer"}}>
+        Compare Another Pair ✦
       </button>
-      <div style={{textAlign:"center", color:"#301607", fontSize:12, display:"flex", justifyContent:"center", gap:16, alignItems:"center"}}>
-        <span style={{display:"flex", alignItems:"center", gap:5}}><Lock size={12}/> AI-Powered</span>
-        <span>·</span><span>Private</span><span>·</span><span>Secure</span>
-      </div>
     </div>
   );
 }
 
-const empty = () => ({ name:"", day:"", month:"", year:"", hour:"", min:"", ampm:"AM", place:null });
+function checkPerson(p: Person, who: string): string | null {
+  if (!p.name.trim() || !p.day || !p.month || !p.year) return `${who}: please enter a name and a complete date of birth.`;
+  const day = +p.day, month = +p.month, year = +p.year;
+  const dt = new Date(year, month - 1, day);
+  if (dt.getFullYear() !== year || dt.getMonth() !== month - 1 || dt.getDate() !== day) return `${who}: that date of birth doesn't exist. Please check the day, month and year.`;
+  if (dt > new Date()) return `${who}: the date of birth can't be in the future.`;
+  return null;
+}
 
 export default function App() {
-  const [p1,setP1] = useState(empty());
-  const [p2,setP2] = useState(empty());
+  const [p1,setP1] = useState<Person>(empty());
+  const [p2,setP2] = useState<Person>(empty());
   const [phase,setPhase] = useState("form");
-  const [report,setReport] = useState(null);
+  const [result,setResult] = useState<Result | null>(null);
   const [error,setError] = useState("");
+  const runRef = useRef(0);
 
-  // Scroll offset carries over across phase changes (nothing resets it), so
-  // without this the loading/results views can open scrolled down wherever
-  // the user had scrolled the (long) form to instead of at the top.
+  // Scroll offset carries over across phase changes, so reset it when the view changes.
   useEffect(() => { window.scrollTo(0, 0); }, [phase]);
 
   // Back button returns to form from loading/results phases
   useBackOverride(
-    phase !== "form" ? () => { setPhase("form"); setReport(null); setError(""); } : null,
+    phase !== "form" ? () => { runRef.current++; setPhase("form"); setResult(null); setError(""); } : null,
     [phase],
   );
 
   const compute = useCallback(async () => {
+    if (phase !== "form") return; // ignore double submits
+    if (!requireSignIn()) return; // account required to generate a reading
     setError("");
-    if (!p1.name||!p2.name||!p1.day||!p1.month||!p1.year||!p2.day||!p2.month||!p2.year) {
-      setError("Please fill in the required fields (Name & Date of Birth) for both persons."); return;
-    }
+    const problem = checkPerson(p1, "Person 1") || checkPerson(p2, "Person 2");
+    if (problem) { setError(problem); return; }
+    const run = ++runRef.current;
     setPhase("loading");
-    const z1=getZodiac(+p1.day,+p1.month), z2=getZodiac(+p2.day,+p2.month);
-    const dob1=`${p1.year}-${String(p1.month).padStart(2,"0")}-${String(p1.day).padStart(2,"0")}`;
-    const dob2=`${p2.year}-${String(p2.month).padStart(2,"0")}-${String(p2.day).padStart(2,"0")}`;
-    const lp1=getLifePath(dob1), lp2=getLifePath(dob2);
-    const seed=p1.name+p2.name+dob1+dob2;
-    const hash=seed.split("").reduce((a,c)=>(a*31+c.charCodeAt(0))&0xffff,0);
-    const base=60+(hash%35);
-    const scores={
-      overall:Math.min(99,base+5), love:deriveScore(base,p1.name,p2.name,"love"),
-      emotional:deriveScore(base,p1.name,p2.name,"emo"), physical:deriveScore(base,p1.name,p2.name,"phys"),
-      friendship:deriveScore(base,p1.name,p2.name,"fri"), marriage:deriveScore(base,p1.name,p2.name,"mar"),
-      financial:deriveScore(base,p1.name,p2.name,"fin"), family:deriveScore(base,p1.name,p2.name,"fam"),
-      spiritual:deriveScore(base,p1.name,p2.name,"spi"),
-    };
-    await new Promise(r=>setTimeout(r,5600));
-    setP1(prev=>({...prev,zodiac:z1,lifePath:lp1}));
-    setP2(prev=>({...prev,zodiac:z2,lifePath:lp2}));
-    setReport({scores});
+    const z1 = getZodiac(+p1.day, +p1.month), z2 = getZodiac(+p2.day, +p2.month);
+    // Short pause so the progress steps can be read; the comparison itself is computed instantly.
+    await new Promise(r => setTimeout(r, 1300));
+    if (run !== runRef.current) return; // user went back while loading
+    setResult({ p1: { ...p1, name: p1.name.trim(), zodiac: z1 }, p2: { ...p2, name: p2.name.trim(), zodiac: z2 } });
     setPhase("results");
-  },[p1,p2]);
+  },[p1,p2,phase]);
 
   return (
     <div className="universe-app">
@@ -2035,39 +1695,35 @@ export default function App() {
       <div className="content" style={{display:phase==="loading"?"none":"block"}}>
         {phase==="form" && (
           <>
+            <style>{formCss}</style>
             <div style={{textAlign:"center", padding:"60px 20px 40px"}}>
-              <div style={{display:"flex", alignItems:"center", justifyContent:"center", gap:16, marginBottom:24}}>
-                <div style={{width:80, height:1, background:"linear-gradient(90deg, transparent, rgba(89,34,9,0.6))"}}></div>
-                <div style={{color:"#301607", fontStyle:"italic", fontSize:15, whiteSpace:"nowrap", letterSpacing:"0.1em", textTransform:"uppercase"}}>
-                  <span style={{color:"#592209"}}>✦</span> Universe Relationship Analyzer <span style={{color:"#592209"}}>✦</span>
-                </div>
-                <div style={{width:80, height:1, background:"linear-gradient(90deg, rgba(89,34,9,0.6), transparent)"}}></div>
+              <div style={{color:"#301607", fontStyle:"italic", fontSize:15, letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:24}}>
+                <span style={{color:"#592209"}}>✦</span> Sun Sign Compatibility <span style={{color:"#592209"}}>✦</span>
               </div>
-              <h1 style={{fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:"clamp(30px,5vw,48px)", fontWeight:700, color:"#301607", letterSpacing:"0.05em", textTransform:"uppercase", lineHeight:1.25, marginBottom:20}}>
+              <h1 style={{fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:"clamp(28px,5vw,48px)", fontWeight:700, color:"#301607", letterSpacing:"0.05em", textTransform:"uppercase", lineHeight:1.25, marginBottom:20}}>
                 Cosmic Compatibility<br/><span style={{color:"#592209"}}>Oracle</span>
               </h1>
-              <p style={{color:"#301607", fontStyle:"italic", fontSize:18}}>Let The Universe Reveal The Truth Of Your Connection</p>
+              <p style={{color:"#301607", fontStyle:"italic", fontSize:18, maxWidth:560, margin:"0 auto"}}>Enter two birth dates to compare the two Sun signs.</p>
             </div>
             <div style={{maxWidth:1000, margin:"0 auto", padding:"20px 24px 80px"}}>
-              {error && <div style={{background:"rgba(248,113,113,0.08)", border:"1px solid rgba(248,113,113,0.3)", borderRadius:10, padding:"12px 16px", color:"#9B2C1D", fontSize:14, marginBottom:24, textAlign:"center"}}>⚠ {error}</div>}
-              <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:24, marginBottom:32}}>
-                <PersonForm title="Divine Feminine" symbol="♀" accentColor="#592209" data={p2} onChange={setP2}/>
-                <PersonForm title="Divine Masculine" symbol="♂" accentColor="#60a5fa" data={p1} onChange={setP1}/>
+              {error && <div role="alert" style={{background:"rgba(248,113,113,0.08)", border:"1px solid rgba(248,113,113,0.3)", borderRadius:10, padding:"12px 16px", color:"#9B2C1D", fontSize:14, marginBottom:24, textAlign:"center"}}>⚠ {error}</div>}
+              <div className="cc-forms">
+                <PersonForm idp="cc1" title="Person 1" accentColor="#60a5fa" data={p1} onChange={setP1}/>
+                <PersonForm idp="cc2" title="Person 2" accentColor="#592209" data={p2} onChange={setP2}/>
               </div>
               <button
                 onClick={compute}
-                style={{display:"flex", alignItems:"center", justifyContent:"center", gap:8, width:"100%", maxWidth:420, margin:"0 auto", padding:"18px", background:"#592209", border:"none", borderRadius:40, color:"#F5E9D6", fontWeight:700, fontSize:16, cursor:"pointer", transition:"transform 0.2s ease, box-shadow 0.2s ease"}}
-                onMouseOver={e=>{e.currentTarget.style.transform="translateY(-2px)";}}
-                onMouseOut={e=>{e.currentTarget.style.transform="translateY(0)";}}
+                style={{display:"flex", alignItems:"center", justifyContent:"center", gap:8, width:"100%", maxWidth:420, margin:"0 auto", padding:"18px", background:"#592209", border:"none", borderRadius:40, color:"#F5E9D6", fontWeight:800, fontSize:17, letterSpacing:"0.05em", textTransform:"uppercase", cursor:"pointer"}}
               >
-                Begin Journey <ArrowRight size={18}/>
+                Compare Signs <ArrowRight size={18}/>
               </button>
             </div>
           </>
         )}
-        {phase==="results" && report && (
-          <Results p1={p1} p2={p2} report={report} onReset={()=>{setPhase("form");setReport(null);setP1(empty());setP2(empty());}}/>
+        {phase==="results" && result && (
+          <Results result={result} onReset={()=>{setPhase("form");setResult(null);setP1(empty());setP2(empty());}}/>
         )}
+        {(phase==="form" || phase==="results") && <CompatibilityEducation/>}
       </div>
     </div>
   );

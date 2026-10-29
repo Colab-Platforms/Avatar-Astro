@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Search, Users, MapPin, Play, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import DevotionLayout from '@/components/DevotionLayout';
+import PartnershipModal from '@/components/PartnershipModal';
 import { liveTemples as staticTemples, streamCategories, formatViewers, type StreamCategory, type LiveTemple } from '@/data/liveStreams';
 import { useDarshanTemples } from '@/hooks/useDarshanTemples';
 import { useDarshanLiveEvents } from '@/hooks/useDarshanLiveEvents';
@@ -111,6 +112,7 @@ const TempleCard = ({ temple, index }: { temple: LiveTemple; index: number }) =>
 
 // ── Page ───────────────────────────────────────────────────────────────────────
 const DarshanPage = () => {
+  const [partnerOpen, setPartnerOpen] = useState(false);
   const [query, setQuery]    = useState('');
   const [active, setActive]  = useState<StreamCategory | 'All'>('All');
 
@@ -146,10 +148,6 @@ const DarshanPage = () => {
         {/* ── HERO ──────────────────────────────────────────────────────── */}
         <section className="text-center" style={{ paddingTop: 56, paddingBottom: 56, paddingLeft: 48, paddingRight: 48 }}>
           <div style={{ maxWidth: 780, margin: '0 auto' }}>
-            <Link to="/avatar-live" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#592209', textDecoration: 'none', fontWeight: 600, marginBottom: 24, letterSpacing: '0.05em' }}>
-              ← Live
-            </Link>
-
             <div className="flex items-center justify-center gap-3 mb-5">
               <div style={{ height: 1, width: 56, background: 'linear-gradient(to right, transparent, #FBF5EC)' }} />
               <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.32em', color: '#592209', textTransform: 'uppercase' }}>✦ Live Streams ✦</p>
@@ -316,7 +314,7 @@ const DarshanPage = () => {
               <p style={{ fontSize: 17, color: 'rgba(48,22,7,0.55)', maxWidth: 460 }}>
                 We partner with temples across India to bring darshan to devotees worldwide. Contact us to add your temple.
               </p>
-              <button style={{
+              <button type="button" onClick={() => setPartnerOpen(true)} style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
                 background: '#F5E9D6',
                 color: '#301607', fontSize: 13, fontWeight: 700,
@@ -330,6 +328,7 @@ const DarshanPage = () => {
           </div>
         </section>
       </div>
+      <PartnershipModal open={partnerOpen} onOpenChange={setPartnerOpen} />
     </DevotionLayout>
   );
 };

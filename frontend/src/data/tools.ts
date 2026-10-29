@@ -11,7 +11,7 @@ export const tools: AstrologyTool[] = [
   {
     title: "Birth Chart",
     description:
-      "Generate your complete birth chart with detailed astrological insights.",
+      "Enter your birth date to see your Sun sign, Life Path number and a written profile of traditional themes.",
     image: "/images/tools/birth-chart.jpg",
     button: "Generate",
     path: "/birth-chart",
@@ -27,7 +27,7 @@ export const tools: AstrologyTool[] = [
   {
     title: "Compatibility",
     description:
-      "Discover relationship compatibility using advanced astrology matching.",
+      "Compare two Sun signs to see how their elements and aspects traditionally fit together.",
     image: "/images/tools/compatibility.jpg",
     button: "Check Now",
     path: "/compatibility",
@@ -35,7 +35,7 @@ export const tools: AstrologyTool[] = [
   {
     title: "Palm Reading",
     description:
-      "Upload your palm and receive an AI-generated palm analysis.",
+      "Upload a palm photo or use your camera to find your hand shape: Earth, Air, Water or Fire.",
     image: "/images/tools/palm-reading.jpg",
     button: "Analyze",
     path: "/palm-reading",
@@ -43,7 +43,7 @@ export const tools: AstrologyTool[] = [
   {
     title: "Cosmic Blueprint",
     description:
-      "Explore name and birth-date numerology insights into your personality and life journey.",
+      "Calculate your name and birth-date numbers, with every step of the working shown.",
     image: "/placeholders/Cosmic-Blueprint.webp",
     button: "Explore Now",
     path: "/name-destiny-report",

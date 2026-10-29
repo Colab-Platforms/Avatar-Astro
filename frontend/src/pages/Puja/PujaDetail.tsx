@@ -168,11 +168,6 @@ const PujaDetail = () => {
     <div className="pt-24 pb-24 lg:pb-16 relative z-10">
       <div className="container mx-auto px-6 lg:px-16">
 
-        {/* Back */}
-        <Link to="/puja" className="inline-flex items-center gap-2 text-sm text-primary/70 hover:text-primary mb-10 transition-colors font-display tracking-wider">
-          <ArrowLeft className="w-4 h-4" /> Back to all temples
-        </Link>
-
         {/* ══════════════════════════════════════════════════════
             HERO — two column
         ══════════════════════════════════════════════════════ */}

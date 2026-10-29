@@ -1,3 +1,4 @@
+import { OPENROUTER_MODEL } from '../config/aiModels.js';
 import { Request, Response } from 'express';
 import axios from 'axios';
 
@@ -40,7 +41,7 @@ Please answer the user's question about their birth chart in a helpful, friendly
     const response = await axios.post(
       `${OPENROUTER_BASE_URL}/chat/completions`,
       {
-        model: 'openai/gpt-4-turbo-preview',
+        model: OPENROUTER_MODEL,
         messages: [
           {
             role: 'system',

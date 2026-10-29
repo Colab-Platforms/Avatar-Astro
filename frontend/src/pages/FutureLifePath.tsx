@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Compass, RotateCcw, Pencil, Loader2 } from "lucide-react";
 import FeatureIntro from "@/components/FeatureIntro";
 import { API_BASE_URL } from "@/lib/api";
+import { authedFetch, SignInRequiredError } from "@/lib/authedFetch";
 
 const FOCUS_OPTIONS = [
   { value: "general", label: "General life direction" },
@@ -19,6 +20,7 @@ interface LifePathResult {
   personalDevelopment?: string;
   focusInsight?: string;
   upcomingPeriods?: { period: string; theme: string }[];
+  nextSteps?: string[];
   reflectionQuestions?: string[];
 }
 
@@ -42,7 +44,8 @@ export default function FutureLifePath() {
   const [error, setError] = useState("");
   const [result, setResult] = useState<LifePathResult | null>(null);
 
-  const today = new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
   async function generate() {
     if (!dob) {
@@ -56,16 +59,24 @@ export default function FutureLifePath() {
     setError("");
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/inner-voice/life-path`, {
+      const res = await authedFetch(`${API_BASE_URL}/inner-voice/life-path`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ dob, tob: tob || undefined, pob: pob.trim() || undefined, focus }),
       });
       const data = await res.json().catch(() => ({}));
+      if (res.status === 429) {
+        setError("Too many readings requested. Please wait a minute and try again.");
+        return;
+      }
       if (!res.ok) throw new Error(data?.error || "Request failed");
       if (!data || !data.lifePathOverview) throw new Error("Empty reading");
       setResult(data);
     } catch (e) {
+      if (e instanceof SignInRequiredError) {
+        setError("Please sign in to generate your reading.");
+        return;
+      }
       console.error("[Future Life Path Prediction] request failed:", e);
       setError("We couldn't generate your reading right now. Please try again in a moment.");
     } finally {
@@ -76,13 +87,6 @@ export default function FutureLifePath() {
   return (
     <div className="min-h-screen bg-[#FBF5EC] px-4 pb-24 pt-24 text-foreground">
       <div className="mx-auto max-w-3xl">
-        <Link
-          to="/inner-voice"
-          className="mb-8 inline-block text-xs uppercase tracking-[0.2em] text-[#592209]/70 hover:text-[#592209] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#592209]"
-        >
-          ← Inner Voice
-        </Link>
-
         <header className="mb-8 text-center">
           <Compass aria-hidden="true" className="mx-auto mb-3 text-[#592209]" size={36} />
           <h1
@@ -217,6 +221,17 @@ export default function FutureLifePath() {
               </section>
             )}
 
+            {!!result.nextSteps?.length && (
+              <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 sm:p-6">
+                <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-[#D9895F]">Practical Next Steps</h2>
+                <ul className="list-disc space-y-2 pl-5 text-base text-white/85">
+                  {result.nextSteps.map((s, i) => (
+                    <li key={i}>{s}</li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
             {!!result.upcomingPeriods?.length && (
               <section className="rounded-2xl border border-primary/15 bg-card p-5 sm:p-6">
                 <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-[#592209]">Upcoming Periods</h2>
@@ -242,6 +257,11 @@ export default function FutureLifePath() {
               </section>
             )}
 
+            <p className="px-2 text-center text-xs text-white/60">
+              Based on: your date of birth{tob ? ", time of birth" : ""}
+              {pob.trim() ? ", place of birth" : ""}. {!tob || !pob.trim() ? "Without a birth time and place, an ascendant or house-based reading is not possible, so this stays general. " : ""}
+              No birth chart was calculated.
+            </p>
             <p className="px-2 text-center text-xs italic text-foreground/70">
               This reading is interpretive guidance for reflection, not a prediction of certain outcomes.
             </p>

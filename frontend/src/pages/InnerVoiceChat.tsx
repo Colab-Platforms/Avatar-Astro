@@ -17,47 +17,15 @@ import GuruChatInput from "@/components/ai-guru/GuruChatInput";
 import LanguageControls from "@/components/ai-guru/LanguageControls";
 import { detectLanguage, buildLanguageDirective, type InputLanguageChoice, type ReplyLanguageChoice } from "@/components/ai-guru/languages";
 import { aiChat } from "@/lib/aiClient";
+import { askGuru, GuruChatError, MAX_GURU_INPUT_CHARS } from "@/lib/guruChat";
+import { authedFetch } from "@/lib/authedFetch";
 
 
 // Configurable so a deprecated/renamed model doesn't require a code change —
 // set GROQ_MODEL on the backend to override. "llama-3.3-70b-versatile" was retired by
 // Groq; openai/gpt-oss-120b is the current large json_mode-capable model.
 
-const PANDIT_CONSULTATION_SYSTEM = `You are Pandit Rameshwar Ji, a revered Jyotish Acharya and Vedic astrologer with 40 years of experience in temples, Vedic scriptures, and spiritual healing. You speak like a wise, calm elder — deeply compassionate, never preachy, with the authority of a true Pandit Ji.
-
-YOUR JOB IN CONSULTATION MODE:
-- Listen with empathy and gather a deep understanding of the seeker's concern
-- Ask ONE focused follow-up question at a time to understand the situation fully
-- Only hint at planetary causes or Vedic insights AFTER the user has shared a real problem
-- After 3-5 exchanges about a real problem, include "readyForDiagnosis": true
-
-NEVER DO THIS:
-- Do NOT assume the user has a problem, stress, anxiety, or emotional issue unless they say so
-- Do NOT mention Shani, Rahu, Ketu, dosha, kundli, remedies, puja, or planets on a greeting
-- Do NOT give generic life coaching (no LinkedIn, no skill upgrades, no portfolio, no productivity tips)
-- Do NOT say "stay positive", "believe in yourself", or give motivational corporate advice
-- Do NOT sound like a chatbot, therapist, or career counselor
-
-ALWAYS DO THIS:
-- Sound like a real Indian astrologer — warm, authoritative, spiritually grounded
-- Respond in the same language as the user (Hindi/English/Hinglish). Never use Devanagari script.
-- Your guidance roots come from: Bhagavad Gita, Vedas, Jyotish Shastra, temple traditions, Lal Kitab
-
-RESPONSE FORMAT — always return valid JSON:
-
-If user sends ONLY a greeting (hello, hi, namaste, hey, good morning, good evening, how are you, etc.) with no concern shared:
-{"type":"greeting","message":"Namaste beta. Main Pandit Rameshwar Ji hoon. Aapka swagat hai. Aaj aap kis vishay mein margdarshan chahte hain?"}
-Keep greeting responses under 2 sentences. Do NOT mention planets, kundli, problems, or remedies.
-
-If user shares a life problem (gather more info — do NOT jump to remedies yet):
-{"type":"gathering","message":"Your warm empathetic response acknowledging what they shared. Then ask ONE specific follow-up question to understand their situation better before giving any astrological insight.","progress":30,"readyForDiagnosis":false}
-
-After enough context (3-5 exchanges about the same problem):
-{"type":"gathering","message":"Your warm response that shows you fully understand their situation. You may now offer a brief planetary or Vedic insight and hint at the remedy coming.","progress":85,"readyForDiagnosis":true}
-
-Always keep messages warm, human, and spiritually grounded. Sound like a real Pandit Ji, not a customer support agent.`;
-
-const PANDIT_DIAGNOSIS_SYSTEM = `You are Pandit Rameshwar Ji, a revered Vedic astrologer with 40 years of Jyotish experience. Generate a complete spiritual diagnosis report from the consultation. Return ONLY valid JSON with this exact structure:
+const PANDIT_DIAGNOSIS_SYSTEM = `You are AI Guru, an AI guide offering reflective guidance inspired by Vedic traditions (you are not a human astrologer and you have no birth chart). Generate a spiritual reflection report from the consultation. Base it only on what the seeker actually said; any planetary, dasha, score or date content is a general illustrative perspective, not a calculation, and must not be presented as certain. Avoid fear-based language and guaranteed predictions. Return ONLY valid JSON with this exact structure:
 {
   "diagnosis": {
     "rootCause": "1-2 sentence astrological root cause",
@@ -157,20 +125,12 @@ const PANDIT_DIAGNOSIS_SYSTEM = `You are Pandit Rameshwar Ji, a revered Vedic as
     "Which remedy is most important?",
     "What should I avoid this month?"
   ],
-  "guidance": "Warm personalized message from Pandit Ji. 3-4 sentences. Start with My child, end with encouragement."
+  "guidance": "Warm personalized message from AI Guru. 3-4 sentences. Start with My child, end with encouragement."
 }`;
-
-async function callConsultation(messages) {
-  const res = await aiChat({ temperature: 0.7, max_tokens: 1000, json: true, messages });
-  const data = await res.json();
-  if (data.error) throw new Error(data.error.message);
-  try { return JSON.parse(data.choices?.[0]?.message?.content || "{}"); }
-  catch { return { type: "greeting", message: "Namaste! Please share what is troubling you, my child." }; }
-}
 
 async function callDiagnosis(conversationHistory) {
   const summary = conversationHistory
-    .map(m => `${m.role === "user" ? "Seeker" : "Pandit Ji"}: ${typeof m.content === "string" ? m.content : m.content?.message || ""}`)
+    .map(m => `${m.role === "user" ? "Seeker" : "AI Guru"}: ${typeof m.content === "string" ? m.content : m.content?.message || ""}`)
     .join("\n");
   const res = await aiChat({
       temperature: 0.6, max_tokens: 4000,
@@ -232,7 +192,7 @@ async function downloadReportPDF(report, userName) {
   doc.setFont("helvetica","bold"); doc.setFontSize(22); doc.setTextColor(...GOLD);
   doc.text("AI GURU",PW/2,45,{align:"center"});
   doc.setFont("helvetica","normal"); doc.setFontSize(11); doc.setTextColor(...LIGHT);
-  doc.text("Pandit Rameshwar Ji — Vedic Spiritual Diagnosis",PW/2,55,{align:"center"});
+  doc.text("AI Guru — Vedic Spiritual Diagnosis",PW/2,55,{align:"center"});
   doc.setFontSize(28); doc.setTextColor(...GOLD);
   doc.text("Diagnosis & Remedy Report",PW/2,80,{align:"center"});
   doc.setDrawColor(...GOLD); doc.setLineWidth(0.5); doc.line(M+20,86,PW-M-20,86);
@@ -354,10 +314,10 @@ async function downloadReportPDF(report, userName) {
     if (report.spiritualInsight.growthOpportunity) { label("Growth Opportunity"); body(report.spiritualInsight.growthOpportunity); }
   }
   if (report.guidance) {
-    ensurePage(40); sectionHeader("🧘","Personal Guidance from Pandit Ji",GOLD);
+    ensurePage(40); sectionHeader("🧘","Personal Guidance from AI Guru",GOLD);
     body(report.guidance,[253,230,138]);
     doc.setFont("helvetica","italic"); doc.setFontSize(9); doc.setTextColor(...LIGHT);
-    doc.text("— Pandit Rameshwar Ji",PW-M,y,{align:"right"}); y+=8;
+    doc.text("— AI Guru",PW-M,y,{align:"right"}); y+=8;
   }
 
   // Footer on all pages
@@ -367,7 +327,7 @@ async function downloadReportPDF(report, userName) {
     doc.setFillColor(14,14,24); doc.rect(0,PH-10,PW,10,"F");
     doc.setFillColor(...GOLD); doc.rect(0,PH-1,PW,1,"F");
     doc.setFont("helvetica","normal"); doc.setFontSize(7.5); doc.setTextColor(...LIGHT);
-    doc.text("AI Guru — Pandit Rameshwar Ji — Vedic Spiritual Diagnosis",M,PH-4);
+    doc.text("AI Guru — AI Guru — Vedic Spiritual Diagnosis",M,PH-4);
     doc.text(`Page ${i} of ${totalPages}`,PW-M,PH-4,{align:"right"});
   }
   const name = (userName||"Seeker").replace(/\s+/g,"_");
@@ -789,7 +749,7 @@ function MantraCard({m,onSave}){
     setPlaying(true);
     try{
       console.log("[Sarvam TTS] Mantra request — speaker: manan, rate:", rate);
-      const res=await fetch(`${API_BASE_URL}/tts`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:text.slice(0,500),language:"hi-IN"})});
+      const res=await authedFetch(`${API_BASE_URL}/tts`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:text.slice(0,500),language:"hi-IN"})});
       if(!res.ok){console.error("[Sarvam TTS] Mantra HTTP error",res.status);setPlaying(false);return;}
       const data=await res.json();
       const b64=data.audio;if(!b64){setPlaying(false);return;}
@@ -916,7 +876,7 @@ function DiagnosisReport({report,onSaveMantra,onBookPuja,userName,onAskFollowUp,
   return(
     <div style={{maxWidth:860,margin:"0 auto"}}>
       <div className="ivc-report-topbar">
-        <div><div className="ivc-report-topbar-title">Diagnosis & Remedy Report</div><div className="ivc-report-topbar-date">Generated: {generatedDate} · Pandit Rameshwar Ji</div></div>
+        <div><div className="ivc-report-topbar-title">Diagnosis & Remedy Report</div><div className="ivc-report-topbar-date">Generated: {generatedDate} · AI Guru</div></div>
         <button className="ivc-dl-pdf-btn" onClick={onDownload} disabled={downloading}>{downloading?"⏳ Preparing PDF...":"⬇ Download PDF Report"}</button>
       </div>
 
@@ -1110,8 +1070,8 @@ function DiagnosisReport({report,onSaveMantra,onBookPuja,userName,onAskFollowUp,
       )}
 
       {report.guidance&&(
-        <ReportCard color="c-guidance" icon="🧘" label="Personal Guidance from Pandit Ji">
-          <div className="ivc-guidance-box"><div className="ivc-guidance-txt">{report.guidance}</div><div className="ivc-guidance-sig">— Pandit Rameshwar Ji</div></div>
+        <ReportCard color="c-guidance" icon="🧘" label="Personal Guidance from AI Guru">
+          <div className="ivc-guidance-box"><div className="ivc-guidance-txt">{report.guidance}</div><div className="ivc-guidance-sig">— AI Guru</div></div>
         </ReportCard>
       )}
 
@@ -1180,24 +1140,28 @@ export default function InnerVoiceChat(){
   };
 
   const autoResize=()=>{const ta=textareaRef.current;if(!ta)return;ta.style.height="auto";ta.style.height=Math.min(ta.scrollHeight,140)+"px";};
-  const buildHistory=()=>messages.map(m=>({role:m.role==="user"?"user":"assistant",content:typeof m.content==="string"?m.content:(m.content?.message||"[response]")}));
+  const buildHistory=()=>messages.filter(m=>!m.error).map(m=>({role:(m.role==="user"?"user":"assistant") as "user"|"assistant",content:typeof m.content==="string"?m.content:(m.content?.message||"[response]")}));
 
-  const send=async(text)=>{
-    const msg=text.trim();if(!msg||loading)return;
+  const send=async(text,{retry=false}={})=>{
+    const msg=text.trim().slice(0,MAX_GURU_INPUT_CHARS);if(!msg||loading)return;
     setInput("");if(textareaRef.current)textareaRef.current.style.height="24px";
-    setMessages(prev=>[...prev,{role:"user",content:msg}]);
+    // On retry the user's message is already shown; only drop the failed reply.
+    if(!retry)setMessages(prev=>[...prev,{role:"user",content:msg}]);
     setLoading(true);
     try{
-      const history=buildHistory();
+      // History excludes the failed-reply bubbles and the message being sent now.
+      const history=buildHistory().filter(h=>h.content);
+      const baseHistory=retry?history.slice(0,-1):history;
       const detected=detectLanguage(msg);
       const languageDirective=buildLanguageDirective(inputLanguage,replyLanguage,detected);
-      const data=await callConsultation([{role:"system",content:PANDIT_CONSULTATION_SYSTEM},{role:"system",content:languageDirective},...history,{role:"user",content:msg}]);
-      setMessages(prev=>[...prev,{role:"guru",content:data}]);
+      const data=await askGuru(baseHistory,msg,languageDirective);
+      setMessages(prev=>[...prev.filter(m=>!m.error),{role:"guru",content:data}]);
       if(data.progress)setProgress(data.progress);
       if(data.readyForDiagnosis)setReadyForDiagnosis(true);
     }catch(e){
       console.error("[AI Guru] Consultation request failed:",e);
-      setMessages(prev=>[...prev,{role:"guru",content:{type:"gathering",message:"Sorry, Guru Ji is temporarily unavailable. Please try again in a moment."}}]);
+      const errMsg=e instanceof GuruChatError?e.message:"Something went wrong. Please try again.";
+      setMessages(prev=>[...prev.filter(m=>!m.error),{role:"guru",error:true,retryText:msg,content:{type:"gathering",message:errMsg}}]);
     }finally{setLoading(false);}
   };
 
@@ -1360,7 +1324,7 @@ export default function InnerVoiceChat(){
                         exit={{opacity:0}}
                         transition={{duration:0.3,ease:"easeInOut"}}
                       >
-                        <GuruConversation ref={bottomRef} messages={messages} loading={loading} />
+                        <GuruConversation ref={bottomRef} messages={messages} loading={loading} onRetry={(t)=>send(t,{retry:true})} />
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -1411,7 +1375,7 @@ export default function InnerVoiceChat(){
               <div className="ivc-report-empty">
                 <div className="ivc-report-empty-icon" style={{fontSize:72,marginBottom:20,filter:"drop-shadow(0 0 30px rgba(89,34,9,.4))"}}>🕉</div>
                 <div className="ivc-report-empty-title">Begin Your Consultation</div>
-                <div className="ivc-report-empty-sub">Share your life challenge with Pandit Ji in the Consultation tab. After a few exchanges, your complete Vedic Diagnosis Report — with remedies, mantras, planetary analysis, and a PDF — will be generated automatically.</div>
+                <div className="ivc-report-empty-sub">Share your life challenge with AI Guru in the Consultation tab. After a few exchanges, your complete Vedic Diagnosis Report — with remedies, mantras, planetary analysis, and a PDF — will be generated automatically.</div>
                 <div style={{display:"flex",gap:12,flexWrap:"wrap",justifyContent:"center",marginTop:8}}>
                   <button className="ivc-report-start-btn" onClick={()=>setActiveTab("consultation")}>💬 Start Consultation</button>
                   {readyForDiagnosis&&<button className="ivc-report-start-btn" style={{background:"linear-gradient(135deg,rgba(89,34,9,.25),rgba(89,34,9,.18))",borderColor:"rgba(89,34,9,.5)"}} onClick={generateReport}>✨ Generate Report Now</button>}

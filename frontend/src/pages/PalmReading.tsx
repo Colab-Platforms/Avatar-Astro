@@ -2,34 +2,20 @@ import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useBackOverride } from "../context/NavigationContext";
 import {
   defaultPalmAnalysisEngine, loadImageFromDataUrl,
-  type HandLandmarks, type HandType, type PalmAnalysisResult, type PalmLine,
+  type HandLandmarks, type HandType, type PalmAnalysisResult,
 } from "@/lib/palmAnalysis";
+import { SQUARE_PALM_MIN, LONG_FINGERS_MIN } from "@/lib/palmAnalysis/lineEstimator";
 import { ScanSequence } from "@/components/palm/ScanSequence";
-import { PalmLineOverlay } from "@/components/palm/PalmLineOverlay";
-import { MetricDashboard, type DashboardMetric } from "@/components/palm/MetricDashboard";
+import PalmEducation from "@/components/palm/PalmEducation";
+import { requireSignIn } from "@/lib/authedFetch";
+
+// Upload limits (checked before anything is read or analysed).
+const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Stage = "landing" | "processing" | "retake" | "scanning" | "results" | "live";
-
-interface PalmResult {
-  handType: string; handElement: string; dominance: string;
-  score: number; confidence: number;
-  lines: { heart: LineData; head: LineData; life: LineData; fate: LineData };
-  mounts: MountData[];
-  personality: TraitScore[];
-  love: string[]; loveStrengths: string[]; loveChallenges: string[];
-  career: string[]; careerTypes: string[];
-  timeline: TimelineItem[];
-  hiddenStrengths: string[];
-  recommendations: RecoItem[];
-  summary: string;
-}
-interface LineData { length: string; depth: string; clarity: string; interpretation: string; strengths: string[]; challenges: string[]; recommendations: string }
-interface MountData { name: string; planet: string; strength: number; meaning: string }
-interface TraitScore { name: string; score: number; icon: string }
-interface TimelineItem { phase: string; years: string; theme: string; insight: string }
-interface RecoItem { category: string; icon: string; tip: string }
 
 // ─── Hand type reference (shown on landing + live scan so users know what
 // the scanner is classifying against) ─────────────────────────────────────
@@ -39,6 +25,14 @@ const HAND_TYPE_LEGEND: { type: HandType; emoji: string; label: string; traits: 
   { type: "Water", emoji: "🌊", label: "Water Hand", traits: "Emotional, intuitive, artistic", shape: "Long palm, long fingers" },
   { type: "Fire",  emoji: "🔥", label: "Fire Hand",  traits: "Energetic, ambitious, spontaneous", shape: "Rectangular palm, short fingers" },
 ];
+
+// Traditional descriptions per hand shape (fixed text; chosen by the measured shape only).
+const HAND_MEANINGS: Record<HandType, string> = {
+  Earth: "In classical palmistry the Earth hand has a square palm and short fingers. It is traditionally associated with a practical, steady and dependable temperament, and a preference for tangible work and routine.",
+  Air: "In classical palmistry the Air hand has a square palm and long fingers. It is traditionally associated with a curious, communicative and analytical temperament, and a love of ideas and conversation.",
+  Water: "In classical palmistry the Water hand has a long palm and long fingers. It is traditionally associated with a sensitive, intuitive and imaginative temperament, and a rich emotional life.",
+  Fire: "In classical palmistry the Fire hand has a long palm and short fingers. It is traditionally associated with an energetic, spontaneous and enthusiastic temperament, and a bold approach to new ventures.",
+};
 
 // ─── Live blueprint skeleton — connects the 21 MediaPipe hand landmarks into
 // the finger/palm topology so the live camera view can render a real-time
@@ -57,137 +51,7 @@ function handSkeletonEdges(lm: HandLandmarks): [{ x: number; y: number }, { x: n
   return edges;
 }
 
-// ─── Deterministic result generator ──────────────────────────────────────────
-// `real`, when provided, comes from actual MediaPipe-detected hand geometry
-// (see lib/palmAnalysis) rather than the seed — hand type and dominance are
-// then genuine measurements, not a random pick.
-function generatePalmResult(seed: number, real?: { handType: HandType; dominance: PalmResult["dominance"] }): PalmResult {
-  const s = (seed % 4);
-  const handTypes = [
-    { type: "Earth Hand", element: "Earth 🌍", traits: "Practical, stable, grounded, reliable, steadfast" },
-    { type: "Air Hand",   element: "Air 💨",   traits: "Intelligent, logical, curious, communicative, analytical" },
-    { type: "Water Hand", element: "Water 🌊", traits: "Emotional, sensitive, artistic, empathetic, intuitive" },
-    { type: "Fire Hand",  element: "Fire 🔥",  traits: "Energetic, passionate, ambitious, spontaneous, bold" },
-  ];
-  const ht = real ? handTypes.find((h) => h.type.startsWith(real.handType)) ?? handTypes[s] : handTypes[s];
-  return {
-    handType: ht.type, handElement: ht.element,
-    dominance: real?.dominance ?? (seed % 2 === 0 ? "Right (Active)" : "Left (Receptive)"),
-    score: 7.8 + (seed % 3) * 0.4,
-    confidence: 91 + (seed % 8),
-    lines: {
-      heart: {
-        length: seed%2===0?"Long & curved":"Medium & straight",
-        depth: "Deep", clarity: "Clear",
-        interpretation: "Your heart line reveals a deeply emotional and loyal nature. You form lasting bonds and invest yourself fully in relationships. Emotional intelligence is one of your greatest gifts — you read people and situations with remarkable accuracy.",
-        strengths: ["Deep emotional loyalty","Strong empathy","Passionate connections","Intuitive emotional awareness"],
-        challenges: ["Tendency to over-give","Difficulty letting go","Emotional sensitivity"],
-        recommendations: "Protect your emotional energy. Set healthy boundaries while honoring your natural depth of feeling."
-      },
-      head: {
-        length: seed%3===0?"Long, extending across palm":"Medium with slight curve",
-        depth: "Moderate", clarity: "Clear with minor breaks",
-        interpretation: "Your head line indicates a sharp, creative mind that balances logic with imagination. You are a strategic thinker who considers multiple angles before deciding. Your intelligence is both analytical and intuitive.",
-        strengths: ["Strategic thinking","Creative problem solving","Strong focus","Intellectual curiosity"],
-        challenges: ["Overthinking at times","Difficulty with quick decisions","Analysis paralysis"],
-        recommendations: "Trust your instincts alongside your analytical mind. Some of your best insights come from your gut."
-      },
-      life: {
-        length: "Long, sweeping arc", depth: "Deep & strong", clarity: "Clear",
-        interpretation: "Your life line speaks of strong vitality and adaptability. It does not predict lifespan, but rather reflects the quality, richness, and transformative depth of your life journey. Major life changes become stepping stones for you.",
-        strengths: ["High physical vitality","Resilience through change","Strong personal growth","Adaptability"],
-        challenges: ["Tendency to take on too much","Need for periodic recovery","Restless energy"],
-        recommendations: "Honor your body's need for rest as much as your drive for activity. Balance fuels your greatest achievements."
-      },
-      fate: {
-        length: seed%2===0?"Strong, runs from base to middle finger":"Starts mid-palm, indicating self-made path",
-        depth: "Deep", clarity: seed%3===0?"Clear":"Moderate with branches",
-        interpretation: "Your fate line indicates a clear sense of purpose and direction. You are not one to drift — there is an inner compass guiding you. Whether shaped by destiny or personal will, your professional path carries meaning and momentum.",
-        strengths: ["Clear life direction","Career focus","Natural leadership","Purpose-driven work"],
-        challenges: ["Rigidity in plans","Difficulty pivoting","External pressure sensitivity"],
-        recommendations: "Your greatest career breakthroughs come when you align passion with discipline. Trust the path even when it curves."
-      },
-    },
-    mounts: [
-      { name: "Mount of Jupiter", planet: "Jupiter", strength: 78 + seed%15, meaning: "Strong ambition, natural leadership and wisdom. You are drawn to positions of influence and guide others with authority." },
-      { name: "Mount of Saturn",  planet: "Saturn",  strength: 65 + seed%20, meaning: "Responsibility and perseverance define your career approach. You build slowly and surely toward lasting success." },
-      { name: "Mount of Sun",     planet: "Sun",     strength: 82 + seed%12, meaning: "Creative flair and a magnetic personality draw recognition and fame. You shine naturally in public-facing roles." },
-      { name: "Mount of Mercury", planet: "Mercury", strength: 70 + seed%18, meaning: "Sharp business acumen and eloquent communication. You excel in negotiation, sales, and intellectual pursuits." },
-      { name: "Mount of Venus",   planet: "Venus",   strength: 75 + seed%16, meaning: "A rich capacity for love, beauty, and sensory pleasure. Relationships and aesthetics play a central role in your happiness." },
-      { name: "Mount of Moon",    planet: "Moon",    strength: 68 + seed%22, meaning: "Deep intuition and a vivid imagination. You are emotionally receptive and often experience prophetic insights." },
-    ],
-    personality: [
-      { name:"Leadership",            score: 78+seed%18, icon:"👑" },
-      { name:"Communication",         score: 82+seed%12, icon:"💬" },
-      { name:"Creativity",            score: 75+seed%20, icon:"🎨" },
-      { name:"Discipline",            score: 70+seed%22, icon:"⚡" },
-      { name:"Emotional Intelligence",score: 85+seed%10, icon:"❤️" },
-      { name:"Adaptability",          score: 80+seed%15, icon:"🌊" },
-      { name:"Confidence",            score: 72+seed%20, icon:"✨" },
-      { name:"Decision Making",       score: 76+seed%18, icon:"🎯" },
-    ],
-    love: ["You love deeply and with full commitment","Loyalty is your highest relationship value","You are drawn to partners who match your emotional depth","You give generously in relationships and expect sincerity in return"],
-    loveStrengths: ["Intense emotional loyalty","Empathetic listening","Romantic depth","Long-term commitment"],
-    loveChallenges: ["Vulnerability to heartbreak","High expectations","Difficulty with casual connections"],
-    career: ["Natural born communicator and strategist","Excel in roles requiring both creativity and analysis","Leadership emerges through trust and example","Work best when values align with profession"],
-    careerTypes: ["Creative Direction","Consulting & Strategy","Education & Mentorship","Entrepreneurship","Healing & Wellness","Arts & Communications"],
-    timeline: [
-      { phase:"Early Life",    years:"0–20",  theme:"Learning & Foundation",    insight:"A period of deep observation, learning, and building the emotional and intellectual foundations that define your unique perspective." },
-      { phase:"Young Adult",   years:"20–35", theme:"Growth & Ambition",        insight:"A dynamic phase of exploration, bold choices, and discovering your authentic path. Career and relationships take shape through meaningful experiences." },
-      { phase:"Mid-Life",      years:"35–50", theme:"Expansion & Achievement",  insight:"The period of greatest professional and personal impact. Your accumulated wisdom begins to create visible, lasting results." },
-      { phase:"Later Years",   years:"50+",   theme:"Wisdom & Contribution",    insight:"A season of deepened purpose, meaningful connections, and sharing your unique gifts with the world from a place of earned authority." },
-    ],
-    hiddenStrengths: [
-      "Natural ability to read people and situations before others notice",
-      "Reservoir of resilience that activates under pressure",
-      "Creative problem-solving that appears effortless to others",
-      "Magnetic presence that makes others feel seen and heard",
-      "Strategic patience — you know when to act and when to wait",
-    ],
-    recommendations: [
-      { category:"Career Development",    icon:"💼", tip:"Seek roles that blend creativity with strategy. Your best work happens at the intersection of ideas and execution." },
-      { category:"Relationship Growth",   icon:"❤️", tip:"Communicate your needs clearly. Your depth is a gift — let the right people truly know you." },
-      { category:"Personal Growth",       icon:"🌱", tip:"Dedicate 20 minutes daily to stillness. Your clearest insights emerge in quiet moments." },
-      { category:"Communication",         icon:"💬", tip:"Your natural eloquence is powerful. Practice active listening to match your expressive gifts." },
-      { category:"Financial Habits",      icon:"💰", tip:"Build a long-term wealth strategy. Your steady discipline, when applied to finances, creates remarkable security." },
-      { category:"Wellness & Vitality",   icon:"🌿", tip:"Honor your body's energy cycles. Movement, nature, and rest are not luxuries — they are your fuel." },
-    ],
-    summary: `Your palm reveals a ${ht.type} — ${ht.traits}. The lines of your hand tell the story of someone with extraordinary emotional intelligence, a sharp and creative mind, and a life path marked by purposeful growth. Your heart speaks deeply, your mind moves strategically, and your fate line confirms that the path ahead is lit by genuine purpose.`,
-  };
-}
-
-// Blends real geometry (line curvature, mount strength — from actual MediaPipe
-// detection) with the existing seeded personality scores, for the dashboard.
-function buildDashboardMetrics(result: PalmResult, analysis: PalmAnalysisResult): DashboardMetric[] {
-  const curviness = (l: PalmLine) => l.length / Math.max(l.straightLength, 0.001);
-  const mountStrength = (planet: string) => analysis.mounts.find((m) => m.planet === planet)?.strength ?? 60;
-  const clampScore = (n: number) => Math.max(35, Math.min(98, Math.round(n)));
-  const trait = (name: string) => result.personality.find((p) => p.name === name)?.score ?? 75;
-
-  const heart = analysis.lines.heart, fate = analysis.lines.fate, life = analysis.lines.life, head = analysis.lines.head;
-
-  return [
-    { label: "Overall Palm Score", icon: "🤚", color: "#592209", value: clampScore(result.score * 10) },
-    { label: "Love & Relationships", icon: "❤️", color: "#592209", value: clampScore(55 + curviness(heart) * 22) },
-    { label: "Career", icon: "💼", color: "#592209", value: clampScore(55 + curviness(fate) * 18) },
-    { label: "Health & Vitality", icon: "🌿", color: "#301607", value: clampScore(55 + curviness(life) * 20) },
-    { label: "Finance", icon: "💰", color: "#6B4A37", value: clampScore(mountStrength("Mercury")) },
-    { label: "Leadership", icon: "👑", color: "#592209", value: clampScore(trait("Leadership")) },
-    { label: "Creativity", icon: "🎨", color: "#592209", value: clampScore(trait("Creativity")) },
-    { label: "Spiritual Growth", icon: "🔮", color: "#592209", value: clampScore((mountStrength("Moon") + mountStrength("Sun")) / 2) },
-    { label: "Decision Making", icon: "🎯", color: "#592209", value: clampScore(trait("Decision Making") - (curviness(head) - 1) * 40) },
-  ];
-}
-
 // ─── Sub-components ───────────────────────────────────────────────────────────
-function ScoreBar({ value, color = "#592209" }: { value: number; color?: string }) {
-  return (
-    <div style={{ background: "rgba(89,34,9,0.2)", borderRadius: 6, height: 8, overflow: "hidden" }}>
-      <div style={{ height: "100%", width: `${Math.min(value,100)}%`, background: `linear-gradient(90deg, ${color}, #592209)`, borderRadius: 6, boxShadow: `0 0 8px ${color}60`, transition: "width 1.2s ease" }} />
-    </div>
-  );
-}
-
 function SectionTitle({ icon, title }: { icon: string; title: string }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 28 }}>
@@ -274,9 +138,7 @@ export default function PalmReading() {
   const [imageUrl, setImageUrl]     = useState<string | null>(null); // preprocessed (cropped/aligned/enhanced) palm photo
   const [imageDims, setImageDims]   = useState({ width: 3, height: 4 });
   const [analysis, setAnalysis]     = useState<PalmAnalysisResult | null>(null);
-  const [result, setResult]         = useState<PalmResult | null>(null);
-  const [activeLineTab, setActiveLineTab] = useState<"heart"|"head"|"life"|"fate">("heart");
-  const [processingMessage, setProcessingMessage] = useState("Initializing AI Vision Engine...");
+  const [processingMessage, setProcessingMessage] = useState("Preparing hand detection...");
   const [processingPct, setProcessingPct]         = useState(0);
   const [retakeMessage, setRetakeMessage]         = useState<string | null>(null);
   const [liveMessage, setLiveMessage]             = useState("Align your palm within the frame. Keep fingers relaxed and palm visible.");
@@ -290,6 +152,7 @@ export default function PalmReading() {
   const previewCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const captureTimeoutRef = useRef<number | null>(null);
+  const runIdRef = useRef(0);
 
   const cleanupCamera = useCallback(() => {
     if (captureTimeoutRef.current) {
@@ -311,7 +174,6 @@ export default function PalmReading() {
   // Back button returns to landing from any non-landing stage
   const resetToLanding = useCallback(() => {
     setStage("landing");
-    setResult(null);
     setAnalysis(null);
     setImageUrl(null);
     setRetakeMessage(null);
@@ -323,9 +185,25 @@ export default function PalmReading() {
     setStage("processing");
     setRetakeMessage(null);
     setProcessingPct(0);
-    setProcessingMessage("Initializing AI Vision Engine...");
+    setProcessingMessage("Preparing hand detection...");
+    // Never leave the user waiting: if detection stalls, give up after 60s and offer a retake.
+    const run = ++runIdRef.current;
+    const watchdog = window.setTimeout(() => {
+      if (runIdRef.current !== run) return;
+      runIdRef.current++;
+      setRetakeMessage("The scan is taking too long. Please try again, or try a different photo.");
+      setStage("retake");
+    }, 60000);
     try {
-      const sourceImg = await loadImageFromDataUrl(dataUrl);
+      let sourceImg: HTMLImageElement;
+      try {
+        sourceImg = await loadImageFromDataUrl(dataUrl);
+      } catch {
+        window.clearTimeout(watchdog);
+        setRetakeMessage("We couldn't open that file as an image. Please use a JPG, PNG or WebP photo.");
+        setStage("retake");
+        return;
+      }
 
       await defaultPalmAnalysisEngine.ensureReady((pct) => setProcessingPct(pct * 0.45));
       setProcessingMessage("Detecting your palm...");
@@ -333,6 +211,7 @@ export default function PalmReading() {
       setProcessingPct(60);
 
       if (!quality.ok || !quality.landmarks) {
+        window.clearTimeout(watchdog);
         setRetakeMessage(quality.message ?? "We couldn't get a clear reading from this photo.");
         setStage("retake");
         return;
@@ -343,21 +222,21 @@ export default function PalmReading() {
       setProcessingPct(82);
       const processedImg = await loadImageFromDataUrl(processed.dataUrl);
 
-      setProcessingMessage("Analyzing palm geometry...");
+      setProcessingMessage("Measuring hand proportions...");
       const fullAnalysis = await defaultPalmAnalysisEngine.analyze(processedImg, quality.landmarks);
       setProcessingPct(100);
 
+      window.clearTimeout(watchdog);
+      if (runIdRef.current !== run) return; // timed out or cancelled meanwhile
       setImageUrl(processed.dataUrl);
       setImageDims({ width: processed.width, height: processed.height });
       setAnalysis(fullAnalysis);
-      setResult(generatePalmResult(Date.now() % 1000, {
-        handType: fullAnalysis.geometry.handType,
-        dominance: fullAnalysis.geometry.dominance,
-      }));
       setStage("scanning");
     } catch (err) {
+      window.clearTimeout(watchdog);
+      if (runIdRef.current !== run) return;
       console.error("[PalmReading] analysis pipeline failed", err);
-      setRetakeMessage("The AI vision engine couldn't load — check your connection and try again.");
+      setRetakeMessage("The hand-detection model couldn't load. Check your connection and try again.");
       setStage("retake");
     }
   }, []);
@@ -475,11 +354,31 @@ export default function PalmReading() {
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file after a retake
     if (!file) return;
+    if (!requireSignIn()) return; // account required to analyse a palm photo
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      setRetakeMessage("That file type isn't supported. Please upload a JPG, PNG or WebP photo of your palm.");
+      setStage("retake");
+      return;
+    }
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setRetakeMessage("That photo is larger than 10 MB. Please choose a smaller photo.");
+      setStage("retake");
+      return;
+    }
+    if (file.size === 0) {
+      setRetakeMessage("That file is empty. Please choose another photo.");
+      setStage("retake");
+      return;
+    }
     const reader = new FileReader();
     reader.onload = ev => runAnalysisPipeline(ev.target?.result as string);
+    reader.onerror = () => {
+      setRetakeMessage("We couldn't read that file. Please try another photo.");
+      setStage("retake");
+    };
     reader.readAsDataURL(file);
-    e.target.value = ""; // allow re-selecting the same file after a retake
   };
 
   const sec: React.CSSProperties = { background: "rgba(89,34,9,0.2)", border: "1px solid rgba(89,34,9,0.18)", borderRadius: 24, padding: "36px 40px", marginBottom: 28 };
@@ -487,7 +386,7 @@ export default function PalmReading() {
   const goldBtn: React.CSSProperties = { background: "#F5E9D6", color: "#000", fontWeight: 800, fontSize: 16, letterSpacing: "0.1em", padding: "16px 36px", borderRadius: 32, border: "none", cursor: "pointer", boxShadow: "0 0 24px rgba(89,34,9,0.4)" };
 
   // Shared across landing + retake so both can trigger the same upload dialog.
-  const fileInput = <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} style={{ display: "none" }} />;
+  const fileInput = <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" aria-label="Upload a photo of your palm" onChange={handleFile} style={{ display: "none" }} />;
 
   // ── LANDING ────────────────────────────────────────────────────────────────
   if (stage === "landing") return (
@@ -508,19 +407,19 @@ export default function PalmReading() {
 
         {/* Hero */}
         <div style={{ textAlign: "center", marginBottom: 72, animation: "fade-in 0.7s ease" }}>
-          <div style={{ fontSize: 14, color: "#592209", letterSpacing: "0.3em", marginBottom: 16, fontWeight: 600 }}>✦ PREMIUM AI CONSULTATION ✦</div>
+          <div style={{ fontSize: 14, color: "#592209", letterSpacing: "0.3em", marginBottom: 16, fontWeight: 600 }}>✦ HAND SHAPE ANALYSIS ✦</div>
           <h1 style={{ fontSize: 58, fontWeight: 900, color: "#301607", letterSpacing: "0.06em", margin: "0 0 20px", lineHeight: 1.1 }}>
-            AI Palm Reading<br/>
-            <span style={{ background: "#592209", backgroundSize: "200% auto", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", animation: "shimmer 3s linear infinite" }}>Analysis</span>
+            Palm Reading<br/>
+            <span style={{ background: "#592209", backgroundSize: "200% auto", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", animation: "shimmer 3s linear infinite" }}>Hand Shape</span>
           </h1>
           <p style={{ fontSize: 20, color: "rgba(48,22,7,0.72)", maxWidth: 620, margin: "0 auto 40px", lineHeight: 1.8 }}>
-            Discover your personality, relationships, career path, wealth potential, and life journey through advanced AI-powered palm analysis rooted in ancient Vedic palmistry.
+            Upload a photo of your palm or use your camera. The tool detects your hand, measures its proportions and describes your hand shape (Earth, Air, Water or Fire) using classical palmistry rules. Your photo is processed on your device and is not uploaded.
           </p>
           {/* Premium palm hero image */}
           <div className="pr-hero-img-wrap" style={{ marginBottom: 48, marginTop: 8, borderRadius: 28 }}>
             <img
               src="/images/palm-reading/premium-palm.jpeg"
-              alt="Glowing AI-analyzed palm with mystical energy lines"
+              alt="Illustration of a glowing palm"
               loading="eager"
               decoding="async"
               style={{ width: "100%", height: "auto", display: "block", borderRadius: 28 }}
@@ -535,14 +434,14 @@ export default function PalmReading() {
             {fileInput}
             <div style={{ fontSize: 56, marginBottom: 20 }}>🖼️</div>
             <h3 style={{ color: "#592209", fontSize: 22, fontWeight: 800, marginBottom: 12 }}>Upload Palm Photo</h3>
-            <p style={{ color: "#592209", fontSize: 16, lineHeight: 1.7, marginBottom: 28 }}>Upload an existing photo of your palm from your device for instant analysis.</p>
+            <p style={{ color: "#592209", fontSize: 16, lineHeight: 1.7, marginBottom: 28 }}>Choose a photo of your palm from your device. JPG, PNG or WebP, up to 10 MB.</p>
             <button style={goldBtn}>📤 Upload Photo</button>
           </div>
           {/* Live scan */}
           <div className="pr-card" style={{ ...sec, textAlign: "center", marginBottom: 0 }}>
             <div style={{ fontSize: 56, marginBottom: 20 }}>📷</div>
             <h3 style={{ color: "#592209", fontSize: 22, fontWeight: 800, marginBottom: 12 }}>Live Palm Scan</h3>
-            <p style={{ color: "#592209", fontSize: 16, lineHeight: 1.7, marginBottom: 28 }}>Use your camera for a real-time palm scan with a live blueprint hand-tracking overlay.</p>
+            <p style={{ color: "#592209", fontSize: 16, lineHeight: 1.7, marginBottom: 28 }}>Use your camera. The scanner tracks your hand live and captures automatically once it has a clear view.</p>
             <button style={goldBtn} onClick={() => setStage("live")}>📱 Start Live Scan</button>
           </div>
         </div>
@@ -589,35 +488,31 @@ export default function PalmReading() {
 
         {/* Line legend */}
         <div style={sec}>
-          <SectionTitle icon="🖐️" title="What We Analyse"/>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16 }}>
-            {[
-              { line: "Heart Line", color: "#9B2C1D", desc: "Emotions, love & relationships" },
-              { line: "Head Line",  color: "#592209", desc: "Intelligence & thinking patterns" },
-              { line: "Life Line",  color: "#301607", desc: "Vitality & personal growth" },
-              { line: "Fate Line",  color: "#592209", desc: "Career, destiny & purpose" },
-            ].map(l=>(
-              <div key={l.line} style={{ ...card, textAlign: "center" }}>
-                <div style={{ width: 40, height: 4, background: l.color, borderRadius: 2, margin: "0 auto 12px", boxShadow: `0 0 10px ${l.color}` }}/>
-                <div style={{ color: l.color, fontWeight: 700, fontSize: 14, marginBottom: 6 }}>{l.line}</div>
-                <div style={{ color: "#592209", fontSize: 13, lineHeight: 1.5 }}>{l.desc}</div>
-              </div>
-            ))}
-          </div>
-          <div style={{ marginTop: 20, display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16 }}>
-            {[
-              { item: "Palm Shape", icon: "🤚" },{ item: "7 Mounts", icon: "⛰️" },
-              { item: "Hand Dominance", icon: "✋" },{ item: "Finger Structure", icon: "☝️" },
-            ].map(i=>(
-              <div key={i.item} style={{ ...card, textAlign: "center" }}>
-                <div style={{ fontSize: 28, marginBottom: 8 }}>{i.icon}</div>
-                <div style={{ color: "#592209", fontWeight: 600, fontSize: 14 }}>{i.item}</div>
-              </div>
-            ))}
+          <SectionTitle icon="🖐️" title="What This Tool Does"/>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }} className="pr-scope">
+            <div style={card}>
+              <div style={{ color: "#2F6B3A", fontWeight: 700, fontSize: 14, letterSpacing: "0.15em", marginBottom: 16 }}>✅ MEASURED FROM YOUR PHOTO</div>
+              {["Hand shape: palm width and length", "Finger length compared with the palm", "Thumb angle", "Whether the photo shows a left or right hand"].map(t => (
+                <div key={t} style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 10 }}>
+                  <span style={{ color: "#2F6B3A", fontSize: 16 }}>✓</span>
+                  <span style={{ fontSize: 15, color: "#4A2E1F" }}>{t}</span>
+                </div>
+              ))}
+            </div>
+            <div style={card}>
+              <div style={{ color: "#9B2C1D", fontWeight: 700, fontSize: 14, letterSpacing: "0.15em", marginBottom: 16 }}>❌ NOT READ</div>
+              {["The lines on your palm (heart, head, life, fate)", "Mounts, marks or skin features", "Any prediction of your future, health or relationships"].map(t => (
+                <div key={t} style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 10 }}>
+                  <span style={{ color: "#9B2C1D", fontSize: 16 }}>✗</span>
+                  <span style={{ fontSize: 15, color: "#4A2E1F" }}>{t}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
       </div>
+      <PalmEducation />
     </div>
   );
 
@@ -642,7 +537,7 @@ export default function PalmReading() {
       <style>{`@keyframes pulse-glow{0%,100%{opacity:0.6;transform:scale(1)}50%{opacity:1;transform:scale(1.3)}}`}</style>
       {fileInput}
       <div style={{ minHeight: "80vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px", textAlign: "center", color: "#301607" }}>
-        <div style={{ fontSize: 14, color: "#592209", letterSpacing: "0.3em", marginBottom: 32, fontWeight: 600 }}>✦ LIVE PALM SCANNER ✦</div>
+        <div style={{ fontSize: 14, color: "#592209", letterSpacing: "0.3em", marginBottom: 32, fontWeight: 600 }}>✦ LIVE HAND SCANNER ✦</div>
         <div style={{ width: "100%", maxWidth: 880, marginBottom: 28, position: "relative", borderRadius: 26, overflow: "hidden", border: "2px solid rgba(89,34,9,0.25)", boxShadow: "0 0 40px rgba(89,34,9,0.16)" }}>
           <video
             ref={videoRef}
@@ -670,9 +565,6 @@ export default function PalmReading() {
                 <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
                   <span style={{ background: "#FBF5EC", border: "1px solid rgba(89,34,9,0.4)", borderRadius: 20, padding: "4px 12px", fontSize: 12, color: "#6B4A37" }}>
                     ✋ {liveLandmarks.handedness} Hand
-                  </span>
-                  <span style={{ background: "#FBF5EC", border: "1px solid rgba(89,34,9,0.4)", borderRadius: 20, padding: "4px 12px", fontSize: 12, color: "#6B4A37" }}>
-                    Confidence {Math.round(liveLandmarks.confidence * 100)}%
                   </span>
                   <span style={{ background: "#FBF5EC", border: "1px solid rgba(89,34,9,0.4)", borderRadius: 20, padding: "4px 12px", fontSize: 12, color: "#6B4A37" }}>
                     21/21 Landmarks Tracked
@@ -736,7 +628,7 @@ export default function PalmReading() {
     return (
       <div>
         <div style={{ minHeight: "80vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px", color: "#301607" }}>
-          <div style={{ fontSize: 14, color: "#592209", letterSpacing: "0.3em", marginBottom: 32, fontWeight: 600 }}>✦ AI ANALYSIS IN PROGRESS ✦</div>
+          <div style={{ fontSize: 14, color: "#592209", letterSpacing: "0.3em", marginBottom: 32, fontWeight: 600 }}>✦ MEASURING YOUR HAND ✦</div>
           <div style={{
             width: "100%", maxWidth: 440, aspectRatio: `${imageDims.width} / ${imageDims.height}`,
             borderRadius: 20, overflow: "hidden", border: "2px solid rgba(89,34,9,0.4)", boxShadow: "0 0 40px rgba(89,34,9,0.25)",
@@ -749,272 +641,104 @@ export default function PalmReading() {
   }
 
   // ── RESULTS ────────────────────────────────────────────────────────────────
-  if (!result) return null;
-  const lineColors: Record<string,string> = { heart:"#e87070", head:"#7090e8", life:"#70e890", fate:"#b070e8" };
+  if (!analysis || !imageUrl) return null;
+  const g = analysis.geometry;
+  const fr = g.fingerLengthRatios;
+  const avgFinger = (fr.index + fr.middle + fr.ring + fr.pinky) / 4;
+  const squarePalm = g.palmWidthToLengthRatio >= SQUARE_PALM_MIN;
+  const longFingers = avgFinger >= LONG_FINGERS_MIN;
+  const shape = HAND_TYPE_LEGEND.find((h) => h.type === g.handType) ?? HAND_TYPE_LEGEND[0];
+  const meaning = HAND_MEANINGS[g.handType];
+  const hand = analysis.landmarks.handedness;
 
   return (
     <div>
       <style>{`
         @keyframes fade-in{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes shimmer{0%{background-position:200% center}100%{background-position:-200% center}}
-        .tab-btn:hover{border-color:rgba(89,34,9,0.5)!important}
+        .pr-res-grid{display:grid;grid-template-columns:minmax(0,420px) 1fr;gap:28px;align-items:start}
+        .pr-measure{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+        @media (max-width:860px){.pr-res-grid{grid-template-columns:1fr}.pr-measure{grid-template-columns:1fr 1fr}}
       `}</style>
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 32px 80px", color: "#301607" }}>
+      <div data-testid="palm-results" style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 24px 40px", color: "#301607" }}>
 
         {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: 48, animation: "fade-in 0.6s ease" }}>
-          <div style={{ fontSize: 13, color: "#592209", letterSpacing: "0.3em", marginBottom: 12, fontWeight: 600 }}>✦ YOUR PALM READING CONSULTATION ✦</div>
-          <h1 style={{ fontSize: 44, fontWeight: 900, color: "#301607", margin: "0 0 12px" }}>Your Cosmic Palm Report</h1>
-          <p style={{ color: "#592209", fontSize: 16 }}>Prepared exclusively based on your palm analysis</p>
+        <div style={{ textAlign: "center", marginBottom: 40, animation: "fade-in 0.6s ease" }}>
+          <div style={{ fontSize: 13, color: "rgba(188,106,77,0.75)", letterSpacing: "0.3em", marginBottom: 12, fontWeight: 600 }}>✦ YOUR HAND SHAPE READING ✦</div>
+          <h1 style={{ fontSize: "clamp(30px,5vw,44px)", fontWeight: 900, color: "#301607", margin: "0 0 12px" }}>{shape.label}</h1>
+          <p style={{ color: "#4A2E1F", fontSize: 16, maxWidth: 620, margin: "0 auto" }}>
+            Based on measurements of the hand in your photo. {shape.shape}.
+          </p>
         </div>
 
-        {/* Palm Overview */}
-        <div style={sec}>
-          <SectionTitle icon="🤚" title="Palm Overview"/>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 28 }}>
-            {/* Score card */}
-            <div style={{ ...card, textAlign: "center" }}>
-              <div style={{ fontSize: 13, color: "#592209", letterSpacing: "0.2em", marginBottom: 16 }}>PALM STRENGTH SCORE</div>
-              <div style={{ fontSize: 56, fontWeight: 900, background: "#592209", backgroundSize: "200% auto", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", animation: "shimmer 3s linear infinite" }}>
-                {result.score.toFixed(1)}<span style={{ fontSize: 24 }}>/10</span>
-              </div>
-              <div style={{ marginTop: 16 }}>
-                <ScoreBar value={result.score * 10} color="#592209"/>
-              </div>
+        <div className="pr-res-grid">
+          {/* Photo with the real detected landmarks */}
+          <div>
+            <div style={{ position: "relative", borderRadius: 20, overflow: "hidden", border: "2px solid rgba(188,106,77,0.4)", aspectRatio: `${imageDims.width} / ${imageDims.height}` }}>
+              <img src={imageUrl} alt="Your palm photo with detected hand landmarks" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+              <svg viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true" style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
+                {analysis.landmarkPoints.map((p, i) => (
+                  <circle key={i} cx={p.x} cy={p.y} r={0.007} fill="#fff6df" style={{ filter: "drop-shadow(0 0 3px #ffd98a)" }} />
+                ))}
+              </svg>
             </div>
-            {/* Stats */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-              {[
-                { label: "Confidence Level", value: `${result.confidence}%`, color: "#301607" },
-                { label: "Hand Type",        value: result.handType,         color: "#592209" },
-                { label: "Element",          value: result.handElement,      color: "#592209" },
-                { label: "Dominance",        value: result.dominance,        color: "#592209" },
-              ].map(s=>(
-                <div key={s.label} style={{ ...card, textAlign: "center" }}>
-                  <div style={{ fontSize: 11, color: "#592209", letterSpacing: "0.15em", marginBottom: 8, textTransform: "uppercase" }}>{s.label}</div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: s.color }}>{s.value}</div>
-                </div>
-              ))}
-            </div>
+            <p style={{ fontSize: 13, color: "#6B4A37", textAlign: "center", margin: "10px 0 0", lineHeight: 1.6 }}>
+              The dots are the 21 hand landmarks detected in your photo. They are used to measure your hand's proportions.
+            </p>
           </div>
-          {/* Real detected palm lines — hover/tap any line for details */}
-          {imageUrl && analysis && (
-            <div style={{ maxWidth: 460, margin: "0 auto" }}>
-              <div style={{ fontSize: 12, color: "rgba(48,22,7,0.72)", letterSpacing: "0.15em", marginBottom: 12, textAlign: "center" }}>YOUR DETECTED PALM LINES</div>
-              <PalmLineOverlay imageUrl={imageUrl} analysis={analysis} />
-            </div>
-          )}
-          <div style={{ ...card, marginTop: 24 }}>
-            <div style={{ fontSize: 13, color: "#592209", letterSpacing: "0.15em", marginBottom: 12 }}>CONSULTATION SUMMARY</div>
-            <p style={{ color: "#592209", fontSize: 17, lineHeight: 1.85, margin: 0, fontStyle: "italic" }}>"{result.summary}"</p>
-          </div>
-        </div>
 
-        {/* AI Analysis Dashboard */}
-        {analysis && (
-          <div style={sec}>
-            <SectionTitle icon="📊" title="AI Analysis Dashboard"/>
-            <MetricDashboard metrics={buildDashboardMetrics(result, analysis)} />
-          </div>
-        )}
+          <div>
+            <div style={{ ...card, marginBottom: 20 }}>
+              <div style={{ fontSize: 13, color: "rgba(188,106,77,0.8)", letterSpacing: "0.15em", marginBottom: 10, textTransform: "uppercase", fontWeight: 700 }}>The traditional meaning of the {shape.label}</div>
+              <p style={{ margin: "0 0 12px", fontSize: 17, lineHeight: 1.75, color: "#301607" }}>{meaning}</p>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "#6B4A37" }}>Traits traditionally linked with this hand shape: {shape.traits.toLowerCase()}.</p>
+            </div>
 
-        {/* Major Lines Analysis */}
-        <div style={sec}>
-          <SectionTitle icon="✋" title="Major Lines Analysis"/>
-          {/* Tabs */}
-          <div style={{ display: "flex", gap: 12, marginBottom: 28, flexWrap: "wrap" }}>
-            {(["heart","head","life","fate"] as const).map(l=>(
-              <button key={l} className="tab-btn" onClick={()=>setActiveLineTab(l)}
-                style={{ padding: "10px 24px", borderRadius: 24, border: `2px solid ${activeLineTab===l?lineColors[l]:"rgba(89,34,9,0.2)"}`, background: activeLineTab===l?`${lineColors[l]}22`:"transparent", color: activeLineTab===l?lineColors[l]:"rgba(89,34,9,0.3)", fontWeight: 700, fontSize: 14, cursor: "pointer", textTransform: "capitalize", transition: "all 0.2s" }}>
-                {l} Line
-              </button>
-            ))}
-          </div>
-          {/* Active line content */}
-          {(() => {
-            const l = result.lines[activeLineTab];
-            const col = lineColors[activeLineTab];
-            return (
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+            <div style={card}>
+              <div style={{ fontSize: 13, color: "rgba(188,106,77,0.8)", letterSpacing: "0.15em", marginBottom: 14, textTransform: "uppercase", fontWeight: 700 }}>How your hand was classified</div>
+              <div className="pr-measure" data-testid="palm-measures">
                 <div>
-                  <div style={{ ...card, marginBottom: 16 }}>
-                    <div style={{ display: "flex", gap: 16, marginBottom: 16, flexWrap: "wrap" }}>
-                      {[["Length",l.length],["Depth",l.depth],["Clarity",l.clarity]].map(([k,v])=>(
-                        <div key={k} style={{ background: `${col}15`, border: `1px solid ${col}40`, borderRadius: 10, padding: "8px 16px" }}>
-                          <div style={{ fontSize: 10, color: `${col}aa`, letterSpacing: "0.15em" }}>{k}</div>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: col }}>{v}</div>
-                        </div>
-                      ))}
-                    </div>
-                    <p style={{ color: "#592209", fontSize: 16, lineHeight: 1.8, margin: 0 }}>{l.interpretation}</p>
-                  </div>
-                  <div style={{ ...card, background: `${col}08` }}>
-                    <div style={{ color: col, fontWeight: 700, fontSize: 13, letterSpacing: "0.15em", marginBottom: 12 }}>RECOMMENDATION</div>
-                    <p style={{ color: "#592209", fontSize: 15, lineHeight: 1.7, margin: 0, fontStyle: "italic" }}>{l.recommendations}</p>
-                  </div>
+                  <div style={{ fontSize: 12, color: "#6B4A37", marginBottom: 4 }}>Palm width ÷ length</div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: "#fff" }}>{g.palmWidthToLengthRatio.toFixed(2)}</div>
+                  <div style={{ fontSize: 13, color: "#BC6A4D" }}>{squarePalm ? "Square palm" : "Long palm"} (square at {SQUARE_PALM_MIN} or more)</div>
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                  <div style={card}>
-                    <div style={{ color: "#301607", fontWeight: 700, fontSize: 13, letterSpacing: "0.15em", marginBottom: 14 }}>STRENGTHS</div>
-                    {l.strengths.map(s=>(
-                      <div key={s} style={{ display: "flex", gap: 10, marginBottom: 10 }}>
-                        <span style={{ color: "#301607" }}>✦</span>
-                        <span style={{ fontSize: 15, color: "rgba(48,22,7,0.8)" }}>{s}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={card}>
-                    <div style={{ color: "#9B2C1D", fontWeight: 700, fontSize: 13, letterSpacing: "0.15em", marginBottom: 14 }}>GROWTH AREAS</div>
-                    {l.challenges.map(c=>(
-                      <div key={c} style={{ display: "flex", gap: 10, marginBottom: 10 }}>
-                        <span style={{ color: "#9B2C1D" }}>◆</span>
-                        <span style={{ fontSize: 15, color: "rgba(48,22,7,0.8)" }}>{c}</span>
-                      </div>
-                    ))}
-                  </div>
+                <div>
+                  <div style={{ fontSize: 12, color: "#6B4A37", marginBottom: 4 }}>Average finger ÷ palm length</div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: "#fff" }}>{avgFinger.toFixed(2)}</div>
+                  <div style={{ fontSize: 13, color: "#BC6A4D" }}>{longFingers ? "Long fingers" : "Short fingers"} (long at {LONG_FINGERS_MIN} or more)</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 12, color: "#6B4A37", marginBottom: 4 }}>Hand in the photo</div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: "#fff" }}>{hand} hand</div>
+                  <div style={{ fontSize: 13, color: "#6B4A37" }}>We can't tell which is your dominant hand</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 12, color: "#6B4A37", marginBottom: 4 }}>Thumb angle</div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: "#fff" }}>{Math.round(g.thumbAngleDeg)}°</div>
+                  <div style={{ fontSize: 13, color: "#592209" }}>Measured, not used in the shape</div>
                 </div>
               </div>
-            );
-          })()}
-        </div>
-
-        {/* Mounts */}
-        <div style={sec}>
-          <SectionTitle icon="⛰️" title="Planetary Mounts Analysis"/>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
-            {result.mounts.map(m=>(
-              <div key={m.name} style={card}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-                  <div>
-                    <div style={{ color: "#592209", fontWeight: 700, fontSize: 14 }}>{m.name}</div>
-                    <div style={{ color: "rgba(48,22,7,0.72)", fontSize: 12 }}>Planet: {m.planet}</div>
-                  </div>
-                  <div style={{ fontSize: 18, fontWeight: 800, color: m.strength>75?"#4ade80":"#592209" }}>{m.strength}%</div>
-                </div>
-                <ScoreBar value={m.strength} color={m.strength>75?"#4ade80":"#592209"}/>
-                <p style={{ color: "#592209", fontSize: 13, lineHeight: 1.6, margin: "12px 0 0" }}>{m.meaning}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Personality Blueprint */}
-        <div style={sec}>
-          <SectionTitle icon="🧠" title="Personality Blueprint"/>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 16 }}>
-            {result.personality.map(t=>(
-              <div key={t.name} style={card}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                  <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                    <span style={{ fontSize: 20 }}>{t.icon}</span>
-                    <span style={{ color: "#301607", fontWeight: 700, fontSize: 15 }}>{t.name}</span>
-                  </div>
-                  <span style={{ color: "#592209", fontWeight: 800, fontSize: 16 }}>{t.score}%</span>
-                </div>
-                <ScoreBar value={t.score}/>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Love & Career */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 28 }}>
-          <div style={{ ...sec, marginBottom: 0 }}>
-            <SectionTitle icon="❤️" title="Love & Relationships"/>
-            {result.love.map(l=>(
-              <div key={l} style={{ display: "flex", gap: 12, marginBottom: 12 }}>
-                <span style={{ color: "#592209", fontSize: 16, flexShrink: 0 }}>♥</span>
-                <span style={{ fontSize: 16, color: "rgba(48,22,7,0.8)", lineHeight: 1.5 }}>{l}</span>
-              </div>
-            ))}
-            <div style={{ marginTop: 20 }}>
-              <div style={{ fontSize: 12, color: "#592209", letterSpacing: "0.15em", marginBottom: 12 }}>RELATIONSHIP STRENGTHS</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {result.loveStrengths.map(s=>(
-                  <span key={s} style={{ background: "rgba(89,34,9,0.1)", border: "1px solid rgba(89,34,9,0.3)", borderRadius: 20, padding: "4px 14px", fontSize: 13, color: "#592209" }}>{s}</span>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div style={{ ...sec, marginBottom: 0 }}>
-            <SectionTitle icon="💼" title="Career & Wealth"/>
-            {result.career.map(c=>(
-              <div key={c} style={{ display: "flex", gap: 12, marginBottom: 12 }}>
-                <span style={{ color: "#592209", fontSize: 16, flexShrink: 0 }}>✦</span>
-                <span style={{ fontSize: 16, color: "rgba(48,22,7,0.8)", lineHeight: 1.5 }}>{c}</span>
-              </div>
-            ))}
-            <div style={{ marginTop: 20 }}>
-              <div style={{ fontSize: 12, color: "#592209", letterSpacing: "0.15em", marginBottom: 12 }}>IDEAL CAREER PATHS</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {result.careerTypes.map(c=>(
-                  <span key={c} style={{ background: "rgba(89,34,9,0.1)", border: "1px solid rgba(89,34,9,0.3)", borderRadius: 20, padding: "4px 14px", fontSize: 13, color: "#592209" }}>{c}</span>
-                ))}
-              </div>
+              <p style={{ margin: "16px 0 0", fontSize: 14, lineHeight: 1.65, color: "#4A2E1F" }}>
+                In classical palmistry, a {squarePalm ? "square" : "long"} palm with {longFingers ? "long" : "short"} fingers is classed as the {shape.label}. Camera angle, finger spread and distance can shift these measurements, so a different photo can give a different result.
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Life Timeline */}
-        <div style={sec}>
-          <SectionTitle icon="🌍" title="Life Journey Timeline"/>
-          <div style={{ position: "relative" }}>
-            <div style={{ position: "absolute", left: 20, top: 0, bottom: 0, width: 2, background: "#F5E9D6)" }}/>
-            {result.timeline.map((t,i)=>(
-              <div key={i} style={{ display: "flex", gap: 28, marginBottom: 32, paddingLeft: 56, position: "relative" }}>
-                <div style={{ position: "absolute", left: 10, top: 4, width: 22, height: 22, borderRadius: "50%", background: "#FBF5EC", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: "#000" }}>{i+1}</div>
-                <div style={card}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-                    <div style={{ color: "#592209", fontWeight: 800, fontSize: 17 }}>{t.phase}</div>
-                    <div style={{ color: "#592209", fontSize: 13, fontWeight: 600 }}>{t.years}</div>
-                  </div>
-                  <div style={{ color: "rgba(48,22,7,0.75)", fontSize: 12, letterSpacing: "0.15em", marginBottom: 10 }}>{t.theme}</div>
-                  <p style={{ color: "#592209", fontSize: 15, lineHeight: 1.7, margin: 0 }}>{t.insight}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+        <div style={{ ...card, marginTop: 28, borderColor: "rgba(188,106,77,0.4)" }}>
+          <div style={{ fontSize: 13, color: "rgba(188,106,77,0.9)", letterSpacing: "0.15em", marginBottom: 10, textTransform: "uppercase", fontWeight: 700 }}>What this reading does not cover</div>
+          <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: "#4A2E1F" }}>
+            This tool does not read the lines or marks on your palm. It measures the shape of your hand and gives the traditional description for that shape. There is no AI interpretation, no score, and no prediction of your future, health, career or relationships.
+          </p>
         </div>
 
-        {/* Hidden Strengths */}
-        <div style={sec}>
-          <SectionTitle icon="💎" title="Hidden Strengths"/>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-            {result.hiddenStrengths.map((s,i)=>(
-              <div key={i} style={{ ...card, display: "flex", gap: 14, alignItems: "flex-start" }}>
-                <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#F5E9D6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#000", flexShrink: 0 }}>{i+1}</div>
-                <span style={{ fontSize: 16, color: "rgba(48,22,7,0.85)", lineHeight: 1.6 }}>{s}</span>
-              </div>
-            ))}
-          </div>
+        <p style={{ margin: "28px auto 24px", maxWidth: 640, textAlign: "center", fontSize: 14, fontStyle: "italic", lineHeight: 1.7, color: "#592209" }}>
+          This reading is for personal interest and reflection. Palmistry is a traditional practice that is not scientifically proven, and the result is not a prediction or professional advice.
+        </p>
+        <div style={{ textAlign: "center" }}>
+          <button style={goldBtn} onClick={resetToLanding}>🔄 New Palm Reading</button>
         </div>
-
-        {/* Recommendations */}
-        <div style={sec}>
-          <SectionTitle icon="🌟" title="Personalized Recommendations"/>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
-            {result.recommendations.map(r=>(
-              <div key={r.category} style={card}>
-                <div style={{ fontSize: 28, marginBottom: 12 }}>{r.icon}</div>
-                <div style={{ color: "#592209", fontWeight: 700, fontSize: 14, marginBottom: 10 }}>{r.category}</div>
-                <p style={{ color: "#592209", fontSize: 14, lineHeight: 1.65, margin: 0 }}>{r.tip}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* CTA */}
-        <div style={{ ...sec, textAlign: "center", background: "linear-gradient(135deg,rgba(89,34,9,0.08),rgba(89,34,9,0))" }}>
-          <div style={{ fontSize: 36, marginBottom: 16 }}>✨</div>
-          <h3 style={{ color: "#592209", fontSize: 24, fontWeight: 800, marginBottom: 12 }}>Want a Deeper Reading?</h3>
-          <p style={{ color: "#592209", fontSize: 16, marginBottom: 28, maxWidth: 480, margin: "0 auto 28px" }}>Combine your palm reading with your birth chart and zodiac profile for a complete cosmic consultation.</p>
-          <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-            <button style={goldBtn} onClick={()=>setStage("landing")}>🔄 New Palm Reading</button>
-            <button style={{ ...goldBtn, background: "rgba(89,34,9,0.12)", color: "#592209", boxShadow: "none", border: "1px solid rgba(89,34,9,0.35)" }}>🌌 View Birth Chart</button>
-          </div>
-        </div>
-
       </div>
+      <PalmEducation />
     </div>
   );
 }
