@@ -1708,7 +1708,7 @@ const KarmaMirrorDisplay = ({
 };
 
 const ReadingNote = () => (
-  <p style={{ position: 'relative', zIndex: 10, maxWidth: 560, margin: '0 auto 32px', padding: '0 20px', textAlign: 'center', fontSize: 15, lineHeight: 1.7, fontStyle: 'italic', color: 'rgba(255,255,255,0.6)', fontFamily: "'Lato',sans-serif" }}>
+  <p style={{ position: 'relative', zIndex: 10, maxWidth: 560, margin: '0 auto 32px', padding: '0 20px', textAlign: 'center', fontSize: 15, lineHeight: 1.7, fontStyle: 'italic', color: 'rgba(255,255,255,0.6)', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
     This reading is AI-written reflection based on the cards you drew. It is not a prediction or professional advice.
   </p>
 );
@@ -1949,7 +1949,7 @@ const TarotExperience = () => {
       </AnimatePresence>
 
       {(phase === 'landing' || (phase === 'reading' && reading && !isLoading)) && (
-        <div style={{ background: '#071327' }}>
+        <div>
           <TarotEducation />
         </div>
       )}
@@ -1959,17 +1959,17 @@ const TarotExperience = () => {
 
 // ─── Error state (no made-up reading is ever shown when the service fails) ──────
 const ReadingError = ({ message, cards, onRetry, onReset }: { message: string; cards: TarotCard[]; onRetry: () => void; onReset: () => void }) => (
-  <div role="alert" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', background: '#071327', textAlign: 'center' }}>
+  <div role="alert" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', background: 'transparent', textAlign: 'center' }}>
     <div style={{ display: 'flex', gap: 10, marginBottom: 28, flexWrap: 'wrap', justifyContent: 'center' }}>
       {cards.map(c => (
-        <span key={c.id} style={{ padding: '6px 14px', border: '1px solid rgba(188,106,77,0.4)', borderRadius: 20, color: '#E8B79A', fontFamily: "'Astra','Iceland',sans-serif", fontSize: 15 }}>{c.name}</span>
+        <span key={c.id} style={{ padding: '6px 14px', border: '1px solid rgba(89,34,9,0.4)', borderRadius: 20, color: '#592209', fontFamily: "'Cinzel', Georgia, serif", fontSize: 15 }}>{c.name}</span>
       ))}
     </div>
-    <h2 style={{ margin: '0 0 12px', color: '#fff', fontFamily: "'Astra','Iceland',sans-serif", fontSize: 'clamp(24px,4vw,34px)', letterSpacing: 2 }}>Your reading couldn&apos;t be created</h2>
-    <p style={{ margin: '0 0 32px', maxWidth: 460, color: 'rgba(255,255,255,0.75)', fontFamily: "'Lato',sans-serif", fontSize: 17, lineHeight: 1.7 }}>{message}</p>
+    <h2 style={{ margin: '0 0 12px', color: '#301607', fontFamily: "'Cinzel', Georgia, serif", fontSize: 'clamp(24px,4vw,34px)', letterSpacing: 2 }}>Your reading couldn&apos;t be created</h2>
+    <p style={{ margin: '0 0 32px', maxWidth: 460, color: '#4A2E1F', fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 17, lineHeight: 1.7 }}>{message}</p>
     <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
-      <button onClick={onRetry} style={{ padding: '14px 32px', background: '#BC6A4D', border: 'none', borderRadius: 4, color: '#050510', fontFamily: "'Astra','Iceland',sans-serif", letterSpacing: 3, fontSize: 15, textTransform: 'uppercase', cursor: 'pointer', fontWeight: 700 }}>Try Again</button>
-      <button onClick={onReset} style={{ padding: '14px 32px', background: 'transparent', border: '1px solid rgba(188,106,77,0.5)', borderRadius: 4, color: 'rgba(255,255,255,0.85)', fontFamily: "'Astra','Iceland',sans-serif", letterSpacing: 3, fontSize: 15, textTransform: 'uppercase', cursor: 'pointer' }}>Start Over</button>
+      <button onClick={onRetry} style={{ padding: '14px 32px', background: '#592209', border: 'none', borderRadius: 4, color: '#F5E9D6', fontFamily: "'Cinzel', Georgia, serif", letterSpacing: 3, fontSize: 15, textTransform: 'uppercase', cursor: 'pointer', fontWeight: 700 }}>Try Again</button>
+      <button onClick={onReset} style={{ padding: '14px 32px', background: 'transparent', border: '1px solid rgba(89,34,9,0.5)', borderRadius: 4, color: '#592209', fontFamily: "'Cinzel', Georgia, serif", letterSpacing: 3, fontSize: 15, textTransform: 'uppercase', cursor: 'pointer' }}>Start Over</button>
     </div>
   </div>
 );

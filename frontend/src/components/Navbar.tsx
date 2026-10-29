@@ -520,15 +520,15 @@ const Navbar = () => {
           </div>
         )}
       <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
-        <AlertDialogContent className="border-border/30 bg-[#081426] text-white">
+        <AlertDialogContent className="border-[#592209]/20 bg-[#FBF5EC] text-[#301607]">
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-display text-lg tracking-wide text-[#BC6A4D]">Confirm Logout</AlertDialogTitle>
+            <AlertDialogTitle className="font-display text-lg tracking-wide text-[#592209]">Confirm Logout</AlertDialogTitle>
             <AlertDialogDescription className="text-foreground/70">
               Are you sure you want to sign out of your account?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="border-border/30 bg-transparent text-white hover:bg-white/5 hover:text-white">
+            <AlertDialogCancel className="border-[#592209]/30 bg-transparent text-[#301607] hover:bg-[#592209]/5 hover:text-[#301607]">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
@@ -536,7 +536,7 @@ const Navbar = () => {
                 setShowLogoutConfirm(false);
                 void handleLogout();
               }}
-              className="bg-[#BC6A4D] text-white hover:bg-[#BC6A4D]/80"
+              className="bg-[#592209] text-[#F5E9D6] hover:bg-[#461B07]"
             >
               Sign out
             </AlertDialogAction>
