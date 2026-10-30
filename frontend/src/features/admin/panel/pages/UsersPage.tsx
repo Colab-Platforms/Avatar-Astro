@@ -245,7 +245,7 @@ export default function UsersPage() {
                     <td className="px-3 py-2 text-xs">{providerLabel(u.authProvider)}</td>
                     <td className="px-3 py-2 text-xs">{[u.isEmailVerified && "Email", u.isPhoneVerified && "Phone"].filter(Boolean).join(" · ") || "—"}</td>
                     <td className="px-3 py-2 text-xs">{fmtDate(u.createdAt)}</td>
-                    <td className="px-3 py-2 text-xs">{u.lastActiveAt ? fmtDate(u.lastActiveAt) : <span className="text-[#9A9086]">No activity</span>}</td>
+                    <td className="px-3 py-2 text-xs">{u.lastActiveAt ? fmtDate(u.lastActiveAt) : <span className="text-[#756B61]">No activity</span>}</td>
                     <td className="space-x-2 whitespace-nowrap px-3 py-2 text-right">
                       <button className={ghostBtn} onClick={() => set({ user: u.id })}>View</button>
                       {u.role === "USER" && <button className={ghostBtn} disabled={toggle.isPending} onClick={() => confirmToggle(u)}>{u.isActive ? "Deactivate" : "Reactivate"}</button>}

@@ -161,9 +161,9 @@ export function CategoryFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => !isSubmitting && onOpenChange(next)}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto border-primary/15 bg-[#FBF5EC] text-foreground sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto border-border bg-white text-foreground sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-display text-lg tracking-wide text-foreground">
+          <DialogTitle className="font-semibold text-lg tracking-normal text-foreground">
             {isEdit ? `Edit ${category?.name}` : "Add Category"}
           </DialogTitle>
           <DialogDescription className="text-foreground/70">
@@ -179,7 +179,7 @@ export function CategoryFormDialog({
               value={values.name}
               onChange={(e) => handleNameChange(e.target.value)}
               placeholder="Gemstones"
-              className="border-primary/15 bg-card text-foreground"
+              className="border-border bg-card text-foreground"
             />
           </Field>
 
@@ -191,7 +191,7 @@ export function CategoryFormDialog({
                 setField("slug", slugify(e.target.value));
               }}
               placeholder="gemstones"
-              className="border-primary/15 bg-card text-foreground"
+              className="border-border bg-card text-foreground"
             />
           </Field>
 
@@ -201,11 +201,11 @@ export function CategoryFormDialog({
               value={values.description ?? ""}
               onChange={(e) => setField("description", e.target.value)}
               placeholder="Optional description shown to admins…"
-              className="border-primary/15 bg-card text-foreground"
+              className="border-border bg-card text-foreground"
             />
           </Field>
 
-          <div className="flex items-center justify-between rounded-md border border-primary/15 bg-card px-3 py-2.5">
+          <div className="flex items-center justify-between rounded-md border border-border bg-card px-3 py-2.5">
             <div>
               <Label className="text-sm text-foreground/80">Active</Label>
               <p className="text-xs text-foreground/70">
@@ -222,7 +222,7 @@ export function CategoryFormDialog({
             <Label className="text-sm text-foreground/80">Category Image</Label>
 
             {(previewUrl || category?.image) && (
-              <div className="h-20 w-20 overflow-hidden rounded-md border border-primary/15">
+              <div className="h-20 w-20 overflow-hidden rounded-md border border-border">
                 <img
                   src={previewUrl ?? category?.image ?? ""}
                   alt=""
@@ -242,7 +242,7 @@ export function CategoryFormDialog({
               type="button"
               variant="outline"
               onClick={() => fileInputRef.current?.click()}
-              className="border-primary/15 bg-transparent text-foreground hover:bg-primary/10 hover:text-foreground"
+              className="border-border bg-transparent text-foreground hover:bg-muted hover:text-foreground"
             >
               <ImagePlus className="h-4 w-4" />
               {category?.image || previewUrl ? "Replace Image" : "Select Image"}
@@ -258,14 +258,14 @@ export function CategoryFormDialog({
               variant="ghost"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
-              className="text-foreground/70 hover:bg-primary/10 hover:text-foreground"
+              className="text-foreground/70 hover:bg-muted hover:text-foreground"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="bg-[#592209] text-[#F5E9D6] hover:bg-[#592209]/90"
+              className="bg-[#803003] text-white hover:bg-[#6B2802]"
             >
               {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
               {uploadImage.isPending
@@ -296,7 +296,7 @@ function Field({
     <div className="space-y-1.5">
       <Label className="text-sm text-foreground/80">
         {label}
-        {required && <span className="ml-0.5 text-[#592209]">*</span>}
+        {required && <span className="ml-0.5 text-[#803003]">*</span>}
       </Label>
       {children}
       {error && <p className="text-xs text-red-800">{error}</p>}

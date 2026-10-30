@@ -2,19 +2,23 @@ import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { errorMessage, panelDownloadCsv, usePanel } from "../api";
 import { QueryView } from "../QueryView";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { BASIS_LABEL, fmtNum, fmtUsd } from "../money";
 import { Badge, Empty, fmtDate, ghostBtn, inputClass, isoDay, PageHeader, Pager, Table } from "../ui";
 
 interface Item {
   id: string; at: string; eventType: string; label: string; feature: string; status: string; statusCode: number; durationMs: number;
   metadata: Record<string, unknown> | null;
+  ai: { provider: string | null; model: string | null; calls: number; inputTokens: number | null; outputTokens: number | null; totalTokens: number | null; costUsd: number | null; costBasis: "actual" | "estimated" | null } | null;
+  servedFromCache: boolean;
   customer: { id: string; email: string | null; name: string | null; removed: boolean } | null;
 }
 interface Data {
   items: Item[]; page: number; pageSize: number; total: number; totalPages: number;
-  facets: { eventTypes: { value: string; label: string }[]; features: { value: string; label: string }[]; statuses: string[] };
+  facets: { eventTypes: { value: string; label: string }[]; features: { value: string; label: string }[]; statuses: string[]; providers?: string[] };
 }
 
-const KEYS = ["customer", "userId", "eventType", "feature", "status", "from", "to"] as const;
+const KEYS = ["customer", "userId", "eventType", "feature", "status", "from", "to", "provider", "costBasis", "ai"] as const;
 const statusTone = (s: string) => (s === "success" ? "good" : s === "error" || s === "failed" ? "bad" : "warn");
 
 function details(i: Item): string {
@@ -28,12 +32,74 @@ function details(i: Item): string {
   return parts.join(" · ") || "—";
 }
 
+function CostCell({ i }: { i: Item }) {
+  if (!i.ai) return <span className="text-xs text-[#6B6259]">{i.servedFromCache ? "Cached" : "—"}</span>;
+  if (i.ai.costUsd === null) return <span className="text-xs text-[#6B6259]" title="The provider reported no cost and no price is configured">Not known</span>;
+  return (
+    <span className="block">
+      <span className="tabular-nums">{fmtUsd(i.ai.costUsd)}</span>
+      {i.ai.costBasis && <span className="block text-[11px] text-[#6B6259]">{BASIS_LABEL[i.ai.costBasis]}</span>}
+    </span>
+  );
+}
+
+function DetailRow({ k, v }: { k: string; v: React.ReactNode }) {
+  return (
+    <div className="flex justify-between gap-4 border-b border-[#EEE9E2] py-1.5 text-sm last:border-0">
+      <dt className="text-[#6B6259]">{k}</dt>
+      <dd className="text-right font-medium text-[#1F1B16]">{v}</dd>
+    </div>
+  );
+}
+
+function DetailDialog({ item, onClose }: { item: Item | null; onClose: () => void }) {
+  const ai = item?.ai;
+  return (
+    <Dialog open={!!item} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-lg">
+        {item && (
+          <>
+            <DialogHeader>
+              <DialogTitle>{item.label}</DialogTitle>
+              <DialogDescription>{fmtDate(item.at)} · {item.feature}</DialogDescription>
+            </DialogHeader>
+            <dl>
+              <DetailRow k="Customer" v={item.customer ? (item.customer.removed ? "Removed account" : item.customer.name ?? item.customer.email) : "Not signed in"} />
+              {item.customer?.email && item.customer.name && <DetailRow k="Email" v={item.customer.email} />}
+              <DetailRow k="Result" v={`${item.status} (HTTP ${item.statusCode})`} />
+              <DetailRow k="Duration" v={`${item.durationMs} ms`} />
+              <DetailRow k="Served from cache" v={item.servedFromCache ? "Yes (nothing generated)" : "No"} />
+            </dl>
+            <h4 className="mt-3 text-sm font-semibold text-[#1F1B16]">AI usage</h4>
+            {ai ? (
+              <dl>
+                <DetailRow k="Provider" v={ai.provider} />
+                <DetailRow k="Model" v={ai.model ?? "Not reported"} />
+                <DetailRow k="Provider calls" v={ai.calls} />
+                <DetailRow k="Input tokens" v={fmtNum(ai.inputTokens)} />
+                <DetailRow k="Output tokens" v={fmtNum(ai.outputTokens)} />
+                <DetailRow k="Total tokens" v={fmtNum(ai.totalTokens)} />
+                <DetailRow k="Cost" v={ai.costUsd === null ? "Not known" : `${fmtUsd(ai.costUsd)} USD`} />
+                <DetailRow k="Cost type" v={ai.costBasis ? `${BASIS_LABEL[ai.costBasis]}${ai.costBasis === "actual" ? " (reported by the provider)" : " (tokens x configured price)"}` : "None: the provider reported no cost and no price is configured"} />
+              </dl>
+            ) : (
+              <p className="text-sm text-[#6B6259]">{item.servedFromCache ? "This answer was reused, so no AI provider was called and nothing was charged." : "No AI provider was called for this activity (or it happened before cost tracking began), so no AI cost applies."}</p>
+            )}
+            {item.customer && !item.customer.removed && <Link className="mt-3 inline-block text-sm text-[#803003] hover:underline" to={`/admin/users?user=${item.customer.id}`}>Open customer profile</Link>}
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function ActivityPage() {
   const [params, setParams] = useSearchParams();
   const page = Math.max(1, Number(params.get("page")) || 1);
   const [customer, setCustomer] = useState(params.get("customer") ?? "");
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [selected, setSelected] = useState<Item | null>(null);
 
   const set = (patch: Record<string, string | null>) => {
     const next = new URLSearchParams(params);
@@ -87,6 +153,25 @@ export default function ActivityPage() {
             {(facets?.statuses ?? ["success", "error", "rejected", "failed"]).map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </label>
+        <label className="text-xs text-[#6B6259]">Provider
+          <select className={`${inputClass} mt-1 w-auto`} value={params.get("provider") ?? ""} onChange={(e) => set({ provider: e.target.value || null })}>
+            <option value="">Any</option>
+            {(facets?.providers ?? ["openrouter", "groq", "sarvam"]).map((p) => <option key={p} value={p}>{p}</option>)}
+          </select>
+        </label>
+        <label className="text-xs text-[#6B6259]">Cost type
+          <select className={`${inputClass} mt-1 w-auto`} value={params.get("costBasis") ?? (params.get("ai") === "no" ? "nonai" : params.get("ai") === "yes" ? "ai" : "")} onChange={(e) => {
+            const v = e.target.value;
+            set({ costBasis: ["actual", "estimated", "none"].includes(v) ? v : null, ai: v === "nonai" ? "no" : v === "ai" ? "yes" : null });
+          }}>
+            <option value="">Any</option>
+            <option value="ai">All AI requests</option>
+            <option value="actual">Actual cost</option>
+            <option value="estimated">Estimated cost</option>
+            <option value="none">AI, cost not known</option>
+            <option value="nonai">No AI used</option>
+          </select>
+        </label>
         <label className="text-xs text-[#6B6259]">From
           <input type="date" className={`${inputClass} mt-1 w-auto`} max={params.get("to") ?? isoDay(new Date())} value={params.get("from") ?? ""} onChange={(e) => set({ from: e.target.value || null, to: params.get("to") || e.target.value || null })} />
         </label>
@@ -107,24 +192,31 @@ export default function ActivityPage() {
             <Empty title={active ? "No activity matches these filters" : "No activity recorded yet"} hint={active ? "Try widening the date range or removing a filter." : "Activity is recorded from the moment tracking was deployed. Nothing is back-filled or estimated."} />
           ) : (
             <>
-              <Table head={["When", "Customer", "Activity", "Feature", "Result", "Details"]}>
+              <Table head={["When", "Customer", "Activity", "Feature", "Provider / Model", "Cost", "Result", "Details"]}>
                 {d.items.map((i) => (
-                  <tr key={i.id}>
+                  <tr key={i.id} className="cursor-pointer hover:bg-[#FBF8F3]" onClick={() => setSelected(i)}>
                     <td className="whitespace-nowrap px-3 py-2 text-xs">{fmtDate(i.at)}</td>
                     <td className="px-3 py-2">
                       {i.customer ? (
-                        i.customer.removed ? <span className="text-xs text-[#9A9086]">Removed account</span> : (
+                        i.customer.removed ? <span className="text-xs text-[#756B61]">Removed account</span> : (
                           <Link className="block hover:text-[#803003]" to={`/admin/users?user=${i.customer.id}`}>
                             <span className="block font-medium">{i.customer.name ?? i.customer.email}</span>
                             {i.customer.name && <span className="block text-xs text-[#6B6259]">{i.customer.email}</span>}
                           </Link>
                         )
-                      ) : <span className="text-xs text-[#9A9086]">Not signed in</span>}
+                      ) : <span className="text-xs text-[#756B61]">Not signed in</span>}
                     </td>
-                    <td className="px-3 py-2">{i.label}<span className="block font-mono text-[11px] text-[#9A9086]">{i.eventType}</span></td>
+                    <td className="px-3 py-2">{i.label}<span className="block font-mono text-[11px] text-[#756B61]">{i.eventType}</span></td>
                     <td className="px-3 py-2">{i.feature}</td>
+                    <td className="px-3 py-2 text-xs">
+                      {i.ai ? <><span className="block font-medium text-[#1F1B16]">{i.ai.provider}</span><span className="block text-[#6B6259]">{i.ai.model ?? "model not reported"}</span></> : <span className="text-[#6B6259]">—</span>}
+                    </td>
+                    <td className="px-3 py-2"><CostCell i={i} /></td>
                     <td className="px-3 py-2"><Badge tone={statusTone(i.status)}>{i.status}</Badge></td>
-                    <td className="px-3 py-2 text-xs text-[#6B6259]">{details(i)}</td>
+                    <td className="px-3 py-2 text-xs text-[#6B6259]">
+                      {details(i)}
+                      <button type="button" className="ml-2 font-medium text-[#803003] hover:underline focus-visible:outline focus-visible:outline-2" onClick={(e) => { e.stopPropagation(); setSelected(i); }}>View</button>
+                    </td>
                   </tr>
                 ))}
               </Table>
@@ -133,6 +225,7 @@ export default function ActivityPage() {
           )
         }
       </QueryView>
+      <DetailDialog item={selected} onClose={() => setSelected(null)} />
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { errorMessage, panelDownloadCsv, usePanel } from "../api";
 import { QueryView } from "../QueryView";
+import { CostAnalytics } from "../CostAnalytics";
 import { Card, Empty, fmtDate, fmtPct, ghostBtn, inputClass, isoDay, PageHeader, Stat, Table } from "../ui";
 
 interface FeatureRow { key: string; label: string; provider: string; total: number; success: number; failed: number; rejected: number }
@@ -51,6 +52,7 @@ function ChartCard({ title, description, children, empty, label }: { title: stri
 const axis = { fontSize: 11, fill: "#6B6259" } as const;
 const grid = <CartesianGrid stroke="#EEE9E2" vertical={false} />;
 const tip = <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #E8E3DC", fontSize: 12 }} />;
+const legendText = (v: string) => <span style={{ color: "#4A423A" }}>{v}</span>;
 const shortDay = (d: string) => d.slice(5);
 
 export default function ReportsPage() {
@@ -127,7 +129,7 @@ export default function ReportsPage() {
                 <div className="grid gap-4 lg:grid-cols-2">
                   <ChartCard title="User registrations" description="Click a bar to see that day's new customers." empty={d.registrations.every((r) => r.email + r.google === 0)} label="New registrations per day, split by email and Google">
                     <ResponsiveContainer><BarChart data={d.registrations} onClick={(s: any) => s?.activeLabel && go(`/admin/users?registeredFrom=${s.activeLabel}&registeredTo=${s.activeLabel}`)} style={{ cursor: "pointer" }}>
-                      {grid}<XAxis dataKey="day" tickFormatter={shortDay} tick={axis} minTickGap={24} /><YAxis allowDecimals={false} tick={axis} width={32} />{tip}<Legend wrapperStyle={{ fontSize: 12 }} />
+                      {grid}<XAxis dataKey="day" tickFormatter={shortDay} tick={axis} minTickGap={24} /><YAxis allowDecimals={false} tick={axis} width={32} />{tip}<Legend wrapperStyle={{ fontSize: 12 }} formatter={legendText} />
                       <Bar dataKey="email" name="Email" stackId="r" fill={C.accent} /><Bar dataKey="google" name="Google" stackId="r" fill={C.sand} radius={[3, 3, 0, 0]} />
                     </BarChart></ResponsiveContainer>
                   </ChartCard>
@@ -140,7 +142,7 @@ export default function ReportsPage() {
                   <ChartCard title="Feature usage" description="Requests per feature by outcome. Click a bar to open that feature's records." empty={d.features.every((f) => f.total === 0)} label="Requests per feature, split by success, failed and rejected">
                     <ResponsiveContainer><BarChart layout="vertical" data={[...d.features].filter((f) => f.total > 0).sort((a, b) => b.total - a.total)} margin={{ left: 8 }}
                       onClick={(s: any) => { const key = labelToKey.get(s?.activeLabel); if (key) go(`/admin/activity?feature=${key}&eventType=feature.request&${rangeQs}`); }} style={{ cursor: "pointer" }}>
-                      {grid}<XAxis type="number" allowDecimals={false} tick={axis} /><YAxis type="category" dataKey="label" tick={axis} width={150} />{tip}<Legend wrapperStyle={{ fontSize: 12 }} />
+                      {grid}<XAxis type="number" allowDecimals={false} tick={axis} /><YAxis type="category" dataKey="label" tick={axis} width={150} />{tip}<Legend wrapperStyle={{ fontSize: 12 }} formatter={legendText} />
                       <Bar dataKey="success" name="Succeeded" stackId="f" fill={C.green} /><Bar dataKey="failed" name="Failed" stackId="f" fill={C.red} /><Bar dataKey="rejected" name="Rejected" stackId="f" fill={C.amber} />
                     </BarChart></ResponsiveContainer>
                   </ChartCard>
@@ -148,12 +150,12 @@ export default function ReportsPage() {
                     <ResponsiveContainer><PieChart>
                       <Pie data={d.requestStatus.filter((s) => s.count > 0)} dataKey="count" nameKey="status" innerRadius={55} outerRadius={90} paddingAngle={2} onClick={(s: any) => s?.status && go(`/admin/activity?eventType=feature.request&status=${s.status === "failed" ? "error" : s.status}&${rangeQs}`)} style={{ cursor: "pointer" }}>
                         {d.requestStatus.filter((s) => s.count > 0).map((s) => <Cell key={s.status} fill={STATUS_COLOR[s.status] ?? C.stone} />)}
-                      </Pie>{tip}<Legend wrapperStyle={{ fontSize: 12 }} />
+                      </Pie>{tip}<Legend wrapperStyle={{ fontSize: 12 }} formatter={legendText} />
                     </PieChart></ResponsiveContainer>
                   </ChartCard>
                   <ChartCard title="User activity trend" description="All recorded activity per day, by type." empty={d.activityTrend.every((r) => Object.keys(r).length <= 1)} label="Daily activity by event type">
                     <ResponsiveContainer><AreaChart data={d.activityTrend} onClick={(s: any) => s?.activeLabel && go(`/admin/activity?from=${s.activeLabel}&to=${s.activeLabel}`)} style={{ cursor: "pointer" }}>
-                      {grid}<XAxis dataKey="day" tickFormatter={shortDay} tick={axis} minTickGap={24} /><YAxis allowDecimals={false} tick={axis} width={32} />{tip}<Legend wrapperStyle={{ fontSize: 12 }} />
+                      {grid}<XAxis dataKey="day" tickFormatter={shortDay} tick={axis} minTickGap={24} /><YAxis allowDecimals={false} tick={axis} width={32} />{tip}<Legend wrapperStyle={{ fontSize: 12 }} formatter={legendText} />
                       <Area type="monotone" dataKey="feature.request" name="Feature requests" stackId="a" stroke={C.accent} fill={C.accent} fillOpacity={0.75} />
                       <Area type="monotone" dataKey="feature.opened" name="Pages opened" stackId="a" stroke={C.sand} fill={C.sand} fillOpacity={0.75} />
                       <Area type="monotone" dataKey="auth.login" name="Sign-ins" stackId="a" stroke={C.blue} fill={C.blue} fillOpacity={0.7} />
@@ -164,7 +166,7 @@ export default function ReportsPage() {
                     <ResponsiveContainer><PieChart>
                       <Pie data={d.authMethods.accountsByProvider.map((a) => ({ name: a.provider === "GOOGLE" ? "Google" : "Email & password", provider: a.provider, users: a.users }))} dataKey="users" nameKey="name" innerRadius={55} outerRadius={90} paddingAngle={2} onClick={(s: any) => s?.provider && go(`/admin/users?provider=${s.provider}`)} style={{ cursor: "pointer" }}>
                         {d.authMethods.accountsByProvider.map((a) => <Cell key={a.provider} fill={a.provider === "GOOGLE" ? C.sand : C.accent} />)}
-                      </Pie>{tip}<Legend wrapperStyle={{ fontSize: 12 }} />
+                      </Pie>{tip}<Legend wrapperStyle={{ fontSize: 12 }} formatter={legendText} />
                     </PieChart></ResponsiveContainer>
                   </ChartCard>
                 </div>
@@ -205,6 +207,7 @@ export default function ReportsPage() {
           }}
         </QueryView>
       )}
+      {valid && <CostAnalytics from={from} to={to} />}
     </div>
   );
 }

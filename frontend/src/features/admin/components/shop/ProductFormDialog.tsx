@@ -229,9 +229,9 @@ export function ProductFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => !isSubmitting && onOpenChange(next)}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto border-primary/15 bg-[#FBF5EC] text-foreground sm:max-w-2xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto border-border bg-white text-foreground sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="font-display text-lg tracking-wide text-foreground">
+          <DialogTitle className="font-semibold text-lg tracking-normal text-foreground">
             {isEdit ? `Edit ${product?.name}` : "Add Product"}
           </DialogTitle>
           <DialogDescription className="text-foreground/70">
@@ -248,7 +248,7 @@ export function ProductFormDialog({
                 value={values.name}
                 onChange={(e) => handleNameChange(e.target.value)}
                 placeholder="Blue Sapphire (Neelam)"
-                className="border-primary/15 bg-card text-foreground"
+                className="border-border bg-card text-foreground"
               />
             </Field>
 
@@ -260,7 +260,7 @@ export function ProductFormDialog({
                   setField("slug", slugify(e.target.value));
                 }}
                 placeholder="blue-sapphire"
-                className="border-primary/15 bg-card text-foreground"
+                className="border-border bg-card text-foreground"
               />
             </Field>
 
@@ -269,7 +269,7 @@ export function ProductFormDialog({
                 value={values.categoryId}
                 onValueChange={(value) => setField("categoryId", value)}
               >
-                <SelectTrigger className="border-primary/15 bg-card text-foreground">
+                <SelectTrigger className="border-border bg-card text-foreground">
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -288,7 +288,7 @@ export function ProductFormDialog({
                 min={1}
                 value={values.price}
                 onChange={(e) => setField("price", Number(e.target.value))}
-                className="border-primary/15 bg-card text-foreground"
+                className="border-border bg-card text-foreground"
               />
             </Field>
 
@@ -304,7 +304,7 @@ export function ProductFormDialog({
                   )
                 }
                 placeholder="Optional"
-                className="border-primary/15 bg-card text-foreground"
+                className="border-border bg-card text-foreground"
               />
             </Field>
 
@@ -313,7 +313,7 @@ export function ProductFormDialog({
                 value={values.authenticity}
                 onChange={(e) => setField("authenticity", e.target.value)}
                 placeholder="GIA Certified · Untreated · Sri Lanka Origin"
-                className="border-primary/15 bg-card text-foreground"
+                className="border-border bg-card text-foreground"
               />
             </Field>
           </div>
@@ -324,7 +324,7 @@ export function ProductFormDialog({
               value={values.description}
               onChange={(e) => setField("description", e.target.value)}
               placeholder="Natural Ceylon Blue Sapphire, energized with Vedic rituals…"
-              className="border-primary/15 bg-card text-foreground"
+              className="border-border bg-card text-foreground"
             />
           </Field>
 
@@ -338,7 +338,7 @@ export function ProductFormDialog({
           <div className="space-y-2">
             <Label className="text-sm text-foreground/80">
               Benefits
-              <span className="ml-0.5 text-[#592209]">*</span>
+              <span className="ml-0.5 text-[#803003]">*</span>
             </Label>
 
             {values.benefits.length > 0 && (
@@ -346,7 +346,7 @@ export function ProductFormDialog({
                 {values.benefits.map((benefit, index) => (
                   <div
                     key={`${benefit}-${index}`}
-                    className="flex items-center gap-2 rounded-md border border-primary/15 bg-card px-3 py-1.5"
+                    className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5"
                   >
                     <span className="flex-1 text-sm text-foreground/80">
                       {benefit}
@@ -375,13 +375,13 @@ export function ProductFormDialog({
                   }
                 }}
                 placeholder="e.g. Career advancement"
-                className="border-primary/15 bg-card text-foreground"
+                className="border-border bg-card text-foreground"
               />
               <Button
                 type="button"
                 variant="outline"
                 onClick={addBenefit}
-                className="border-primary/15 bg-transparent text-foreground hover:bg-primary/10 hover:text-foreground"
+                className="border-border bg-transparent text-foreground hover:bg-muted hover:text-foreground"
               >
                 <Plus className="h-4 w-4" />
                 Add
@@ -392,7 +392,7 @@ export function ProductFormDialog({
             )}
           </div>
 
-          <div className="flex items-center justify-between rounded-md border border-primary/15 bg-card px-3 py-2.5">
+          <div className="flex items-center justify-between rounded-md border border-border bg-card px-3 py-2.5">
             <div>
               <Label className="text-sm text-foreground/80">Active</Label>
               <p className="text-xs text-foreground/70">
@@ -409,7 +409,7 @@ export function ProductFormDialog({
             <Label className="text-sm text-foreground/80">Product Image</Label>
 
             {(previewUrl || product?.image) && (
-              <div className="h-20 w-20 overflow-hidden rounded-md border border-primary/15">
+              <div className="h-20 w-20 overflow-hidden rounded-md border border-border">
                 <img
                   src={previewUrl ?? product?.image ?? ""}
                   alt=""
@@ -429,7 +429,7 @@ export function ProductFormDialog({
               type="button"
               variant="outline"
               onClick={() => fileInputRef.current?.click()}
-              className="border-primary/15 bg-transparent text-foreground hover:bg-primary/10 hover:text-foreground"
+              className="border-border bg-transparent text-foreground hover:bg-muted hover:text-foreground"
             >
               <ImagePlus className="h-4 w-4" />
               {product?.image || previewUrl ? "Replace Image" : "Select Image"}
@@ -445,14 +445,14 @@ export function ProductFormDialog({
               variant="ghost"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
-              className="text-foreground/70 hover:bg-primary/10 hover:text-foreground"
+              className="text-foreground/70 hover:bg-muted hover:text-foreground"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="bg-[#592209] text-[#F5E9D6] hover:bg-[#592209]/90"
+              className="bg-[#803003] text-white hover:bg-[#6B2802]"
             >
               {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
               {uploadImage.isPending
@@ -483,7 +483,7 @@ function Field({
     <div className="space-y-1.5">
       <Label className="text-sm text-foreground/80">
         {label}
-        {required && <span className="ml-0.5 text-[#592209]">*</span>}
+        {required && <span className="ml-0.5 text-[#803003]">*</span>}
       </Label>
       {children}
       {error && <p className="text-xs text-red-800">{error}</p>}

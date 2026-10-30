@@ -167,9 +167,13 @@ describe("Reports page", () => {
     authMethods: { accountsByProvider: [], signInsByMethod: [], failedSignInsByMethod: [] }, activityTrend: [], providers: [], ...over,
   });
 
+  // The page also asks for /costs/summary (covered in CostPanels.test.tsx); here it answers "no AI usage yet".
+  const noCosts = { from: "", to: "", currency: "USD", inrRate: null, trackingSince: null, note: "", kpis: { totalAiRequests: 0 }, byFeature: [], byProvider: [], byModel: [], topCustomers: [], daily: [] };
+  const serve = (payload: object) => authRequest.mockImplementation(async (url: string) => (String(url).startsWith("/admin/costs/summary") ? noCosts : payload));
+
   it("requests the chosen preset range, links its KPIs, and says so when there is no activity", async () => {
     authRequest.mockReset();
-    authRequest.mockResolvedValue(analytics());
+    serve(analytics());
     mount(<ReportsPage />);
     await screen.findByText("Registered users");
     expect(calls().some((c) => /^\/admin\/reports\/analytics\?from=\d{4}-\d{2}-\d{2}&to=\d{4}-\d{2}-\d{2}$/.test(c))).toBe(true);
@@ -180,13 +184,13 @@ describe("Reports page", () => {
     fireEvent.click(screen.getByRole("button", { name: "Today" }));
     await waitFor(() => expect(calls().length).toBeGreaterThan(before));
     const today = new Date().toISOString().slice(0, 10);
-    expect(calls().at(-1)).toBe(`/admin/reports/analytics?from=${today}&to=${today}`);
+    expect(calls().filter((c) => c.startsWith("/admin/reports/analytics")).at(-1)).toBe(`/admin/reports/analytics?from=${today}&to=${today}`);
     expect(screen.getByRole("button", { name: "Today" })).toHaveAttribute("aria-pressed", "true");
   });
 
   it("offers custom dates and refuses an inverted range", async () => {
     authRequest.mockReset();
-    authRequest.mockResolvedValue(analytics());
+    serve(analytics());
     mount(<ReportsPage />);
     await screen.findByText("Registered users");
     fireEvent.click(screen.getByRole("button", { name: "Custom" }));
@@ -197,7 +201,7 @@ describe("Reports page", () => {
 
   it("failed-request KPI leads to the failed records", async () => {
     authRequest.mockReset();
-    authRequest.mockResolvedValue(analytics({ kpis: { ...analytics().kpis, totalRequests: 4, successfulRequests: 3, failedRequests: 1, failureRate: 0.25, activeUsers: 2, mostUsedFeature: { key: "tarot", label: "AI Tarot Reading", total: 4 } } }));
+    serve(analytics({ kpis: { ...analytics().kpis, totalRequests: 4, successfulRequests: 3, failedRequests: 1, failureRate: 0.25, activeUsers: 2, mostUsedFeature: { key: "tarot", label: "AI Tarot Reading", total: 4 } } }));
     mount(<ReportsPage />);
     const failed = await screen.findByRole("link", { name: /^Failed/ });
     expect(failed.getAttribute("href")).toMatch(/\/admin\/activity\?eventType=feature\.request&status=error&from=.*&to=/);

@@ -29,9 +29,23 @@ model UsageEvent {
   /// Small, safe, non-secret context (method, route, reason...). Never tokens, passwords or user content.
   metadata  Json?
 
+  /// AI usage for this request. All null for non-AI requests. Never filled with guessed numbers.
+  aiProvider    String?  @map("ai_provider")
+  aiModel       String?  @map("ai_model")
+  aiCalls       Int?     @map("ai_calls")
+  inputTokens   Int?     @map("input_tokens")
+  outputTokens  Int?     @map("output_tokens")
+  totalTokens   Int?     @map("total_tokens")
+  /// USD. Null when the provider gave no cost and no trusted price is configured.
+  costUsd       Decimal? @map("cost_usd") @db.Decimal(14, 8)
+  /// "actual" (provider reported) or "estimated" (tokens x configured price)
+  costBasis     String?  @map("cost_basis")
+  servedFromCache Boolean @default(false) @map("served_from_cache")
+
   createdAt DateTime @default(now()) @map("created_at")
 
   @@index([createdAt])
+  @@index([aiProvider, createdAt])
   @@index([feature, createdAt])
   @@index([userId, createdAt])
   @@index([eventType, createdAt])
