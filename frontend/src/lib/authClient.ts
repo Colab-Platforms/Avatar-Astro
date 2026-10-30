@@ -70,6 +70,11 @@ interface AuthRequestOptions extends Omit<RequestInit, "body"> {
   body?: unknown;
   /** Skip the Authorization header (used for login/register/refresh). */
   skipAuth?: boolean;
+  /**
+   * For PUBLIC endpoints: send the access token when the user is signed in so the server can attribute the activity to them,
+   * but never refresh, retry or sign the user out on a 401. Anonymous visitors send no header at all.
+   */
+  sendTokenIfPresent?: boolean;
 }
 
 /**
@@ -81,7 +86,7 @@ export async function authRequest<T = unknown>(
   options: AuthRequestOptions = {},
   isRetry = false,
 ): Promise<T> {
-  const { body, skipAuth, headers, ...rest } = options;
+  const { body, skipAuth, sendTokenIfPresent, headers, ...rest } = options;
 
   // FormData must set its own Content-Type so the multipart boundary is
   // included — forcing application/json would make the upload unparseable.
@@ -93,7 +98,7 @@ export async function authRequest<T = unknown>(
   };
 
   const accessToken = useAuthStore.getState().accessToken;
-  if (!skipAuth && accessToken) {
+  if ((!skipAuth || sendTokenIfPresent) && accessToken) {
     requestHeaders.Authorization = `Bearer ${accessToken}`;
   }
 
@@ -121,6 +126,7 @@ export async function authRequest<T = unknown>(
   if (
     response.status === 401 &&
     !skipAuth &&
+    !sendTokenIfPresent &&
     !isRetry &&
     Boolean(requestHeaders.Authorization)
   ) {

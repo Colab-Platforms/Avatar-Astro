@@ -98,3 +98,22 @@ test("summarizing a request: unknown costs never turn into zero, mixed actual+es
   assert.equal(mixed.aiCalls, 2);
   assert.equal(summarizeCalls([]).aiCalls, null);
 });
+
+test("Groq llama-3.3-70b-versatile (the gemstone explainer): tokens are always kept; cost exists ONLY when that exact model has a configured price", () => {
+  const body = { model: "llama-3.3-70b-versatile", usage: { prompt_tokens: 800, completion_tokens: 200, total_tokens: 1000 } };
+  const saved = process.env.AI_PRICING_JSON;
+  try {
+    process.env.AI_PRICING_JSON = JSON.stringify({ "openrouter:configured/model": { inputPerM: 10, outputPerM: 20 } }); // no Groq entry
+    const unpriced = extractCall("groq", "llama-3.3-70b-versatile", true, body);
+    assert.deepEqual([unpriced.provider, unpriced.model, unpriced.totalTokens, unpriced.costUsd, unpriced.costBasis], ["groq", "llama-3.3-70b-versatile", 1000, null, null]);
+    // test-only placeholder rates: they prove the arithmetic, they are NOT Groq's prices
+    process.env.AI_PRICING_JSON = JSON.stringify({ "groq:llama-3.3-70b-versatile": { inputPerM: 2, outputPerM: 4 } });
+    const priced = extractCall("groq", "llama-3.3-70b-versatile", true, body);
+    assert.equal(priced.costBasis, "estimated");
+    assert.equal(priced.costUsd, (800 * 2 + 200 * 4) / 1e6);
+    process.env.AI_PRICING_JSON = JSON.stringify({ "groq:some-other-model": { inputPerM: 2, outputPerM: 4 } }); // other model priced, this one not
+    assert.equal(extractCall("groq", "llama-3.3-70b-versatile", true, body).costUsd, null);
+  } finally {
+    process.env.AI_PRICING_JSON = saved;
+  }
+});

@@ -6,12 +6,13 @@ import type {
   ShopMatches,
 } from "./types";
 
-// Public, stateless endpoints — no auth header, so no refresh round-trips.
+// Public, stateless endpoints. A signed-in visitor's token is sent so their activity is attributed to them (the server ignores it
+// for access decisions and never rejects on it), without any refresh round-trips.
 export const ratnaApi = {
   searchLocations(q: string, signal?: AbortSignal) {
     return authRequest<PlaceResult[]>(
       `/gemstone-calculator/locations?q=${encodeURIComponent(q)}`,
-      { skipAuth: true, signal },
+      { skipAuth: true, sendTokenIfPresent: true, signal },
     );
   },
 
@@ -20,13 +21,14 @@ export const ratnaApi = {
       method: "POST",
       body,
       skipAuth: true,
+      sendTokenIfPresent: true,
     });
   },
 
   products(stoneKey: string) {
     return authRequest<ShopMatches>(
       `/gemstone-calculator/products/${encodeURIComponent(stoneKey)}`,
-      { skipAuth: true },
+      { skipAuth: true, sendTokenIfPresent: true },
     );
   },
 };

@@ -10,7 +10,7 @@ import innerVoiceRoutes from "./routes/innerVoiceRoutes.js";
 import aiProxyRoutes from "./routes/aiProxyRoutes.js";
 import tarotRoutes from "./routes/tarotRoutes.js";
 import inquiryRoutes from "./routes/inquiryRoutes.js";
-import { auth } from "./middleware/authMiddleware.js";
+import { auth, optionalAuth } from "./middleware/authMiddleware.js";
 import { createRateLimiter } from "./utils/rateLimit.js";
 import { feature } from "./utils/usage.js";
 import { installAiUsageCapture } from "./utils/aiUsageCapture.js";
@@ -296,7 +296,8 @@ app.use("/api/chadhawa", publicChadhawaRoutes);
 app.use("/api/shop", publicShopRoutes);
 
 // Ratna Jyotish (stateless gemstone calculator)
-app.use("/api/gemstone-calculator", ...feature("gemstone"), gemstoneRoutes);
+// Public calculator: optionalAuth only identifies a signed-in caller for usage attribution; it never blocks or grants anything.
+app.use("/api/gemstone-calculator", ...feature("gemstone"), optionalAuth(), gemstoneRoutes);
 
 // AI routes
 app.use("/api/interpretation", ...feature("interpretation"), interpretationRoutes);
