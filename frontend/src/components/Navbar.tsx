@@ -212,7 +212,7 @@ const AvatarLiveDropdown = ({ currentPath, lightNav }: AvatarLiveDropdownProps) 
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
           >
             <Radio style={{ width: 13, height: 13, color: '#BC6A4D', flexShrink: 0 }} />
-            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.2em', color: '#BC6A4D', textTransform: 'uppercase', fontFamily: "'Astra','Iceland',sans-serif" }}>
+            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.2em', color: '#BC6A4D', textTransform: 'uppercase', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
               Live Hub
             </span>
             {/* Live pulse dot */}
@@ -240,10 +240,10 @@ const AvatarLiveDropdown = ({ currentPath, lightNav }: AvatarLiveDropdownProps) 
               🛕
             </div>
             <div>
-              <p style={{ fontSize: 15, fontWeight: 800, color: '#2C1810', marginBottom: 5, fontFamily: 'Iceland, sans-serif', letterSpacing: '0.04em', lineHeight: 1 }}>
+              <p style={{ fontSize: 15, fontWeight: 800, color: '#2C1810', marginBottom: 5, fontFamily: "'DM Sans', system-ui, sans-serif", letterSpacing: '0.04em', lineHeight: 1 }}>
                 Live Darshan
               </p>
-              <p style={{ fontSize: 12, color: 'rgba(44,24,16,0.55)', lineHeight: 1.55, fontFamily: "'Astra','Iceland',sans-serif" }}>
+              <p style={{ fontSize: 12, color: 'rgba(44,24,16,0.55)', lineHeight: 1.55, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
                 Watch live temple darshans, aartis, and spiritual broadcasts from famous temples across India.
               </p>
             </div>
@@ -267,10 +267,10 @@ const AvatarLiveDropdown = ({ currentPath, lightNav }: AvatarLiveDropdownProps) 
               💒
             </div>
             <div>
-              <p style={{ fontSize: 15, fontWeight: 800, color: '#2C1810', marginBottom: 5, fontFamily: 'Iceland, sans-serif', letterSpacing: '0.04em', lineHeight: 1 }}>
+              <p style={{ fontSize: 15, fontWeight: 800, color: '#2C1810', marginBottom: 5, fontFamily: "'DM Sans', system-ui, sans-serif", letterSpacing: '0.04em', lineHeight: 1 }}>
                 Family Functions
               </p>
-              <p style={{ fontSize: 12, color: 'rgba(44,24,16,0.55)', lineHeight: 1.55, fontFamily: "'Astra','Iceland',sans-serif" }}>
+              <p style={{ fontSize: 12, color: 'rgba(44,24,16,0.55)', lineHeight: 1.55, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
                 Attend weddings, pujas, naming ceremonies, birthdays, memorials, and family celebrations online.
               </p>
             </div>
@@ -399,7 +399,7 @@ const Navbar = () => {
             <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-[#BC6A4D] transition-transform duration-500 group-hover:rotate-90">
               <path d="M12 2L14.8 9.2L22 12L14.8 14.8L12 22L9.2 14.8L2 12L9.2 9.2L12 2Z" />
             </svg>
-            <span className="font-display text-lg font-bold tracking-[0.25em] text-[#BC6A4D]">SPIRITUAL</span>
+            <span className="font-home-serif text-xl font-semibold tracking-[0.02em] text-[#BC6A4D]">MyBhagya</span>
           </Link>
 
           {/* ── Desktop nav ─────────────────────────────────────────────── */}
@@ -534,15 +534,15 @@ const Navbar = () => {
           </div>
         )}
       <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
-        <AlertDialogContent className="border-border/30 bg-[#081426] text-white">
+        <AlertDialogContent className="border-[#592209]/20 bg-[#FBF5EC] text-[#301607]">
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-display text-lg tracking-wide text-[#BC6A4D]">Confirm Logout</AlertDialogTitle>
+            <AlertDialogTitle className="font-display text-lg tracking-wide text-[#592209]">Confirm Logout</AlertDialogTitle>
             <AlertDialogDescription className="text-foreground/70">
               Are you sure you want to sign out of your account?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="border-border/30 bg-transparent text-white hover:bg-white/5 hover:text-white">
+            <AlertDialogCancel className="border-[#592209]/30 bg-transparent text-[#301607] hover:bg-[#592209]/5 hover:text-[#301607]">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
@@ -550,7 +550,7 @@ const Navbar = () => {
                 setShowLogoutConfirm(false);
                 void handleLogout();
               }}
-              className="bg-[#BC6A4D] text-white hover:bg-[#BC6A4D]/80"
+              className="bg-[#592209] text-[#F5E9D6] hover:bg-[#461B07]"
             >
               Sign out
             </AlertDialogAction>

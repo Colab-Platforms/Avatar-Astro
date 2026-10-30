@@ -11,7 +11,7 @@ const SHIMMER_CSS = `
     }
   }
   .chadhawa-shimmer-bg {
-    background: linear-gradient(90deg, #F2EAE0 25%, #FAF6EE 50%, #F2EAE0 75%);
+    background: linear-gradient(90deg, #F0DFC7 25%, #FBF5EC 50%, #F0DFC7 75%);
     background-size: 200% 100%;
     animation: chadhawa-shimmer 1.6s infinite linear;
   }
@@ -43,7 +43,7 @@ export const ChadhawaDetailSkeleton = () => (
           
           {/* Left Column: Image Carousel Placeholder */}
           <div className="lg:w-[56%] flex flex-col gap-3">
-            <div className="rounded-[20px] overflow-hidden relative" style={{ height: 420, background: '#F3ECE0' }}>
+            <div className="rounded-[20px] overflow-hidden relative" style={{ height: 420, background: '#F0DFC7' }}>
               <div className="chadhawa-shimmer-bg absolute inset-0" />
             </div>
             {/* Carousel Dots */}
@@ -141,7 +141,7 @@ export const ChadhawaDetailSkeleton = () => (
 
             {/* Sidebar Summary */}
             <div className="lg:w-72 xl:w-80 flex-shrink-0">
-              <div className="glass-card rounded-2xl border border-border/30 overflow-hidden" style={{ background: '#FFFFFF' }}>
+              <div className="glass-card rounded-2xl border border-border/30 overflow-hidden" style={{ background: 'rgba(89,34,9,0.25)' }}>
                 <div className="border-b border-border/20 px-5 py-4">
                   <div className="chadhawa-shimmer-bg" style={{ width: 140, height: 18, borderRadius: 4 }} />
                 </div>

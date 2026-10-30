@@ -14,9 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["Iceland", "sans-serif"],
-        body: ["Iceland", "sans-serif"],
-        astra: ["Astra", "Iceland", "sans-serif"],
+        display: ["DM Sans", "system-ui", "sans-serif"], // unified with the homepage: DM Sans body, Cinzel titles
+        body: ["DM Sans", "system-ui", "sans-serif"],
+        astra: ["DM Sans", "system-ui", "sans-serif"],
         // Homepage light theme: Cinzel is already loaded site-wide (index.css @import).
         "home-serif": ["Cinzel", "Georgia", "serif"],
         "home-sans": ["DM Sans", "system-ui", "sans-serif"],
@@ -37,14 +37,14 @@ export default {
       colors: {
         // Homepage theme (parchment, gerua, antique gold). Mirrors the --mb-* variables in index.css.
         home: {
-          parchment: "#EFE5D7", //   page background  (--mb-background)
-          ivory: "#FAF7F1", //       cards, navbar, footer  (--mb-surface)
-          gerua: "#8C3F18", //       primary actions, links, accents  (--mb-primary)
-          "gerua-dark": "#713214", // primary hover  (--mb-primary-hover)
-          ink: "#27231F", //         warm charcoal text  (--mb-text)
-          muted: "#645B52", //       secondary text  (--mb-text-muted)
-          gold: "#B99A64", //        decoration only (2.1-2.5:1), never text  (--mb-gold)
-          line: "#D9CABA", //        borders  (--mb-border)
+          parchment: "#F5E9D6", //   page background  (--mb-background)
+          ivory: "#FBF5EC", //       cards, navbar, footer  (--mb-surface)
+          gerua: "#592209", //       primary actions, links, accents  (--mb-primary)
+          "gerua-dark": "#461B07", // primary hover  (--mb-primary-hover)
+          ink: "#301607", //         warm charcoal text  (--mb-text)
+          muted: "#6B4A37", //       secondary text  (--mb-text-muted)
+          gold: "#E58A45", //        decoration only (2.1-2.5:1), never text  (--mb-gold)
+          line: "#E0C8B0", //        borders  (--mb-border)
           navy: "#1C2740", //        artwork only  (--mb-cosmic-navy)
         },
         border: "hsl(var(--border))",

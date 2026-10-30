@@ -20,10 +20,10 @@ const SignInPrompt = () => {
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && hide()}>
-      <DialogContent className="w-[calc(100%-2rem)] max-w-md border-[#BC6A4D]/30 bg-[#0B1020] text-white">
+      <DialogContent className="w-[calc(100%-2rem)] max-w-md border-[#592209]/30 bg-[#FBF5EC] text-[#301607]">
         <DialogHeader>
-          <DialogTitle className="text-xl text-[#D9895F]">Sign in to continue</DialogTitle>
-          <DialogDescription className="text-white/75">
+          <DialogTitle className="text-xl text-[#592209]">Sign in to continue</DialogTitle>
+          <DialogDescription className="text-[#4A2E1F]">
             This feature needs a free account so we can keep your readings private. Sign in or create an account and you will come straight back here.
           </DialogDescription>
         </DialogHeader>
@@ -32,7 +32,7 @@ const SignInPrompt = () => {
             to="/login"
             state={{ from }}
             onClick={hide}
-            className="flex-1 rounded-lg bg-[#BC6A4D] px-5 py-3 text-center text-sm font-bold uppercase tracking-wider text-white hover:bg-[#a85a3e]"
+            className="flex-1 rounded-lg bg-[#592209] px-5 py-3 text-center text-sm font-bold uppercase tracking-wider text-[#F5E9D6] hover:bg-[#461B07]"
           >
             Sign in
           </Link>
@@ -40,12 +40,12 @@ const SignInPrompt = () => {
             to="/register"
             state={{ from }}
             onClick={hide}
-            className="flex-1 rounded-lg border border-[#BC6A4D]/50 px-5 py-3 text-center text-sm font-bold uppercase tracking-wider text-[#D9895F] hover:bg-[#BC6A4D]/10"
+            className="flex-1 rounded-lg border border-[#592209]/50 px-5 py-3 text-center text-sm font-bold uppercase tracking-wider text-[#592209] hover:bg-[#592209]/10"
           >
             Create account
           </Link>
         </div>
-        <button type="button" onClick={hide} className="mt-1 text-center text-sm text-white/60 underline underline-offset-2 hover:text-white">
+        <button type="button" onClick={hide} className="mt-1 text-center text-sm text-[#6B4A37] underline underline-offset-2 hover:text-[#301607]">
           Not now
         </button>
       </DialogContent>

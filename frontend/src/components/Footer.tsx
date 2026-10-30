@@ -55,13 +55,13 @@ const Footer = () => {
   const pad = home ? 'px-6' : 'px-6 md:px-12 lg:px-[72px]';
   const rule = 'rgba(245, 233, 214, 0.22)'; // translucent cream
   const dim = 'rgba(245, 233, 214, 0.85)'; // cream at 85% (5.8:1 on gerua)
-  const ring = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E58A45] focus-visible:ring-offset-2 focus-visible:ring-offset-[#803003]';
+  const ring = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E58A45] focus-visible:ring-offset-2 focus-visible:ring-offset-[#592209]';
   const linkCls = `w-fit rounded-sm text-base font-medium transition-colors duration-200 md:text-lg hover:text-[#E58A45] hover:underline hover:decoration-1 hover:underline-offset-4 ${ring}`;
 
   const colHead = 'mb-5 text-base font-semibold uppercase tracking-[0.1em] md:text-lg';
 
   return (
-    <footer style={{ background: '#803003', color: '#F5E9D6' }} className="w-full">
+    <footer style={{ background: '#592209', color: '#F5E9D6' }} className="w-full">
       <div className={`mx-auto w-full pb-10 pt-14 ${pad} ${wrap}`}>
         <div className="mb-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr_1.3fr] lg:gap-14">
           {/* Intro */}
@@ -150,7 +150,7 @@ const Footer = () => {
             aria-hidden="true"
             className="mb-3 uppercase leading-none"
             style={{
-              fontFamily: "'ASTRA', 'Iceland', 'Orbitron', sans-serif",
+              fontFamily: "'ASTRA', 'DM Sans', system-ui, sans-serif",
               fontSize: 'clamp(40px, 9vw, 90px)',
               letterSpacing: '0.115em',
               color: '#F5E9D6',

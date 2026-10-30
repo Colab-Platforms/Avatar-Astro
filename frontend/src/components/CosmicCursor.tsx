@@ -86,7 +86,7 @@ export default function CosmicCursor() {
         life: 1,
         maxLife: 0.5 + Math.random()*0.4,
         size: 2 + Math.random()*4,
-        color: [theme.glow, theme.particle, "#ffffff", "#FFD700"][Math.floor(Math.random()*4)],
+        color: [theme.glow, theme.particle, "#301607", "#FFD700"][Math.floor(Math.random()*4)],
         type: Math.random() > 0.4 ? "star" : "dot",
       });
     }
@@ -470,27 +470,27 @@ export default function CosmicCursor() {
         .energy-label {
           font-size: 10px;
           letter-spacing: 0.18em;
-          color: rgba(201,168,76,0.6);
+          color: #592209;
           font-family: monospace;
           text-transform: uppercase;
         }
         .energy-bar-bg {
           width: 80px;
           height: 4px;
-          background: rgba(255,255,255,0.08);
+          background: rgba(89,34,9,0.05);
           border-radius: 4px;
           overflow: hidden;
         }
         .energy-bar-fill {
           height: 100%;
-          background: linear-gradient(90deg, #C9A84C, #FFD700);
+          background: linear-gradient(90deg, #E58A45, #E58A45);
           border-radius: 4px;
-          box-shadow: 0 0 8px #C9A84C;
+          box-shadow: 0 0 8px #E58A45;
           transition: width 0.1s linear;
         }
         .theme-badge {
           font-size: 11px;
-          color: rgba(201,168,76,0.55);
+          color: #592209;
           font-family: monospace;
           letter-spacing: 0.12em;
         }

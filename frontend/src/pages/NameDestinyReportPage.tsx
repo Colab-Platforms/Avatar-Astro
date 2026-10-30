@@ -15,12 +15,12 @@ const emptyForm = (): FormState => ({ firstName: "", lastName: "", dob: "" });
 
 const inputStyle: React.CSSProperties = {
   width: "100%",
-  background: "rgba(20,28,58,0.7)",
-  border: "1px solid rgba(255,255,255,0.08)",
-  borderBottom: "2px solid rgba(255,126,71,0.5)",
+  background: "#FBF5EC",
+  border: "1px solid rgba(89,34,9,0.2)",
+  borderBottom: "2px solid rgba(89,34,9,0.5)",
   borderRadius: 10,
   padding: "14px 18px",
-  color: "#fff",
+  color: "#301607",
   fontSize: 16,
   outline: "none",
 };
@@ -74,8 +74,8 @@ export default function NameDestinyReportPage() {
       {!profile && (
         <>
           <header className="mx-auto mb-8 max-w-3xl px-4 pt-10 text-center">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#D9895F]">Name Numerology</p>
-            <h1 className="mb-4 text-4xl text-white sm:text-6xl" style={{ fontFamily: "'Astra','Cinzel',serif" }}>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#592209]">Name Numerology</p>
+            <h1 className="mb-4 text-4xl text-[#301607] sm:text-6xl" style={{ fontFamily: "'Astra','Cinzel',serif" }}>
               Cosmic Blueprint
             </h1>
           </header>
@@ -93,41 +93,41 @@ export default function NameDestinyReportPage() {
 
           <form id="destiny-form" onSubmit={handleSubmit} noValidate style={{ maxWidth: 600, margin: "0 auto", padding: "32px 0 20px", scrollMarginTop: 100 }}>
             <div style={{ textAlign: "center", marginBottom: 36 }}>
-              <h2 style={{ fontFamily: "'Astra','Cinzel',serif", fontSize: "clamp(24px,3.5vw,34px)", fontWeight: 700, color: "#fff", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>
+              <h2 style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: "clamp(24px,3.5vw,34px)", fontWeight: 700, color: "#301607", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>
                 Your Details
               </h2>
-              <p style={{ color: "rgba(255,255,255,0.65)", fontStyle: "italic", fontSize: 16 }}>Free with an account. Your details stay in your browser.</p>
+              <p style={{ color: "#6B4A37", fontStyle: "italic", fontSize: 16 }}>Free with an account. Your details stay in your browser.</p>
             </div>
 
             {error && (
-              <div role="alert" style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.3)", borderRadius: 10, padding: "12px 16px", color: "#f87171", fontSize: 14, marginBottom: 24, textAlign: "center" }}>
+              <div role="alert" style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.3)", borderRadius: 10, padding: "12px 16px", color: "#9B2C1D", fontSize: 14, marginBottom: 24, textAlign: "center" }}>
                 ⚠ {error}
               </div>
             )}
 
-            <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "32px 28px", backdropFilter: "blur(16px)" }}>
+            <div style={{ background: "rgba(89,34,9,0.2)", border: "1px solid rgba(89,34,9,0.2)", borderRadius: 20, padding: "32px 28px", backdropFilter: "blur(16px)" }}>
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2" style={{ marginBottom: 20 }}>
                 <div>
-                  <label htmlFor="nd-first" style={{ display: "block", color: "#ff7e47", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>First Name *</label>
+                  <label htmlFor="nd-first" style={{ display: "block", color: "#592209", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>First Name *</label>
                   <input id="nd-first" style={inputStyle} maxLength={60} autoComplete="given-name" value={form.firstName} onChange={(e) => up("firstName", e.target.value)} placeholder="e.g. Rohan" />
                 </div>
                 <div>
-                  <label htmlFor="nd-last" style={{ display: "block", color: "#ff7e47", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>Last Name <span style={{ opacity: 0.6, fontWeight: 400 }}>(Optional)</span></label>
+                  <label htmlFor="nd-last" style={{ display: "block", color: "#592209", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>Last Name <span style={{ opacity: 0.6, fontWeight: 400 }}>(Optional)</span></label>
                   <input id="nd-last" style={inputStyle} maxLength={60} autoComplete="family-name" value={form.lastName} onChange={(e) => up("lastName", e.target.value)} placeholder="e.g. Mehta" />
                 </div>
               </div>
 
               <div style={{ marginBottom: 28 }}>
-                <label htmlFor="nd-dob" style={{ display: "block", color: "#ff7e47", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>Date of Birth *</label>
+                <label htmlFor="nd-dob" style={{ display: "block", color: "#592209", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>Date of Birth *</label>
                 <input id="nd-dob" type="date" min="1900-01-01" max={today} style={inputStyle} value={form.dob} onChange={(e) => up("dob", e.target.value)} />
               </div>
 
               <button
                 type="submit"
                 style={{
-                  width: "100%", padding: "20px", background: "#ff7e47", border: "none", borderRadius: 40,
-                  color: "#fff", fontWeight: 800, fontSize: 18, letterSpacing: "0.05em", textTransform: "uppercase",
-                  cursor: "pointer", boxShadow: "0 0 30px rgba(255,126,71,0.35)",
+                  width: "100%", padding: "20px", background: "#592209", border: "none", borderRadius: 40,
+                  color: "#F5E9D6", fontWeight: 800, fontSize: 18, letterSpacing: "0.05em", textTransform: "uppercase",
+                  cursor: "pointer", boxShadow: "0 0 30px rgba(89,34,9,0.35)",
                 }}
               >
                 ✦ Show My Cosmic Blueprint ✦
@@ -147,7 +147,7 @@ export default function NameDestinyReportPage() {
             }}
             style={{
               display: "block", margin: "0 auto", padding: "14px 40px", background: "transparent",
-              border: "1px solid rgba(255,255,255,0.3)", borderRadius: 50, color: "rgba(255,255,255,0.8)",
+              border: "1px solid rgba(89,34,9,0.3)", borderRadius: 50, color: "#6B4A37",
               fontSize: 13, letterSpacing: "0.1em", textTransform: "uppercase", cursor: "pointer",
             }}
           >

@@ -75,7 +75,7 @@ const ZodiacCard = ({ sign, index, compact = false }: ZodiacCardProps) => {
           {/* 2 — Element Badge */}
           <span
             className="flex-shrink-0 text-[13px] font-medium uppercase tracking-[0.18em] text-primary/90 px-5 py-[6px] rounded-full border border-primary/40 mb-3"
-            style={{ background: 'rgba(4,12,37,0.88)' }}
+            style={{ background: '#FBF5EC' }}
           >
             {sign.element}
           </span>

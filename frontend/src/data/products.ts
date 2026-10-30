@@ -205,7 +205,7 @@ export const products: Product[] = [
     description: 'The famous Tirupati Balaji Ladoo, directly sourced from the TTD trust kitchens.',
     benefits: ["Venkateswara's blessings", 'Divine nourishment', 'Wish fulfillment', 'Sacred energy'],
     authenticity: 'TTD Official · Direct Sourced · Pure Ghee',
-    gradient: 'linear-gradient(135deg, #2D1B69 0%, #6B3FA0 50%, #BC6A4D 100%)',
+    gradient: 'linear-gradient(135deg, #2D1B69 0%, #6B3FA0 50%, #592209 100%)',
     image: 'tirupati-ladoo-prasad.png',
   },
   {

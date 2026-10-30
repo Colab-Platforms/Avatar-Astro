@@ -5,21 +5,21 @@ import type { MatchedProduct } from "./types";
 
 const ProductCard = ({ p, index }: { p: MatchedProduct; index: number }) => (
   <li
-    className="ratna-lift ratna-reveal flex min-w-0 flex-col overflow-hidden rounded-2xl border border-[#d4a64a]/25 bg-[#081426]/70"
+    className="ratna-lift ratna-reveal flex min-w-0 flex-col overflow-hidden rounded-2xl border border-[#592209]/25 bg-[#FBF5EC]/70"
     style={{ ["--i" as string]: Math.min(index, 5) }}
   >
     <Link to={p.url} className="ratna-link block overflow-hidden" aria-label={`View ${p.name}`}>
       {p.image ? (
         <img src={p.image} alt={p.name} loading="lazy" className="h-40 w-full object-cover sm:h-44" />
       ) : (
-        <div className="flex h-40 items-center justify-center bg-[#0c1c38] text-slate-500 sm:h-44">No image</div>
+        <div className="flex h-40 items-center justify-center bg-[#FBF5EC] text-slate-500 sm:h-44">No image</div>
       )}
     </Link>
     <div className="flex flex-1 flex-col gap-1 p-3">
-      <Link to={p.url} className="ratna-link line-clamp-2 break-words text-base font-semibold text-white hover:text-[#f0d58a]">
+      <Link to={p.url} className="ratna-link line-clamp-2 break-words text-base font-semibold text-foreground hover:text-[#301607]">
         {p.name}
       </Link>
-      <p className="text-base text-[#f0d58a]">
+      <p className="text-base text-[#301607]">
         ₹{p.price.toLocaleString("en-IN")}
         {p.originalPrice ? (
           <span className="ml-2 text-sm text-slate-500 line-through">₹{p.originalPrice.toLocaleString("en-IN")}</span>
@@ -34,8 +34,8 @@ const ProductCard = ({ p, index }: { p: MatchedProduct; index: number }) => (
 
 const Group = ({ title, intro, items }: { title: string; intro?: string; items: MatchedProduct[] }) => (
   <div>
-    <h3 className="font-astra text-base text-white sm:text-lg">{title}</h3>
-    {intro && <p className="mt-0.5 text-sm text-slate-400">{intro}</p>}
+    <h3 className="font-astra text-base text-foreground sm:text-lg">{title}</h3>
+    {intro && <p className="mt-0.5 text-sm text-muted-foreground">{intro}</p>}
     <ul className="mt-3 grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
       {items.map((p, i) => (
         <ProductCard key={p.id} p={p} index={i} />
@@ -61,18 +61,18 @@ const ShopSections = ({
 
   return (
     <section className="ratna-reveal space-y-5" style={{ ["--i" as string]: 5 }} aria-labelledby="ratna-shop-h">
-      <h2 id="ratna-shop-h" className="font-astra text-lg text-[#f0d58a] sm:text-xl">
+      <h2 id="ratna-shop-h" className="font-astra text-lg text-[#301607] sm:text-xl">
         From the My Bhagya Shop
       </h2>
 
       {isLoading && (
-        <p className="text-slate-300" role="status">
+        <p className="text-muted-foreground" role="status">
           Loading shop matches…
         </p>
       )}
 
       {isError && (
-        <div role="alert" className="rounded-xl border border-red-400/50 bg-red-950/40 p-4 text-red-200">
+        <div role="alert" className="rounded-xl border border-red-400/50 bg-red-950/40 p-4 text-red-800">
           <p>We could not load shop products right now. Your result above is not affected.</p>
           <button type="button" className="ratna-btn-ghost mt-3" onClick={() => refetch()} disabled={isFetching}>
             {isFetching ? "Retrying…" : "Try again"}
@@ -86,8 +86,8 @@ const ShopSections = ({
             <Group title="Your Matching Gemstone" items={data.gemstones} />
           ) : (
             <div>
-              <h3 className="font-astra text-base text-white sm:text-lg">Your Matching Gemstone</h3>
-              <p className="mt-1 text-slate-300">
+              <h3 className="font-astra text-base text-foreground sm:text-lg">Your Matching Gemstone</h3>
+              <p className="mt-1 text-muted-foreground">
                 No {stoneName} is currently listed in the shop. We do not substitute a different gemstone.
               </p>
             </div>
@@ -113,7 +113,7 @@ const ShopSections = ({
         </>
       )}
 
-      <p className="text-xs text-slate-400">
+      <p className="text-xs text-muted-foreground">
         Buying is optional. Listings come from the My Bhagya catalogue; descriptions are provided by the seller.
       </p>
     </section>

@@ -292,7 +292,7 @@ export default function RegisterPage() {
               </div>
             ) : null}
             {phoneError ? (
-              <p className="text-center text-xs text-red-400">{phoneError}</p>
+              <p className="text-center text-xs text-red-800">{phoneError}</p>
             ) : null}
             <button
               type="button"

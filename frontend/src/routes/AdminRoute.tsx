@@ -6,7 +6,7 @@ import Loader from "@/components/Loader/Loader";
 
 function AuthSpinner() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#081426]">
+    <div className="flex min-h-screen items-center justify-center bg-[#FBF5EC]">
       <Loader />
     </div>
   );

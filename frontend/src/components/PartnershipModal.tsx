@@ -9,7 +9,7 @@ interface Props {
 }
 
 const inputCls =
-  "w-full rounded-lg border border-[#BC6A4D]/30 bg-white px-3 py-2.5 text-base text-[#2C1810] placeholder:text-[#2C1810]/35 focus:border-[#BC6A4D] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#BC6A4D]/40";
+  "w-full rounded-lg border border-[#592209]/30 bg-white px-3 py-2.5 text-base text-[#2C1810] placeholder:text-[#2C1810]/35 focus:border-[#592209] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#592209]/40";
 const labelCls = "mb-1 block text-sm font-semibold text-[#2C1810]";
 const errCls = "mt-1 text-sm text-red-700";
 
@@ -87,10 +87,10 @@ const PartnershipModal = ({ open, onOpenChange }: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-h-[90vh] w-[calc(100%-2rem)] max-w-lg overflow-y-auto border-[#BC6A4D]/25 bg-[#FFFBF5] p-5 text-[#2C1810] sm:p-7">
+      <DialogContent className="max-h-[90vh] w-[calc(100%-2rem)] max-w-lg overflow-y-auto border-[#592209]/25 bg-[#FFFBF5] p-5 text-[#2C1810] sm:p-7">
         {done ? (
           <div className="py-6 text-center" role="status">
-            <CheckCircle2 className="mx-auto mb-3 text-[#BC6A4D]" size={44} aria-hidden="true" />
+            <CheckCircle2 className="mx-auto mb-3 text-[#592209]" size={44} aria-hidden="true" />
             <DialogTitle className="mb-2 text-xl">Thank you</DialogTitle>
             <DialogDescription className="text-[#2C1810]/75">
               Our team has received your partnership enquiry and will reply to {form.email.trim()}.
@@ -98,7 +98,7 @@ const PartnershipModal = ({ open, onOpenChange }: Props) => {
             <button
               type="button"
               onClick={() => handleOpenChange(false)}
-              className="mt-6 rounded-lg bg-[#BC6A4D] px-6 py-2.5 text-sm font-bold uppercase tracking-wider text-white hover:bg-[#a85a3e]"
+              className="mt-6 rounded-lg bg-[#592209] px-6 py-2.5 text-sm font-bold uppercase tracking-wider text-[#F5E9D6] hover:bg-[#461B07]"
             >
               Close
             </button>
@@ -151,7 +151,7 @@ const PartnershipModal = ({ open, onOpenChange }: Props) => {
               <button
                 type="submit"
                 disabled={submitting}
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#BC6A4D] px-6 py-3 text-sm font-bold uppercase tracking-wider text-white transition hover:bg-[#a85a3e] disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#592209] px-6 py-3 text-sm font-bold uppercase tracking-wider text-[#F5E9D6] transition hover:bg-[#461B07] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {submitting ? (
                   <>

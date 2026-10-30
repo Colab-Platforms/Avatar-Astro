@@ -32,26 +32,26 @@ const MandalaSVG = () => {
   return (
     <svg viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
       {rings.map((r, i) => (
-        <circle key={i} cx="120" cy="120" r={r} stroke="#BC6A4D" strokeWidth={i % 2 === 0 ? 1 : 0.6} />
+        <circle key={i} cx="120" cy="120" r={r} stroke="#592209" strokeWidth={i % 2 === 0 ? 1 : 0.6} />
       ))}
       {petals.map((a, i) => (
         <line key={i}
           x1={120 + Math.cos(a) * 20} y1={120 + Math.sin(a) * 20}
           x2={120 + Math.cos(a) * 110} y2={120 + Math.sin(a) * 110}
-          stroke="#BC6A4D" strokeWidth="0.5"
+          stroke="#592209" strokeWidth="0.5"
         />
       ))}
       {petals.map((a, i) => (
-        <circle key={i} cx={120 + Math.cos(a) * 50} cy={120 + Math.sin(a) * 50} r="3.5" fill="#BC6A4D" />
+        <circle key={i} cx={120 + Math.cos(a) * 50} cy={120 + Math.sin(a) * 50} r="3.5" fill="#592209" />
       ))}
       {petals.map((a, i) => (
         <circle key={i}
           cx={120 + Math.cos(a + Math.PI / 8) * 68}
           cy={120 + Math.sin(a + Math.PI / 8) * 68}
-          r="2" fill="#BC6A4D" fillOpacity="0.5"
+          r="2" fill="#592209" fillOpacity="0.5"
         />
       ))}
-      <circle cx="120" cy="120" r="8" fill="#BC6A4D" fillOpacity="0.3" />
+      <circle cx="120" cy="120" r="8" fill="#592209" fillOpacity="0.3" />
     </svg>
   );
 };
@@ -64,7 +64,7 @@ interface DevotionLayoutProps {
 const DevotionLayout = ({ children }: DevotionLayoutProps) => (
   <div
     className="page-light min-h-screen relative overflow-x-hidden"
-    style={{ background: 'linear-gradient(180deg, #F8F2E8 0%, #F5EDE0 50%, #F0E8D8 100%)' }}
+    style={{ background: 'linear-gradient(180deg, #F5E9D6 0%, #F5E9D6 50%, #F0DFC7 100%)' }}
   >
     {/* Temple silhouettes — very faint, left/right of hero area */}
     <div className="absolute left-0 top-16 pointer-events-none select-none z-0 hidden lg:block"

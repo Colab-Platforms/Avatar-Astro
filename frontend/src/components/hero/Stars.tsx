@@ -48,7 +48,7 @@ const Stars = () => {
         className="absolute -top-24 right-0 w-[42rem] h-[42rem] rounded-full opacity-20 blur-3xl"
         style={{
           background:
-            "radial-gradient(circle, rgba(188,106,77,0.5) 0%, rgba(188,106,77,0) 70%)",
+            "radial-gradient(circle, rgba(89,34,9,0.5) 0%, rgba(89,34,9,0) 70%)",
         }}
       />
       <div

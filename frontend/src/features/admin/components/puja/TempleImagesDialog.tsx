@@ -67,24 +67,24 @@ export function TempleImagesDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => !busy && onOpenChange(next)}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto border-white/10 bg-[#0a1628] text-white sm:max-w-2xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto border-primary/15 bg-[#FBF5EC] text-foreground sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="font-display text-lg tracking-wide text-white">
+          <DialogTitle className="font-display text-lg tracking-wide text-foreground">
             Temple Images
           </DialogTitle>
-          <DialogDescription className="text-white/60">
+          <DialogDescription className="text-foreground/70">
             {templeName ?? temple?.name ?? "Manage the image gallery"}
           </DialogDescription>
         </DialogHeader>
 
         {isLoading ? (
           <div className="flex justify-center py-10">
-            <Loader2 className="h-6 w-6 animate-spin text-white/50" />
+            <Loader2 className="h-6 w-6 animate-spin text-foreground/70" />
           </div>
         ) : images.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-white/10 py-10 text-center">
-            <ImageIcon className="h-8 w-8 text-white/30" />
-            <p className="text-sm text-white/60">
+          <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-primary/15 py-10 text-center">
+            <ImageIcon className="h-8 w-8 text-foreground/70" />
+            <p className="text-sm text-foreground/70">
               No temple images uploaded yet.
             </p>
           </div>
@@ -93,7 +93,7 @@ export function TempleImagesDialog({
             {images.map((image) => (
               <div
                 key={image.id}
-                className="group relative aspect-square overflow-hidden rounded-lg border border-white/10"
+                className="group relative aspect-square overflow-hidden rounded-lg border border-primary/15"
               >
                 <img
                   src={image.url}
@@ -132,7 +132,7 @@ export function TempleImagesDialog({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={busy || !templeId}
-            className="bg-[#BC6A4D] text-white hover:bg-[#BC6A4D]/90"
+            className="bg-[#592209] text-[#F5E9D6] hover:bg-[#592209]/90"
           >
             {uploadImages.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -141,7 +141,7 @@ export function TempleImagesDialog({
             )}
             {uploadImages.isPending ? "Uploading…" : "Upload Images"}
           </Button>
-          <p className="text-xs text-white/40">
+          <p className="text-xs text-foreground/70">
             JPEG, PNG, WebP or AVIF · up to 10 MB each · max 10 per upload
           </p>
         </div>

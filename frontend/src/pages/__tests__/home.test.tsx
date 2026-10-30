@@ -6,7 +6,6 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import Index from "@/pages/Index";
 import Layout from "@/components/Layout";
-import HideOnHome from "@/components/HideOnHome";
 import { NavigationProvider } from "@/context/NavigationContext";
 import { tools } from "@/data/tools";
 import { homeBlogPosts } from "@/data/homeBlog";
@@ -45,7 +44,7 @@ const sectionOf = (name: RegExp) => screen.getByRole("heading", { level: 2, name
 describe("homepage content and structure", () => {
   it("renders every section, each with a heading", () => {
     renderAt("/");
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(/AI Astrology for\s+Every Moment of\s+Your Life/);
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(/Discover Clarity,\s*Align Your Energy,\s*Create a Better Tomorrow/);
     for (const name of [
       /Explore Our\s+Astrology Tools/,
       /Explore the\s+Solar System/,
@@ -61,21 +60,29 @@ describe("homepage content and structure", () => {
     }
   });
 
-  it("hero: two columns, a framed solar-system video, a gerua headline highlight and the same actions", () => {
+  it("hero: static artwork (no video), the approved copy, real destinations and no eyebrow or scroll prompt", () => {
     const { container } = renderAt("/");
-    expect(screen.getByRole("link", { name: /Start Free Reading/ })).toHaveAttribute("href", "/birth-chart");
-    expect(screen.getByRole("link", { name: "Explore Tools" })).toHaveAttribute("href", "/zodiac");
-    const hero = screen.getByRole("heading", { level: 1 }).closest("section")!;
-    expect(hero.getAttribute("style")).toBeNull(); // no longer a 100svh video backdrop
-    expect(hero.querySelector(".lg\\:grid-cols-\\[1\\.05fr_1fr\\]")).not.toBeNull();
-    const video = container.querySelector("video")!;
-    expect(video.getAttribute("src")).toBe("/images/temples/Solar_system.mp4");
-    expect(video.getAttribute("poster")).toBe("/images/hero/solar-system-poster.jpg");
-    expect(video.getAttribute("aria-hidden")).toBe("true");
-    expect(video.parentElement!.className).toContain("rounded-[1.75rem]");
-    expect(screen.getByText("Every Moment of").className).toContain("text-home-gerua");
-    // nothing dark behind the copy: the old navy / cream washes are gone
-    expect(hero.innerHTML).not.toMatch(/2,\s?11,\s?31|#020B1F|255,\s?243,\s?236/i);
+    const h1 = screen.getByRole("heading", { level: 1 });
+    expect(h1.textContent).toBe("Discover Clarity,Align Your Energy,Create a Better Tomorrow");
+    expect(screen.getByText("Create a Better Tomorrow").className).toContain("text-home-gerua");
+    expect(screen.queryByText(/YOUR PERSONAL ASTROLOGY/)).toBeNull();
+    expect(screen.getByText(/Get accurate astrology insights, personalised guidance/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Explore Astrology Tools/ })).toHaveAttribute("href", "#astrology-tools");
+    expect(screen.getByRole("link", { name: "Book a Consultation" })).toHaveAttribute("href", "/inner-voice/chat");
+    for (const [v, l] of [["50,000+", "Happy Users"], ["Verified", "Astrologers"], ["13+", "Languages"], ["60+", "Countries"]]) {
+      expect(screen.getByText(v)).toBeInTheDocument();
+      expect(screen.getByText(l)).toBeInTheDocument();
+    }
+    expect(screen.queryByText(/Scroll to explore/)).toBeNull();
+    const hero = h1.closest("section")!;
+    expect(hero.querySelector("video")).toBeNull();
+    expect(container.querySelector("video")).toBeNull();
+    const img = hero.querySelector("img")!;
+    expect(img.getAttribute("src")).toBe("/images/hero/mybhagya-hero-base.webp");
+    expect(img.getAttribute("alt")).toBe("");
+    expect(img.closest("[aria-hidden='true']")).not.toBeNull();
+    expect(hero.querySelector(".hero-wheel")).not.toBeNull();
+    expect(container.querySelector("#astrology-tools")).not.toBeNull();
   });
 
   it("Astrology Tools: every tool renders in data order, led by the four photo cards, each with its route", () => {
@@ -217,10 +224,9 @@ describe("homepage content and structure", () => {
     expect(screen.getByRole("button", { name: "What can I explore on Spiritual?" })).toHaveAttribute("aria-expanded", "false");
   });
 
-  it("every image has alt text, and the decorative video is hidden", () => {
+  it("every image has an alt attribute (empty for the decorative hero art)", () => {
     const { container } = renderAt("/");
     for (const img of container.querySelectorAll("img")) expect(img.hasAttribute("alt")).toBe(true);
-    expect(container.querySelector("video")?.closest("[aria-hidden='true']")).not.toBeNull();
   });
 
   it("every homepage image path points at a file that exists in the repo", () => {
@@ -238,8 +244,8 @@ describe("homepage content and structure", () => {
   });
 });
 
-describe("homepage-only light theme scoping", () => {
-  it("applies .home-light on '/' and nowhere else", () => {
+describe("site-wide light theme scoping", () => {
+  it("applies the shared .home-light theme to every route, not just '/'", () => {
     const { container, unmount } = renderAt("/");
     expect(container.querySelector(".home-light")).not.toBeNull();
     expect(document.body.classList.contains("home-light-body")).toBe(true);
@@ -247,32 +253,28 @@ describe("homepage-only light theme scoping", () => {
     expect(document.body.classList.contains("home-light-body")).toBe(false);
 
     const other = renderAt("/about", <p>about page</p>);
-    expect(other.container.querySelector(".home-light")).toBeNull();
-    expect(document.body.classList.contains("home-light-body")).toBe(false);
+    expect(other.container.querySelector(".home-light")).not.toBeNull();
+    expect(document.body.classList.contains("home-light-body")).toBe(true);
   });
 
-  it("hides the starfield background on '/' only", () => {
-    const child = <span data-testid="stars">stars</span>;
-    const home = render(<MemoryRouter initialEntries={["/"]}><HideOnHome>{child}</HideOnHome></MemoryRouter>);
-    expect(home.queryByTestId("stars")).toBeNull();
-    home.unmount();
-    const other = render(<MemoryRouter initialEntries={["/tarot"]}><HideOnHome>{child}</HideOnHome></MemoryRouter>);
-    expect(other.getByTestId("stars")).toBeInTheDocument();
+  it("the old dark starfield layer is no longer mounted by the app shell or the auth layout", () => {
+    expect(src("App.tsx")).not.toMatch(/import CosmicBackground|<CosmicBackground/);
+    expect(src("features/auth/components/AuthLayout.tsx")).not.toMatch(/import CosmicBackground|<CosmicBackground/);
   });
 
   it("the gerua navbar and footer are shared by every route", () => {
     const home = renderAt("/");
     expect(document.querySelector("nav")!.className).toContain("navbar-gerua");
-    expect(document.querySelector("footer")!.getAttribute("style")).toContain("rgb(128, 48, 3)");
+    expect(document.querySelector("footer")!.getAttribute("style")).toContain("rgb(89, 34, 9)");
     home.unmount();
     renderAt("/about", <p>about</p>);
     expect(document.querySelector("nav")!.className).toContain("navbar-gerua");
-    expect(document.querySelector("footer")!.getAttribute("style")).toContain("rgb(128, 48, 3)");
+    expect(document.querySelector("footer")!.getAttribute("style")).toContain("rgb(89, 34, 9)");
   });
 
   it("gerua navbar tokens: gerua bar, ivory type, antique-gold accent, ivory dropdowns", () => {
     const block = css.slice(css.indexOf("nav.navbar-gerua {"));
-    for (const decl of ["--nav-bg: #8C3F18;", "--nav-fg: #FAF7F1;", "--nav-accent: #F3D8AA;", "--nav-menu-bg: #FAF7F1;", "--nav-menu-text: #27231F;"]) {
+    for (const decl of ["--nav-bg: #592209;", "--nav-fg: #F5E9D6;", "--nav-accent: #E58A45;", "--nav-menu-bg: #FBF5EC;", "--nav-menu-text: #301607;"]) {
       expect(block, decl).toContain(decl);
     }
     // the bar's colours are page-independent: the nav never sets a page background
@@ -303,7 +305,7 @@ describe("homepage-only light theme scoping", () => {
 describe("no dark sections remain", () => {
   it("the footer is gerua with cream type, translucent cream tiles, a cream input and an orange submit button", () => {
     const footer = src("components/Footer.tsx");
-    expect(footer).toContain("background: '#803003'");
+    expect(footer).toContain("background: '#592209'");
     expect(footer).toContain("color: '#F5E9D6'");
     expect(footer).toContain("bg-[#F5E9D6] px-[18px] text-[15px] text-[#301607]");
     expect(footer).toContain("placeholder:text-[#6B4A30]");
@@ -386,20 +388,23 @@ describe("layout matches the design", () => {
 
 describe("parchment / gerua / gold palette", () => {
   const tailwind = readFileSync(resolve(process.cwd(), "tailwind.config.ts"), "utf8");
-  const homeBlock = css.slice(css.indexOf(".home-light {"), css.indexOf(":where(.home-light) h1"));
+  const homeBlock = css.slice(css.indexOf("--mb-primary: #592209;"), css.indexOf("--mb-focus-ring") + 40);
   const TOKENS: Record<string, string> = {
-    "--mb-background": "#EFE5D7", "--mb-surface": "#FAF7F1", "--mb-primary": "#8C3F18", "--mb-primary-hover": "#713214",
-    "--mb-text": "#27231F", "--mb-text-muted": "#645B52", "--mb-gold": "#B99A64", "--mb-border": "#D9CABA", "--mb-cosmic-navy": "#1C2740",
+    "--mb-primary": "#592209", "--mb-background": "#F5E9D6", "--mb-accent": "#E58A45", "--mb-text": "#301607",
+    "--mb-surface": "#FBF5EC", "--mb-surface-muted": "#F0DFC7", "--mb-text-muted": "#6B4A37", "--mb-primary-hover": "#461B07", "--mb-focus-ring": "#E58A45",
   };
 
-  it("defines exactly the nine specified tokens, scoped to .home-light", () => {
+  it("defines the four brand tokens plus their derived surfaces on :root (site-wide)", () => {
     for (const [name, hex] of Object.entries(TOKENS)) expect(homeBlock).toContain(`${name}: ${hex};`);
-    const beforeScope = css.slice(0, css.indexOf(".home-light {"));
-    expect(beforeScope).not.toMatch(/--mb-(background|surface|primary|text|gold|border|cosmic)/);
+    expect(homeBlock).toContain("--mb-border: rgba(89, 34, 9, 0.18);");
+    // the shared HSL tokens behind every Tailwind utility are light, not the old dark navy
+    expect(css).toContain("--background: 37 61% 90%;");
+    expect(css).toContain("--foreground: 22 75% 11%;");
+    expect(css).toMatch(/body \{\s*background: #F5E9D6;/);
   });
 
   it("Tailwind home.* tokens match the CSS variables", () => {
-    const pairs: Record<string, string> = { parchment: "#EFE5D7", ivory: "#FAF7F1", gerua: "#8C3F18", "gerua-dark": "#713214", ink: "#27231F", muted: "#645B52", gold: "#B99A64", line: "#D9CABA", navy: "#1C2740" };
+    const pairs: Record<string, string> = { parchment: "#F5E9D6", ivory: "#FBF5EC", gerua: "#592209", "gerua-dark": "#461B07", ink: "#301607", muted: "#6B4A37", gold: "#E58A45", line: "#E0C8B0", navy: "#1C2740" };
     for (const [k, v] of Object.entries(pairs)) {
       const key = k.includes("-") ? `"${k}"` : k; // hyphenated keys are quoted in the config
       expect(tailwind, k).toContain(`${key}: "${v}"`);
@@ -429,7 +434,7 @@ describe("motion and contrast", () => {
     expect(reduced).toMatch(/animation:\s*none/);
     expect(reduced).toContain(".hl-card");
     expect(reduced).toMatch(/transition:\s*none/);
-    expect(src("components/hero/Hero.tsx")).toContain("autoPlay={!reduceMotion}");
+    expect(src("components/hero/Hero.tsx")).toContain('behavior: reduceMotion ? "auto" : "smooth"');
   });
 
   const lum = (hex: string) => {
@@ -438,7 +443,7 @@ describe("motion and contrast", () => {
     return 0.2126 * r + 0.7152 * g + 0.0722 * b;
   };
   const ratio = (a: string, b: string) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
-  const PARCHMENT = "#EFE5D7", IVORY = "#FAF7F1", GERUA = "#8C3F18", GERUA_DARK = "#713214", INK = "#27231F", MUTED = "#645B52", GOLD = "#B99A64";
+  const PARCHMENT = "#F5E9D6", IVORY = "#FBF5EC", GERUA = "#592209", GERUA_DARK = "#461B07", INK = "#301607", MUTED = "#6B4A37", GOLD = "#E58A45";
 
   it("charcoal, muted text and gerua meet AA (4.5:1) on both surfaces", () => {
     for (const [name, bg] of Object.entries({ parchment: PARCHMENT, ivory: IVORY })) {
@@ -455,7 +460,7 @@ describe("motion and contrast", () => {
   });
 
   it("footer text pairs: cream, input text and placeholder meet AA; orange is a 3:1 hover accent with an underline cue", () => {
-    const CREAM = "#F5E9D6", FG = "#803003", ORANGE = "#E58A45", BROWN = "#301607";
+    const CREAM = "#F5E9D6", FG = "#592209", ORANGE = "#E58A45", BROWN = "#301607";
     expect(ratio(CREAM, FG)).toBeGreaterThanOrEqual(7);
     expect(ratio(BROWN, CREAM)).toBeGreaterThanOrEqual(7);
     expect(ratio("#6B4A30", CREAM)).toBeGreaterThanOrEqual(4.5); // placeholder
@@ -463,11 +468,11 @@ describe("motion and contrast", () => {
     expect(ratio(ORANGE, FG)).toBeGreaterThanOrEqual(3); // hover/focus indicator
   });
 
-  it("navbar text pairs meet AA: ivory and antique gold on gerua, charcoal and rust on the ivory dropdown", () => {
-    const GOLD_SOFT = "#F3D8AA";
-    expect(ratio(IVORY, GERUA)).toBeGreaterThanOrEqual(4.5);
-    expect(ratio(GOLD_SOFT, GERUA)).toBeGreaterThanOrEqual(4.5);
-    expect(ratio(GERUA, GOLD_SOFT)).toBeGreaterThanOrEqual(4.5); // sign-in hover
+  it("navbar text pairs: beige on gerua AA; orange on gerua is a 3:1 accent paired with an underline; dropdown text AA", () => {
+    const ORANGE = "#E58A45", BEIGE = "#F5E9D6";
+    expect(ratio(BEIGE, GERUA)).toBeGreaterThanOrEqual(7);
+    expect(ratio(ORANGE, GERUA)).toBeGreaterThanOrEqual(3);
+    expect(ratio(INK, ORANGE)).toBeGreaterThanOrEqual(4.5); // sign-in hover
     expect(ratio(INK, IVORY)).toBeGreaterThanOrEqual(7);
     expect(ratio(GERUA, IVORY)).toBeGreaterThanOrEqual(4.5);
     expect(ratio(MUTED, IVORY)).toBeGreaterThanOrEqual(4.5);

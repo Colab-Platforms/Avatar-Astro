@@ -2,24 +2,21 @@
 // import { useBackOverride } from "../context/NavigationContext";
 
 // // ── Google Fonts ─────────────────────────────────────────────────────────────
-// const fl = document.createElement("link"); fl.rel="stylesheet";
-// fl.href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:wght@400;700&display=swap";
-// document.head.appendChild(fl);
-
+// 
 // // ── CSS ───────────────────────────────────────────────────────────────────────
 // const css = `
 // :root {
-//   --void:#03010a; --deep:#07030f; --glass:rgba(255,255,255,0.05);
-//   --gb:rgba(255,255,255,0.10); --gold:#BC6A4D; --gold2:#D9895F;
-//   --pur:#BC6A4D; --pink:#BC6A4D; --cyan:#BC6A4D; --green:#BC6A4D;
-//   --fd:'Astra','Iceland',sans-serif; --fb:'Astra','Iceland',sans-serif; --fm:'Astra','Iceland',sans-serif;
+//   --void:#03010a; --deep:#07030f; --glass:rgba(89,34,9,0.05);
+//   --gb:rgba(89,34,9,0.05); --gold:#592209; --gold2:#D9895F;
+//   --pur:#592209; --pink:#592209; --cyan:#592209; --green:#592209;
+//   --fd:'DM Sans', system-ui, sans-serif; --fb:'DM Sans', system-ui, sans-serif; --fm:'DM Sans', system-ui, sans-serif;
 // }
 // *{box-sizing:border-box;margin:0;padding:0;}
-// .bc-app{min-height:100vh;background:var(--void);color:#e8e0f0;font-family:var(--fb);font-size:17px;overflow-x:hidden;position:relative;}
+// .bc-app{min-height:100vh;background:var(--void);color:#301607;font-family:var(--fb);font-size:17px;overflow-x:hidden;position:relative;}
 
 // /* Stars */
 // .sf{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
-// .st{position:absolute;border-radius:50%;background:#fff;animation:twk var(--d) ease-in-out infinite;animation-delay:var(--dl);opacity:var(--op);}
+// .st{position:absolute;border-radius:50%;background:rgba(89,34,9,0.25);animation:twk var(--d) ease-in-out infinite;animation-delay:var(--dl);opacity:var(--op);}
 // @keyframes twk{0%,100%{opacity:var(--op);transform:scale(1);}50%{opacity:.05;transform:scale(.4);}}
 
 // /* Nebula */
@@ -32,19 +29,19 @@
 // .form-wrap{max-width:600px;margin:0 auto;padding:60px 20px 80px;}
 // .form-head{text-align:center;margin-bottom:48px;}
 // .form-tag{font-family:var(--fm);font-size:10px;letter-spacing:6px;color:var(--cyan);text-transform:uppercase;margin-bottom:14px;}
-// .form-h1{font-family:var(--fd);font-size:clamp(20px,4vw,40px);font-weight:900;color:var(--gold);line-height:1.2;margin-bottom:10px;text-shadow:0 0 40px rgba(188,106,77,.4);}
-// .form-sub{color:rgba(232,224,240,.5);font-style:italic;font-size:16px;}
+// .form-h1{font-family:var(--fd);font-size:clamp(20px,4vw,40px);font-weight:900;color:var(--gold);line-height:1.2;margin-bottom:10px;text-shadow:0 0 40px rgba(89,34,9,.4);}
+// .form-sub{color:#592209;font-style:italic;font-size:16px;}
 
 // .f-card{background:var(--glass);border:1px solid var(--gb);border-radius:20px;padding:32px 28px;backdrop-filter:blur(16px);}
 // .f-field{margin-bottom:20px;}
-// .f-label{font-family:var(--fm);font-size:10px;letter-spacing:3px;color:rgba(232,224,240,.5);text-transform:uppercase;display:block;margin-bottom:8px;}
-// .f-input{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:13px 16px;color:#e8e0f0;font-family:var(--fb);font-size:16px;outline:none;transition:border .3s,box-shadow .3s;}
-// .f-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(188,106,77,.12);}
-// .f-input::placeholder{color:rgba(232,224,240,.25);}
-// .f-input option{background:#1a0a2e;}
+// .f-label{font-family:var(--fm);font-size:10px;letter-spacing:3px;color:#592209;text-transform:uppercase;display:block;margin-bottom:8px;}
+// .f-input{width:100%;background:rgba(89,34,9,0.05);border:1px solid rgba(89,34,9,0.05);border-radius:10px;padding:13px 16px;color:#301607;font-family:var(--fb);font-size:16px;outline:none;transition:border .3s,box-shadow .3s;}
+// .f-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(89,34,9,.12);}
+// .f-input::placeholder{color:rgba(48,22,7,0.75);}
+// .f-input option{background:#FBF5EC;}
 // .drow{display:grid;grid-template-columns:2fr 2fr 3fr;gap:8px;}
 // .trow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
-// .f-hint{font-size:13px;color:rgba(232,224,240,.35);margin-top:5px;font-style:italic;}
+// .f-hint{font-size:13px;color:rgba(48,22,7,0.75);margin-top:5px;font-style:italic;}
 
 // /* Name input */
 // .name-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
@@ -52,31 +49,31 @@
 
 // /* Place autocomplete */
 // .pl-wrap{position:relative;}
-// .pl-drop{position:absolute;top:calc(100% + 6px);left:0;right:0;background:#150830;border:1px solid rgba(188,106,77,.4);border-radius:10px;z-index:100;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.7);}
-// .pl-item{padding:10px 14px;cursor:pointer;font-size:15px;transition:background .2s;border-bottom:1px solid rgba(255,255,255,.05);}
-// .pl-item:hover{background:rgba(188,106,77,.2);}
-// .pl-item small{display:block;font-size:11px;color:rgba(232,224,240,.4);margin-top:2px;font-family:var(--fm);}
+// .pl-drop{position:absolute;top:calc(100% + 6px);left:0;right:0;background:#FBF5EC;border:1px solid rgba(89,34,9,.4);border-radius:10px;z-index:100;overflow:hidden;box-shadow:0 20px 60px rgba(89,34,9,0.2);}
+// .pl-item{padding:10px 14px;cursor:pointer;font-size:15px;transition:background .2s;border-bottom:1px solid rgba(89,34,9,0.2);}
+// .pl-item:hover{background:rgba(89,34,9,0.08);}
+// .pl-item small{display:block;font-size:11px;color:#592209;margin-top:2px;font-family:var(--fm);}
 
 // /* Generate btn */
-// .gen-btn{width:100%;margin-top:8px;padding:18px;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:12px;color:#000;font-family:var(--fd);font-size:13px;letter-spacing:2px;font-weight:700;cursor:pointer;text-transform:uppercase;transition:transform .2s,box-shadow .3s;position:relative;overflow:hidden;}
-// .gen-btn:hover{transform:translateY(-2px);box-shadow:0 20px 60px rgba(188,106,77,.35);}
+// .gen-btn{width:100%;margin-top:8px;padding:18px;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:12px;color:#F5E9D6;font-family:var(--fd);font-size:13px;letter-spacing:2px;font-weight:700;cursor:pointer;text-transform:uppercase;transition:transform .2s,box-shadow .3s;position:relative;overflow:hidden;}
+// .gen-btn:hover{transform:translateY(-2px);box-shadow:0 20px 60px rgba(89,34,9,.35);}
 // .gen-btn:active{transform:translateY(0);}
-// .err-box{background:rgba(188,106,77,.1);border:1px solid rgba(188,106,77,.3);border-radius:10px;padding:12px 16px;color:#ff8ab0;font-family:var(--fm);font-size:12px;letter-spacing:1px;margin-bottom:16px;text-align:center;}
+// .err-box{background:rgba(89,34,9,.1);border:1px solid rgba(89,34,9,.3);border-radius:10px;padding:12px 16px;color:#592209;font-family:var(--fm);font-size:12px;letter-spacing:1px;margin-bottom:16px;text-align:center;}
 
 // /* ── LOADING ── */
 // .load-screen{position:fixed;inset:0;background:var(--void);z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:36px;}
 // .load-cosmos{width:200px;height:200px;position:relative;}
 // .orb{position:absolute;border-radius:50%;border:1.5px solid transparent;animation:spin linear infinite;}
-// .orb:nth-child(1){inset:0;border-color:rgba(188,106,77,.5);animation-duration:5s;}
-// .orb:nth-child(2){inset:24px;border-color:rgba(188,106,77,.5);animation-duration:3.5s;animation-direction:reverse;}
-// .orb:nth-child(3){inset:48px;border-color:rgba(188,106,77,.5);animation-duration:6s;}
-// .orb:nth-child(4){inset:70px;border-color:rgba(188,106,77,.4);animation-duration:4s;animation-direction:reverse;}
+// .orb:nth-child(1){inset:0;border-color:rgba(89,34,9,.5);animation-duration:5s;}
+// .orb:nth-child(2){inset:24px;border-color:rgba(89,34,9,.5);animation-duration:3.5s;animation-direction:reverse;}
+// .orb:nth-child(3){inset:48px;border-color:rgba(89,34,9,.5);animation-duration:6s;}
+// .orb:nth-child(4){inset:70px;border-color:rgba(89,34,9,.4);animation-duration:4s;animation-direction:reverse;}
 // .orb-dot{position:absolute;width:8px;height:8px;border-radius:50%;top:-4px;left:50%;transform:translateX(-50%);}
 // @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
 // .orb-core{position:absolute;inset:80px;border-radius:50%;background:radial-gradient(circle,var(--gold),var(--pink));display:flex;align-items:center;justify-content:center;font-size:22px;animation:pglow 2s ease-in-out infinite;}
-// @keyframes pglow{0%,100%{box-shadow:0 0 20px rgba(188,106,77,.5);}50%{box-shadow:0 0 60px rgba(188,106,77,.8),0 0 100px rgba(188,106,77,.4);}}
+// @keyframes pglow{0%,100%{box-shadow:0 0 20px rgba(89,34,9,.5);}50%{box-shadow:0 0 60px rgba(89,34,9,.8),0 0 100px rgba(89,34,9,.4);}}
 // .load-steps{display:flex;flex-direction:column;gap:10px;text-align:center;}
-// .load-step{font-family:var(--fm);font-size:11px;letter-spacing:2px;color:rgba(232,224,240,.2);transition:color .5s;display:flex;align-items:center;gap:10px;justify-content:center;}
+// .load-step{font-family:var(--fm);font-size:11px;letter-spacing:2px;color:rgba(48,22,7,0.75);transition:color .5s;display:flex;align-items:center;gap:10px;justify-content:center;}
 // .load-step.active{color:var(--cyan);text-shadow:0 0 20px var(--cyan);}
 // .load-step.done{color:var(--gold);}
 // .ls-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0;}
@@ -87,28 +84,28 @@
 
 // /* Section heading */
 // .s-head{font-family:var(--fd);font-size:11px;letter-spacing:4px;color:var(--cyan);text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;gap:12px;}
-// .s-head::after{content:'';flex:1;height:1px;background:linear-gradient(to right,rgba(188,106,77,.3),transparent);}
+// .s-head::after{content:'';flex:1;height:1px;background:linear-gradient(to right,rgba(89,34,9,0.08),transparent);}
 // .s-space{margin-bottom:48px;}
 
 // /* Life purpose reveal */
-// .purpose-hero{text-align:center;padding:60px 20px;background:radial-gradient(ellipse at center,rgba(188,106,77,.08) 0%,transparent 70%);border-radius:24px;border:1px solid rgba(188,106,77,.12);margin-bottom:48px;}
+// .purpose-hero{text-align:center;padding:60px 20px;background:radial-gradient(ellipse at center,rgba(89,34,9,.08) 0%,transparent 70%);border-radius:24px;border:1px solid rgba(89,34,9,.12);margin-bottom:48px;}
 // .purpose-tag{font-family:var(--fm);font-size:10px;letter-spacing:5px;color:var(--gold);text-transform:uppercase;margin-bottom:20px;}
-// .purpose-statement{font-family:var(--fd);font-size:clamp(16px,2.5vw,26px);color:#fff;line-height:1.5;max-width:600px;margin:0 auto;text-shadow:0 0 40px rgba(188,106,77,.3);}
+// .purpose-statement{font-family:var(--fd);font-size:clamp(16px,2.5vw,26px);color:#301607;line-height:1.5;max-width:600px;margin:0 auto;text-shadow:0 0 40px rgba(89,34,9,.3);}
 
 // /* Soul archetype cards */
 // .arch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin-bottom:48px;}
 // .arch-card{background:var(--glass);border:1px solid var(--gb);border-radius:16px;padding:20px 14px;text-align:center;backdrop-filter:blur(12px);transition:transform .2s,border-color .3s,box-shadow .3s;cursor:default;animation:fadeUp .6s ease both;}
-// .arch-card:hover{transform:translateY(-6px);border-color:rgba(188,106,77,.4);box-shadow:0 20px 50px rgba(188,106,77,.15);}
+// .arch-card:hover{transform:translateY(-6px);border-color:rgba(89,34,9,.4);box-shadow:0 20px 50px rgba(89,34,9,.15);}
 // @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
 // .arch-icon{font-size:32px;margin-bottom:10px;}
 // .arch-name{font-family:var(--fd);font-size:11px;letter-spacing:1px;color:var(--gold);}
-// .arch-desc{font-size:12px;color:rgba(232,224,240,.5);margin-top:5px;font-style:italic;}
+// .arch-desc{font-size:12px;color:#592209;margin-top:5px;font-style:italic;}
 
 // /* Cosmic DNA */
 // .dna-wrap{background:var(--glass);border:1px solid var(--gb);border-radius:20px;padding:28px;backdrop-filter:blur(12px);margin-bottom:48px;}
 // .dna-row{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
-// .dna-label{font-family:var(--fm);font-size:11px;letter-spacing:2px;color:rgba(232,224,240,.6);width:110px;flex-shrink:0;text-transform:uppercase;}
-// .dna-bar{flex:1;height:8px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden;}
+// .dna-label{font-family:var(--fm);font-size:11px;letter-spacing:2px;color:#592209;width:110px;flex-shrink:0;text-transform:uppercase;}
+// .dna-bar{flex:1;height:8px;background:rgba(89,34,9,0.2);border-radius:4px;overflow:hidden;}
 // .dna-fill{height:100%;border-radius:4px;background:var(--bc,linear-gradient(to right,var(--pur),var(--cyan)));transition:width 2s cubic-bezier(.4,0,.2,1);width:0;}
 // .dna-fill.go{width:var(--tw,0%);}
 // .dna-val{font-family:var(--fm);font-size:13px;font-weight:700;color:var(--gold);width:40px;text-align:right;}
@@ -118,27 +115,27 @@
 // .cards-3{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px;margin-bottom:48px;}
 // @media(max-width:600px){.cards-2{grid-template-columns:1fr;}}
 // .r-card{background:var(--glass);border:1px solid var(--gb);border-radius:16px;padding:22px;backdrop-filter:blur(12px);transition:transform .2s,border-color .3s;}
-// .r-card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.18);}
+// .r-card:hover{transform:translateY(-3px);border-color:rgba(89,34,9,0.2);}
 // .r-card-icon{font-size:26px;margin-bottom:10px;}
 // .r-card-title{font-family:var(--fd);font-size:11px;letter-spacing:2px;color:var(--gold);margin-bottom:8px;text-transform:uppercase;}
-// .r-card-val{font-size:20px;color:#fff;font-weight:600;margin-bottom:6px;}
-// .r-card-desc{font-size:14px;color:rgba(232,224,240,.6);font-style:italic;line-height:1.5;}
+// .r-card-val{font-size:20px;color:#301607;font-weight:600;margin-bottom:6px;}
+// .r-card-desc{font-size:14px;color:#592209;font-style:italic;line-height:1.5;}
 
 // /* Superpowers */
 // .powers-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:48px;}
-// .power-card{background:linear-gradient(135deg,rgba(188,106,77,.07),rgba(188,106,77,.06));border:1px solid rgba(188,106,77,.18);border-radius:14px;padding:18px;animation:fadeUp .5s ease both;transition:transform .2s;}
+// .power-card{background:linear-gradient(135deg,rgba(89,34,9,.07),rgba(89,34,9,.06));border:1px solid rgba(89,34,9,.18);border-radius:14px;padding:18px;animation:fadeUp .5s ease both;transition:transform .2s;}
 // .power-card:hover{transform:translateY(-4px);}
 // .power-icon{font-size:24px;margin-bottom:8px;}
 // .power-name{font-family:var(--fd);font-size:11px;letter-spacing:1px;color:var(--green);margin-bottom:5px;}
-// .power-desc{font-size:13px;color:rgba(232,224,240,.6);font-style:italic;}
+// .power-desc{font-size:13px;color:#592209;font-style:italic;}
 
 // /* Shadow side */
 // .shadow-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:48px;}
-// .shadow-card{background:linear-gradient(135deg,rgba(188,106,77,.07),rgba(255,107,53,.05));border:1px solid rgba(188,106,77,.2);border-radius:14px;padding:18px;transition:transform .2s;}
+// .shadow-card{background:linear-gradient(135deg,rgba(89,34,9,.07),rgba(89,34,9,.05));border:1px solid rgba(89,34,9,.2);border-radius:14px;padding:18px;transition:transform .2s;}
 // .shadow-card:hover{transform:translateY(-4px);}
 // .shadow-icon{font-size:22px;margin-bottom:8px;}
-// .shadow-name{font-family:var(--fd);font-size:11px;letter-spacing:1px;color:var(--pink);margin-bottom:4px;}
-// .shadow-tip{font-size:13px;color:rgba(232,224,240,.55);font-style:italic;}
+// .shadow-name{font-family:var(--fd);font-size:11px;letter-spacing:1px;color:#592209;margin-bottom:4px;}
+// .shadow-tip{font-size:13px;color:#592209;font-style:italic;}
 
 // /* Timeline */
 // .tl-wrap{position:relative;padding:10px 0 10px 32px;margin-bottom:48px;}
@@ -146,67 +143,67 @@
 // .tl-item{position:relative;margin-bottom:24px;padding-left:18px;}
 // .tl-dot2{position:absolute;left:-26px;top:8px;width:14px;height:14px;border-radius:50%;background:var(--dc,var(--gold));border:2px solid var(--void);box-shadow:0 0 14px var(--dc,var(--gold));}
 // .tl-phase{font-family:var(--fm);font-size:10px;letter-spacing:3px;color:var(--dc,var(--gold));text-transform:uppercase;margin-bottom:4px;}
-// .tl-range{font-family:var(--fd);font-size:14px;color:#fff;margin-bottom:3px;}
-// .tl-desc{font-size:14px;color:rgba(232,224,240,.6);font-style:italic;line-height:1.5;}
+// .tl-range{font-family:var(--fd);font-size:14px;color:#301607;margin-bottom:3px;}
+// .tl-desc{font-size:14px;color:#592209;font-style:italic;line-height:1.5;}
 
 // /* Planet dashboard */
 // .planet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;margin-bottom:20px;}
 // .p-item{background:var(--glass);border:1px solid var(--gb);border-radius:14px;padding:16px 10px;text-align:center;cursor:pointer;transition:transform .2s,border-color .3s,box-shadow .3s;}
-// .p-item:hover,.p-item.sel{transform:translateY(-4px);border-color:var(--gold);box-shadow:0 0 30px rgba(188,106,77,.2);}
+// .p-item:hover,.p-item.sel{transform:translateY(-4px);border-color:var(--gold);box-shadow:0 0 30px rgba(89,34,9,.2);}
 // .p-sym{font-size:30px;margin-bottom:6px;}
-// .p-name{font-family:var(--fm);font-size:9px;letter-spacing:2px;color:rgba(232,224,240,.4);text-transform:uppercase;margin-bottom:5px;}
+// .p-name{font-family:var(--fm);font-size:9px;letter-spacing:2px;color:#592209;text-transform:uppercase;margin-bottom:5px;}
 // .p-score{font-family:var(--fd);font-size:15px;color:var(--gold);}
-// .p-panel{background:linear-gradient(135deg,rgba(188,106,77,.1),rgba(188,106,77,.06));border:1px solid rgba(188,106,77,.25);border-radius:16px;padding:24px;margin-bottom:48px;animation:fadeUp .4s ease;}
+// .p-panel{background:linear-gradient(135deg,rgba(89,34,9,.1),rgba(89,34,9,.06));border:1px solid rgba(89,34,9,.25);border-radius:16px;padding:24px;margin-bottom:48px;animation:fadeUp .4s ease;}
 // .p-panel-title{font-family:var(--fd);font-size:16px;color:var(--gold);margin-bottom:6px;}
 // .p-panel-sub{font-family:var(--fm);font-size:10px;letter-spacing:3px;color:var(--cyan);text-transform:uppercase;margin-bottom:14px;}
-// .p-panel-body{font-size:15px;color:rgba(232,224,240,.75);line-height:1.7;font-style:italic;}
+// .p-panel-body{font-size:15px;color:#592209;line-height:1.7;font-style:italic;}
 // .p-traits{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
-// .p-trait{background:rgba(188,106,77,.1);border:1px solid rgba(188,106,77,.2);border-radius:20px;padding:5px 14px;font-family:var(--fm);font-size:10px;letter-spacing:1px;color:var(--gold);}
+// .p-trait{background:rgba(89,34,9,.1);border:1px solid rgba(89,34,9,.2);border-radius:20px;padding:5px 14px;font-family:var(--fm);font-size:10px;letter-spacing:1px;color:var(--gold);}
 
 // /* Aura */
 // .aura-wrap{text-align:center;padding:40px 20px;margin-bottom:48px;}
 // .aura-glow{width:160px;height:160px;border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:50px;animation:aura-pulse 3s ease-in-out infinite;}
-// @keyframes aura-pulse{0%,100%{box-shadow:0 0 40px var(--ac,rgba(188,106,77,.5)),0 0 80px var(--ac,rgba(188,106,77,.25));}50%{box-shadow:0 0 80px var(--ac,rgba(188,106,77,.8)),0 0 160px var(--ac,rgba(188,106,77,.4));}}
+// @keyframes aura-pulse{0%,100%{box-shadow:0 0 40px var(--ac,rgba(89,34,9,.5)),0 0 80px var(--ac,rgba(89,34,9,.25));}50%{box-shadow:0 0 80px var(--ac,rgba(89,34,9,.8)),0 0 160px var(--ac,rgba(89,34,9,.4));}}
 // .aura-name{font-family:var(--fd);font-size:22px;color:var(--gold);margin-bottom:8px;}
-// .aura-meaning{font-size:16px;color:rgba(232,224,240,.65);font-style:italic;}
+// .aura-meaning{font-size:16px;color:#592209;font-style:italic;}
 
 // /* Lucky system */
 // .lucky-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:48px;}
 // .lucky-item{background:var(--glass);border:1px solid var(--gb);border-radius:14px;padding:18px 12px;text-align:center;transition:transform .2s;}
 // .lucky-item:hover{transform:translateY(-3px);}
 // .lucky-icon{font-size:26px;margin-bottom:8px;}
-// .lucky-type{font-family:var(--fm);font-size:9px;letter-spacing:3px;color:rgba(232,224,240,.4);text-transform:uppercase;margin-bottom:5px;}
+// .lucky-type{font-family:var(--fm);font-size:9px;letter-spacing:3px;color:#592209;text-transform:uppercase;margin-bottom:5px;}
 // .lucky-val{font-family:var(--fd);font-size:15px;color:var(--gold);}
 
 // /* Gauge */
 // .gauge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px;margin-bottom:48px;}
 // .gauge-item{background:var(--glass);border:1px solid var(--gb);border-radius:16px;padding:20px;text-align:center;backdrop-filter:blur(8px);}
 // .gauge-svg{width:100px;height:100px;display:block;margin:0 auto 10px;transform:rotate(-90deg);}
-// .gauge-track{fill:none;stroke:rgba(255,255,255,.07);stroke-width:8;}
+// .gauge-track{fill:none;stroke:rgba(89,34,9,0.05);stroke-width:8;}
 // .gauge-fill{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset 2s cubic-bezier(.4,0,.2,1);}
 // .gauge-inner{display:grid;place-items:center;}
 // .gauge-svg-wrap{display:grid;place-items:center;width:100px;height:100px;margin:0 auto 10px;}
 // .gauge-svg2{width:100px;height:100px;transform:rotate(-90deg);grid-area:1/1;}
 // .gauge-num{grid-area:1/1;font-family:var(--fd);font-size:20px;color:var(--gold);font-weight:700;}
-// .gauge-label{font-family:var(--fm);font-size:10px;letter-spacing:2px;color:rgba(232,224,240,.5);text-transform:uppercase;}
+// .gauge-label{font-family:var(--fm);font-size:10px;letter-spacing:2px;color:#592209;text-transform:uppercase;}
 
 // /* Power years */
 // .pyears-wrap{margin-bottom:48px;}
-// .py-item{display:flex;align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+// .py-item{display:flex;align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid rgba(89,34,9,0.2);}
 // .py-year{font-family:var(--fd);font-size:18px;color:var(--gold);width:60px;flex-shrink:0;}
 // .py-stars{flex:1;}
-// .py-desc{font-size:14px;color:rgba(232,224,240,.6);font-style:italic;width:220px;text-align:right;}
+// .py-desc{font-size:14px;color:#592209;font-style:italic;width:220px;text-align:right;}
 
 // /* Forecast */
 // .forecast-tabs{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
-// .f-tab{padding:8px 18px;border-radius:20px;font-family:var(--fm);font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border:1px solid rgba(255,255,255,.12);background:transparent;color:rgba(232,224,240,.5);transition:all .3s;}
-// .f-tab.active{background:linear-gradient(135deg,var(--pur),var(--pink));border-color:transparent;color:#fff;box-shadow:0 0 20px rgba(188,106,77,.3);}
+// .f-tab{padding:8px 18px;border-radius:20px;font-family:var(--fm);font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border:1px solid rgba(89,34,9,0.1);background:transparent;color:#592209;transition:all .3s;}
+// .f-tab.active{background:linear-gradient(135deg,var(--pur),var(--pink));border-color:transparent;color:#F5E9D6;box-shadow:0 0 20px rgba(89,34,9,.3);}
 // .forecast-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:48px;}
 // @media(max-width:600px){.forecast-grid{grid-template-columns:repeat(2,1fr);}}
 // .fc-item{background:var(--glass);border:1px solid var(--gb);border-radius:12px;padding:14px 10px;text-align:center;}
 // .fc-icon{font-size:22px;margin-bottom:6px;}
-// .fc-type{font-family:var(--fm);font-size:9px;letter-spacing:2px;color:rgba(232,224,240,.4);text-transform:uppercase;margin-bottom:6px;}
-// .fc-bar{height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;margin-bottom:7px;}
+// .fc-type{font-family:var(--fm);font-size:9px;letter-spacing:2px;color:#592209;text-transform:uppercase;margin-bottom:6px;}
+// .fc-bar{height:5px;background:rgba(89,34,9,0.2);border-radius:3px;overflow:hidden;margin-bottom:7px;}
 // .fc-bfill{height:100%;border-radius:3px;transition:width 1.6s cubic-bezier(.4,0,.2,1);width:0;}
 // .fc-bfill.go{width:var(--fw,0%);}
 // .fc-val{font-family:var(--fd);font-size:15px;font-weight:700;color:var(--fcolor,var(--gold));}
@@ -215,57 +212,57 @@
 // .chat-wrap{background:var(--glass);border:1px solid var(--gb);border-radius:20px;padding:24px;margin-bottom:48px;backdrop-filter:blur(12px);}
 // .chat-msgs{max-height:320px;overflow-y:auto;margin-bottom:16px;display:flex;flex-direction:column;gap:12px;}
 // .chat-msgs::-webkit-scrollbar{width:4px;}
-// .chat-msgs::-webkit-scrollbar-thumb{background:rgba(188,106,77,.4);border-radius:2px;}
+// .chat-msgs::-webkit-scrollbar-thumb{background:rgba(89,34,9,.4);border-radius:2px;}
 // .chat-msg{padding:12px 16px;border-radius:12px;font-size:15px;line-height:1.6;max-width:85%;}
-// .chat-msg.user{background:linear-gradient(135deg,rgba(188,106,77,.25),rgba(188,106,77,.15));border:1px solid rgba(188,106,77,.2);align-self:flex-end;font-style:italic;}
-// .chat-msg.ai{background:rgba(188,106,77,.07);border:1px solid rgba(188,106,77,.15);align-self:flex-start;color:rgba(232,224,240,.85);}
-// .chat-msg.loading{color:rgba(232,224,240,.4);font-style:italic;font-size:14px;}
+// .chat-msg.user{background:linear-gradient(135deg,rgba(89,34,9,.25),rgba(89,34,9,.15));border:1px solid rgba(89,34,9,.2);align-self:flex-end;font-style:italic;}
+// .chat-msg.ai{background:rgba(89,34,9,.07);border:1px solid rgba(89,34,9,.15);align-self:flex-start;color:#592209;}
+// .chat-msg.loading{color:#592209;font-style:italic;font-size:14px;}
 // .chat-row{display:flex;gap:10px;}
-// .chat-input{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 16px;color:#e8e0f0;font-family:var(--fb);font-size:15px;outline:none;transition:border .3s;}
+// .chat-input{flex:1;background:rgba(89,34,9,0.05);border:1px solid rgba(89,34,9,0.05);border-radius:10px;padding:12px 16px;color:#301607;font-family:var(--fb);font-size:15px;outline:none;transition:border .3s;}
 // .chat-input:focus{border-color:var(--gold);}
-// .chat-send{padding:12px 20px;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:10px;color:#000;font-family:var(--fd);font-size:11px;letter-spacing:1px;cursor:pointer;transition:transform .2s;white-space:nowrap;}
+// .chat-send{padding:12px 20px;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:10px;color:#F5E9D6;font-family:var(--fd);font-size:11px;letter-spacing:1px;cursor:pointer;transition:transform .2s;white-space:nowrap;}
 // .chat-send:hover{transform:translateY(-1px);}
 // .chat-send:disabled{opacity:.5;cursor:not-allowed;}
 // .chat-qs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
-// .chat-q{padding:6px 14px;background:rgba(188,106,77,.1);border:1px solid rgba(188,106,77,.2);border-radius:20px;font-size:13px;color:rgba(232,224,240,.7);cursor:pointer;transition:all .2s;font-style:italic;}
-// .chat-q:hover{background:rgba(188,106,77,.2);color:#fff;}
+// .chat-q{padding:6px 14px;background:rgba(89,34,9,.1);border:1px solid rgba(89,34,9,.2);border-radius:20px;font-size:13px;color:#592209;cursor:pointer;transition:all .2s;font-style:italic;}
+// .chat-q:hover{background:rgba(89,34,9,.2);color:#301607;}
 
 // /* Universe scoreboard */
 // .scoreboard{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px;margin-bottom:48px;}
 // .sb-item{background:var(--glass);border:1px solid var(--gb);border-radius:16px;padding:20px;text-align:center;backdrop-filter:blur(8px);}
 // .sb-icon{font-size:24px;margin-bottom:10px;}
-// .sb-label{font-family:var(--fm);font-size:9px;letter-spacing:2px;color:rgba(232,224,240,.4);text-transform:uppercase;margin-bottom:8px;}
+// .sb-label{font-family:var(--fm);font-size:9px;letter-spacing:2px;color:#592209;text-transform:uppercase;margin-bottom:8px;}
 // .sb-score{font-family:var(--fd);font-size:26px;color:var(--gold);}
 
 // /* WOW finale */
-// .wow-wrap{text-align:center;padding:60px 20px;background:radial-gradient(ellipse at center,rgba(188,106,77,.06),transparent 70%);border-radius:24px;border:1px solid rgba(188,106,77,.1);margin-bottom:48px;}
-// .wow-title{font-family:var(--fd);font-size:clamp(18px,3vw,32px);color:var(--gold);margin-bottom:8px;text-shadow:0 0 40px rgba(188,106,77,.4);}
-// .wow-sub{font-family:var(--fm);font-size:10px;letter-spacing:5px;color:rgba(232,224,240,.4);text-transform:uppercase;margin-bottom:40px;}
+// .wow-wrap{text-align:center;padding:60px 20px;background:radial-gradient(ellipse at center,rgba(89,34,9,.06),transparent 70%);border-radius:24px;border:1px solid rgba(89,34,9,.1);margin-bottom:48px;}
+// .wow-title{font-family:var(--fd);font-size:clamp(18px,3vw,32px);color:var(--gold);margin-bottom:8px;text-shadow:0 0 40px rgba(89,34,9,.4);}
+// .wow-sub{font-family:var(--fm);font-size:10px;letter-spacing:5px;color:#592209;text-transform:uppercase;margin-bottom:40px;}
 // .wow-cols{display:grid;grid-template-columns:1fr 1fr;gap:24px;text-align:left;}
 // @media(max-width:600px){.wow-cols{grid-template-columns:1fr;}}
 // .wow-col-title{font-family:var(--fm);font-size:10px;letter-spacing:3px;text-transform:uppercase;margin-bottom:14px;}
-// .wow-item{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;font-size:14px;color:rgba(232,224,240,.75);font-style:italic;}
+// .wow-item{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;font-size:14px;color:#592209;font-style:italic;}
 
 // /* Reset */
-// .reset-btn{display:block;margin:0 auto;padding:14px 40px;background:transparent;border:1px solid rgba(255,255,255,.15);border-radius:50px;color:rgba(232,224,240,.5);font-family:var(--fm);font-size:11px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all .3s;}
-// .reset-btn:hover{border-color:var(--gold);color:var(--gold);box-shadow:0 0 30px rgba(188,106,77,.15);}
+// .reset-btn{display:block;margin:0 auto;padding:14px 40px;background:transparent;border:1px solid rgba(89,34,9,0.1);border-radius:50px;color:#592209;font-family:var(--fm);font-size:11px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all .3s;}
+// .reset-btn:hover{border-color:var(--gold);color:var(--gold);box-shadow:0 0 30px rgba(89,34,9,.15);}
 
 // /* Couple header */
 // .r-header{text-align:center;padding:50px 20px 40px;}
 // .r-name{font-family:var(--fd);font-size:clamp(18px,3vw,32px);background:linear-gradient(135deg,var(--gold),var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:6px;}
-// .r-sub{font-family:var(--fm);font-size:10px;letter-spacing:4px;color:rgba(232,224,240,.35);text-transform:uppercase;}
+// .r-sub{font-family:var(--fm);font-size:10px;letter-spacing:4px;color:rgba(48,22,7,0.75);text-transform:uppercase;}
 
 // /* Shareable card */
-// .share-card{background:linear-gradient(135deg,#0d0520,#1a0a2e);border:1px solid rgba(188,106,77,.25);border-radius:20px;padding:32px;text-align:center;margin-bottom:48px;position:relative;overflow:hidden;}
-// .share-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(188,106,77,.08),transparent 60%);pointer-events:none;}
+// .share-card{background:#F5E9D6;border:1px solid rgba(89,34,9,.25);border-radius:20px;padding:32px;text-align:center;margin-bottom:48px;position:relative;overflow:hidden;}
+// .share-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(89,34,9,0.08),transparent 60%);pointer-events:none;}
 // .share-title{font-family:var(--fd);font-size:11px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:20px;}
-// .share-inner{display:inline-block;background:linear-gradient(135deg,rgba(188,106,77,.06),rgba(188,106,77,.06));border:1px solid rgba(188,106,77,.15);border-radius:16px;padding:24px 32px;margin-bottom:20px;}
-// .share-sname{font-family:var(--fd);font-size:20px;color:#fff;margin-bottom:4px;}
+// .share-inner{display:inline-block;background:linear-gradient(135deg,rgba(89,34,9,.06),rgba(89,34,9,.06));border:1px solid rgba(89,34,9,.15);border-radius:16px;padding:24px 32px;margin-bottom:20px;}
+// .share-sname{font-family:var(--fd);font-size:20px;color:#301607;margin-bottom:4px;}
 // .share-zodiac{font-family:var(--fm);font-size:11px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:14px;}
 // .share-tags{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;}
-// .share-tag{background:rgba(188,106,77,.12);border:1px solid rgba(188,106,77,.2);border-radius:20px;padding:4px 14px;font-family:var(--fm);font-size:10px;color:var(--gold);}
+// .share-tag{background:rgba(89,34,9,.12);border:1px solid rgba(89,34,9,.2);border-radius:20px;padding:4px 14px;font-family:var(--fm);font-size:10px;color:var(--gold);}
 // .share-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
-// .share-btn{padding:10px 20px;border-radius:20px;font-family:var(--fm);font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:transform .2s;border:none;color:#fff;}
+// .share-btn{padding:10px 20px;border-radius:20px;font-family:var(--fm);font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:transform .2s;border:none;color:#301607;}
 // .share-btn:hover{transform:translateY(-2px);}
 // `;
 
@@ -321,18 +318,18 @@
 // };
 
 // const AURA_COLORS={
-//   Aries:{color:"#ff4444",name:"Red Aura",   meaning:"Power, passion, and unstoppable energy"},
-//   Taurus:{color:"#44cc44",name:"Green Aura", meaning:"Abundance, grounding, and natural wealth"},
-//   Gemini:{color:"#ffff44",name:"Yellow Aura",meaning:"Intellect, creativity, and bright communication"},
-//   Cancer:{color:"#44aaff",name:"Blue Aura",  meaning:"Empathy, intuition, and deep emotional wisdom"},
-//   Leo:{color:"#D9895F",   name:"Golden Aura",meaning:"Leadership, abundance, and radiant confidence"},
-//   Virgo:{color:"#88cc44", name:"Emerald Aura",meaning:"Healing, precision, and natural intelligence"},
-//   Libra:{color:"#ff88cc", name:"Pink Aura",  meaning:"Love, harmony, and beautiful balance"},
-//   Scorpio:{color:"#8844cc",name:"Violet Aura",meaning:"Mystery, transformation, and spiritual power"},
-//   Sagittarius:{color:"#ff8844",name:"Orange Aura",meaning:"Freedom, adventure, and inspiring wisdom"},
+//   Aries:{color:"#9B2C1D",name:"Red Aura",   meaning:"Power, passion, and unstoppable energy"},
+//   Taurus:{color:"#2F6B3A",name:"Green Aura", meaning:"Abundance, grounding, and natural wealth"},
+//   Gemini:{color:"#301607",name:"Yellow Aura",meaning:"Intellect, creativity, and bright communication"},
+//   Cancer:{color:"#592209",name:"Blue Aura",  meaning:"Empathy, intuition, and deep emotional wisdom"},
+//   Leo:{color:"#592209",   name:"Golden Aura",meaning:"Leadership, abundance, and radiant confidence"},
+//   Virgo:{color:"#6B4A37", name:"Emerald Aura",meaning:"Healing, precision, and natural intelligence"},
+//   Libra:{color:"#592209", name:"Pink Aura",  meaning:"Love, harmony, and beautiful balance"},
+//   Scorpio:{color:"#592209",name:"Violet Aura",meaning:"Mystery, transformation, and spiritual power"},
+//   Sagittarius:{color:"#592209",name:"Orange Aura",meaning:"Freedom, adventure, and inspiring wisdom"},
 //   Capricorn:{color:"#888888",name:"Silver Aura",meaning:"Discipline, ambition, and timeless mastery"},
-//   Aquarius:{color:"#44ccff",name:"Electric Blue Aura",meaning:"Innovation, humanity, and cosmic vision"},
-//   Pisces:{color:"#cc88ff",  name:"Lavender Aura",meaning:"Spirituality, compassion, and dream wisdom"},
+//   Aquarius:{color:"#6B4A37",name:"Electric Blue Aura",meaning:"Innovation, humanity, and cosmic vision"},
+//   Pisces:{color:"#592209",  name:"Lavender Aura",meaning:"Spirituality, compassion, and dream wisdom"},
 // };
 
 // // Nominatim place search
@@ -378,14 +375,14 @@
 //     <div className="gauge-item">
 //       <div style={{display:"grid",placeItems:"center",width:100,height:100,margin:"0 auto 10px"}}>
 //         <svg style={{gridArea:"1/1",width:100,height:100,transform:"rotate(-90deg)"}} viewBox="0 0 100 100">
-//           <circle fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="8" cx="50" cy="50" r={r}/>
+//           <circle fill="none" stroke="rgba(89,34,9,0.05)" strokeWidth="8" cx="50" cy="50" r={r}/>
 //           <circle fill="none" strokeWidth="8" strokeLinecap="round" cx="50" cy="50" r={r}
 //             stroke={color||"var(--gold)"}
 //             strokeDasharray={circ}
 //             strokeDashoffset={off}
 //             style={{transition:"stroke-dashoffset 2s cubic-bezier(.4,0,.2,1)"}}/>
 //         </svg>
-//         <div style={{gridArea:"1/1",fontFamily:"var(--fd)",fontSize:19,fontWeight:700,color:"#BC6A4D",textAlign:"center",pointerEvents:"none"}}>
+//         <div style={{gridArea:"1/1",fontFamily:"var(--fd)",fontSize:19,fontWeight:700,color:"#592209",textAlign:"center",pointerEvents:"none"}}>
 //           {value}%
 //         </div>
 //       </div>
@@ -612,12 +609,12 @@
 //   const [fcTab,setFcTab]=useState("30days");
 
 //   const DNA=[
-//     {icon:"🧠",label:"Mind",     value:dv(base,name+"mind"),   color:"linear-gradient(to right,#BC6A4D,#BC6A4D)"},
-//     {icon:"❤️",label:"Heart",    value:dv(base,name+"heart"),  color:"linear-gradient(to right,#BC6A4D,#ff6b35)"},
-//     {icon:"🔥",label:"Energy",   value:dv(base,name+"energy"), color:"linear-gradient(to right,#ff6b35,#BC6A4D)"},
-//     {icon:"💰",label:"Wealth",   value:dv(base,name+"wealth"), color:"linear-gradient(to right,#BC6A4D,#BC6A4D)"},
-//     {icon:"🌙",label:"Spirit",   value:dv(base,name+"spirit"), color:"linear-gradient(to right,#BC6A4D,#BC6A4D)"},
-//     {icon:"⚡",label:"Ambition", value:dv(base,name+"ambit"),  color:"linear-gradient(to right,#BC6A4D,#BC6A4D)"},
+//     {icon:"🧠",label:"Mind",     value:dv(base,name+"mind"),   color:"linear-gradient(to right,#592209,#592209)"},
+//     {icon:"❤️",label:"Heart",    value:dv(base,name+"heart"),  color:"linear-gradient(to right,#592209,#592209)"},
+//     {icon:"🔥",label:"Energy",   value:dv(base,name+"energy"), color:"linear-gradient(to right,#592209,#592209)"},
+//     {icon:"💰",label:"Wealth",   value:dv(base,name+"wealth"), color:"linear-gradient(to right,#592209,#592209)"},
+//     {icon:"🌙",label:"Spirit",   value:dv(base,name+"spirit"), color:"linear-gradient(to right,#592209,#592209)"},
+//     {icon:"⚡",label:"Ambition", value:dv(base,name+"ambit"),  color:"linear-gradient(to right,#592209,#592209)"},
 //   ];
 
 //   const PLANETS=Object.entries(PLANET_INFO).map(([k,v])=>({key:k,score:dv(base,name+v.name),info:v}));
@@ -641,34 +638,34 @@
 
 //   const fcData={
 //     "30days":[
-//       {icon:"❤️",type:"Love",  val:dv(base,name+"l30"),  color:"#BC6A4D"},
+//       {icon:"❤️",type:"Love",  val:dv(base,name+"l30"),  color:"#592209"},
 //       {icon:"💼",type:"Career",val:dv(base,name+"c30"),  color:"var(--gold)"},
-//       {icon:"💰",type:"Money", val:dv(base,name+"m30"),  color:"#BC6A4D"},
-//       {icon:"🏥",type:"Health",val:dv(base,name+"h30"),  color:"#BC6A4D"},
-//       {icon:"🌱",type:"Growth",val:dv(base,name+"g30"),  color:"#BC6A4D"},
+//       {icon:"💰",type:"Money", val:dv(base,name+"m30"),  color:"#592209"},
+//       {icon:"🏥",type:"Health",val:dv(base,name+"h30"),  color:"#592209"},
+//       {icon:"🌱",type:"Growth",val:dv(base,name+"g30"),  color:"#592209"},
 //     ],
 //     "6months":[
-//       {icon:"❤️",type:"Love",  val:dv(base,name+"l6m"),  color:"#BC6A4D"},
+//       {icon:"❤️",type:"Love",  val:dv(base,name+"l6m"),  color:"#592209"},
 //       {icon:"💼",type:"Career",val:dv(base,name+"c6m"),  color:"var(--gold)"},
-//       {icon:"💰",type:"Money", val:dv(base,name+"m6m"),  color:"#BC6A4D"},
-//       {icon:"🏥",type:"Health",val:dv(base,name+"h6m"),  color:"#BC6A4D"},
-//       {icon:"🌱",type:"Growth",val:dv(base,name+"g6m"),  color:"#BC6A4D"},
+//       {icon:"💰",type:"Money", val:dv(base,name+"m6m"),  color:"#592209"},
+//       {icon:"🏥",type:"Health",val:dv(base,name+"h6m"),  color:"#592209"},
+//       {icon:"🌱",type:"Growth",val:dv(base,name+"g6m"),  color:"#592209"},
 //     ],
 //     "1year":[
-//       {icon:"❤️",type:"Love",  val:dv(base,name+"l1y"),  color:"#BC6A4D"},
+//       {icon:"❤️",type:"Love",  val:dv(base,name+"l1y"),  color:"#592209"},
 //       {icon:"💼",type:"Career",val:dv(base,name+"c1y"),  color:"var(--gold)"},
-//       {icon:"💰",type:"Money", val:dv(base,name+"m1y"),  color:"#BC6A4D"},
-//       {icon:"🏥",type:"Health",val:dv(base,name+"h1y"),  color:"#BC6A4D"},
-//       {icon:"🌱",type:"Growth",val:dv(base,name+"g1y"),  color:"#BC6A4D"},
+//       {icon:"💰",type:"Money", val:dv(base,name+"m1y"),  color:"#592209"},
+//       {icon:"🏥",type:"Health",val:dv(base,name+"h1y"),  color:"#592209"},
+//       {icon:"🌱",type:"Growth",val:dv(base,name+"g1y"),  color:"#592209"},
 //     ],
 //   };
 
 //   const TL_PHASES=[
-//     {phase:"Childhood",range:"0 – 12",c:"#BC6A4D",opp:"Foundation of sensitivity and natural curiosity were established. Your early environment shaped your emotional blueprint."},
-//     {phase:"Teenage Years",range:"13 – 19",c:"#BC6A4D",opp:"Identity formation and first awakenings of your core gifts. Creative energy peaked during this period."},
-//     {phase:"20s",range:"20 – 29",c:"#BC6A4D",opp:"Exploration and self-discovery. Multiple doors open — this is the decade of possibility and rapid growth."},
-//     {phase:"30s",range:"30 – 39",c:"#BC6A4D",opp:"Power decade. Career expansion and deep relationship bonds form the foundation of your legacy."},
-//     {phase:"40s",range:"40 – 49",c:"#BC6A4D",opp:"Mastery phase. Your accumulated wisdom transforms into leadership and influence at scale."},
+//     {phase:"Childhood",range:"0 – 12",c:"#592209",opp:"Foundation of sensitivity and natural curiosity were established. Your early environment shaped your emotional blueprint."},
+//     {phase:"Teenage Years",range:"13 – 19",c:"#592209",opp:"Identity formation and first awakenings of your core gifts. Creative energy peaked during this period."},
+//     {phase:"20s",range:"20 – 29",c:"#592209",opp:"Exploration and self-discovery. Multiple doors open — this is the decade of possibility and rapid growth."},
+//     {phase:"30s",range:"30 – 39",c:"#592209",opp:"Power decade. Career expansion and deep relationship bonds form the foundation of your legacy."},
+//     {phase:"40s",range:"40 – 49",c:"#592209",opp:"Mastery phase. Your accumulated wisdom transforms into leadership and influence at scale."},
 //     {phase:"50+",range:"50 and beyond",c:"#ff8844",opp:"Legacy and spiritual depth. The universe rewards your journey with profound peace, wisdom, and abundance."},
 //   ];
 
@@ -726,10 +723,10 @@
 //         <div className="s-head">💰 Wealth & Success Blueprint</div>
 //         <div className="gauge-grid">
 //           {[
-//             {icon:"💰",label:"Money",    value:dv(base,name+"mny"), color:"#BC6A4D"},
+//             {icon:"💰",label:"Money",    value:dv(base,name+"mny"), color:"#592209"},
 //             {icon:"📈",label:"Business", value:dv(base,name+"biz"), color:"var(--gold)"},
-//             {icon:"👑",label:"Leadership",value:dv(base,name+"ldr"),color:"#BC6A4D"},
-//             {icon:"🚀",label:"Career",   value:dv(base,name+"car"), color:"#BC6A4D"},
+//             {icon:"👑",label:"Leadership",value:dv(base,name+"ldr"),color:"#592209"},
+//             {icon:"🚀",label:"Career",   value:dv(base,name+"car"), color:"#592209"},
 //           ].map(g=><Gauge key={g.label} {...g}/>)}
 //         </div>
 //       </div>
@@ -813,7 +810,7 @@
 //           </div>
 //           <div className="r-card">
 //             <div className="r-card-title" style={{marginBottom:16}}>What This Means For You</div>
-//             {(p_report.spiritMeaning||["Fierce independence and natural authority","Exceptional vision — you see what others cannot","Born to soar above limitations","Protector energy — others feel safe near you"]).map((m,i)=><div key={i} style={{display:"flex",gap:10,marginBottom:10,fontSize:14,color:"rgba(232,224,240,.7)",fontStyle:"italic"}}><span>✦</span><span>{m}</span></div>)}
+//             {(p_report.spiritMeaning||["Fierce independence and natural authority","Exceptional vision — you see what others cannot","Born to soar above limitations","Protector energy — others feel safe near you"]).map((m,i)=><div key={i} style={{display:"flex",gap:10,marginBottom:10,fontSize:14,color:"rgba(48,22,7,0.72)",fontStyle:"italic"}}><span>✦</span><span>{m}</span></div>)}
 //           </div>
 //         </div>
 //       </div>
@@ -911,9 +908,9 @@
 //             ))}
 //           </div>
 //           <div>
-//             <div className="wow-col-title" style={{color:"var(--pink)"}}>⚠️ Top 5 Things To Avoid</div>
+//             <div className="wow-col-title" style={{color:"#592209"}}>⚠️ Top 5 Things To Avoid</div>
 //             {(p_report.mustAvoid||["Dimming your light to make others comfortable","Waiting for the perfect moment — it never arrives","Letting fear of judgment silence your authentic voice","Pouring your energy into people who drain your spirit","Confusing busyness with purpose — they are not the same"]).map((t,i)=>(
-//               <div key={i} className="wow-item"><span style={{color:"var(--pink)",flexShrink:0}}>⚠</span><span>{t}</span></div>
+//               <div key={i} className="wow-item"><span style={{color:"#592209",flexShrink:0}}>⚠</span><span>{t}</span></div>
 //             ))}
 //           </div>
 //         </div>
@@ -965,9 +962,9 @@
 //   return(
 //     <div className="bc-app">
 //       <Starfield/>
-//       <div className="nb" style={{width:700,height:700,top:"-250px",left:"-200px",background:"radial-gradient(circle,rgba(188,106,77,.1),transparent 70%)","--nd":"20s"}}/>
-//       <div className="nb" style={{width:500,height:500,bottom:"5%",right:"-100px",background:"radial-gradient(circle,rgba(188,106,77,.1),transparent 70%)","--nd":"25s"}}/>
-//       <div className="nb" style={{width:400,height:400,top:"40%",left:"35%",background:"radial-gradient(circle,rgba(188,106,77,.06),transparent 70%)","--nd":"30s"}}/>
+//       <div className="nb" style={{width:700,height:700,top:"-250px",left:"-200px",background:"radial-gradient(circle,rgba(89,34,9,0.08),transparent 70%)","--nd":"20s"}}/>
+//       <div className="nb" style={{width:500,height:500,bottom:"5%",right:"-100px",background:"radial-gradient(circle,rgba(89,34,9,0.08),transparent 70%)","--nd":"25s"}}/>
+//       <div className="nb" style={{width:400,height:400,top:"40%",left:"35%",background:"radial-gradient(circle,rgba(89,34,9,0.06),transparent 70%)","--nd":"30s"}}/>
 
 //       {phase==="loading"&&<Loading name={[form.firstName,form.lastName].filter(Boolean).join(" ")}/>}
 
@@ -1025,18 +1022,18 @@
 //                className="gen-btn"
 //                onClick={generate}
 //                style={{
-//                   background: "linear-gradient(135deg, #BC6A4D, #D9895F, #BC6A4D)",
+//                   background: "linear-gradient(135deg, #592209, #592209, #592209)",
 //                   backgroundSize: "200% auto",
-//                   color: "#000",
+//                   color: "#F5E9D6",
 //                   fontWeight: 800,
 //                   fontSize: 16,
 //                   letterSpacing: "0.1em",
 //                   padding: "14px 36px",
 //                   borderRadius: 30,
-//                   border: "1px solid rgba(188,106,77,0.6)",
+//                   border: "1px solid rgba(89,34,9,0.6)",
 //                   cursor: "pointer",
 //                   animation: "shimmer 2s linear infinite",
-//                   boxShadow: "0 0 24px rgba(188,106,77,0.5), 0 0 48px rgba(188,106,77,0.2)",
+//                   boxShadow: "0 0 24px rgba(89,34,9,0.5), 0 0 48px rgba(89,34,9,0.2)",
 //                 }}
 //               >
 //                 ✦ Reveal My Cosmic Identity ✦
@@ -1083,24 +1080,21 @@ import zodiacPisces from "@/assets/zodiac-gold/pisces.png";
 import { requireSignIn } from "@/lib/authedFetch";
 
 // ── Google Fonts ─────────────────────────────────────────────────────────────
-const fl = document.createElement("link"); fl.rel="stylesheet";
-fl.href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:wght@400;700&display=swap";
-document.head.appendChild(fl);
 
 // ── CSS ───────────────────────────────────────────────────────────────────────
 const css = `
 :root {
-  --void:#080c1f; --deep:#0b1030; --glass:rgba(255,255,255,0.05);
-  --gb:rgba(255,255,255,0.10); --gold:#f5c518; --gold2:#ffaa00;
-  --pur:#7b2fff; --pink:#ff2d78; --cyan:#00e5ff; --green:#00ffaa;
-  --fd:'Cinzel Decorative',serif; --fb:'Cormorant Garamond',serif; --fm:'Space Mono',monospace;
+  --void:#F5E9D6; --deep:#FBF5EC; --glass:rgba(89,34,9,0.05);
+  --gb:rgba(89,34,9,0.05); --gold:#f5c518; --gold2:#ffaa00;
+  --pur:#592209; --pink:#E58A45; --cyan:#461B07; --green:#2F6B3A;
+  --fd:Cinzel, Georgia, serif; --fb:'DM Sans', system-ui, sans-serif; --fm:'DM Sans', system-ui, sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-.bc-app{min-height:100vh;background:var(--void);color:#e8e0f0;font-family:var(--fb);font-size:17px;overflow-x:hidden;position:relative;}
+.bc-app{min-height:100vh;background:var(--void);color:#301607;font-family:var(--fb);font-size:17px;overflow-x:hidden;position:relative;}
 
 /* Stars */
 .sf{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
-.st{position:absolute;border-radius:50%;background:#fff;animation:twk var(--d) ease-in-out infinite;animation-delay:var(--dl);opacity:var(--op);}
+.st{position:absolute;border-radius:50%;background:rgba(89,34,9,0.25);animation:twk var(--d) ease-in-out infinite;animation-delay:var(--dl);opacity:var(--op);}
 @keyframes twk{0%,100%{opacity:var(--op);transform:scale(1);}50%{opacity:.05;transform:scale(.4);}}
 
 /* Nebula */
@@ -1113,19 +1107,19 @@ const css = `
 .form-wrap{max-width:600px;margin:0 auto;padding:60px 20px 80px;}
 .form-head{text-align:center;margin-bottom:48px;}
 .form-tag{font-family:var(--fm);font-size:10px;letter-spacing:6px;color:var(--cyan);text-transform:uppercase;margin-bottom:14px;}
-.form-h1{font-family:var(--fd);font-size:clamp(20px,4vw,40px);font-weight:900;color:var(--gold);line-height:1.2;margin-bottom:10px;text-shadow:0 0 40px rgba(245,197,24,.4);}
-.form-sub{color:rgba(232,224,240,.5);font-style:italic;font-size:16px;}
+.form-h1{font-family:var(--fd);font-size:clamp(20px,4vw,40px);font-weight:900;color:var(--gold);line-height:1.2;margin-bottom:10px;text-shadow:0 0 40px rgba(229,138,69,.4);}
+.form-sub{color:#592209;font-style:italic;font-size:16px;}
 
 .f-card{background:var(--glass);border:1px solid var(--gb);border-radius:20px;padding:32px 28px;backdrop-filter:blur(16px);}
 .f-field{margin-bottom:20px;}
-.f-label{font-family:var(--fm);font-size:10px;letter-spacing:3px;color:rgba(232,224,240,.5);text-transform:uppercase;display:block;margin-bottom:8px;}
-.f-input{width:100%;background:rgba(20,28,58,.7);border:1px solid rgba(255,255,255,.08);border-bottom:2px solid rgba(255,126,71,.5);border-radius:10px;padding:14px 18px;color:#fff;font-family:'Inter',sans-serif;font-size:16px;outline:none;transition:border .3s,box-shadow .3s;}
-.f-input:focus{border-color:#ff7e47;box-shadow:0 0 0 3px rgba(255,126,71,.15);}
-.f-input::placeholder{color:rgba(255,255,255,.35);}
-.f-input option{background:#0d1226;}
+.f-label{font-family:var(--fm);font-size:10px;letter-spacing:3px;color:#592209;text-transform:uppercase;display:block;margin-bottom:8px;}
+.f-input{width:100%;background:#FBF5EC;border:1px solid rgba(89,34,9,0.05);border-bottom:2px solid rgba(89,34,9,.5);border-radius:10px;padding:14px 18px;color:#301607;font-family:'DM Sans', system-ui, sans-serif;font-size:16px;outline:none;transition:border .3s,box-shadow .3s;}
+.f-input:focus{border-color:#592209;box-shadow:0 0 0 3px rgba(89,34,9,.15);}
+.f-input::placeholder{color:rgba(48,22,7,0.72);}
+.f-input option{background:#FBF5EC;}
 .drow{display:grid;grid-template-columns:2fr 2fr 3fr;gap:8px;}
 .trow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
-.f-hint{font-size:13px;color:rgba(232,224,240,.35);margin-top:5px;font-style:italic;}
+.f-hint{font-size:13px;color:rgba(48,22,7,0.75);margin-top:5px;font-style:italic;}
 
 /* Name input */
 .name-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
@@ -1133,33 +1127,33 @@ const css = `
 
 /* Place autocomplete */
 .pl-wrap{position:relative;}
-.pl-drop{position:absolute;top:calc(100% + 6px);left:0;right:0;background:#150830;border:1px solid rgba(123,47,255,.4);border-radius:10px;z-index:100;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.7);}
-.pl-item{padding:10px 14px;cursor:pointer;font-size:15px;transition:background .2s;border-bottom:1px solid rgba(255,255,255,.05);}
-.pl-item:hover{background:rgba(123,47,255,.2);}
-.pl-item small{display:block;font-size:11px;color:rgba(232,224,240,.4);margin-top:2px;font-family:var(--fm);}
+.pl-drop{position:absolute;top:calc(100% + 6px);left:0;right:0;background:#FBF5EC;border:1px solid rgba(89,34,9,.4);border-radius:10px;z-index:100;overflow:hidden;box-shadow:0 20px 60px rgba(89,34,9,0.2);}
+.pl-item{padding:10px 14px;cursor:pointer;font-size:15px;transition:background .2s;border-bottom:1px solid rgba(89,34,9,0.2);}
+.pl-item:hover{background:rgba(89,34,9,.2);}
+.pl-item small{display:block;font-size:11px;color:#592209;margin-top:2px;font-family:var(--fm);}
 
 /* Generate btn */
-.gen-btn{width:100%;margin-top:8px;padding:18px;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:12px;color:#000;font-family:var(--fd);font-size:13px;letter-spacing:2px;font-weight:700;cursor:pointer;text-transform:uppercase;transition:transform .2s,box-shadow .3s;position:relative;overflow:hidden;}
-.gen-btn:hover{transform:translateY(-2px);box-shadow:0 20px 60px rgba(245,197,24,.35);}
+.gen-btn{width:100%;margin-top:8px;padding:18px;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:12px;color:#F5E9D6;font-family:var(--fd);font-size:13px;letter-spacing:2px;font-weight:700;cursor:pointer;text-transform:uppercase;transition:transform .2s,box-shadow .3s;position:relative;overflow:hidden;}
+.gen-btn:hover{transform:translateY(-2px);box-shadow:0 20px 60px rgba(229,138,69,.35);}
 .gen-btn:active{transform:translateY(0);}
-.err-box{background:rgba(255,45,120,.1);border:1px solid rgba(255,45,120,.3);border-radius:10px;padding:12px 16px;color:#ff8ab0;font-family:var(--fm);font-size:12px;letter-spacing:1px;margin-bottom:16px;text-align:center;}
+.err-box{background:rgba(89,34,9,.1);border:1px solid rgba(89,34,9,.3);border-radius:10px;padding:12px 16px;color:#592209;font-family:var(--fm);font-size:12px;letter-spacing:1px;margin-bottom:16px;text-align:center;}
 
 /* ── LOADING ── */
 .load-screen{position:fixed;inset:0;background:var(--void);z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:36px;}
 .load-cosmos{width:240px;height:240px;position:relative;}
 .orb{position:absolute;border-radius:50%;border:1.5px solid transparent;animation:spin linear infinite;}
-.orb:nth-child(1){inset:0;   border-color:rgba(230,228,245,.8); box-shadow:0 0 8px rgba(230,228,245,.55),0 0 18px rgba(230,228,245,.3);animation-duration:22s;}
-.orb:nth-child(2){inset:28px;border-color:rgba(123,47,255,.7);  box-shadow:0 0 8px rgba(123,47,255,.55),0 0 18px rgba(123,47,255,.3);animation-duration:15s;animation-direction:reverse;}
-.orb:nth-child(3){inset:62px;border-color:rgba(0,229,255,.75);  box-shadow:0 0 8px rgba(0,229,255,.6), 0 0 18px rgba(0,229,255,.32);animation-duration:9s;}
-.orb:nth-child(4){inset:98px;border-color:rgba(0,255,170,.7);   box-shadow:0 0 8px rgba(0,255,170,.55),0 0 18px rgba(0,255,170,.3);animation-duration:5s;animation-direction:reverse;}
+.orb:nth-child(1){inset:0;   border-color:rgba(89,34,9,.8); box-shadow:0 0 8px rgba(89,34,9,.55),0 0 18px rgba(89,34,9,.3);animation-duration:22s;}
+.orb:nth-child(2){inset:28px;border-color:rgba(89,34,9,.7);  box-shadow:0 0 8px rgba(89,34,9,.55),0 0 18px rgba(89,34,9,.3);animation-duration:15s;animation-direction:reverse;}
+.orb:nth-child(3){inset:62px;border-color:rgba(89,34,9,.75);  box-shadow:0 0 8px rgba(89,34,9,.6), 0 0 18px rgba(89,34,9,.32);animation-duration:9s;}
+.orb:nth-child(4){inset:98px;border-color:rgba(229,138,69,.7);   box-shadow:0 0 8px rgba(229,138,69,.55),0 0 18px rgba(229,138,69,.3);animation-duration:5s;animation-direction:reverse;}
 .orb-dot{position:absolute;width:9px;height:9px;border-radius:50%;top:-4.5px;left:50%;transform:translateX(-50%);box-shadow:0 0 6px currentColor,0 0 14px currentColor,0 0 26px currentColor;}
 @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
-.orb-core{position:absolute;inset:106px;border-radius:50%;background:radial-gradient(circle at 36% 34%,#ffffff 0%,#fff6d0 14%,#ffd54f 42%,#ffb300 72%,#ff8f00 100%);animation:pglow 2s ease-in-out infinite;z-index:2;}
+.orb-core{position:absolute;inset:106px;border-radius:50%;background:radial-gradient(circle at 36% 34%,#ffffff 0%,#fff6d0 14%,#E58A45 42%,#E58A45 72%,#E58A45 100%);animation:pglow 2s ease-in-out infinite;z-index:2;}
 .orb-core::after{content:'';position:absolute;inset:-90%;border-radius:50%;background:linear-gradient(to right,transparent 0%,rgba(255,246,208,.85) 49.3%,rgba(255,246,208,.85) 50.7%,transparent 100%),linear-gradient(to bottom,transparent 0%,rgba(255,246,208,.85) 49.3%,rgba(255,246,208,.85) 50.7%,transparent 100%);mix-blend-mode:screen;-webkit-mask-image:radial-gradient(circle,black 12%,transparent 62%);mask-image:radial-gradient(circle,black 12%,transparent 62%);pointer-events:none;animation:flare-spin 24s linear infinite;}
 @keyframes flare-spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
-@keyframes pglow{0%,100%{box-shadow:0 0 8px 2px rgba(255,213,79,.6),0 0 20px 6px rgba(255,179,0,.35),0 0 44px 14px rgba(255,143,0,.18);opacity:.9;}50%{box-shadow:0 0 12px 3px rgba(255,213,79,.8),0 0 30px 10px rgba(255,179,0,.5),0 0 60px 20px rgba(255,143,0,.28);opacity:1;}}
+@keyframes pglow{0%,100%{box-shadow:0 0 8px 2px rgba(229,138,69,.6),0 0 20px 6px rgba(229,138,69,.35),0 0 44px 14px rgba(229,138,69,.18);opacity:.9;}50%{box-shadow:0 0 12px 3px rgba(229,138,69,.8),0 0 30px 10px rgba(229,138,69,.5),0 0 60px 20px rgba(229,138,69,.28);opacity:1;}}
 .load-steps{display:flex;flex-direction:column;gap:10px;text-align:center;}
-.load-step{font-family:var(--fm);font-size:11px;letter-spacing:2px;color:rgba(232,224,240,.2);transition:color .5s;display:flex;align-items:center;gap:10px;justify-content:center;}
+.load-step{font-family:var(--fm);font-size:11px;letter-spacing:2px;color:rgba(48,22,7,0.75);transition:color .5s;display:flex;align-items:center;gap:10px;justify-content:center;}
 .load-step.active{color:var(--cyan);text-shadow:0 0 20px var(--cyan);}
 .load-step.done{color:var(--gold);}
 .ls-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0;}
@@ -1170,28 +1164,28 @@ const css = `
 
 /* Section heading */
 .s-head{font-family:var(--fd);font-size:11px;letter-spacing:4px;color:var(--cyan);text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;gap:12px;}
-.s-head::after{content:'';flex:1;height:1px;background:linear-gradient(to right,rgba(0,229,255,.3),transparent);}
+.s-head::after{content:'';flex:1;height:1px;background:linear-gradient(to right,rgba(89,34,9,.3),transparent);}
 .s-space{margin-bottom:48px;}
 
 /* Life purpose reveal */
-.purpose-hero{text-align:center;padding:60px 20px;background:radial-gradient(ellipse at center,rgba(245,197,24,.08) 0%,transparent 70%);border-radius:24px;border:1px solid rgba(245,197,24,.12);margin-bottom:48px;}
+.purpose-hero{text-align:center;padding:60px 20px;background:radial-gradient(ellipse at center,rgba(229,138,69,.08) 0%,transparent 70%);border-radius:24px;border:1px solid rgba(229,138,69,.12);margin-bottom:48px;}
 .purpose-tag{font-family:var(--fm);font-size:10px;letter-spacing:5px;color:var(--gold);text-transform:uppercase;margin-bottom:20px;}
-.purpose-statement{font-family:var(--fd);font-size:clamp(16px,2.5vw,26px);color:#fff;line-height:1.5;max-width:600px;margin:0 auto;text-shadow:0 0 40px rgba(245,197,24,.3);}
+.purpose-statement{font-family:var(--fd);font-size:clamp(16px,2.5vw,26px);color:#301607;line-height:1.5;max-width:600px;margin:0 auto;text-shadow:0 0 40px rgba(229,138,69,.3);}
 
 /* Soul archetype cards */
 .arch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin-bottom:48px;}
 .arch-card{background:var(--glass);border:1px solid var(--gb);border-radius:16px;padding:20px 14px;text-align:center;backdrop-filter:blur(12px);transition:transform .2s,border-color .3s,box-shadow .3s;cursor:default;animation:fadeUp .6s ease both;}
-.arch-card:hover{transform:translateY(-6px);border-color:rgba(245,197,24,.4);box-shadow:0 20px 50px rgba(245,197,24,.15);}
+.arch-card:hover{transform:translateY(-6px);border-color:rgba(229,138,69,.4);box-shadow:0 20px 50px rgba(229,138,69,.15);}
 @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
 .arch-icon{font-size:32px;margin-bottom:10px;}
 .arch-name{font-family:var(--fd);font-size:11px;letter-spacing:1px;color:var(--gold);}
-.arch-desc{font-size:12px;color:rgba(232,224,240,.5);margin-top:5px;font-style:italic;}
+.arch-desc{font-size:12px;color:#592209;margin-top:5px;font-style:italic;}
 
 /* Cosmic DNA */
 .dna-wrap{background:var(--glass);border:1px solid var(--gb);border-radius:20px;padding:28px;backdrop-filter:blur(12px);margin-bottom:48px;}
 .dna-row{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
-.dna-label{font-family:var(--fm);font-size:11px;letter-spacing:2px;color:rgba(232,224,240,.6);width:110px;flex-shrink:0;text-transform:uppercase;}
-.dna-bar{flex:1;height:8px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden;}
+.dna-label{font-family:var(--fm);font-size:11px;letter-spacing:2px;color:#592209;width:110px;flex-shrink:0;text-transform:uppercase;}
+.dna-bar{flex:1;height:8px;background:rgba(89,34,9,0.2);border-radius:4px;overflow:hidden;}
 .dna-fill{height:100%;border-radius:4px;background:var(--bc,linear-gradient(to right,var(--pur),var(--cyan)));transition:width 2s cubic-bezier(.4,0,.2,1);width:0;}
 .dna-fill.go{width:var(--tw,0%);}
 .dna-val{font-family:var(--fm);font-size:13px;font-weight:700;color:var(--gold);width:40px;text-align:right;}
@@ -1201,27 +1195,27 @@ const css = `
 .cards-3{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px;margin-bottom:48px;}
 @media(max-width:600px){.cards-2{grid-template-columns:1fr;}}
 .r-card{background:var(--glass);border:1px solid var(--gb);border-radius:16px;padding:22px;backdrop-filter:blur(12px);transition:transform .2s,border-color .3s;}
-.r-card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.18);}
+.r-card:hover{transform:translateY(-3px);border-color:rgba(89,34,9,0.2);}
 .r-card-icon{font-size:26px;margin-bottom:10px;}
 .r-card-title{font-family:var(--fd);font-size:11px;letter-spacing:2px;color:var(--gold);margin-bottom:8px;text-transform:uppercase;}
-.r-card-val{font-size:20px;color:#fff;font-weight:600;margin-bottom:6px;}
-.r-card-desc{font-size:14px;color:rgba(232,224,240,.6);font-style:italic;line-height:1.5;}
+.r-card-val{font-size:20px;color:#301607;font-weight:600;margin-bottom:6px;}
+.r-card-desc{font-size:14px;color:#592209;font-style:italic;line-height:1.5;}
 
 /* Superpowers */
 .powers-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:48px;}
-.power-card{background:linear-gradient(135deg,rgba(0,255,170,.07),rgba(123,47,255,.06));border:1px solid rgba(0,255,170,.18);border-radius:14px;padding:18px;animation:fadeUp .5s ease both;transition:transform .2s;}
+.power-card{background:linear-gradient(135deg,rgba(229,138,69,.07),rgba(89,34,9,.06));border:1px solid rgba(229,138,69,.18);border-radius:14px;padding:18px;animation:fadeUp .5s ease both;transition:transform .2s;}
 .power-card:hover{transform:translateY(-4px);}
 .power-icon{font-size:24px;margin-bottom:8px;}
 .power-name{font-family:var(--fd);font-size:11px;letter-spacing:1px;color:var(--green);margin-bottom:5px;}
-.power-desc{font-size:13px;color:rgba(232,224,240,.6);font-style:italic;}
+.power-desc{font-size:13px;color:#592209;font-style:italic;}
 
 /* Shadow side */
 .shadow-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:48px;}
-.shadow-card{background:linear-gradient(135deg,rgba(255,45,120,.07),rgba(255,107,53,.05));border:1px solid rgba(255,45,120,.2);border-radius:14px;padding:18px;transition:transform .2s;}
+.shadow-card{background:linear-gradient(135deg,rgba(89,34,9,.07),rgba(89,34,9,.05));border:1px solid rgba(89,34,9,.2);border-radius:14px;padding:18px;transition:transform .2s;}
 .shadow-card:hover{transform:translateY(-4px);}
 .shadow-icon{font-size:22px;margin-bottom:8px;}
-.shadow-name{font-family:var(--fd);font-size:11px;letter-spacing:1px;color:var(--pink);margin-bottom:4px;}
-.shadow-tip{font-size:13px;color:rgba(232,224,240,.55);font-style:italic;}
+.shadow-name{font-family:var(--fd);font-size:11px;letter-spacing:1px;color:#592209;margin-bottom:4px;}
+.shadow-tip{font-size:13px;color:#592209;font-style:italic;}
 
 /* Timeline */
 .tl-wrap{position:relative;padding:10px 0 10px 32px;margin-bottom:48px;}
@@ -1229,67 +1223,67 @@ const css = `
 .tl-item{position:relative;margin-bottom:24px;padding-left:18px;}
 .tl-dot2{position:absolute;left:-26px;top:8px;width:14px;height:14px;border-radius:50%;background:var(--dc,var(--gold));border:2px solid var(--void);box-shadow:0 0 14px var(--dc,var(--gold));}
 .tl-phase{font-family:var(--fm);font-size:10px;letter-spacing:3px;color:var(--dc,var(--gold));text-transform:uppercase;margin-bottom:4px;}
-.tl-range{font-family:var(--fd);font-size:14px;color:#fff;margin-bottom:3px;}
-.tl-desc{font-size:14px;color:rgba(232,224,240,.6);font-style:italic;line-height:1.5;}
+.tl-range{font-family:var(--fd);font-size:14px;color:#301607;margin-bottom:3px;}
+.tl-desc{font-size:14px;color:#592209;font-style:italic;line-height:1.5;}
 
 /* Planet dashboard */
 .planet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;margin-bottom:20px;}
 .p-item{background:var(--glass);border:1px solid var(--gb);border-radius:14px;padding:16px 10px;text-align:center;cursor:pointer;transition:transform .2s,border-color .3s,box-shadow .3s;}
-.p-item:hover,.p-item.sel{transform:translateY(-4px);border-color:var(--gold);box-shadow:0 0 30px rgba(245,197,24,.2);}
+.p-item:hover,.p-item.sel{transform:translateY(-4px);border-color:var(--gold);box-shadow:0 0 30px rgba(229,138,69,.2);}
 .p-sym{font-size:30px;margin-bottom:6px;}
-.p-name{font-family:var(--fm);font-size:9px;letter-spacing:2px;color:rgba(232,224,240,.4);text-transform:uppercase;margin-bottom:5px;}
+.p-name{font-family:var(--fm);font-size:9px;letter-spacing:2px;color:#592209;text-transform:uppercase;margin-bottom:5px;}
 .p-score{font-family:var(--fd);font-size:15px;color:var(--gold);}
-.p-panel{background:linear-gradient(135deg,rgba(123,47,255,.1),rgba(0,229,255,.06));border:1px solid rgba(123,47,255,.25);border-radius:16px;padding:24px;margin-bottom:48px;animation:fadeUp .4s ease;}
+.p-panel{background:linear-gradient(135deg,rgba(89,34,9,.1),rgba(89,34,9,.06));border:1px solid rgba(89,34,9,.25);border-radius:16px;padding:24px;margin-bottom:48px;animation:fadeUp .4s ease;}
 .p-panel-title{font-family:var(--fd);font-size:16px;color:var(--gold);margin-bottom:6px;}
 .p-panel-sub{font-family:var(--fm);font-size:10px;letter-spacing:3px;color:var(--cyan);text-transform:uppercase;margin-bottom:14px;}
-.p-panel-body{font-size:15px;color:rgba(232,224,240,.75);line-height:1.7;font-style:italic;}
+.p-panel-body{font-size:15px;color:#592209;line-height:1.7;font-style:italic;}
 .p-traits{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
-.p-trait{background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.2);border-radius:20px;padding:5px 14px;font-family:var(--fm);font-size:10px;letter-spacing:1px;color:var(--gold);}
+.p-trait{background:rgba(229,138,69,.1);border:1px solid rgba(229,138,69,.2);border-radius:20px;padding:5px 14px;font-family:var(--fm);font-size:10px;letter-spacing:1px;color:var(--gold);}
 
 /* Aura */
 .aura-wrap{text-align:center;padding:40px 20px;margin-bottom:48px;}
 .aura-glow{width:160px;height:160px;border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:50px;animation:aura-pulse 3s ease-in-out infinite;}
-@keyframes aura-pulse{0%,100%{box-shadow:0 0 40px var(--ac,rgba(245,197,24,.5)),0 0 80px var(--ac,rgba(245,197,24,.25));}50%{box-shadow:0 0 80px var(--ac,rgba(245,197,24,.8)),0 0 160px var(--ac,rgba(245,197,24,.4));}}
+@keyframes aura-pulse{0%,100%{box-shadow:0 0 40px var(--ac,rgba(229,138,69,.5)),0 0 80px var(--ac,rgba(229,138,69,.25));}50%{box-shadow:0 0 80px var(--ac,rgba(229,138,69,.8)),0 0 160px var(--ac,rgba(229,138,69,.4));}}
 .aura-name{font-family:var(--fd);font-size:22px;color:var(--gold);margin-bottom:8px;}
-.aura-meaning{font-size:16px;color:rgba(232,224,240,.65);font-style:italic;}
+.aura-meaning{font-size:16px;color:#592209;font-style:italic;}
 
 /* Lucky system */
 .lucky-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:48px;}
 .lucky-item{background:var(--glass);border:1px solid var(--gb);border-radius:14px;padding:18px 12px;text-align:center;transition:transform .2s;}
 .lucky-item:hover{transform:translateY(-3px);}
 .lucky-icon{font-size:26px;margin-bottom:8px;}
-.lucky-type{font-family:var(--fm);font-size:9px;letter-spacing:3px;color:rgba(232,224,240,.4);text-transform:uppercase;margin-bottom:5px;}
+.lucky-type{font-family:var(--fm);font-size:9px;letter-spacing:3px;color:#592209;text-transform:uppercase;margin-bottom:5px;}
 .lucky-val{font-family:var(--fd);font-size:15px;color:var(--gold);}
 
 /* Gauge */
 .gauge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px;margin-bottom:48px;}
 .gauge-item{background:var(--glass);border:1px solid var(--gb);border-radius:16px;padding:20px;text-align:center;backdrop-filter:blur(8px);}
 .gauge-svg{width:100px;height:100px;display:block;margin:0 auto 10px;transform:rotate(-90deg);}
-.gauge-track{fill:none;stroke:rgba(255,255,255,.07);stroke-width:8;}
+.gauge-track{fill:none;stroke:rgba(89,34,9,0.05);stroke-width:8;}
 .gauge-fill{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset 2s cubic-bezier(.4,0,.2,1);}
 .gauge-inner{display:grid;place-items:center;}
 .gauge-svg-wrap{display:grid;place-items:center;width:100px;height:100px;margin:0 auto 10px;}
 .gauge-svg2{width:100px;height:100px;transform:rotate(-90deg);grid-area:1/1;}
 .gauge-num{grid-area:1/1;font-family:var(--fd);font-size:20px;color:var(--gold);font-weight:700;}
-.gauge-label{font-family:var(--fm);font-size:10px;letter-spacing:2px;color:rgba(232,224,240,.5);text-transform:uppercase;}
+.gauge-label{font-family:var(--fm);font-size:10px;letter-spacing:2px;color:#592209;text-transform:uppercase;}
 
 /* Power years */
 .pyears-wrap{margin-bottom:48px;}
-.py-item{display:flex;align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.py-item{display:flex;align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid rgba(89,34,9,0.2);}
 .py-year{font-family:var(--fd);font-size:18px;color:var(--gold);width:60px;flex-shrink:0;}
 .py-stars{flex:1;}
-.py-desc{font-size:14px;color:rgba(232,224,240,.6);font-style:italic;width:220px;text-align:right;}
+.py-desc{font-size:14px;color:#592209;font-style:italic;width:220px;text-align:right;}
 
 /* Forecast */
 .forecast-tabs{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
-.f-tab{padding:8px 18px;border-radius:20px;font-family:var(--fm);font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border:1px solid rgba(255,255,255,.12);background:transparent;color:rgba(232,224,240,.5);transition:all .3s;}
-.f-tab.active{background:linear-gradient(135deg,var(--pur),var(--pink));border-color:transparent;color:#fff;box-shadow:0 0 20px rgba(123,47,255,.3);}
+.f-tab{padding:8px 18px;border-radius:20px;font-family:var(--fm);font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border:1px solid rgba(89,34,9,0.1);background:transparent;color:#592209;transition:all .3s;}
+.f-tab.active{background:linear-gradient(135deg,var(--pur),var(--pink));border-color:transparent;color:#F5E9D6;box-shadow:0 0 20px rgba(89,34,9,.3);}
 .forecast-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:48px;}
 @media(max-width:600px){.forecast-grid{grid-template-columns:repeat(2,1fr);}}
 .fc-item{background:var(--glass);border:1px solid var(--gb);border-radius:12px;padding:14px 10px;text-align:center;}
 .fc-icon{font-size:22px;margin-bottom:6px;}
-.fc-type{font-family:var(--fm);font-size:9px;letter-spacing:2px;color:rgba(232,224,240,.4);text-transform:uppercase;margin-bottom:6px;}
-.fc-bar{height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;margin-bottom:7px;}
+.fc-type{font-family:var(--fm);font-size:9px;letter-spacing:2px;color:#592209;text-transform:uppercase;margin-bottom:6px;}
+.fc-bar{height:5px;background:rgba(89,34,9,0.2);border-radius:3px;overflow:hidden;margin-bottom:7px;}
 .fc-bfill{height:100%;border-radius:3px;transition:width 1.6s cubic-bezier(.4,0,.2,1);width:0;}
 .fc-bfill.go{width:var(--fw,0%);}
 .fc-val{font-family:var(--fd);font-size:15px;font-weight:700;color:var(--fcolor,var(--gold));}
@@ -1298,64 +1292,64 @@ const css = `
 .chat-wrap{background:var(--glass);border:1px solid var(--gb);border-radius:20px;padding:24px;margin-bottom:48px;backdrop-filter:blur(12px);}
 .chat-msgs{max-height:320px;overflow-y:auto;margin-bottom:16px;display:flex;flex-direction:column;gap:12px;}
 .chat-msgs::-webkit-scrollbar{width:4px;}
-.chat-msgs::-webkit-scrollbar-thumb{background:rgba(123,47,255,.4);border-radius:2px;}
+.chat-msgs::-webkit-scrollbar-thumb{background:rgba(89,34,9,.4);border-radius:2px;}
 .chat-msg{padding:12px 16px;border-radius:12px;font-size:15px;line-height:1.6;max-width:85%;}
-.chat-msg.user{background:linear-gradient(135deg,rgba(123,47,255,.25),rgba(0,229,255,.15));border:1px solid rgba(123,47,255,.2);align-self:flex-end;font-style:italic;}
-.chat-msg.ai{background:rgba(245,197,24,.07);border:1px solid rgba(245,197,24,.15);align-self:flex-start;color:rgba(232,224,240,.85);}
-.chat-msg.loading{color:rgba(232,224,240,.4);font-style:italic;font-size:14px;}
+.chat-msg.user{background:linear-gradient(135deg,rgba(89,34,9,.25),rgba(89,34,9,.15));border:1px solid rgba(89,34,9,.2);align-self:flex-end;font-style:italic;}
+.chat-msg.ai{background:rgba(229,138,69,.07);border:1px solid rgba(229,138,69,.15);align-self:flex-start;color:#592209;}
+.chat-msg.loading{color:#592209;font-style:italic;font-size:14px;}
 .chat-row{display:flex;gap:10px;}
-.chat-input{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 16px;color:#e8e0f0;font-family:var(--fb);font-size:15px;outline:none;transition:border .3s;}
+.chat-input{flex:1;background:rgba(89,34,9,0.05);border:1px solid rgba(89,34,9,0.05);border-radius:10px;padding:12px 16px;color:#301607;font-family:var(--fb);font-size:15px;outline:none;transition:border .3s;}
 .chat-input:focus{border-color:var(--gold);}
-.chat-send{padding:12px 20px;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:10px;color:#000;font-family:var(--fd);font-size:11px;letter-spacing:1px;cursor:pointer;transition:transform .2s;white-space:nowrap;}
+.chat-send{padding:12px 20px;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:10px;color:#F5E9D6;font-family:var(--fd);font-size:11px;letter-spacing:1px;cursor:pointer;transition:transform .2s;white-space:nowrap;}
 .chat-send:hover{transform:translateY(-1px);}
 .chat-send:disabled{opacity:.5;cursor:not-allowed;}
 .chat-qs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
-.chat-q{padding:6px 14px;background:rgba(123,47,255,.1);border:1px solid rgba(123,47,255,.2);border-radius:20px;font-size:13px;color:rgba(232,224,240,.7);cursor:pointer;transition:all .2s;font-style:italic;}
-.chat-q:hover{background:rgba(123,47,255,.2);color:#fff;}
+.chat-q{padding:6px 14px;background:rgba(89,34,9,.1);border:1px solid rgba(89,34,9,.2);border-radius:20px;font-size:13px;color:#592209;cursor:pointer;transition:all .2s;font-style:italic;}
+.chat-q:hover{background:rgba(89,34,9,.2);color:#301607;}
 
 /* Universe scoreboard */
 .scoreboard{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px;margin-bottom:48px;}
 .sb-item{background:var(--glass);border:1px solid var(--gb);border-radius:16px;padding:20px;text-align:center;backdrop-filter:blur(8px);}
 .sb-icon{font-size:24px;margin-bottom:10px;}
-.sb-label{font-family:var(--fm);font-size:9px;letter-spacing:2px;color:rgba(232,224,240,.4);text-transform:uppercase;margin-bottom:8px;}
+.sb-label{font-family:var(--fm);font-size:9px;letter-spacing:2px;color:#592209;text-transform:uppercase;margin-bottom:8px;}
 .sb-score{font-family:var(--fd);font-size:26px;color:var(--gold);}
 
 /* WOW finale */
-.wow-wrap{text-align:center;padding:60px 20px;background:radial-gradient(ellipse at center,rgba(245,197,24,.06),transparent 70%);border-radius:24px;border:1px solid rgba(245,197,24,.1);margin-bottom:48px;}
-.wow-title{font-family:var(--fd);font-size:clamp(18px,3vw,32px);color:var(--gold);margin-bottom:8px;text-shadow:0 0 40px rgba(245,197,24,.4);}
-.wow-sub{font-family:var(--fm);font-size:10px;letter-spacing:5px;color:rgba(232,224,240,.4);text-transform:uppercase;margin-bottom:40px;}
+.wow-wrap{text-align:center;padding:60px 20px;background:radial-gradient(ellipse at center,rgba(229,138,69,.06),transparent 70%);border-radius:24px;border:1px solid rgba(229,138,69,.1);margin-bottom:48px;}
+.wow-title{font-family:var(--fd);font-size:clamp(18px,3vw,32px);color:var(--gold);margin-bottom:8px;text-shadow:0 0 40px rgba(229,138,69,.4);}
+.wow-sub{font-family:var(--fm);font-size:10px;letter-spacing:5px;color:#592209;text-transform:uppercase;margin-bottom:40px;}
 .wow-cols{display:grid;grid-template-columns:1fr 1fr;gap:24px;text-align:left;}
 @media(max-width:600px){.wow-cols{grid-template-columns:1fr;}}
 .wow-col-title{font-family:var(--fm);font-size:10px;letter-spacing:3px;text-transform:uppercase;margin-bottom:14px;}
-.wow-item{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;font-size:14px;color:rgba(232,224,240,.75);font-style:italic;}
+.wow-item{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;font-size:14px;color:#592209;font-style:italic;}
 
 /* Reset */
-.reset-btn{display:block;margin:0 auto;padding:14px 40px;background:transparent;border:1px solid rgba(255,255,255,.15);border-radius:50px;color:rgba(232,224,240,.5);font-family:var(--fm);font-size:11px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all .3s;}
-.reset-btn:hover{border-color:var(--gold);color:var(--gold);box-shadow:0 0 30px rgba(245,197,24,.15);}
+.reset-btn{display:block;margin:0 auto;padding:14px 40px;background:transparent;border:1px solid rgba(89,34,9,0.1);border-radius:50px;color:#592209;font-family:var(--fm);font-size:11px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all .3s;}
+.reset-btn:hover{border-color:var(--gold);color:var(--gold);box-shadow:0 0 30px rgba(229,138,69,.15);}
 
 /* Couple header */
 .r-header{text-align:center;padding:50px 20px 40px;}
 .r-name{font-family:var(--fd);font-size:clamp(18px,3vw,32px);background:linear-gradient(135deg,var(--gold),var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:6px;}
-.r-sub{font-family:var(--fm);font-size:10px;letter-spacing:4px;color:rgba(232,224,240,.35);text-transform:uppercase;}
+.r-sub{font-family:var(--fm);font-size:10px;letter-spacing:4px;color:rgba(48,22,7,0.75);text-transform:uppercase;}
 
 /* Shareable card */
-.share-card{background:linear-gradient(135deg,#0d0520,#1a0a2e);border:1px solid rgba(245,197,24,.25);border-radius:20px;padding:32px;text-align:center;margin-bottom:48px;position:relative;overflow:hidden;}
-.share-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(245,197,24,.08),transparent 60%);pointer-events:none;}
+.share-card{background:#F5E9D6;border:1px solid rgba(229,138,69,.25);border-radius:20px;padding:32px;text-align:center;margin-bottom:48px;position:relative;overflow:hidden;}
+.share-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(229,138,69,.08),transparent 60%);pointer-events:none;}
 .share-title{font-family:var(--fd);font-size:11px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:20px;}
-.share-inner{display:inline-block;background:linear-gradient(135deg,rgba(245,197,24,.06),rgba(123,47,255,.06));border:1px solid rgba(245,197,24,.15);border-radius:16px;padding:24px 32px;margin-bottom:20px;}
-.share-sname{font-family:var(--fd);font-size:20px;color:#fff;margin-bottom:4px;}
+.share-inner{display:inline-block;background:linear-gradient(135deg,rgba(229,138,69,.06),rgba(89,34,9,.06));border:1px solid rgba(229,138,69,.15);border-radius:16px;padding:24px 32px;margin-bottom:20px;}
+.share-sname{font-family:var(--fd);font-size:20px;color:#301607;margin-bottom:4px;}
 .share-zodiac{font-family:var(--fm);font-size:11px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:14px;}
 .share-tags{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;}
-.share-tag{background:rgba(245,197,24,.12);border:1px solid rgba(245,197,24,.2);border-radius:20px;padding:4px 14px;font-family:var(--fm);font-size:10px;color:var(--gold);}
+.share-tag{background:rgba(229,138,69,.12);border:1px solid rgba(229,138,69,.2);border-radius:20px;padding:4px 14px;font-family:var(--fm);font-size:10px;color:var(--gold);}
 .share-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
-.share-btn{padding:10px 20px;border-radius:20px;font-family:var(--fm);font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:transform .2s;border:none;color:#fff;}
+.share-btn{padding:10px 20px;border-radius:20px;font-family:var(--fm);font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:transform .2s;border:none;color:#301607;}
 .share-btn:hover{transform:translateY(-2px);}
 
 /* Results page: gentle entrance + hover + a very subtle energy-badge glow pulse */
 @keyframes rfade-up{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
 .r-sec{animation:rfade-up .6s ease-out both;}
 .r-hcard{transition:transform .2s ease,border-color .2s ease;}
-.r-hcard:hover{transform:translateY(-4px);border-color:rgba(255,126,71,0.45)!important;}
+.r-hcard:hover{transform:translateY(-4px);border-color:rgba(89,34,9,0.45)!important;}
 @keyframes energy-glow-pulse{0%,100%{opacity:0.98;}50%{opacity:1;filter:brightness(1.02);}}
 .energy-badge{animation:energy-glow-pulse 3.5s ease-in-out infinite;}
 `;
@@ -1450,7 +1444,7 @@ function Loading({name}){
     <div className="load-screen">
       <div className="load-name">✦ {name} ✦</div>
       <div className="load-cosmos">
-        <div className="orb"><div className="orb-dot" style={{background:"#e6e4f5",color:"#e6e4f5"}}/></div>
+        <div className="orb"><div className="orb-dot" style={{background:"#592209",color:"#F5E9D6"}}/></div>
         <div className="orb"><div className="orb-dot" style={{background:"var(--pur)",color:"var(--pur)"}}/></div>
         <div className="orb"><div className="orb-dot" style={{background:"var(--cyan)",color:"var(--cyan)"}}/></div>
         <div className="orb"><div className="orb-dot" style={{background:"var(--green)",color:"var(--green)"}}/></div>
@@ -1463,11 +1457,11 @@ function Loading({name}){
 
 // ── Detailed Insights tab data (per-zodiac descriptions + generic advice/pattern) ──
 const INSIGHT_TABS=[
-  {key:"love",         label:"Love",         image:loveInsightImg,         color:"#ff6b8a"},
-  {key:"career",       label:"Career",       image:careerInsightImg,       color:"#ff7e47"},
-  {key:"money",        label:"Money",        image:moneyInsightImg,        color:"#4ade80"},
-  {key:"health",       label:"Health",       image:healthInsightImg,       color:"#60a5fa"},
-  {key:"spirituality", label:"Spirituality", image:spiritualityInsightImg, color:"#a78bfa"},
+  {key:"love",         label:"Love",         image:loveInsightImg,         color:"#9B2C1D"},
+  {key:"career",       label:"Career",       image:careerInsightImg,       color:"#592209"},
+  {key:"money",        label:"Money",        image:moneyInsightImg,        color:"#301607"},
+  {key:"health",       label:"Health",       image:healthInsightImg,       color:"#592209"},
+  {key:"spirituality", label:"Spirituality", image:spiritualityInsightImg, color:"#592209"},
 ];
 
 const INSIGHT_EXTRA={
@@ -1598,8 +1592,8 @@ function Results({data,onReset}){
   const heroDesc=`Your ${zodiac} Sun brings ${ZODIAC_HERO_TRAITS[zodiac]||"a distinctive presence"}. Life Path ${lifePath} adds ${LIFE_PATH_TRAITS[lifePath]||"its own blend of themes"}.`;
   const working=lifePathWorking(dob);
 
-  const cardStyle:CSSProperties={background:"rgba(15,20,45,0.55)",border:"1px solid rgba(255,126,71,0.2)",borderRadius:16,padding:28};
-  const sectionTitle:CSSProperties={fontFamily:"'Astra','Cinzel',serif",fontSize:"clamp(22px,4vw,28px)",color:"#fff",fontWeight:700,textAlign:"center",textTransform:"uppercase",marginBottom:28,letterSpacing:"0.03em"};
+  const cardStyle:CSSProperties={background:"#FBF5EC",border:"1px solid rgba(89,34,9,0.2)",borderRadius:16,padding:28};
+  const sectionTitle:CSSProperties={fontFamily:"'DM Sans', system-ui, sans-serif",fontSize:"clamp(22px,4vw,28px)",color:"#301607",fontWeight:700,textAlign:"center",textTransform:"uppercase",marginBottom:28,letterSpacing:"0.03em"};
   const smallLabel:CSSProperties={color:"rgba(255,255,255,0.55)",fontWeight:700,fontSize:13,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:10};
 
   const activeTab=INSIGHT_TABS.find(t=>t.key===insightTab);
@@ -1607,26 +1601,26 @@ function Results({data,onReset}){
   const insightExtra=INSIGHT_EXTRA[insightTab];
 
   return(
-    <div data-testid="bc-results" style={{maxWidth:1100,margin:"0 auto",padding:"20px 20px 100px",color:"#e8e0f0",fontFamily:"'Inter',sans-serif"}}>
+    <div data-testid="bc-results" style={{maxWidth:1100,margin:"0 auto",padding:"20px 20px 100px",color:"#301607",fontFamily:"'DM Sans',sans-serif"}}>
       <style>{resultsCss}</style>
 
       {/* ── HERO ── */}
       <div className="r-sec bcp-hero">
         <div>
           <div style={{color:"rgba(255,255,255,0.55)",fontWeight:700,fontSize:14,letterSpacing:"0.15em",marginBottom:12}}>SUN SIGN &amp; LIFE PATH PROFILE</div>
-          <h1 style={{fontFamily:"'Astra','Cinzel',serif",fontSize:"clamp(30px,5vw,52px)",color:"#fff",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.04em",marginBottom:16,lineHeight:1.1,wordBreak:"break-word"}}>{name}</h1>
-          <div style={{color:"#ff7e47",fontWeight:700,fontSize:18,marginBottom:20}}>{zodiac.toUpperCase()} SUN &nbsp;•&nbsp; LIFE PATH {lifePath}</div>
-          <p style={{fontSize:18,fontStyle:"italic",lineHeight:1.7,color:"#f8f8f8",marginBottom:28}}>{heroDesc}</p>
+          <h1 style={{fontFamily:"'DM Sans', system-ui, sans-serif",fontSize:"clamp(30px,5vw,52px)",color:"#301607",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.04em",marginBottom:16,lineHeight:1.1,wordBreak:"break-word"}}>{name}</h1>
+          <div style={{color:"#592209",fontWeight:700,fontSize:18,marginBottom:20}}>{zodiac.toUpperCase()} SUN &nbsp;•&nbsp; LIFE PATH {lifePath}</div>
+          <p style={{fontSize:18,fontStyle:"italic",lineHeight:1.7,color:"#301607",marginBottom:28}}>{heroDesc}</p>
           <div className="bcp-facts">
             <div style={{display:"flex",alignItems:"center",gap:12}}>
-              <div style={{width:44,height:44,borderRadius:"50%",background:"rgba(255,126,71,0.12)",display:"flex",alignItems:"center",justifyContent:"center"}}><Calendar size={20} color="#ff7e47"/></div>
+              <div style={{width:44,height:44,borderRadius:"50%",background:"rgba(89,34,9,0.12)",display:"flex",alignItems:"center",justifyContent:"center"}}><Calendar size={20} color="#592209"/></div>
               <div style={{textAlign:"left"}}>
                 <div style={{fontWeight:700,fontSize:15}}>Born {dobFormatted}</div>
                 <div style={{fontSize:13,color:"rgba(255,255,255,0.6)"}}>{time||"Birth time not entered"}</div>
               </div>
             </div>
             <div style={{display:"flex",alignItems:"center",gap:12}}>
-              <div style={{width:44,height:44,borderRadius:"50%",background:"rgba(255,126,71,0.12)",display:"flex",alignItems:"center",justifyContent:"center"}}><MapPin size={20} color="#ff7e47"/></div>
+              <div style={{width:44,height:44,borderRadius:"50%",background:"rgba(89,34,9,0.12)",display:"flex",alignItems:"center",justifyContent:"center"}}><MapPin size={20} color="#ff7e47"/></div>
               <div style={{textAlign:"left"}}>
                 <div style={{fontWeight:700,fontSize:15}}>{place?.city?`${place.city}${place.country?", "+place.country:""}`:"Birth place not entered"}</div>
                 <div style={{fontSize:13,color:"rgba(255,255,255,0.6)"}}>{place?.lat!=null?`${formatCoord(place.lat,"N","S")}, ${formatCoord(place.lon,"E","W")}`:"—"}</div>
@@ -1635,14 +1629,14 @@ function Results({data,onReset}){
           </div>
         </div>
         <div className="bcp-hero-art">
-          <div style={{position:"absolute",inset:"2%",borderRadius:"50%",background:"radial-gradient(circle,rgba(255,126,71,0.18),transparent 70%)",filter:"blur(20px)"}}/>
+          <div style={{position:"absolute",inset:"2%",borderRadius:"50%",background:"radial-gradient(circle,rgba(89,34,9,0.18),transparent 70%)",filter:"blur(20px)"}}/>
           <img src={zodiacImg} alt={`${zodiac} symbol`} style={{position:"relative"}}/>
         </div>
       </div>
 
       {/* ── HOW THIS PROFILE WAS MADE ── */}
       <div className="r-sec" style={{...cardStyle,marginBottom:56,borderColor:"rgba(255,126,71,0.35)"}}>
-        <div style={{...smallLabel,color:"#ff7e47"}}>How this profile was made</div>
+        <div style={{...smallLabel,color:"#592209"}}>How this profile was made</div>
         <p style={{fontSize:16,lineHeight:1.7,color:"rgba(255,255,255,0.8)"}}>
           Your Sun sign comes from your birth date, using the standard Western (tropical) date ranges. Your Life Path number comes from adding the digits of your birth date. The descriptions are written text for each sign and number, so people with the same sign and Life Path see the same interpretation. Your birth time and place are shown for reference only. This profile does not calculate planetary positions, an ascendant or houses, and it is not generated by AI.
         </p>
@@ -1652,23 +1646,23 @@ function Results({data,onReset}){
       <div className="r-sec bcp-two">
         <div className="r-hcard" style={cardStyle}>
           <div style={smallLabel}>Your Sun sign</div>
-          <div style={{color:"#fff",fontWeight:800,fontSize:26,marginBottom:4}}>{zodiac} {ZODIAC_SYMBOLS[zodiac]}</div>
+          <div style={{color:"#301607",fontWeight:800,fontSize:26,marginBottom:4}}>{zodiac} {ZODIAC_SYMBOLS[zodiac]}</div>
           {sign&&<>
-            <div style={{color:"rgba(255,255,255,0.6)",fontSize:15,marginBottom:14}}>{sign.dates} · {sign.element} · Ruler: {sign.traditionalRuling?`${sign.ruling} (modern), ${sign.traditionalRuling} (traditional)`:sign.ruling}</div>
+            <div style={{color:"rgba(48,22,7,0.85)",fontSize:15,marginBottom:14}}>{sign.dates} · {sign.element} · Ruler: {sign.traditionalRuling?`${sign.ruling} (modern), ${sign.traditionalRuling} (traditional)`:sign.ruling}</div>
             <p style={{fontSize:16,lineHeight:1.65,color:"rgba(255,255,255,0.8)",marginBottom:16}}>{sign.description}</p>
             <div style={{marginBottom:12}}>{sign.traits.map(t=><span key={t} className="bcp-chip">{t}</span>)}</div>
-            <div style={{fontSize:15,lineHeight:1.6,color:"rgba(255,255,255,0.7)"}}><b style={{color:"#fff"}}>Strengths:</b> {sign.strengths.join(", ")}.<br/><b style={{color:"#fff"}}>Areas to watch:</b> {sign.weaknesses.join(", ")}.</div>
-            <Link to={`/zodiac/${zodiac.toLowerCase()}`} style={{display:"inline-block",marginTop:16,color:"#ff7e47",fontWeight:700,fontSize:14}}>Read the full {zodiac} profile →</Link>
+            <div style={{fontSize:15,lineHeight:1.6,color:"rgba(255,255,255,0.7)"}}><b style={{color:"#301607"}}>Strengths:</b> {sign.strengths.join(", ")}.<br/><b style={{color:"#301607"}}>Areas to watch:</b> {sign.weaknesses.join(", ")}.</div>
+            <Link to={`/zodiac/${zodiac.toLowerCase()}`} style={{display:"inline-block",marginTop:16,color:"#592209",fontWeight:700,fontSize:14}}>Read the full {zodiac} profile →</Link>
           </>}
         </div>
         <div className="r-hcard" style={cardStyle}>
           <div style={smallLabel}>Your Life Path number</div>
-          <div style={{color:"#fff",fontWeight:800,fontSize:26,marginBottom:14}}>Life Path {lifePath}</div>
+          <div style={{color:"#301607",fontWeight:800,fontSize:26,marginBottom:14}}>Life Path {lifePath}</div>
           <p style={{fontSize:16,lineHeight:1.65,color:"rgba(255,255,255,0.8)",marginBottom:16}}>In numerology, Life Path {lifePath} is associated with {LIFE_PATH_TRAITS[lifePath]||"its own set of themes"}.</p>
           <div style={{...smallLabel,marginBottom:6}}>The working</div>
           <div data-testid="lp-working" style={{fontFamily:"'Space Mono',monospace",fontSize:14,lineHeight:1.9,color:"#f8f8f8",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,padding:"12px 14px"}}>
             {working.map((w,i)=><div key={i}>{w}</div>)}
-            <div style={{color:"#ff7e47"}}>Life Path = {lifePath}</div>
+            <div style={{color:"#592209"}}>Life Path = {lifePath}</div>
           </div>
           <p style={{fontSize:13,lineHeight:1.6,color:"rgba(255,255,255,0.5)",marginTop:10}}>Digits of {dob} are added, then reduced until one digit remains, except that 11 and 22 are kept as master numbers.</p>
         </div>
@@ -1682,7 +1676,7 @@ function Results({data,onReset}){
             {INSIGHT_TABS.map(t=>(
               <button key={t.key} role="tab" aria-selected={insightTab===t.key} onClick={()=>setInsightTab(t.key)}
                 style={{background:"none",border:"none",cursor:"pointer",padding:"12px 18px",fontSize:15,fontWeight:600,
-                  color:insightTab===t.key?"#fff":"rgba(255,255,255,0.55)",
+                  color:insightTab===t.key?"#301607":"rgba(255,255,255,0.55)",
                   borderBottom:insightTab===t.key?`2px solid ${t.color}`:"2px solid transparent"}}>
                 {t.label}
               </button>
@@ -1695,21 +1689,21 @@ function Results({data,onReset}){
             </div>
 
             <div>
-              <div style={{fontSize:24,fontWeight:800,color:"#fff",marginBottom:6}}>{activeTab.label}</div>
+              <div style={{fontSize:24,fontWeight:800,color:"#301607",marginBottom:6}}>{activeTab.label}</div>
               <div style={{fontSize:13,color:"rgba(255,255,255,0.5)",marginBottom:14}}>Traditional {zodiac} themes, written for this area</div>
               <div style={{fontSize:16,lineHeight:1.7,color:"rgba(255,255,255,0.8)",marginBottom:20}}>{insightText}</div>
-              <div style={{background:"rgba(255,126,71,0.06)",border:"1px solid rgba(255,126,71,0.25)",borderRadius:12,padding:"16px 18px"}}>
-                <div style={{color:"#ff7e47",fontWeight:700,fontSize:14,marginBottom:6,display:"flex",alignItems:"center",gap:8}}><Star size={16}/> A REFLECTION PROMPT</div>
-                <div style={{fontSize:15,color:"#f8f8f8"}}>{insightExtra.advice}</div>
+              <div style={{background:"rgba(89,34,9,0.06)",border:"1px solid rgba(89,34,9,0.25)",borderRadius:12,padding:"16px 18px"}}>
+                <div style={{color:"#592209",fontWeight:700,fontSize:14,marginBottom:6,display:"flex",alignItems:"center",gap:8}}><Star size={16}/> A REFLECTION PROMPT</div>
+                <div style={{fontSize:15,color:"#301607"}}>{insightExtra.advice}</div>
               </div>
             </div>
 
             <div style={{display:"flex",flexDirection:"column",gap:18}}>
               {[{label:"Pattern to notice",text:insightExtra.pattern,Icon:Heart},{label:"Focus",text:insightExtra.focus,Icon:Target},{label:"Growth",text:insightExtra.growth,Icon:Compass}].map(({label,text,Icon})=>(
                 <div key={label} style={{display:"flex",gap:12}}>
-                  <div style={{width:36,height:36,borderRadius:"50%",background:"rgba(255,126,71,0.1)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon size={16} color="#ff7e47"/></div>
+                  <div style={{width:36,height:36,borderRadius:"50%",background:"rgba(89,34,9,0.1)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon size={16} color="#ff7e47"/></div>
                   <div>
-                    <div style={{color:"#fff",fontWeight:700,fontSize:15,marginBottom:3}}>{label}</div>
+                    <div style={{color:"#301607",fontWeight:700,fontSize:15,marginBottom:3}}>{label}</div>
                     <div style={{color:"rgba(255,255,255,0.65)",fontSize:14,lineHeight:1.5}}>{text}</div>
                   </div>
                 </div>
@@ -1733,17 +1727,17 @@ function Results({data,onReset}){
 const emptyForm=()=>({firstName:"",lastName:"",day:"",month:"",year:"",hour:"",min:"",ampm:"AM",place:null});
 
 const bcInputStyle={
-  width:"100%", background:"rgba(20,28,58,0.7)", border:"1px solid rgba(255,255,255,0.08)",
-  borderBottom:"2px solid rgba(255,126,71,0.5)", borderRadius:10, padding:"14px 18px",
-  color:"#fff", fontFamily:"'Inter',sans-serif", fontSize:16, outline:"none",
+  width:"100%", background:"#FBF5EC", border:"1px solid rgba(89,34,9,0.2)",
+  borderBottom:"2px solid rgba(89,34,9,0.5)", borderRadius:10, padding:"14px 18px",
+  color:"#301607", fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:16, outline:"none",
 };
 
 function BcDivider(){
   return (
     <div style={{display:"flex", alignItems:"center", gap:12, margin:"22px 0"}}>
-      <div style={{flex:1, height:1, background:"rgba(255,126,71,0.3)"}}></div>
-      <span style={{color:"#ff7e47", fontSize:14}}>✦</span>
-      <div style={{flex:1, height:1, background:"rgba(255,126,71,0.3)"}}></div>
+      <div style={{flex:1, height:1, background:"rgba(89,34,9,0.3)"}}></div>
+      <span style={{color:"#592209", fontSize:14}}>✦</span>
+      <div style={{flex:1, height:1, background:"rgba(89,34,9,0.3)"}}></div>
     </div>
   );
 }
@@ -1807,38 +1801,38 @@ export default function App(){
   return(
     <div className="bc-app">
       <Starfield/>
-      <div className="nb" style={{width:700,height:700,top:"-250px",left:"-200px",background:"radial-gradient(circle,rgba(245,197,24,.1),transparent 70%)","--nd":"20s"} as CSSProperties}/>
-      <div className="nb" style={{width:500,height:500,bottom:"5%",right:"-100px",background:"radial-gradient(circle,rgba(123,47,255,.1),transparent 70%)","--nd":"25s"} as CSSProperties}/>
-      <div className="nb" style={{width:400,height:400,top:"40%",left:"35%",background:"radial-gradient(circle,rgba(0,229,255,.06),transparent 70%)","--nd":"30s"} as CSSProperties}/>
+      <div className="nb" style={{width:700,height:700,top:"-250px",left:"-200px",background:"radial-gradient(circle,rgba(229,138,69,.1),transparent 70%)","--nd":"20s"} as CSSProperties}/>
+      <div className="nb" style={{width:500,height:500,bottom:"5%",right:"-100px",background:"radial-gradient(circle,rgba(89,34,9,.1),transparent 70%)","--nd":"25s"} as CSSProperties}/>
+      <div className="nb" style={{width:400,height:400,top:"40%",left:"35%",background:"radial-gradient(circle,rgba(89,34,9,.06),transparent 70%)","--nd":"30s"} as CSSProperties}/>
 
       {phase==="loading"&&<Loading name={[form.firstName,form.lastName].filter(Boolean).join(" ")}/>}
 
       <div className="content" style={{display:phase==="loading"?"none":"block"}}>
         {phase==="form"&&(
-          <div style={{maxWidth:700, margin:"0 auto", padding:"60px 24px 100px", fontFamily:"'Inter', sans-serif"}}>
+          <div style={{maxWidth:700, margin:"0 auto", padding:"60px 24px 100px", fontFamily:"'DM Sans', system-ui, sans-serif"}}>
             <div style={{textAlign:"center", marginBottom:56}}>
               <div style={{display:"flex", alignItems:"center", justifyContent:"center", gap:16, marginBottom:24}}>
-                <div style={{width:80, height:1, background:"linear-gradient(90deg, transparent, rgba(255,126,71,0.6))"}}></div>
-                <div style={{color:"#f8f8f8", fontStyle:"italic", fontSize:18, whiteSpace:"nowrap"}}>
-                  <span style={{color:"#ff7e47"}}>✦</span> Cosmic Identity Experience <span style={{color:"#ff7e47"}}>✦</span>
+                <div style={{width:80, height:1, background:"linear-gradient(90deg, transparent, rgba(89,34,9,0.6))"}}></div>
+                <div style={{color:"#301607", fontStyle:"italic", fontSize:18, whiteSpace:"nowrap"}}>
+                  <span style={{color:"#592209"}}>✦</span> Cosmic Identity Experience <span style={{color:"#592209"}}>✦</span>
                 </div>
-                <div style={{width:80, height:1, background:"linear-gradient(90deg, rgba(255,126,71,0.6), transparent)"}}></div>
+                <div style={{width:80, height:1, background:"linear-gradient(90deg, rgba(89,34,9,0.6), transparent)"}}></div>
               </div>
-              <h1 style={{fontFamily:"'Astra','Cinzel',serif", fontSize:"clamp(30px,5vw,48px)", fontWeight:700, color:"#fff", letterSpacing:"0.06em", textTransform:"uppercase", lineHeight:1.25, marginBottom:20}}>
-                Your Sun Sign &amp;<br/><span style={{color:"#ff7e47"}}>Life Path Profile</span>
+              <h1 style={{fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:"clamp(30px,5vw,48px)", fontWeight:700, color:"#301607", letterSpacing:"0.06em", textTransform:"uppercase", lineHeight:1.25, marginBottom:20}}>
+                Your Sun Sign &amp;<br/><span style={{color:"#592209"}}>Life Path Profile</span>
               </h1>
-              <p style={{color:"#f8f8f8", fontStyle:"italic", fontSize:18}}>Enter your birth date to see your Sun sign and Life Path number.</p>
+              <p style={{color:"#301607", fontStyle:"italic", fontSize:18}}>Enter your birth date to see your Sun sign and Life Path number.</p>
             </div>
 
-            {error&&<div role="alert" style={{background:"rgba(248,113,113,0.08)", border:"1px solid rgba(248,113,113,0.3)", borderRadius:10, padding:"12px 16px", color:"#f87171", fontSize:14, marginBottom:24, textAlign:"center"}}>⚠ {error}</div>}
+            {error&&<div role="alert" style={{background:"rgba(248,113,113,0.08)", border:"1px solid rgba(248,113,113,0.3)", borderRadius:10, padding:"12px 16px", color:"#9B2C1D", fontSize:14, marginBottom:24, textAlign:"center"}}>⚠ {error}</div>}
 
             <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:20, marginBottom:8}}>
               <div>
-                <label htmlFor="bc-first" style={{display:"block", color:"#ff7e47", fontWeight:700, fontSize:15, marginBottom:10}}>First Name *</label>
+                <label htmlFor="bc-first" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>First Name *</label>
                 <input id="bc-first" maxLength={60} autoComplete="given-name" style={bcInputStyle} value={form.firstName} onChange={e=>up("firstName",e.target.value)} placeholder="e.g. Luna"/>
               </div>
               <div>
-                <label htmlFor="bc-last" style={{display:"block", color:"#ff7e47", fontWeight:700, fontSize:15, marginBottom:10}}>Last Name <span style={{opacity:0.6, fontWeight:400}}>(Optional)</span></label>
+                <label htmlFor="bc-last" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Last Name <span style={{opacity:0.6, fontWeight:400}}>(Optional)</span></label>
                 <input id="bc-last" maxLength={60} autoComplete="family-name" style={bcInputStyle} value={form.lastName} onChange={e=>up("lastName", e.target.value)} placeholder="e.g. Starlight"/>
               </div>
             </div>
@@ -1847,19 +1841,19 @@ export default function App(){
 
             <div style={{display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:20, marginBottom:8}}>
               <div>
-                <label htmlFor="bc-day" style={{display:"block", color:"#ff7e47", fontWeight:700, fontSize:15, marginBottom:10}}>Day *</label>
+                <label htmlFor="bc-day" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Day *</label>
                 <select id="bc-day" style={bcInputStyle} value={form.day} onChange={e=>up("day",e.target.value)}>
                   <option value="">DD</option>{DAYS.map(d=><option key={d} value={d}>{String(d).padStart(2,"0")}</option>)}
                 </select>
               </div>
               <div>
-                <label htmlFor="bc-month" style={{display:"block", color:"#ff7e47", fontWeight:700, fontSize:15, marginBottom:10}}>Month *</label>
+                <label htmlFor="bc-month" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Month *</label>
                 <select id="bc-month" style={bcInputStyle} value={form.month} onChange={e=>up("month",e.target.value)}>
                   <option value="">MM</option>{MONTHS.map((m,i)=><option key={m} value={i+1}>{m}</option>)}
                 </select>
               </div>
               <div>
-                <label htmlFor="bc-year" style={{display:"block", color:"#ff7e47", fontWeight:700, fontSize:15, marginBottom:10}}>Year *</label>
+                <label htmlFor="bc-year" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Year *</label>
                 <select id="bc-year" style={bcInputStyle} value={form.year} onChange={e=>up("year", e.target.value)}>
                   <option value="">YYYY</option>{YEARS.map(y=><option key={y} value={y}>{y}</option>)}
                 </select>
@@ -1870,40 +1864,40 @@ export default function App(){
 
             <div style={{display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:20, marginBottom:10}}>
               <div>
-                <label htmlFor="bc-hour" style={{display:"block", color:"#ff7e47", fontWeight:700, fontSize:15, marginBottom:10}}>Hour</label>
+                <label htmlFor="bc-hour" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Hour</label>
                 <select id="bc-hour" style={bcInputStyle} value={form.hour} onChange={e=>up("hour",e.target.value)}>
                   <option value="">HH</option>{HOURS.map(h=><option key={h} value={h}>{h}</option>)}
                 </select>
               </div>
               <div>
-                <label htmlFor="bc-min" style={{display:"block", color:"#ff7e47", fontWeight:700, fontSize:15, marginBottom:10}}>Minute</label>
+                <label htmlFor="bc-min" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Minute</label>
                 <select id="bc-min" style={bcInputStyle} value={form.min} onChange={e=>up("min",e.target.value)}>
                   <option value="">MM</option>{MINS.map(m=><option key={m} value={m}>{m}</option>)}
                 </select>
               </div>
               <div>
-                <label htmlFor="bc-ampm" style={{display:"block", color:"#ff7e47", fontWeight:700, fontSize:15, marginBottom:10}}>Period</label>
+                <label htmlFor="bc-ampm" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Period</label>
                 <select id="bc-ampm" style={bcInputStyle} value={form.ampm} onChange={e=>up("ampm",e.target.value)}>
                   <option value="AM">AM</option><option value="PM">PM</option>
                 </select>
               </div>
             </div>
-            <div style={{color:"#ff7e47", fontStyle:"italic", fontSize:14, opacity:0.85, marginBottom:8}}>Optional. Birth time and place are shown on your profile but do not change it.</div>
+            <div style={{color:"#592209", fontStyle:"italic", fontSize:14, opacity:0.85, marginBottom:8}}>Optional. Birth time and place are shown on your profile but do not change it.</div>
 
             <BcDivider/>
 
             <div style={{marginBottom:40}}>
-              <label htmlFor="bc-place" style={{display:"block", color:"#ff7e47", fontWeight:700, fontSize:15, marginBottom:10}}>Place of Birth <span style={{opacity:0.6, fontWeight:400}}>(Optional)</span></label>
+              <label htmlFor="bc-place" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Place of Birth <span style={{opacity:0.85, fontWeight:400}}>(Optional)</span></label>
               <PlaceInput value={form.place} onChange={v=>up("place",v)}/>
             </div>
 
             <button
               onClick={generate}
               style={{
-                width:"100%", padding:"20px", background:"#ff7e47", border:"none", borderRadius:40,
-                color:"#fff", fontWeight:800, fontSize:18, letterSpacing:"0.05em", textTransform:"uppercase",
+                width:"100%", padding:"20px", background:"#592209", border:"none", borderRadius:40,
+                color:"#F5E9D6", fontWeight:800, fontSize:18, letterSpacing:"0.05em", textTransform:"uppercase",
                 cursor:"pointer", transition:"transform 0.2s ease, box-shadow 0.2s ease",
-                boxShadow:"0 0 30px rgba(255,126,71,0.35)",
+                boxShadow:"0 0 30px rgba(89,34,9,0.35)",
               }}
               onMouseOver={(e)=>{e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.boxShadow="0 0 40px rgba(255,126,71,0.5)";}}
               onMouseOut={(e)=>{e.currentTarget.style.transform="translateY(0)"; e.currentTarget.style.boxShadow="0 0 30px rgba(255,126,71,0.35)";}}

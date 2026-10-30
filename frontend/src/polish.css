@@ -1,0 +1,110 @@
+/* ── Compatibility heart hub (centre of the two partner rings) ── */
+.love-hub { position: relative; width: 112px; height: 112px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%;
+  background: radial-gradient(circle at 50% 45%, #5A2208 0%, #3A1505 55%, #1F0B03 100%);
+  box-shadow: 0 0 0 1px rgba(233, 184, 114, 0.55), 0 10px 26px rgba(89, 34, 9, 0.35), inset 0 0 18px rgba(0, 0, 0, 0.45); }
+.love-hub-halo { position: absolute; inset: -6px; border-radius: 50%; border: 1px solid rgba(229, 138, 69, 0.55); animation: love-halo 3s ease-in-out infinite; }
+.love-heart { position: relative; filter: drop-shadow(0 0 10px rgba(229, 138, 69, 0.7)); animation: love-beat 2.4s ease-in-out infinite; }
+.love-spark { position: absolute; animation: love-float 3.6s ease-in-out infinite; }
+.love-spark-1 { top: 14px; right: 16px; }
+.love-spark-2 { bottom: 18px; left: 16px; animation-delay: 1.2s; }
+@keyframes love-beat { 0%, 100% { transform: scale(1); } 14% { transform: scale(1.1); } 28% { transform: scale(1); } 42% { transform: scale(1.06); } 56% { transform: scale(1); } }
+@keyframes love-halo { 0%, 100% { opacity: 0.45; transform: scale(1); } 50% { opacity: 0.95; transform: scale(1.05); } }
+@keyframes love-float { 0%, 100% { transform: translateY(0); opacity: 0.6; } 50% { transform: translateY(-5px); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .love-heart, .love-hub-halo, .love-spark { animation: none; } }
+
+/* ── Tarot card hover / focus polish (flip transform is untouched) ── */
+.tarot-face .tarot-art { transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), filter 0.4s ease; transform-origin: 50% 50%; }
+.tarot-face:hover .tarot-art, :focus-visible .tarot-face .tarot-art { transform: scale(1.05); filter: brightness(1.12) saturate(1.08); }
+@media (prefers-reduced-motion: reduce) { .tarot-face .tarot-art { transition: none; transform: none !important; } }
+
+/* Keyboard focus ring for the selectable tarot fan cards */
+div[role="button"][aria-label^="Choose card"]:focus-visible { outline: 3px solid #E58A45; outline-offset: 4px; border-radius: 14px; }
+
+/* Navbar tagline under the MyBhagya Astro wordmark */
+nav.navbar-gerua .nav-tagline { color: #F3D8AA; font-family: "DM Sans", system-ui, sans-serif; white-space: nowrap; }
+@media (max-width: 380px) { nav.navbar-gerua .nav-tagline { letter-spacing: 0.1em; } }
+
+/* ── Hero artwork: a "cover" frame (container units) so overlays share the photo's coordinate space ── */
+.hero-art { position: absolute; inset: 0; container-type: size; overflow: hidden; --px: 0.78; --py: 0.4; }
+@media (min-width: 640px) { .hero-art { --px: 0.72; } }
+@media (min-width: 1024px) { .hero-art { --px: 1; --py: 0.5; } }
+.hero-art-inner {
+  position: absolute;
+  width: max(100cqw, calc(100cqh * 1.77685));
+  aspect-ratio: 1672 / 941;
+  left: calc((100cqw - max(100cqw, calc(100cqh * 1.77685))) * var(--px));
+  top: calc((100cqh - max(calc(100cqw / 1.77685), 100cqh)) * var(--py));
+}
+/* wheel line-work only (transparent PNG cut from the artwork), centred on (1300, 275) of 1672×941 */
+.hero-wheel {
+  position: absolute;
+  left: 68.9%; top: 13.5%; width: 17.7%; aspect-ratio: 1;
+  background: url("/images/hero/mybhagya-wheel.png") center / 100% 100% no-repeat;
+  animation: hero-wheel-spin 90s linear infinite;
+  will-change: transform;
+}
+@keyframes hero-wheel-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .hero-wheel { animation: none; } }
+
+/* ── Zodiac cards: light parchment surface, gerua type, warm-brown line art ── */
+.zodiac-card-body {
+  background:
+    radial-gradient(ellipse 80% 46% at 50% 20%, rgba(229, 138, 69, 0.22) 0%, transparent 72%),
+    linear-gradient(165deg, #FFFBF4 0%, #F9EDD9 55%, #F1DFC5 100%);
+  border-color: rgba(89, 34, 9, 0.28);
+  box-shadow: 0 10px 28px rgba(89, 34, 9, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+.zodiac-card-body::before {
+  content: ""; position: absolute; top: 0; left: 22%; right: 22%; height: 3px; z-index: 2;
+  background: linear-gradient(90deg, transparent, #E58A45, transparent); border-radius: 0 0 4px 4px;
+}
+.home-light .zodiac-card-body .zodiac-card-name { color: #592209; }
+.home-light .group:hover .zodiac-card-body .zodiac-card-name { color: #461B07; }
+.home-light .zodiac-card-body p { color: #4A2E1F; }
+.home-light .zodiac-card-body p.text-xs { color: #6B4A37; }
+.home-light .zodiac-card-body .flex-wrap span { color: #592209; background: rgba(89, 34, 9, 0.07); border-color: rgba(89, 34, 9, 0.3); }
+/* pale-blue illustrations -> warm brown line art */
+.zodiac-card-body img { filter: invert(1) brightness(0.7) contrast(1.4); }
+.zodiac-card-body:hover { box-shadow: 0 16px 36px rgba(89, 34, 9, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Astrolabe loaders (Birth Chart, Compatibility, Ratna, route fallback)
+   Light parchment page; the loader itself is a deep-chocolate / gold astrolabe
+   disc (public/images/loader/astrolabe.webp) turning slowly, with a pulsing sun.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.load-screen, .loading-screen { background: #F5E9D6 !important; }
+.orbital-fullscreen, .ratna-loader { background: #FBF5EC !important; }
+
+.load-cosmos, .loading-cosmos, .orbital-stage {
+  position: relative; width: min(320px, 74vw); height: min(320px, 74vw);
+  border-radius: 50%; background: none; box-shadow: none;
+}
+.load-cosmos::before, .loading-cosmos::before, .orbital-stage::before {
+  content: ""; position: absolute; inset: 0; border-radius: 50%;
+  background: url("/images/loader/astrolabe.webp") center / 100% 100% no-repeat;
+  filter: drop-shadow(0 18px 30px rgba(60, 25, 8, 0.38));
+  animation: astrolabe-spin 90s linear infinite;
+}
+@keyframes astrolabe-spin { to { transform: rotate(360deg); } }
+
+/* the disc replaces the hand-drawn rings and planets */
+.orb, .orbit-ring, .orbital-ring, .orbital-track { display: none !important; }
+
+/* pulsing sun glow over the disc centre */
+.orb-core, .orbit-center, .orbital-core {
+  position: absolute; inset: 41% !important; border-radius: 50%; z-index: 2;
+  background: radial-gradient(circle, rgba(255, 236, 170, 0.75) 0%, rgba(255, 200, 110, 0.35) 45%, transparent 72%) !important;
+  box-shadow: none !important; animation: astrolabe-sun 3s ease-in-out infinite !important;
+}
+.orb-core::after, .orbit-center::after { display: none !important; }
+@keyframes astrolabe-sun { 0%, 100% { opacity: 0.55; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.18); } }
+
+.load-name { color: #301607 !important; opacity: 1 !important; letter-spacing: 0.12em; text-shadow: none; }
+.load-step, .loading-step { color: #301607 !important; opacity: 0.6; text-shadow: none; font-size: 13px; }
+.load-step.active, .loading-step.active { color: #592209 !important; opacity: 1; font-weight: 700; text-shadow: none; }
+.load-step.done, .loading-step.done { color: #6B4A37 !important; opacity: 0.9; }
+.orbital-step { color: #301607; }
+.orbital-step-dot { background: #592209; }
+@media (prefers-reduced-motion: reduce) {
+  .load-cosmos::before, .loading-cosmos::before, .orbital-stage::before, .orb-core, .orbit-center, .orbital-core { animation: none !important; }
+}

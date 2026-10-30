@@ -84,7 +84,7 @@ export const ZodiacWheelSection = () => {
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
         <div
           className="absolute left-1/2 top-1/2 h-[560px] w-[560px] max-w-full -translate-x-1/2 -translate-y-1/2 rounded-full blur-[140px]"
-          style={{ background: 'rgba(185,154,100,0.14)' }}
+          style={{ background: 'rgba(229,138,69,0.14)' }}
         />
       </div>
 
@@ -130,7 +130,7 @@ export const ZodiacWheelSection = () => {
                     onClick={!isCenter ? () => paginate(offset > 0 ? 1 : -1) : undefined}
                     className={`flex items-center justify-center rounded-2xl border ${
                       isCenter
-                        ? 'border-home-gerua/60 bg-home-ivory shadow-[0_12px_28px_rgba(140,63,24,0.2)]'
+                        ? 'border-home-gerua/60 bg-home-ivory shadow-[0_12px_28px_rgba(89,34,9,0.2)]'
                         : 'border-home-line bg-home-parchment'
                     }`}
                     style={{
@@ -231,7 +231,7 @@ export const ZodiacWheelSection = () => {
                 style={{
                   width: i === currentIndex ? 24 : 6,
                   height: 6,
-                  background: i === currentIndex ? '#8C3F18' : 'rgba(140,63,24,0.2)',
+                  background: i === currentIndex ? '#592209' : 'rgba(89,34,9,0.08)',
                 }}
               />
             </button>

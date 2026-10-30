@@ -50,10 +50,10 @@
 
 // // Element colors
 // const elementColors = {
-//   Fire: 'text-orange-400',
-//   Earth: 'text-green-400',
-//   Air: 'text-sky-400',
-//   Water: 'text-blue-400',
+//   Fire: 'text-amber-800',
+//   Earth: 'text-green-800',
+//   Air: 'text-blue-800',
+//   Water: 'text-indigo-800',
 // };
 
 // const AUTO_CYCLE_INTERVAL = 2500;  // ms each sign stays highlighted
@@ -274,7 +274,7 @@
 //                         <img 
 //                           src={zodiacImages[selectedSign.name]} 
 //                           alt={selectedSign.name}
-//                           className="w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(188,106,77,0.4)]"
+//                           className="w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(89,34,9,0.4)]"
 //                         />
 //                       </div>
 //                       <div>
@@ -332,12 +332,12 @@
 //                 <div
 //                   className="absolute inset-[-8%] rounded-full pointer-events-none"
 //                   style={{
-//                     background: 'radial-gradient(ellipse 75% 75% at 50% 50%, rgba(188,106,77,0.14) 0%, rgba(188,106,77,0.05) 55%, transparent 75%)',
+//                     background: 'radial-gradient(ellipse 75% 75% at 50% 50%, rgba(89,34,9,0.08) 0%, rgba(89,34,9,0.05) 55%, transparent 75%)',
 //                   }}
 //                 />
 
 //                 {/* Outer static decorative rings */}
-//                 <div className="absolute inset-0 rounded-full border border-primary/25" style={{ boxShadow: '0 0 18px rgba(188,106,77,0.10) inset' }} />
+//                 <div className="absolute inset-0 rounded-full border border-primary/25" style={{ boxShadow: '0 0 18px rgba(89,34,9,0.10) inset' }} />
 //                 <div className="absolute inset-[5%] rounded-full border border-primary/32" />
 
 //                 {/* Rotating wheel container */}
@@ -346,7 +346,7 @@
 //                   className="absolute inset-[10%] rounded-full"
 //                 >
 //                   {/* Inner circles */}
-//                   <div className="absolute inset-0 rounded-full border border-primary/38" style={{ boxShadow: '0 0 12px rgba(188,106,77,0.12) inset' }} />
+//                   <div className="absolute inset-0 rounded-full border border-primary/38" style={{ boxShadow: '0 0 12px rgba(89,34,9,0.12) inset' }} />
 //                   <div className="absolute inset-[15%] rounded-full border border-primary/28 border-dashed" />
 //                   <div className="absolute inset-[35%] rounded-full border border-primary/22" />
 
@@ -363,7 +363,7 @@
 //                   <div
 //                     className="absolute inset-[36%] rounded-full pointer-events-none"
 //                     style={{
-//                       background: 'radial-gradient(circle, rgba(188,106,77,0.28) 0%, rgba(188,106,77,0.14) 45%, transparent 70%)',
+//                       background: 'radial-gradient(circle, rgba(89,34,9,0.08) 0%, rgba(89,34,9,0.08) 45%, transparent 70%)',
 //                     }}
 //                   />
 
@@ -402,16 +402,16 @@
 //                   <div
 //                     className="absolute inset-[-50%] rounded-full pointer-events-none"
 //                     style={{
-//                       background: 'radial-gradient(circle, rgba(188,106,77,0.22) 0%, transparent 65%)',
+//                       background: 'radial-gradient(circle, rgba(89,34,9,0.08) 0%, transparent 65%)',
 //                       animation: 'wheel-center-pulse 4s ease-in-out infinite',
 //                     }}
 //                   />
 //                   <div className="relative w-16 h-16 rounded-full flex items-center justify-center"
-//                     style={{ background: 'radial-gradient(circle, rgba(188,106,77,0.28) 0%, transparent 70%)' }}
+//                     style={{ background: 'radial-gradient(circle, rgba(89,34,9,0.08) 0%, transparent 70%)' }}
 //                   >
 //                     <span
 //                       className="text-3xl text-primary"
-//                       style={{ filter: 'drop-shadow(0 0 10px rgba(188,106,77,0.75)) drop-shadow(0 0 22px rgba(188,106,77,0.38))' }}
+//                       style={{ filter: 'drop-shadow(0 0 10px rgba(89,34,9,0.75)) drop-shadow(0 0 22px rgba(89,34,9,0.38))' }}
 //                     >
 //                       ☉
 //                     </span>
@@ -424,7 +424,7 @@
 //                   className="absolute font-display text-[11px] font-semibold uppercase tracking-[0.15em] pointer-events-none whitespace-nowrap"
 //                   style={{
 //                     transform: 'translate(-50%, -50%)',
-//                     color: '#BC6A4D',
+//                     color: '#592209',
 //                     opacity: isAnimating ? 0 : 1,
 //                     transition: 'opacity 350ms ease',
 //                     textShadow:
@@ -445,7 +445,7 @@
 //                   <div
 //                     key={`star-${i}`}
 //                     className="absolute w-1.5 h-1.5 rounded-full bg-primary/65 animate-pulse"
-//                     style={{ ...pos, animationDelay: `${i * 0.5}s`, boxShadow: '0 0 6px rgba(188,106,77,0.5)' }}
+//                     style={{ ...pos, animationDelay: `${i * 0.5}s`, boxShadow: '0 0 6px rgba(89,34,9,0.5)' }}
 //                   />
 //                 ))}
 //               </div>
@@ -535,10 +535,10 @@ const elementIcons = {
 
 // Element colors
 const elementColors = {
-  Fire: 'text-orange-400',
-  Earth: 'text-green-400',
-  Air: 'text-sky-400',
-  Water: 'text-blue-400',
+  Fire: 'text-amber-800',
+  Earth: 'text-green-800',
+  Air: 'text-blue-800',
+  Water: 'text-indigo-800',
 };
 
 const AUTO_CYCLE_INTERVAL = 2500;  // ms each sign stays highlighted
@@ -740,7 +740,7 @@ const ZodiacSigns = () => {
 
                 {/* Auto mode indicator */}
                 <div className="absolute top-4 left-1/2 -translate-x-1/2">
-                  <div className={`flex items-center gap-2 text-xs uppercase tracking-widest transition-opacity duration-300 ${isAutoMode ? 'opacity-60' : 'opacity-0'}`}>
+                  <div className={`flex items-center gap-2 text-xs uppercase tracking-widest transition-opacity duration-300 ${isAutoMode ? 'opacity-90' : 'opacity-0'}`}>
                     <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                     <span className="text-muted-foreground">Auto-exploring</span>
                   </div>
@@ -827,12 +827,12 @@ const ZodiacSigns = () => {
                 <div
                   className="absolute inset-[-8%] rounded-full pointer-events-none"
                   style={{
-                    background: 'radial-gradient(ellipse 75% 75% at 50% 50%, rgba(188,106,77,0.14) 0%, rgba(188,106,77,0.05) 55%, transparent 75%)',
+                    background: 'radial-gradient(ellipse 75% 75% at 50% 50%, rgba(89,34,9,0.08) 0%, rgba(89,34,9,0.05) 55%, transparent 75%)',
                   }}
                 />
 
                 {/* Outer static decorative rings */}
-                <div className="absolute inset-0 rounded-full border border-primary/25" style={{ boxShadow: '0 0 18px rgba(188,106,77,0.10) inset' }} />
+                <div className="absolute inset-0 rounded-full border border-primary/25" style={{ boxShadow: '0 0 18px rgba(89,34,9,0.10) inset' }} />
                 <div className="absolute inset-[5%] rounded-full border border-primary/32" />
 
                 {/* Rotating wheel container */}
@@ -841,7 +841,7 @@ const ZodiacSigns = () => {
                   className="absolute inset-[10%] rounded-full"
                 >
                   {/* Inner circles */}
-                  <div className="absolute inset-0 rounded-full border border-primary/38" style={{ boxShadow: '0 0 12px rgba(188,106,77,0.12) inset' }} />
+                  <div className="absolute inset-0 rounded-full border border-primary/38" style={{ boxShadow: '0 0 12px rgba(89,34,9,0.12) inset' }} />
                   <div className="absolute inset-[15%] rounded-full border border-primary/28 border-dashed" />
                   <div className="absolute inset-[35%] rounded-full border border-primary/22" />
 
@@ -858,7 +858,7 @@ const ZodiacSigns = () => {
                   <div
                     className="absolute inset-[36%] rounded-full pointer-events-none"
                     style={{
-                      background: 'radial-gradient(circle, rgba(245,195,106,0.28) 0%, rgba(188,106,77,0.14) 45%, transparent 70%)',
+                      background: 'radial-gradient(circle, rgba(229,138,69,0.28) 0%, rgba(89,34,9,0.08) 45%, transparent 70%)',
                     }}
                   />
 
@@ -899,16 +899,16 @@ const ZodiacSigns = () => {
                   <div
                     className="absolute inset-[-50%] rounded-full pointer-events-none"
                     style={{
-                      background: 'radial-gradient(circle, rgba(245,195,106,0.22) 0%, transparent 65%)',
+                      background: 'radial-gradient(circle, rgba(229,138,69,0.22) 0%, transparent 65%)',
                       animation: 'wheel-center-pulse 4s ease-in-out infinite',
                     }}
                   />
                   <div className="relative w-16 h-16 rounded-full flex items-center justify-center"
-                    style={{ background: 'radial-gradient(circle, rgba(188,106,77,0.28) 0%, transparent 70%)' }}
+                    style={{ background: 'radial-gradient(circle, rgba(89,34,9,0.08) 0%, transparent 70%)' }}
                   >
                     <span
                       className="text-3xl text-primary"
-                      style={{ filter: 'drop-shadow(0 0 10px rgba(245,195,106,0.75)) drop-shadow(0 0 22px rgba(245,195,106,0.38))' }}
+                      style={{ filter: 'drop-shadow(0 0 10px rgba(229,138,69,0.75)) drop-shadow(0 0 22px rgba(229,138,69,0.38))' }}
                     >
                       ☉
                     </span>
@@ -921,11 +921,11 @@ const ZodiacSigns = () => {
                   className="absolute font-display text-[11px] font-semibold uppercase tracking-[0.15em] pointer-events-none whitespace-nowrap"
                   style={{
                     transform: 'translate(-50%, -50%)',
-                    color: '#F4B26A',
+                    color: '#6B4A37',
                     opacity: isAnimating ? 0 : 1,
                     transition: 'opacity 350ms ease',
                     textShadow:
-                      '0 0 12px rgba(244,178,106,0.90), 0 0 24px rgba(244,178,106,0.40), 0 1px 4px rgba(4,12,37,0.96)',
+                      '0 0 12px rgba(229,138,69,0.90), 0 0 24px rgba(229,138,69,0.40), 0 1px 4px rgba(89,34,9,0.2)',
                     willChange: 'opacity, left, top',
                   }}
                 >
@@ -942,7 +942,7 @@ const ZodiacSigns = () => {
                   <div
                     key={`star-${i}`}
                     className="absolute w-1.5 h-1.5 rounded-full bg-primary/65 animate-pulse"
-                    style={{ ...pos, animationDelay: `${i * 0.5}s`, boxShadow: '0 0 6px rgba(245,195,106,0.5)' }}
+                    style={{ ...pos, animationDelay: `${i * 0.5}s`, boxShadow: '0 0 6px rgba(229,138,69,0.5)' }}
                   />
                 ))}
               </div>

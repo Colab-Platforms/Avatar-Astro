@@ -17,7 +17,7 @@ const TABS: { key: GuruTab; label: string; icon: typeof MessageCircle }[] = [
 ];
 
 const GuruTabs = ({ activeTab, onChange, reportReady, reportGenerating }: GuruTabsProps) => (
-  <div className="flex gap-1 overflow-x-auto border-b border-white/[0.08] bg-[#09090B]/60 px-4 md:px-6" role="tablist">
+  <div className="flex gap-1 overflow-x-auto border-b border-primary/15 bg-[#FBF5EC]/60 px-4 md:px-6" role="tablist">
     {TABS.map(({ key, label, icon: Icon }) => (
       <button
         key={key}
@@ -25,26 +25,26 @@ const GuruTabs = ({ activeTab, onChange, reportReady, reportGenerating }: GuruTa
         aria-selected={activeTab === key}
         onClick={() => onChange(key)}
         className={cn(
-          "relative flex shrink-0 items-center gap-2 px-4 py-3.5 text-sm font-medium text-[#6B7280] transition-colors hover:text-[#A3A3B2]",
-          activeTab === key && "text-[#FF9D4D]",
+          "relative flex shrink-0 items-center gap-2 px-4 py-3.5 text-sm font-medium text-muted-foreground transition-colors hover:text-muted-foreground",
+          activeTab === key && "text-[#592209]",
         )}
       >
         <Icon className="h-4 w-4" />
         {label}
         {key === "report" && reportReady && (
-          <span className="rounded-full border border-[#FF9D4D]/35 bg-[#FF9D4D]/15 px-2 py-0.5 text-[10px] text-[#FF9D4D]">
+          <span className="rounded-full border border-[#592209]/35 bg-[#592209]/15 px-2 py-0.5 text-[10px] text-[#FF9D4D]">
             Ready
           </span>
         )}
         {key === "report" && reportGenerating && (
-          <span className="rounded-full border border-[#FF9D4D]/35 bg-[#FF9D4D]/15 px-2 py-0.5 text-[10px] text-[#FF9D4D]">
+          <span className="rounded-full border border-[#592209]/35 bg-[#592209]/15 px-2 py-0.5 text-[10px] text-[#FF9D4D]">
             Generating…
           </span>
         )}
         {activeTab === key && (
           <motion.div
             layoutId="guru-tab-underline"
-            className="absolute inset-x-2 -bottom-px h-[2px] rounded-full bg-[#FF9D4D] shadow-[0_0_8px_rgba(255,157,77,0.7)]"
+            className="absolute inset-x-2 -bottom-px h-[2px] rounded-full bg-[#592209] shadow-[0_0_8px_rgba(255,157,77,0.7)]"
             transition={{ type: "spring", stiffness: 400, damping: 32 }}
           />
         )}

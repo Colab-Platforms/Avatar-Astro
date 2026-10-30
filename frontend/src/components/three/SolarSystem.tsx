@@ -167,7 +167,7 @@ function PlanetModal({ planet, onClose }) {
         </div>
 
         <h2 style={{
-          fontFamily:"'Cinzel Decorative',serif",
+          fontFamily:"Cinzel, Georgia, serif",
           fontSize:22, color:planet.glowColor,
           margin:"0 0 6px",
           textShadow:`0 0 20px ${planet.glowColor}80`,
@@ -175,14 +175,14 @@ function PlanetModal({ planet, onClose }) {
 
         <div style={{
           fontSize:11,color:"rgba(255,255,255,0.3)",
-          fontFamily:"'Space Mono',monospace",
+          fontFamily:"'DM Sans', system-ui, sans-serif",
           letterSpacing:3,marginBottom:18,
         }}>PLANETARY ENERGY</div>
 
         <p style={{
           fontSize:15,color:"rgba(255,255,255,0.75)",
           lineHeight:1.75,fontStyle:"italic",
-          fontFamily:"'Cormorant Garamond',serif",
+          fontFamily:"'DM Sans', system-ui, sans-serif",
           marginBottom:22,
         }}>{planet.description}</p>
 
@@ -192,7 +192,7 @@ function PlanetModal({ planet, onClose }) {
         }}>
           <div style={{
             fontSize:9,color:"rgba(255,255,255,0.28)",
-            fontFamily:"'Space Mono',monospace",
+            fontFamily:"'DM Sans', system-ui, sans-serif",
             letterSpacing:3,marginBottom:10,
             textTransform:"uppercase",
           }}>Rules These Signs</div>
@@ -203,7 +203,7 @@ function PlanetModal({ planet, onClose }) {
                 border:`1px solid ${planet.glowColor}50`,
                 borderRadius:50,fontSize:13,
                 color:planet.glowColor,
-                fontFamily:"'Cormorant Garamond',serif",
+                fontFamily:"'DM Sans', system-ui, sans-serif",
                 background:`${planet.glowColor}12`,
               }}>{s}</span>
             ))}
@@ -216,7 +216,7 @@ function PlanetModal({ planet, onClose }) {
             padding:"12px 36px",
             background:`linear-gradient(135deg,${planet.glowColor}cc,${planet.glowColor}66)`,
             border:"none",borderRadius:50,
-            color:"#000",fontFamily:"'Cinzel Decorative',serif",
+            color:"#000",fontFamily:"Cinzel, Georgia, serif",
             fontSize:11,letterSpacing:2,cursor:"pointer",fontWeight:700,
             boxShadow:`0 4px 24px ${planet.glowColor}50`,
             transition:"transform .2s,box-shadow .2s",
@@ -358,7 +358,7 @@ export default function SolarSystem() {
 
         // Name tag
         ctx.fillStyle = "#fff";
-        ctx.font = `bold 11px 'Space Mono',monospace`;
+        ctx.font = `bold 11px 'DM Sans', system-ui, sans-serif`;
         ctx.textAlign = "center";
         ctx.shadowColor = "rgba(0,0,0,0.8)";
         ctx.shadowBlur = 6;

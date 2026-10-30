@@ -74,41 +74,41 @@ export function TemplePujasDialog({
         open={open}
         onOpenChange={(next) => !deletePuja.isPending && onOpenChange(next)}
       >
-        <DialogContent className="max-h-[90vh] overflow-y-auto border-white/10 bg-[#0a1628] text-white sm:max-w-2xl">
+        <DialogContent className="max-h-[90vh] overflow-y-auto border-primary/15 bg-[#FBF5EC] text-foreground sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="font-display text-lg tracking-wide text-white">
+            <DialogTitle className="font-display text-lg tracking-wide text-foreground">
               {templeName ?? temple?.name ?? "Temple"}
             </DialogTitle>
-            <DialogDescription className="text-white/60">
+            <DialogDescription className="text-foreground/70">
               Manage the Pujas offered at this temple.
             </DialogDescription>
           </DialogHeader>
 
           {isLoading ? (
             <div className="flex justify-center py-10">
-              <Loader2 className="h-6 w-6 animate-spin text-white/50" />
+              <Loader2 className="h-6 w-6 animate-spin text-foreground/70" />
             </div>
           ) : isError ? (
-            <p className="py-8 text-center text-sm text-red-400">
+            <p className="py-8 text-center text-sm text-red-800">
               {(error as Error)?.message ?? "Could not load Pujas"}
             </p>
           ) : pujas.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-white/10 py-10 text-center">
-              <Flame className="h-8 w-8 text-white/30" />
-              <p className="text-sm text-white/60">
+            <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-primary/15 py-10 text-center">
+              <Flame className="h-8 w-8 text-foreground/70" />
+              <p className="text-sm text-foreground/70">
                 No Pujas added for this temple yet.
               </p>
               <Button
                 type="button"
                 onClick={openCreate}
-                className="bg-[#BC6A4D] text-white hover:bg-[#BC6A4D]/90"
+                className="bg-[#592209] text-[#F5E9D6] hover:bg-[#592209]/90"
               >
                 <Plus className="h-4 w-4" />
                 Add Puja
               </Button>
             </div>
           ) : (
-            <ul className="divide-y divide-white/10 rounded-lg border border-white/10">
+            <ul className="divide-y divide-primary/15 rounded-lg border border-primary/15">
               {pujas.map((puja) => (
                 <li
                   key={puja.id}
@@ -116,11 +116,11 @@ export function TemplePujasDialog({
                 >
                   <div className="min-w-0 space-y-1.5">
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                      <span className="font-medium text-white">{puja.name}</span>
-                      <span className="text-sm text-[#BC6A4D]">
+                      <span className="font-medium text-foreground">{puja.name}</span>
+                      <span className="text-sm text-[#592209]">
                         {formatPrice(puja.price)}
                       </span>
-                      <span className="text-sm text-white/50">
+                      <span className="text-sm text-foreground/70">
                         {puja.duration}
                       </span>
                     </div>
@@ -128,7 +128,7 @@ export function TemplePujasDialog({
                       {puja.benefits.map((benefit, index) => (
                         <li
                           key={index}
-                          className="rounded-full bg-white/5 px-2.5 py-0.5 text-xs text-white/60"
+                          className="rounded-full bg-card px-2.5 py-0.5 text-xs text-foreground/70"
                         >
                           {benefit}
                         </li>
@@ -142,7 +142,7 @@ export function TemplePujasDialog({
                       variant="ghost"
                       size="icon"
                       onClick={() => openEdit(puja)}
-                      className="text-white/60 hover:bg-white/5 hover:text-white"
+                      className="text-foreground/70 hover:bg-primary/10 hover:text-foreground"
                       aria-label={`Edit ${puja.name}`}
                     >
                       <Pencil className="h-4 w-4" />
@@ -152,7 +152,7 @@ export function TemplePujasDialog({
                       variant="ghost"
                       size="icon"
                       onClick={() => setPujaToDelete(puja)}
-                      className="text-white/60 hover:bg-red-500/10 hover:text-red-400"
+                      className="text-foreground/70 hover:bg-red-500/10 hover:text-red-800"
                       aria-label={`Delete ${puja.name}`}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -168,7 +168,7 @@ export function TemplePujasDialog({
               <Button
                 type="button"
                 onClick={openCreate}
-                className="bg-[#BC6A4D] text-white hover:bg-[#BC6A4D]/90"
+                className="bg-[#592209] text-[#F5E9D6] hover:bg-[#592209]/90"
               >
                 <Plus className="h-4 w-4" />
                 Add Puja
@@ -191,12 +191,12 @@ export function TemplePujasDialog({
         open={Boolean(pujaToDelete)}
         onOpenChange={(next) => !next && setPujaToDelete(null)}
       >
-        <AlertDialogContent className="border-white/10 bg-[#0a1628] text-white">
+        <AlertDialogContent className="border-primary/15 bg-[#FBF5EC] text-foreground">
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-display text-lg tracking-wide text-white">
+            <AlertDialogTitle className="font-display text-lg tracking-wide text-foreground">
               Delete {pujaToDelete?.name}?
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-white/60">
+            <AlertDialogDescription className="text-foreground/70">
               This permanently removes the Puja and its benefits. This cannot be
               undone.
             </AlertDialogDescription>
@@ -204,7 +204,7 @@ export function TemplePujasDialog({
           <AlertDialogFooter>
             <AlertDialogCancel
               disabled={deletePuja.isPending}
-              className="border-white/10 bg-transparent text-white hover:bg-white/5 hover:text-white"
+              className="border-primary/15 bg-transparent text-foreground hover:bg-primary/10 hover:text-foreground"
             >
               Cancel
             </AlertDialogCancel>
@@ -214,7 +214,7 @@ export function TemplePujasDialog({
                 confirmDelete();
               }}
               disabled={deletePuja.isPending}
-              className="bg-red-600 text-white hover:bg-red-600/90"
+              className="bg-red-600 text-[#F5E9D6] hover:bg-red-600/90"
             >
               {deletePuja.isPending && (
                 <Loader2 className="h-4 w-4 animate-spin" />
