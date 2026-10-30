@@ -80,12 +80,17 @@ before(async () => {
   await prisma.user.deleteMany({ where: { email: { endsWith: "@pipeline-test.example" } } });
   const roles: Record<string, string> = {};
   for (const name of ["USER", "ADMIN", "SUPERADMIN"]) roles[name] = (await prisma.role.upsert({ where: { name }, update: {}, create: { name } })).id;
-  for (const [key, role] of [["owner", "SUPERADMIN"], ["alice", "USER"]] as const) {
-    const u = await prisma.user.create({ data: { email: `${key}@pipeline-test.example`, firstName: key, lastName: "Pipe", password: "HASH", isActive: true, userRoleMappings: { create: { roleId: roles[role] } } } });
+  for (const [key, role] of [["owner", "SUPERADMIN"], ["alice", "USER"], ["sleeper", "USER"]] as const) {
+    const u = await prisma.user.create({ data: { email: `${key}@pipeline-test.example`, firstName: key, lastName: "Pipe", password: "HASH", isActive: key !== "sleeper", userRoleMappings: { create: { roleId: roles[role] } } } });
     ids[key] = u.id;
   }
   await prisma.$disconnect();
-  t = { owner: jwt.sign({ id: ids.owner, role: "SUPERADMIN" }, SECRET), alice: jwt.sign({ id: ids.alice, role: "USER" }, SECRET) };
+  t = {
+    owner: jwt.sign({ id: ids.owner, role: "SUPERADMIN" }, SECRET), alice: jwt.sign({ id: ids.alice, role: "USER" }, SECRET),
+    sleeper: jwt.sign({ id: ids.sleeper, role: "USER" }, SECRET),
+    expired: jwt.sign({ id: ids.alice, role: "USER" }, SECRET, { expiresIn: -60 }),
+    forged: jwt.sign({ id: ids.alice, role: "USER" }, "some-other-secret"),
+  };
 
   setMode("ok");
   const port = await freePort();
@@ -127,7 +132,7 @@ after(async () => {
 });
 
 const TAROT = { mode: "karma", cards: ["The Fool", "The Magician", "The High Priestess"] };
-const GEM = { dateOfBirth: "1990-05-15", timeOfBirth: null, timeUnknown: true, place: { name: "New Delhi", admin1: "Delhi", country: "India", latitude: 28.6139, longitude: 77.209, timezone: "Asia/Kolkata" } };
+const GEM = { fullName: "Asha Rao", gender: "Female", dateOfBirth: "1990-05-15", timeOfBirth: null, timeUnknown: true, place: { name: "New Delhi", admin1: "Delhi", country: "India", latitude: 28.6139, longitude: 77.209, timezone: "Asia/Kolkata" } };
 
 // Each case: a REAL route, the provider/model the code really uses, and what the provider reply carries.
 const CASES: { name: string; feature: string; run: () => Promise<{ status: number }>; provider: string; model: string; basis: "actual" | "estimated"; customer: boolean }[] = [
@@ -303,4 +308,69 @@ test("a request body that arrives after the headers is still captured (tarot and
   const chat = (await rowsFor("ai-chat", before.chat + 1))[0];
   assert.equal(tarot.ai?.provider, "openrouter");
   assert.equal(chat.ai?.provider, "groq");
+});
+
+// ── Gemstone calculator: a PUBLIC route group. Only /calculate calls an AI provider (Groq); the rest are ordinary requests. ──
+const gemRows = async (path: string, who: "alice" | "anon", extra = "") => (await activity(`&feature=gemstone${extra}`)).filter((r) => r.metadata?.route?.endsWith(path) && (who === "anon" ? !r.customer : r.customer?.email === "alice@pipeline-test.example"));
+
+test("gemstone /calculate: signed-in visitor is attributed to their account, with Groq provider, model, tokens and an ESTIMATED cost", { skip }, async () => {
+  setMode("ok");
+  const c0 = providerCalls().length;
+  const r = await call("POST", "/api/gemstone-calculator/calculate", t.alice, GEM);
+  assert.equal(r.status, 200);
+  assert.equal(providerCalls().length - c0, 1, "one Groq call");
+  let rows: any[] = [];
+  for (let i = 0; i < 40 && !rows.length; i++) { rows = await gemRows("/calculate", "alice"); if (!rows.length) await sleep(150); }
+  assert.equal(rows.length, 1, "exactly one attributed row");
+  assert.equal(rows[0].customer.email, "alice@pipeline-test.example");
+  assert.equal(rows[0].ai.provider, "groq");
+  assert.equal(rows[0].ai.totalTokens, 1500);
+  assert.equal(rows[0].ai.costBasis, "estimated");
+});
+
+test("gemstone /calculate: an anonymous visitor stays anonymous, with the same AI usage", { skip }, async () => {
+  const before = (await gemRows("/calculate", "anon")).length;
+  assert.equal((await call("POST", "/api/gemstone-calculator/calculate", undefined, GEM)).status, 200);
+  let rows: any[] = [];
+  for (let i = 0; i < 40 && rows.length < before + 1; i++) { rows = await gemRows("/calculate", "anon"); if (rows.length < before + 1) await sleep(150); }
+  assert.equal(rows.length, before + 1);
+  assert.equal(rows[0].customer, null);
+  assert.equal(rows[0].ai.provider, "groq");
+});
+
+test("gemstone: a bad, expired, forged or deactivated-account token never blocks the public route and is recorded as anonymous", { skip }, async () => {
+  const before = (await gemRows("/calculate", "anon")).length;
+  for (const tok of ["not-a-jwt", t.expired, t.forged, t.sleeper]) {
+    const r = await call("POST", "/api/gemstone-calculator/calculate", tok, GEM);
+    assert.equal(r.status, 200, "public access is unchanged: an unusable token must not turn into a 401");
+  }
+  let rows: any[] = [];
+  for (let i = 0; i < 40 && rows.length < before + 4; i++) { rows = await gemRows("/calculate", "anon"); if (rows.length < before + 4) await sleep(150); }
+  assert.equal(rows.length, before + 4, "all four were recorded without a customer");
+});
+
+test("gemstone non-AI routes (locations, products, kundali): attributed when signed in, and carry NO provider, model, tokens or cost", { skip }, async () => {
+  setMode("ok");
+  const c0 = providerCalls().length;
+  // q shorter than 2 characters answers without any outbound geocoding call
+  assert.equal((await call("GET", "/api/gemstone-calculator/locations?q=a", t.alice)).status, 200);
+  assert.equal((await call("GET", "/api/gemstone-calculator/products/ruby", t.alice)).status < 500, true);
+  assert.equal((await call("POST", "/api/gemstone-calculator/kundali", t.alice, GEM)).status < 500, true);
+  assert.equal(providerCalls().length, c0, "none of them reaches an AI provider");
+  for (const path of ["/locations", "/products/:stone", "/kundali"]) {
+    let rows: any[] = [];
+    for (let i = 0; i < 40 && !rows.length; i++) { rows = await gemRows(path, "alice"); if (!rows.length) await sleep(150); }
+    assert.ok(rows.length >= 1, `${path}: row recorded for the signed-in customer`);
+    assert.equal(rows[0].ai, null, `${path}: no AI data on a non-AI request`);
+  }
+});
+
+test("Customer Activity and Reports agree on the gemstone AI requests", { skip }, async () => {
+  const items = (await activity("&feature=gemstone")).filter((r) => r.ai);
+  const k = (await call("GET", "/api/admin/costs/summary", t.owner)).data.data;
+  const g = k.byFeature.find((f: any) => f.key === "gemstone");
+  assert.equal(g.requests, items.length, "Reports counts exactly the AI rows Activity lists");
+  assert.equal(g.unpricedRequests, 0);
+  assert.ok(Math.abs(g.costUsd - items.reduce((n, r) => n + r.ai.costUsd, 0)) < 1e-12);
+  assert.ok(!k.byFeature.some((f: any) => f.key === "gemstone" && f.requests > items.length), "non-AI gemstone requests are not counted as AI");
 });
