@@ -5,7 +5,7 @@ interface Diag {
   captureInstalled: boolean; accountingEnabled: boolean; startedAt: string;
   counters: { providerCallsSeen: number; providerCallsWithoutRequestContext: number; providerCallsWithoutTokens: number; providerCallsWithoutCost: number; aiRowsPersisted: number; aiRowsPersistFailed: number };
   providersConfigured: Record<string, boolean>;
-  pricingEntries: number; windowDays: number;
+  pricingEntries: number; openRouterPriceList?: number; lastProviderCallAt?: string | null; windowDays: number;
   features: { feature: string; requests: number; withAiUsage: number; succeededWithoutAi: number; notSuccessful: number }[];
   recent: { at: string; stage: string; provider?: string; feature?: string; reason?: string; persisted?: boolean }[];
   note: string;
@@ -26,14 +26,19 @@ export function CaptureStatus() {
         <div className="space-y-3 text-sm">
           <p className="flex flex-wrap items-center gap-2">
             {q.data.captureInstalled && q.data.accountingEnabled ? <Badge tone="good">Capture active</Badge> : <Badge tone="bad">{q.data.captureInstalled ? "Capture switched off (AI_USAGE_ACCOUNTING=off)" : "Capture not installed"}</Badge>}
-            <span className="text-[#6B6259]">Server started {fmtDate(q.data.startedAt)} · {q.data.pricingEntries} price{q.data.pricingEntries === 1 ? "" : "s"} configured</span>
+            <span className="text-[#6B6259]">Server started {fmtDate(q.data.startedAt)} · {q.data.pricingEntries} price{q.data.pricingEntries === 1 ? "" : "s"} configured · OpenRouter price list: {q.data.openRouterPriceList ? `${q.data.openRouterPriceList} models` : "not loaded"}</span>
           </p>
+          {q.data.counters.providerCallsSeen === 0 && (
+            <p role="note" className="rounded-lg bg-[#FBF8F3] p-3 text-xs leading-relaxed text-[#4A423A]">
+              No AI request has run on this server since it started, so there is nothing to record yet. Requests made before this server started (or on a different server) are never back-filled. Make one AI request (for example a Tarot reading) and reload this page: the counters below will move.
+            </p>
+          )}
           <p className="flex flex-wrap items-center gap-2">
             <span className="text-[#6B6259]">Provider keys on this server:</span>
             {Object.entries(q.data.providersConfigured).map(([k, v]) => <Badge key={k} tone={v ? "good" : "warn"}>{k}: {v ? "set" : "not set"}</Badge>)}
           </p>
           <ul className="grid gap-1 text-xs text-[#4A423A] sm:grid-cols-2">
-            <li>Provider calls seen since start: <strong>{q.data.counters.providerCallsSeen}</strong></li>
+            <li>Provider calls seen since start: <strong>{q.data.counters.providerCallsSeen}</strong>{q.data.lastProviderCallAt ? <> · last {fmtDate(q.data.lastProviderCallAt)}</> : null}</li>
             <li>Usage rows saved: <strong>{q.data.counters.aiRowsPersisted}</strong>{q.data.counters.aiRowsPersistFailed ? <> · failed to save: <strong className="text-red-700">{q.data.counters.aiRowsPersistFailed}</strong></> : null}</li>
             <li>Calls with no token counts from the provider: <strong>{q.data.counters.providerCallsWithoutTokens}</strong></li>
             <li>Calls with no cost known: <strong>{q.data.counters.providerCallsWithoutCost}</strong></li>

@@ -26,9 +26,54 @@ export function loadPricing(raw = process.env.AI_PRICING_JSON): Record<string, P
   }
 }
 
+/**
+ * OpenRouter publishes every model's price in its public model list (USD per token). It is used ONLY when a response carries
+ * tokens but no cost, so the result is an ESTIMATE; a configured AI_PRICING_JSON entry always wins. It is a cache in
+ * memory, loaded without any API key, refreshed at most daily, and never required: if it cannot be loaded no estimate is made.
+ */
+const orCatalogue = new Map<string, Price>();
+let orLoadedAt = 0;
+let orAttemptAt = 0;
+let orInFlight = false;
+const DAY = 86_400_000;
+const num = (v: unknown) => (v !== undefined && v !== null && v !== "" && Number.isFinite(Number(v)) && Number(v) >= 0 ? Number(v) : null);
+
+export function setOpenRouterCatalogue(models: { id?: unknown; pricing?: { prompt?: unknown; completion?: unknown } }[]): number {
+  const next = new Map<string, Price>();
+  for (const m of models) {
+    const prompt = num(m?.pricing?.prompt), completion = num(m?.pricing?.completion);
+    if (typeof m?.id === "string" && prompt !== null && completion !== null) next.set(m.id.toLowerCase(), { inputPerM: prompt * 1e6, outputPerM: completion * 1e6 });
+  }
+  if (next.size) {
+    orCatalogue.clear();
+    next.forEach((v, k) => orCatalogue.set(k, v));
+    orLoadedAt = Date.now();
+  }
+  return orCatalogue.size;
+}
+export const openRouterCatalogueSize = () => orCatalogue.size;
+export const resetOpenRouterCatalogue = () => { orCatalogue.clear(); orLoadedAt = 0; orAttemptAt = 0; };
+
+/** Fire-and-forget. `f` must be the ORIGINAL fetch so this lookup is never mistaken for a customer AI call. */
+export function ensureOpenRouterCatalogue(f: typeof fetch): void {
+  if (process.env.AI_OPENROUTER_PRICING === "off" || orInFlight) return;
+  const now = Date.now();
+  if (orLoadedAt && now - orLoadedAt < DAY) return;
+  if (now - orAttemptAt < 15 * 60_000) return; // after a failure, retry at most every 15 minutes
+  orAttemptAt = now;
+  orInFlight = true;
+  f("https://openrouter.ai/api/v1/models", { signal: AbortSignal.timeout(10_000) })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((j: any) => { if (Array.isArray(j?.data)) setOpenRouterCatalogue(j.data); })
+    .catch(() => { /* no estimate without a price list; never an error for the customer */ })
+    .finally(() => { orInFlight = false; });
+}
+
 export function priceFor(provider: string, model: string | null | undefined, table = loadPricing()): Price | null {
   const m = (model ?? "").toLowerCase();
-  return table[`${provider}:${m}`] ?? table[`${provider}:*`] ?? null;
+  const configured = table[`${provider}:${m}`] ?? table[`${provider}:*`];
+  if (configured) return configured;
+  return provider === "openrouter" ? orCatalogue.get(m) ?? null : null;
 }
 
 /** USD, or null when the price or either token count is unknown. Never guesses a missing token count. */
