@@ -17,10 +17,10 @@ const FeaturedCarousel = () => {
       <div
         role="region"
         aria-roledescription="carousel"
-        aria-label="Featured tools"
+        aria-label="Featured Seva"
         className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 px-4 py-4 sm:px-5 lg:gap-x-4 lg:py-6"
       >
-        <button type="button" aria-label="Previous featured tool" onClick={() => go(-1)} className={`${arrowCls} order-2 lg:order-1`}>
+        <button type="button" aria-label="Previous featured Seva" onClick={() => go(-1)} className={`${arrowCls} order-2 lg:order-1`}>
           <ChevronLeft className="h-4 w-4" />
         </button>
 
@@ -80,11 +80,11 @@ const FeaturedCarousel = () => {
           </div>
         </div>
 
-        <button type="button" aria-label="Next featured tool" onClick={() => go(1)} className={`${arrowCls} order-4 lg:order-3`}>
+        <button type="button" aria-label="Next featured Seva" onClick={() => go(1)} className={`${arrowCls} order-4 lg:order-3`}>
           <ChevronRight className="h-4 w-4" />
         </button>
 
-        <div className="order-3 flex items-center justify-center lg:order-4 lg:col-span-3" role="group" aria-label="Choose featured tool">
+        <div className="order-3 flex items-center justify-center lg:order-4 lg:col-span-3" role="group" aria-label="Choose featured Seva">
           {featuredSlides.map((slide, i) => (
             <button
               key={slide.title}

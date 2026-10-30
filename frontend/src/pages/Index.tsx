@@ -3,7 +3,6 @@ import ZodiacWheelSection from "@/components/ZodiacWheelSection";
 import Hero from "@/components/hero/Hero";
 import AstrologyToolsSection from "@/components/AstrologyToolsSection";
 import FeatureShowcase from "@/components/FeatureShowcase";
-import SolarSystemSection from "@/components/SolarSystemSection";
 import HomeBlogSection from "@/components/HomeBlogSection";
 import WhyAstrologySection from "@/components/WhyAstrologySection";
 import FaqSection from "@/components/FaqSection";
@@ -22,9 +21,6 @@ const Index = () => {
 
           {/* ── ASTROLOGY TOOLS ──────────────────────────────────────── */}
           <AstrologyToolsSection />
-
-          {/* ── EXPLORE SOLAR SYSTEM ──────────────────────────────────── */}
-          <SolarSystemSection />
 
           {/* ── FEATURE SHOWCASE ──────────────────────────────────────── */}
           <FeatureShowcase />

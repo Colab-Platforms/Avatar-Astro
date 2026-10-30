@@ -1,4 +1,7 @@
 import { useState, useEffect, useRef } from "react";
+import FullScreenLoader from "@/components/Loader/FullScreenLoader";
+import { FEATURES } from "@/data/featureCatalog";
+import { useFeatureTitle } from "@/hooks/useFeatureTitle";
 import { Link } from "react-router-dom";
 import FeatureIntro from "@/components/FeatureIntro";
 import { useAuthStore } from "@/store/authStore";
@@ -174,6 +177,7 @@ function Field({ icon, label, labelClass, text, textClass, children }: FieldProp
 }
 
 export default function InnerVoiceWisdom() {
+  useFeatureTitle(FEATURES.shloka);
   const [situation, setSituation] = useState("");
   const [scripture, setScripture] = useState("");
   const [loading, setLoading] = useState(false);
@@ -232,13 +236,14 @@ export default function InnerVoiceWisdom() {
 
         <div className="ivw-hdr">
           <div className="ivw-eyebrow">Ancient Vedic Scripture</div>
-          <h1 className="ivw-h1">Sacred Shloka</h1>
+          <h1 className="ivw-h1">{FEATURES.shloka.name}</h1>
+          <p className="ivw-sub" style={{ maxWidth: 560, margin: "12px auto 0", color: "rgba(48,22,7,0.78)", lineHeight: 1.6 }}>{FEATURES.shloka.subtitle}</p>
         </div>
 
         {!display && (
           <FeatureIntro
             className="mb-10"
-            description="Discover timeless wisdom from sacred Sanskrit verses and traditional Indian scriptures. Sacred Shloka helps you explore the meaning, context, and practical lessons behind each verse so you can connect ancient teachings with everyday life."
+            description="Discover timeless wisdom from sacred Sanskrit verses and traditional Indian scriptures. Divya Shloka helps you explore the meaning, context, and practical lessons behind each verse so you can connect ancient teachings with everyday life."
             steps={[
               { title: "Share Your Situation", text: "Describe what you are going through, or pick a quick situation. You may also choose a scripture." },
               { title: "Understand Its Meaning", text: "Read the Sanskrit verse, its transliteration, word meanings and the English meaning." },
@@ -276,10 +281,7 @@ export default function InnerVoiceWisdom() {
               </div>
 
               {loading ? (
-                <div className="ivw-loader-wrap">
-                  <div className="ivw-spin" />
-                  <div className="ivw-ltxt">Searching the scriptures...</div>
-                </div>
+                <FullScreenLoader title="Searching the Scriptures" description="Finding a verse for your situation…" steps={["Understanding your situation", "Searching the scriptures", "Preparing the verse and its meaning"]} testId="shloka-loader" />
               ) : (
                 <button className="ivw-btn" onClick={()=>fetchWisdom()} disabled={situation.trim().length < 8}>
                   🕉 &nbsp; Receive the Verse

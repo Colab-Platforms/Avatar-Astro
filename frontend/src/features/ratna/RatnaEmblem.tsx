@@ -9,7 +9,7 @@ const GEMS = [
   "#b5651d", // hessonite
   "#8a9a3b", // cat's eye
 ];
-const GOLD = "#d4a64a";
+const GOLD = "#B9722F";
 
 /** Gold gemstone mandala: thin outer ring, nine gem accents, central star. */
 const RatnaEmblem = ({ size = 84, className = "" }: { size?: number; className?: string }) => {
@@ -22,7 +22,7 @@ const RatnaEmblem = ({ size = 84, className = "" }: { size?: number; className?:
   return (
     <svg
       role="img"
-      aria-label="Ratna Jyotish gemstone emblem"
+      aria-label="Ratna Jyotish emblem"
       viewBox="0 0 200 200"
       width={size}
       height={size}

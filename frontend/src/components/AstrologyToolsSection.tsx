@@ -18,7 +18,7 @@ const AstrologyToolsSection = () => (
           className="hl-serif inline-flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[1.625rem] font-semibold normal-case leading-[1.15] tracking-[0.03em] text-home-ink sm:text-[1.875rem] md:text-[2.1rem]"
         >
           <Sparkles className="h-5 w-5 text-home-gold md:h-6 md:w-6" strokeWidth={1.75} aria-hidden="true" />
-          Explore Our <span className="text-home-gerua">Astrology Tools</span>
+          Explore Our <span className="text-home-gerua">Astrology Seva</span>
         </h2>
       </motion.div>
 

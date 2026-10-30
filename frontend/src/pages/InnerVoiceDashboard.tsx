@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { FEATURES } from "@/data/featureCatalog";
+import { useFeatureTitle } from "@/hooks/useFeatureTitle";
 import { Link } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import { requireSignIn } from "@/lib/authedFetch";
@@ -160,6 +162,7 @@ function ScoreRing({ score }) {
 }
 
 export default function InnerVoiceDashboard() {
+  useFeatureTitle(FEATURES.karmaScore);
   const signedIn = useAuthStore((s) => s.isAuthenticated);
   const [profile, setProfile] = useState(()=>{ try{return JSON.parse(localStorage.getItem("iv_profile")||"null")}catch{return null} });
   const [form, setForm] = useState({name:"",dob:"",sign:"",nakshatra:"",dasha:""});
@@ -184,7 +187,7 @@ export default function InnerVoiceDashboard() {
   if(!signedIn) return (
     <div className="ivd-app"><style>{CSS}</style><StarCanvas />
       <div className="ivd-wrap">
-        <div className="ivd-hdr"><div className="ivd-eyebrow">Daily Karma Score</div><h1 className="ivd-title">Karma Score</h1><p className="ivd-sub">A simple daily score based on the mindful practices you complete. It is symbolic, meant to encourage consistency.</p></div>
+        <div className="ivd-hdr"><div className="ivd-eyebrow">Daily Karma Sankhya</div><h1 className="ivd-title">{FEATURES.karmaScore.name}</h1><p className="ivd-sub">A simple daily score based on the mindful practices you complete. It is symbolic, meant to encourage consistency.</p></div>
         <div className="ivd-setup">
           <div className="ivd-setup-title">Sign in to track your score</div>
           <div className="ivd-setup-sub">Your practices and score history are personal, so they are kept for signed-in members only.</div>
@@ -197,14 +200,14 @@ export default function InnerVoiceDashboard() {
   if(!profile) return (
     <div className="ivd-app"><style>{CSS}</style><StarCanvas />
       <div className="ivd-wrap">
-        <div className="ivd-hdr"><div className="ivd-eyebrow">One-time Setup</div><h1 className="ivd-title">Karma Score</h1><p className="ivd-sub">A simple daily score based on the mindful practices you complete. It is symbolic, meant to encourage consistency.</p></div>
+        <div className="ivd-hdr"><div className="ivd-eyebrow">One-time Setup</div><h1 className="ivd-title">{FEATURES.karmaScore.name}</h1><p className="ivd-sub">A simple daily score based on the mindful practices you complete. It is symbolic, meant to encourage consistency.</p></div>
         <div className="ivd-setup">
           <div className="ivd-setup-title">Your Profile</div>
           <div className="ivd-setup-sub">Only your name is needed. Other details are optional and are not used in the score.</div>
           <div className="ivd-grid2">
             <div className="ivd-field"><label>Your Name</label><input className="ivd-input" placeholder="Enter your name" maxLength={60} value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))}/></div>
             <div className="ivd-field"><label>Date of Birth (optional)</label><input className="ivd-input" type="date" value={form.dob} onChange={e=>setForm(f=>({...f,dob:e.target.value}))}/></div>
-            <div className="ivd-field"><label>Sun Sign / Rashi (optional)</label><select className="ivd-select" value={form.sign} onChange={e=>setForm(f=>({...f,sign:e.target.value}))}><option value="">Select...</option>{ZODIAC.map(s=><option key={s} value={s}>{s}</option>)}</select></div>
+            <div className="ivd-field"><label>Chandra Rashi (Moon sign, optional)</label><select className="ivd-select" value={form.sign} onChange={e=>setForm(f=>({...f,sign:e.target.value}))}><option value="">Select...</option>{ZODIAC.map(s=><option key={s} value={s}>{s}</option>)}</select></div>
             <div className="ivd-field"><label>Nakshatra (optional)</label><select className="ivd-select" value={form.nakshatra} onChange={e=>setForm(f=>({...f,nakshatra:e.target.value}))}><option value="">Select...</option>{NAKSHATRA.map(n=><option key={n} value={n}>{n}</option>)}</select></div>
           </div>
           <button className="ivd-setup-btn" onClick={saveProfile} disabled={!form.name.trim()}>Start Tracking →</button>
@@ -216,7 +219,7 @@ export default function InnerVoiceDashboard() {
   return (
     <div className="ivd-app"><style>{CSS}</style><StarCanvas />
       <div className="ivd-wrap">
-        <div className="ivd-hdr"><div className="ivd-eyebrow">Daily Karma Score</div><h1 className="ivd-title">Karma Score</h1><p className="ivd-sub">{profile.name}{profile.sign ? ` · ${profile.sign}`:""}</p></div>
+        <div className="ivd-hdr"><div className="ivd-eyebrow">Daily Karma Sankhya</div><h1 className="ivd-title">{FEATURES.karmaScore.name}</h1><p className="ivd-sub">{profile.name}{profile.sign ? ` · ${profile.sign}`:""}</p></div>
 
         <div className="ivd-score-section">
           <ScoreRing score={composite}/>

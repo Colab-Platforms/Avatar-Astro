@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { FEATURES } from "@/data/featureCatalog";
+import { useFeatureTitle } from "@/hooks/useFeatureTitle";
 import NameDestinyReport from "@/components/NameDestinyReport";
 import FeatureIntro from "@/components/FeatureIntro";
 import NameNumerologyEducation from "@/components/NameNumerologyEducation";
@@ -26,6 +28,7 @@ const inputStyle: React.CSSProperties = {
 };
 
 export default function NameDestinyReportPage() {
+  useFeatureTitle(FEATURES.numerology);
   const [form, setForm] = useState<FormState>(emptyForm());
   const [profile, setProfile] = useState<NameProfile | null>(null);
   const [error, setError] = useState("");
@@ -76,13 +79,14 @@ export default function NameDestinyReportPage() {
           <header className="mx-auto mb-8 max-w-3xl px-4 pt-10 text-center">
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#592209]">Name Numerology</p>
             <h1 className="mb-4 text-4xl text-[#301607] sm:text-6xl" style={{ fontFamily: "'Astra','Cinzel',serif" }}>
-              Cosmic Blueprint
+              {FEATURES.numerology.name}
             </h1>
+            <p className="mx-auto max-w-2xl text-base leading-relaxed text-[#4A2E1F] sm:text-lg">{FEATURES.numerology.subtitle}</p>
           </header>
 
           <FeatureIntro
             className="mb-4"
-            description="Explore what the letters of your name and the digits of your birth date add up to in numerology. Cosmic Blueprint calculates your Destiny, Soul Urge, Personality, Chaldean, Life Path and Birth numbers, shows every step of the working, and gives the traditional meaning of each."
+            description="Explore what the letters of your name and the digits of your birth date add up to in numerology. Naamank Jyotish calculates your Destiny, Soul Urge, Personality, Chaldean, Life Path and Birth numbers, shows every step of the working, and gives the traditional meaning of each."
             steps={[
               { title: "Enter Your Details", text: "Provide your name in English letters and your date of birth. Your last name is optional." },
               { title: "See the Calculations", text: "Each number is worked out from your letters or birth digits, with the arithmetic shown step by step." },
@@ -130,7 +134,7 @@ export default function NameDestinyReportPage() {
                   cursor: "pointer", boxShadow: "0 0 30px rgba(89,34,9,0.35)",
                 }}
               >
-                ✦ Show My Cosmic Blueprint ✦
+                ✦ Show My Naamank Jyotish ✦
               </button>
             </div>
           </form>

@@ -24,14 +24,14 @@ const blocks: EducationBlock[] = [
     heading: "What Is Name Numerology?",
     paragraphs: [
       "Name numerology is a traditional practice that turns the letters of a name, and the digits of a birth date, into numbers, then reads each number as a symbol for personality themes. Different cultures have used it for centuries, including in India and the Greek and Hebrew traditions.",
-      "The adding-up part is plain arithmetic that anyone can check. The meanings attached to the numbers are traditional beliefs, and they are not scientifically proven. Cosmic Blueprint is useful if you are curious about the numbers in your name and birth date, and what numerologists say about them.",
+      "The adding-up part is plain arithmetic that anyone can check. The meanings attached to the numbers are traditional beliefs, and they are not scientifically proven. Naamank Jyotish is useful if you are curious about the numbers in your name and birth date, and what numerologists say about them.",
     ],
   },
   {
-    heading: "How Does Cosmic Blueprint Work?",
+    heading: "How Does Naamank Jyotish Work?",
     list: [
       "Enter your first name, your optional last name, and your date of birth.",
-      "The tool turns each letter into a number using two letter tables, adds the numbers and reduces the total to a single digit. It does the same with the digits of your birth date.",
+      "The Seva turns each letter into a number using two letter tables, adds the numbers and reduces the total to a single digit. It does the same with the digits of your birth date.",
       "You see six numbers with the working shown step by step, the traditional theme and ruling planet for each, the days of the month that match your Life Path, and a spelling lab for trying other spellings.",
     ],
     ordered: true,
@@ -42,7 +42,7 @@ const blocks: EducationBlock[] = [
   {
     heading: "Which Numerology System Is Used?",
     paragraphs: [
-      "Cosmic Blueprint implements two systems and uses each for specific numbers.",
+      "Naamank Jyotish implements two systems and uses each for specific numbers.",
     ],
     list: [
       "Pythagorean: letters run A=1 to I=9, then the cycle repeats. It is used for the Destiny (Expression), Soul Urge and Personality numbers.",
@@ -66,7 +66,7 @@ const blocks: EducationBlock[] = [
   },
   {
     heading: "A Worked Example",
-    paragraphs: [`Take the name ${EXAMPLE_NAME} and the birth date ${EXAMPLE_DOB}. Every figure below comes from the same code the tool uses.`],
+    paragraphs: [`Take the name ${EXAMPLE_NAME} and the birth date ${EXAMPLE_DOB}. Every figure below comes from the same code the Seva uses.`],
     list: [
       `Destiny (all letters, Pythagorean): ${seq(ex.destiny)}. These add to ${ex.destiny.total}, and ${chainText(ex.destiny.chain)}. Destiny number ${ex.destiny.result}.`,
       `Soul Urge (vowels only): ${seq(ex.soulUrge)}. The total is ${ex.soulUrge.total}, and ${chainText(ex.soulUrge.chain)}. Soul Urge number ${ex.soulUrge.result}.`,
@@ -108,7 +108,7 @@ const faqs: EducationFaq[] = [
   {
     question: "Why are some of my numbers 11, 22 or 33?",
     answer:
-      "Those are master numbers. When a total reaches 11, 22 or 33, the tool keeps it instead of reducing it further, except for the Chaldean number, which is always reduced to 1–9.",
+      "Those are master numbers. When a total reaches 11, 22 or 33, the Seva keeps it instead of reducing it further, except for the Chaldean number, which is always reduced to 1–9.",
   },
   {
     question: "Why can't I enter my name in my own language?",
@@ -120,8 +120,8 @@ const faqs: EducationFaq[] = [
     answer: "Yes. The PDF lists the same six numbers with the same working and traditional themes.",
   },
   {
-    question: "Can I use Cosmic Blueprint for free?",
-    answer: "Yes. Cosmic Blueprint is one of MyBhagya Astro's free tools. It needs no sign-in and no payment.",
+    question: "Can I use Naamank Jyotish for free?",
+    answer: "Yes. Naamank Jyotish is one of MyBhagya Astro's free Seva. It needs no sign-in and no payment.",
   },
 ];
 
@@ -129,5 +129,5 @@ const DISCLAIMER =
   "Numerology is offered for personal interest, cultural exploration and reflection. It is a traditional belief system that is not scientifically proven. Results are not predictions, and they are not professional advice.";
 
 export default function NameNumerologyEducation() {
-  return <EducationSection idPrefix="numerology" title="About Cosmic Blueprint" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
+  return <EducationSection idPrefix="numerology" title="About Naamank Jyotish" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
 }

@@ -43,24 +43,24 @@ describe("unknown birth time: gemstone-led result", () => {
   it("shows the primary gemstone, planet, method label and summary", () => {
     renderResult();
     expect(screen.getByTestId("recommended-stone")).toHaveTextContent("Emerald");
-    expect(screen.getByText("Your Birth-Date Gemstone")).toBeInTheDocument();
-    const card = screen.getByRole("region", { name: "Emerald" });
+    expect(screen.getByText("Traditional Birth-Weekday Ratna")).toBeInTheDocument();
+    const card = screen.getByRole("region", { name: /^Emerald/ });
     expect(within(card).getByText(/Traditionally associated with Mercury/)).toBeInTheDocument();
-    expect(screen.getByTestId("method-label")).toHaveTextContent("Method: Birth-Date & Place Gemstone Method");
+    expect(screen.getByTestId("method-label")).toHaveTextContent("Method: Birth-Date & Place Ratna Method");
     expect(within(card).getByText("Born on a Wednesday, a day ruled by Mercury.")).toBeInTheDocument();
     expect(within(card).getByText(/Based on your birth date and birthplace; exact birth time was not used\./)).toBeInTheDocument();
-    expect(screen.getByRole("img", { name: "Emerald illustration" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Emerald (पन्ना · Panna) Ratna photograph" })).toBeInTheDocument();
   });
 
   it("has the hero with eyebrow, heading and the real birth details", () => {
     renderResult();
-    expect(screen.getByText("YOUR PERSONAL GEMSTONE")).toBeInTheDocument();
+    expect(screen.getByText("YOUR PERSONAL RATNA")).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 1, name: "Your Ratna Jyotish Reading" })).toBeInTheDocument();
     const meta = screen.getByRole("list", { name: "Birth details used" });
     expect(within(meta).getByText("Born 9 May 1990")).toBeInTheDocument();
     expect(within(meta).getByText("Birth time not provided")).toBeInTheDocument();
     expect(within(meta).getByText("Vasai, Palghar, Maharashtra, India")).toBeInTheDocument();
-    expect(screen.getByRole("img", { name: "Ratna Jyotish gemstone emblem" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Ratna Jyotish emblem" })).toBeInTheDocument();
   });
 
   it("no longer shows the old no-recommendation panel or a planet-sign grid as the result", () => {
@@ -69,7 +69,7 @@ describe("unknown birth time: gemstone-led result", () => {
     expect(screen.queryByText(/cannot be calculated/i)).toBeNull();
     expect(screen.queryByText("Your Ratna Jyotish Result")).toBeNull();
     // Planet signs survive only as background chips inside the method disclosure.
-    const primary = screen.getByRole("region", { name: "Emerald" });
+    const primary = screen.getByRole("region", { name: /^Emerald/ });
     expect(within(primary).queryByText(/Sun in Aries/)).toBeNull();
     const chips = screen.getByRole("list", { name: "Planetary signs steady across the date" });
     expect(within(chips).getByText("Sun in Aries")).toBeInTheDocument();
@@ -79,7 +79,7 @@ describe("unknown birth time: gemstone-led result", () => {
   it("shows themes in hedged language, with no personal-problem claims", () => {
     renderResult();
     const section = screen.getByTestId("ratna-significance");
-    expect(within(section).getByRole("heading", { name: "Traditional associations" })).toBeInTheDocument();
+    expect(within(section).getByRole("heading", { name: "Traditional significance" })).toBeInTheDocument();
     expect(within(section).getByText(/Traditional interpretation in some Vedic astrology schools/)).toBeInTheDocument();
     expect(within(section).getByText("Communication")).toBeInTheDocument();
     expect(within(section).getByText("Learning and study")).toBeInTheDocument();
@@ -90,14 +90,14 @@ describe("unknown birth time: gemstone-led result", () => {
   it("explains what the reading means and is honest about its limits", () => {
     renderResult();
     expect(screen.queryByRole("heading", { name: "What This Means for You" })).toBeNull(); // folded into the card
-    expect(screen.getByText(/You were born on a Wednesday, ruled by Mercury/)).toBeInTheDocument(); // inside "Why this gemstone?"
+    expect(screen.getByText(/You were born on a Wednesday, ruled by Mercury/)).toBeInTheDocument(); // inside "Full explanation"
     expect(screen.getByRole("link", { name: "Calculate again with an exact birth time" })).toHaveAttribute("href", "/ratna-jyotish");
   });
 
   it("shows wearing guidance with the weekday, sunrise, location and time zone used", () => {
     renderResult();
     const w = screen.getByTestId("ratna-wearing");
-    expect(within(w).getByRole("heading", { name: "How to wear" })).toBeInTheDocument();
+    expect(within(w).getByRole("heading", { name: "Wearing guidance" })).toBeInTheDocument();
     expect(within(w).getByText("Wednesday")).toBeInTheDocument();
     expect(within(w).getByText("Gold or silver")).toBeInTheDocument();
     expect(within(w).getByText("Little finger")).toBeInTheDocument();
@@ -126,7 +126,7 @@ describe("unknown birth time: gemstone-led result", () => {
 
   it("does not show secondary house-based perspectives it cannot calculate", () => {
     renderResult();
-    expect(screen.queryByText("Other Traditional Perspectives")).toBeNull();
+    expect(screen.queryByText("Alternative Ratnas")).toBeNull();
     expect(screen.queryByText(/house lord/)).toBeNull();
   });
 });
@@ -136,44 +136,63 @@ describe("exact birth time: result is the same method with the new layout", () =
     saveResult(complete);
     renderResult();
     expect(screen.getByTestId("method-label")).toHaveTextContent("Method: Parashari Lagna-lord method");
-    expect(screen.getByText("Your Lagna-Lord Gemstone")).toBeInTheDocument();
+    expect(screen.getByText("Recommended Ratna")).toBeInTheDocument();
     expect(screen.getByTestId("recommended-stone")).toHaveTextContent("Diamond or White Sapphire");
-    const card = screen.getByRole("region", { name: "Diamond or White Sapphire" });
-    expect(within(card).getByText(/Your Ascendant is Taurus; its ruler Venus/)).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: /^Diamond or White Sapphire/ })).toBeInTheDocument();
+    expect(screen.getByText("Venus reason one.")).toBeInTheDocument();
     expect(screen.getByText("Born 5 May 1990")).toBeInTheDocument();
     expect(screen.getByText("at 10:00")).toBeInTheDocument();
-    expect(screen.queryByText(/Your Birth-Date Gemstone/)).toBeNull();
+    expect(screen.queryByText(/Traditional Birth-Weekday Ratna/)).toBeNull();
   });
 
-  it("still shows secondary perspectives and cautions when present", () => {
+  it("shows alternative and cautioned Ratnas from the chart analysis, each with expandable details", () => {
+    saveResult(complete);
+    renderResult();
+    expect(screen.getByText("Alternative Ratnas")).toBeInTheDocument();
+    const alt = screen.getByTestId("ratna-card-emerald");
+    expect(alt).toHaveAttribute("data-category", "alternative");
+    expect(within(alt).getByText(/Mercury, lord of the 2nd and 5th house/)).toBeInTheDocument();
+    expect(within(alt).getByText("पन्ना · Panna")).toBeInTheDocument();
+    const view = within(alt).getByRole("button", { name: "View Details" });
+    expect(view).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(view);
+    expect(view).toHaveAttribute("aria-expanded", "true");
+    expect(within(alt).getByText("Mercury is conjunct Sun, traditionally malefic planets.")).toBeInTheDocument();
+
+    expect(screen.getByText("Ratnas that require caution")).toBeInTheDocument();
+    const caution = screen.getByTestId("ratna-card-pearl");
+    expect(caution).toHaveAttribute("data-category", "caution");
+    expect(within(caution).getByText("Requires caution")).toBeInTheDocument();
+    expect(within(caution).getByText(/Moon rules only the 3rd house/)).toBeInTheDocument();
+    // the primary Ratna's own cautions are shown, with the consult-an-astrologer advice
+    expect(screen.getByTestId("ratna-cautions")).toHaveTextContent("Venus is conjunct Sun");
+    expect(screen.getByTestId("ratna-cautions")).toHaveTextContent(/consult a qualified Vedic astrologer/);
+  });
+
+  it("says plainly when the chart supports no alternative Ratna", () => {
     saveResult({
       ...complete,
-      recommendation: {
-        ...complete.recommendation!,
-        secondary: [{ house: 5, planet: "Mercury", sign: "Virgo", stone: emerald, reason: "5th lord, no conflict." }],
-        cautions: ["Venus is debilitated in this chart."],
-      },
+      recommendation: { ...complete.recommendation!, analysis: { ...complete.recommendation!.analysis, alternatives: [], cautionedStones: [] } },
     });
     renderResult();
-    expect(screen.getByText("Other Traditional Perspectives")).toBeInTheDocument();
-    expect(screen.getByText(/5th house lord \(Virgo\)/)).toBeInTheDocument();
-    expect(screen.getByText("Venus is debilitated in this chart.")).toBeInTheDocument();
+    expect(screen.getByText(/No alternative Ratna is supported by this chart/)).toBeInTheDocument();
+    expect(screen.queryByText("Ratnas that require caution")).toBeNull();
   });
 });
 
 describe("disclosures and notice", () => {
   beforeEach(() => saveResult(dateBased));
 
-  it("'Why this gemstone?' expands and collapses with correct ARIA state", () => {
+  it("'Full explanation' expands and collapses with correct ARIA state", () => {
     renderResult();
-    const btn = screen.getByRole("button", { name: "Why this gemstone?" });
+    const btn = screen.getByRole("button", { name: "Full explanation" });
     expect(btn).toHaveAttribute("aria-expanded", "false");
     const panel = document.getElementById(btn.getAttribute("aria-controls")!)!;
     expect(panel).toHaveAttribute("data-open", "false");
     fireEvent.click(btn);
     expect(btn).toHaveAttribute("aria-expanded", "true");
     expect(panel).toHaveAttribute("data-open", "true");
-    expect(within(panel).getByText("Wednesday: Mercury")).toBeInTheDocument();
+    expect(within(panel).getAllByText(/Mercury/).length).toBeGreaterThan(0);
     fireEvent.click(btn);
     expect(btn).toHaveAttribute("aria-expanded", "false");
   });
@@ -316,11 +335,11 @@ describe("shop products for the date-based gemstone", () => {
     expect(await screen.findByRole("link", { name: "Colombian Emerald" })).toHaveAttribute("href", "/shop/em-1");
     expect(api.products).toHaveBeenCalledWith("emerald");
     expect(screen.getByText("₹3,499")).toBeInTheDocument();
-    for (const t of ["Your Matching Gemstone", "Matching Gemstone Jewellery", "Planet-Linked Accessories", "Complementary Spiritual Accessories"]) {
+    for (const t of ["Your Matching Ratna", "Matching Ratna Jewellery", "Planet-Linked Accessories", "Complementary Spiritual Accessories"]) {
       expect(screen.getByRole("heading", { name: t })).toBeInTheDocument();
     }
     // chart-linked is labelled as convention-based, general accessories as not personalised
-    expect(screen.getByText("Linked by convention to Mercury, the planet of Emerald; not a prescription.")).toBeInTheDocument();
+    expect(screen.getByText("Linked by convention to Mercury, the planet of Emerald (पन्ना · Panna); not a prescription.")).toBeInTheDocument();
     expect(screen.getByText("General accessories, not selected from your birth details.")).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "View Product" })).toHaveLength(4);
     expect(screen.queryByText(/prescribed for you|your remedy/i)).toBeNull();
@@ -328,9 +347,9 @@ describe("shop products for the date-based gemstone", () => {
 
   it("does not substitute a different stone when the gemstone is not listed", async () => {
     renderResult();
-    expect(await screen.findByText(/No Emerald is currently listed in the shop/)).toBeInTheDocument();
-    expect(screen.getByText(/do not substitute a different gemstone/)).toBeInTheDocument();
-    expect(screen.queryByText("Matching Gemstone Jewellery")).toBeNull();
+    expect(await screen.findByText(/No Emerald (.*) is currently listed in the shop/)).toBeInTheDocument();
+    expect(screen.getByText(/do not substitute a different Ratna/)).toBeInTheDocument();
+    expect(screen.queryByText("Matching Ratna Jewellery")).toBeNull();
   });
 
   it("keeps the result and offers a retry when the shop API fails", async () => {

@@ -12,7 +12,7 @@ const ProductCard = ({ p, index }: { p: MatchedProduct; index: number }) => (
       {p.image ? (
         <img src={p.image} alt={p.name} loading="lazy" className="h-40 w-full object-cover sm:h-44" />
       ) : (
-        <div className="flex h-40 items-center justify-center bg-[#FBF5EC] text-slate-500 sm:h-44">No image</div>
+        <div className="flex h-40 items-center justify-center bg-[#FBF5EC] text-[#6B4A37] sm:h-44">No image</div>
       )}
     </Link>
     <div className="flex flex-1 flex-col gap-1 p-3">
@@ -22,7 +22,7 @@ const ProductCard = ({ p, index }: { p: MatchedProduct; index: number }) => (
       <p className="text-base text-[#301607]">
         ₹{p.price.toLocaleString("en-IN")}
         {p.originalPrice ? (
-          <span className="ml-2 text-sm text-slate-500 line-through">₹{p.originalPrice.toLocaleString("en-IN")}</span>
+          <span className="ml-2 text-sm text-[#6B4A37] line-through">₹{p.originalPrice.toLocaleString("en-IN")}</span>
         ) : null}
       </p>
       <Link to={p.url} className="ratna-btn-ghost mt-auto inline-flex items-center justify-center pt-0 text-sm">
@@ -34,7 +34,7 @@ const ProductCard = ({ p, index }: { p: MatchedProduct; index: number }) => (
 
 const Group = ({ title, intro, items }: { title: string; intro?: string; items: MatchedProduct[] }) => (
   <div>
-    <h3 className="font-astra text-base text-foreground sm:text-lg">{title}</h3>
+    <h3 className="font-home-serif text-lg font-semibold text-[#592209] sm:text-xl">{title}</h3>
     {intro && <p className="mt-0.5 text-sm text-muted-foreground">{intro}</p>}
     <ul className="mt-3 grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
       {items.map((p, i) => (
@@ -47,12 +47,16 @@ const Group = ({ title, intro, items }: { title: string; intro?: string; items: 
 const ShopSections = ({
   stoneKey,
   stoneName,
+  stoneLabel,
   planet,
 }: {
   stoneKey: string;
   stoneName: string;
+  /** English plus Hindi name, e.g. "Yellow Sapphire (पुखराज · Pukhraj)". */
+  stoneLabel?: string;
   planet: string;
 }) => {
+  const named = stoneLabel ?? stoneName;
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["ratna-products", stoneKey],
     queryFn: () => ratnaApi.products(stoneKey),
@@ -61,7 +65,7 @@ const ShopSections = ({
 
   return (
     <section className="ratna-reveal space-y-5" style={{ ["--i" as string]: 5 }} aria-labelledby="ratna-shop-h">
-      <h2 id="ratna-shop-h" className="font-astra text-lg text-[#301607] sm:text-xl">
+      <h2 id="ratna-shop-h" className="font-home-serif text-xl font-semibold text-[#592209] sm:text-2xl">
         From the My Bhagya Shop
       </h2>
 
@@ -72,7 +76,7 @@ const ShopSections = ({
       )}
 
       {isError && (
-        <div role="alert" className="rounded-xl border border-red-400/50 bg-red-950/40 p-4 text-red-800">
+        <div role="alert" className="rounded-xl border border-[#9B2C1D]/40 bg-[#9B2C1D]/10 p-4 text-[#7A2216]">
           <p>We could not load shop products right now. Your result above is not affected.</p>
           <button type="button" className="ratna-btn-ghost mt-3" onClick={() => refetch()} disabled={isFetching}>
             {isFetching ? "Retrying…" : "Try again"}
@@ -83,22 +87,22 @@ const ShopSections = ({
       {data && (
         <>
           {data.gemstones.length > 0 ? (
-            <Group title="Your Matching Gemstone" items={data.gemstones} />
+            <Group title="Your Matching Ratna" items={data.gemstones} />
           ) : (
             <div>
-              <h3 className="font-astra text-base text-foreground sm:text-lg">Your Matching Gemstone</h3>
+              <h3 className="font-home-serif text-lg font-semibold text-[#592209] sm:text-xl">Your Matching Ratna</h3>
               <p className="mt-1 text-muted-foreground">
-                No {stoneName} is currently listed in the shop. We do not substitute a different gemstone.
+                No {named} is currently listed in the shop. We do not substitute a different Ratna.
               </p>
             </div>
           )}
 
-          {data.jewellery.length > 0 && <Group title="Matching Gemstone Jewellery" items={data.jewellery} />}
+          {data.jewellery.length > 0 && <Group title="Matching Ratna Jewellery" items={data.jewellery} />}
 
           {data.chartLinked.length > 0 && (
             <Group
               title="Planet-Linked Accessories"
-              intro={`Linked by convention to ${planet}, the planet of ${stoneName}; not a prescription.`}
+              intro={`Linked by convention to ${planet}, the planet of ${named}; not a prescription.`}
               items={data.chartLinked}
             />
           )}

@@ -1,4 +1,7 @@
 import { useState, useRef, useEffect } from "react";
+import FullScreenLoader from "@/components/Loader/FullScreenLoader";
+import { FEATURES } from "@/data/featureCatalog";
+import { useFeatureTitle } from "@/hooks/useFeatureTitle";
 import { motion, AnimatePresence } from "framer-motion";
 import VoiceConsultation from "../components/VoiceConsultation";
 import { API_BASE_URL } from "@/lib/api";
@@ -190,9 +193,9 @@ async function downloadReportPDF(report, userName) {
   doc.setFillColor(...DARK); doc.rect(0,0,PW,PH,"F");
   doc.setFillColor(...GOLD); doc.rect(0,0,PW,3,"F");
   doc.setFont("helvetica","bold"); doc.setFontSize(22); doc.setTextColor(...GOLD);
-  doc.text("AI GURU",PW/2,45,{align:"center"});
+  doc.text("DIVYA MARGDARSHAK",PW/2,45,{align:"center"});
   doc.setFont("helvetica","normal"); doc.setFontSize(11); doc.setTextColor(...LIGHT);
-  doc.text("AI Guru — Vedic Spiritual Diagnosis",PW/2,55,{align:"center"});
+  doc.text("Divya Margdarshak — Vedic Spiritual Diagnosis",PW/2,55,{align:"center"});
   doc.setFontSize(28); doc.setTextColor(...GOLD);
   doc.text("Diagnosis & Remedy Report",PW/2,80,{align:"center"});
   doc.setDrawColor(...GOLD); doc.setLineWidth(0.5); doc.line(M+20,86,PW-M-20,86);
@@ -314,10 +317,10 @@ async function downloadReportPDF(report, userName) {
     if (report.spiritualInsight.growthOpportunity) { label("Growth Opportunity"); body(report.spiritualInsight.growthOpportunity); }
   }
   if (report.guidance) {
-    ensurePage(40); sectionHeader("🧘","Personal Guidance from AI Guru",GOLD);
+    ensurePage(40); sectionHeader("🧘","Personal Guidance from Divya Margdarshak",GOLD);
     body(report.guidance,[253,230,138]);
     doc.setFont("helvetica","italic"); doc.setFontSize(9); doc.setTextColor(...LIGHT);
-    doc.text("— AI Guru",PW-M,y,{align:"right"}); y+=8;
+    doc.text("— Divya Margdarshak",PW-M,y,{align:"right"}); y+=8;
   }
 
   // Footer on all pages
@@ -327,11 +330,11 @@ async function downloadReportPDF(report, userName) {
     doc.setFillColor(14,14,24); doc.rect(0,PH-10,PW,10,"F");
     doc.setFillColor(...GOLD); doc.rect(0,PH-1,PW,1,"F");
     doc.setFont("helvetica","normal"); doc.setFontSize(7.5); doc.setTextColor(...LIGHT);
-    doc.text("AI Guru — AI Guru — Vedic Spiritual Diagnosis",M,PH-4);
+    doc.text("Divya Margdarshak — Vedic Spiritual Diagnosis",M,PH-4);
     doc.text(`Page ${i} of ${totalPages}`,PW-M,PH-4,{align:"right"});
   }
   const name = (userName||"Seeker").replace(/\s+/g,"_");
-  doc.save(`AI_Guru_Report_${name}_${new Date().toISOString().slice(0,10)}.pdf`);
+  doc.save(`Divya_Margdarshak_Report_${name}_${new Date().toISOString().slice(0,10)}.pdf`);
 }
 
 const CSS = `
@@ -876,7 +879,7 @@ function DiagnosisReport({report,onSaveMantra,onBookPuja,userName,onAskFollowUp,
   return(
     <div style={{maxWidth:860,margin:"0 auto"}}>
       <div className="ivc-report-topbar">
-        <div><div className="ivc-report-topbar-title">Diagnosis & Remedy Report</div><div className="ivc-report-topbar-date">Generated: {generatedDate} · AI Guru</div></div>
+        <div><div className="ivc-report-topbar-title">Diagnosis & Remedy Report</div><div className="ivc-report-topbar-date">Generated: {generatedDate} · Divya Margdarshak</div></div>
         <button className="ivc-dl-pdf-btn" onClick={onDownload} disabled={downloading}>{downloading?"⏳ Preparing PDF...":"⬇ Download PDF Report"}</button>
       </div>
 
@@ -1033,7 +1036,7 @@ function DiagnosisReport({report,onSaveMantra,onBookPuja,userName,onAskFollowUp,
       {report.karmaScore&&(
         <ReportCard color="c-karma" icon="⚡" label="Karma & Spiritual Progress">
           <div className="ivc-karma-score-big">{report.karmaScore.current>0?`+${report.karmaScore.current}`:report.karmaScore.current}</div>
-          <div className="ivc-karma-sub">Current Karma Score</div>
+          <div className="ivc-karma-sub">Current Karma Sankhya</div>
           {report.karmaScore.progressToNeutral!==undefined&&(
             <div className="ivc-karma-progress-wrap">
               <div className="ivc-karma-progress-label"><span className="ivc-karma-progress-lbl">Progress to Neutral Karma</span><span className="ivc-karma-progress-pct">{report.karmaScore.progressToNeutral}%</span></div>
@@ -1070,8 +1073,8 @@ function DiagnosisReport({report,onSaveMantra,onBookPuja,userName,onAskFollowUp,
       )}
 
       {report.guidance&&(
-        <ReportCard color="c-guidance" icon="🧘" label="Personal Guidance from AI Guru">
-          <div className="ivc-guidance-box"><div className="ivc-guidance-txt">{report.guidance}</div><div className="ivc-guidance-sig">— AI Guru</div></div>
+        <ReportCard color="c-guidance" icon="🧘" label="Personal Guidance from Divya Margdarshak">
+          <div className="ivc-guidance-box"><div className="ivc-guidance-txt">{report.guidance}</div><div className="ivc-guidance-sig">— Divya Margdarshak</div></div>
         </ReportCard>
       )}
 
@@ -1090,6 +1093,7 @@ function DiagnosisReport({report,onSaveMantra,onBookPuja,userName,onAskFollowUp,
 }
 
 export default function InnerVoiceChat(){
+  useFeatureTitle(FEATURES.guru);
   const [activeTab,setActiveTab]=useState("consultation");
   const [messages,setMessages]=useState([]);
   const [input,setInput]=useState("");
@@ -1114,12 +1118,9 @@ export default function InnerVoiceChat(){
   useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth",block:"end"});},[messages,loading]);
 
   useEffect(()=>{
-    const SELECTORS=["footer","[class*='footer' i]","[class*='Footer']","[id*='footer' i]","[class*='navbar' i]","[class*='NavBar']","[class*='nav-bar' i]","[id*='navbar' i]","nav:not(.ivc-sb nav)"];
-    const hidden=[];
-    SELECTORS.forEach(sel=>{try{document.querySelectorAll(sel).forEach(el=>{if(!el.closest(".ivc-app")){hidden.push({el,prev:el.style.display});el.style.setProperty("display","none","important");}});}catch{}});
     const prevOverflow=document.body.style.overflow;
     document.body.style.overflow="hidden";
-    return()=>{hidden.forEach(({el,prev})=>el.style.display=prev);document.body.style.overflow=prevOverflow;};
+    return()=>{document.body.style.overflow=prevOverflow;};
   },[]);
 
   useEffect(()=>{
@@ -1364,18 +1365,14 @@ export default function InnerVoiceChat(){
         {activeTab==="report"&&(
           <div className="ivc-report">
             {generatingReport?(
-              <div className="ivc-report-generating">
-                <div className="ivc-gen-spinner"/>
-                <div className="ivc-gen-txt">Preparing Your Diagnosis</div>
-                <div className="ivc-gen-sub">Analysing planetary influences, karmic patterns, and prescribing remedies...</div>
-              </div>
+              <FullScreenLoader title="Preparing Your Diagnosis" description="Reviewing your conversation and preparing remedies…" steps={["Reviewing your conversation", "Finding the karmic pattern", "Preparing your report"]} testId="guru-loader" />
             ):report?(
               <DiagnosisReport report={report} onSaveMantra={saveMantra} onBookPuja={()=>alert("Puja booking coming soon!")} userName={profile?.name} onAskFollowUp={handleFollowUp} onDownload={handleDownloadPDF} downloading={downloading}/>
             ):(
               <div className="ivc-report-empty">
                 <div className="ivc-report-empty-icon" style={{fontSize:72,marginBottom:20,filter:"drop-shadow(0 0 30px rgba(89,34,9,.4))"}}>🕉</div>
                 <div className="ivc-report-empty-title">Begin Your Consultation</div>
-                <div className="ivc-report-empty-sub">Share your life challenge with AI Guru in the Consultation tab. After a few exchanges, your complete Vedic Diagnosis Report — with remedies, mantras, planetary analysis, and a PDF — will be generated automatically.</div>
+                <div className="ivc-report-empty-sub">Share your life challenge with Divya Margdarshak in the Consultation tab. After a few exchanges, your complete Vedic Diagnosis Report — with remedies, mantras, planetary analysis, and a PDF — will be generated automatically.</div>
                 <div style={{display:"flex",gap:12,flexWrap:"wrap",justifyContent:"center",marginTop:8}}>
                   <button className="ivc-report-start-btn" onClick={()=>setActiveTab("consultation")}>💬 Start Consultation</button>
                   {readyForDiagnosis&&<button className="ivc-report-start-btn" style={{background:"linear-gradient(135deg,rgba(89,34,9,.25),rgba(89,34,9,.18))",borderColor:"rgba(89,34,9,.5)"}} onClick={generateReport}>✨ Generate Report Now</button>}

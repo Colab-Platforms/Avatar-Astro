@@ -4,11 +4,11 @@ const blocks: EducationBlock[] = [
   {
     heading: "What Is Tarot Reading?",
     paragraphs: [
-      "Tarot is a deck of illustrated cards used for reflection and storytelling. Each card carries traditional themes such as new beginnings, choices, endings or support. It is a tool for thinking a question through, not a way of proving what will happen.",
+      "Tarot is a deck of illustrated cards used for reflection and storytelling. Each card carries traditional themes such as new beginnings, choices, endings or support. It is an aid for thinking a question through, not a way of proving what will happen.",
     ],
   },
   {
-    heading: "How Does Tarot Experience Work?",
+    heading: "How Does Tarot Drishti Work?",
     list: [
       "Choose a reading: Life Timeline Tarot (five cards, with a life area such as Career or Love) or Karma Mirror (three cards).",
       "Shuffle if you like, then pick the cards that draw you from the fanned deck and watch them turn over.",
@@ -43,8 +43,8 @@ const faqs: EducationFaq[] = [
 ];
 
 const DISCLAIMER =
-  "Tarot Experience is offered for personal interest and reflection. Readings are AI-written interpretations, not predictions, and not medical, legal, financial or relationship advice.";
+  "Tarot Drishti is offered for personal interest and reflection. Readings are AI-written interpretations, not predictions, and not medical, legal, financial or relationship advice.";
 
 export default function TarotEducation() {
-  return <EducationSection idPrefix="tarot" title="About Tarot Experience" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
+  return <EducationSection idPrefix="tarot" title="About Tarot Drishti" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
 }

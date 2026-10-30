@@ -75,6 +75,8 @@ export interface GemstoneInfo {
   planet: Planet;
   name: string;
   sanskrit: string;
+  /** Devanagari name shown beside the English name. */
+  hindi: string;
   /** Lower-case words used to find matching catalogue products. */
   aliases: string[];
   colour: string;
@@ -95,7 +97,8 @@ export const GEMSTONES: Record<string, GemstoneInfo> = {
     key: "ruby",
     planet: "Sun",
     name: "Ruby",
-    sanskrit: "Manikya",
+    sanskrit: "Manik",
+    hindi: "माणिक",
     aliases: ["ruby", "manik", "manikya"],
     colour: "#c8102e",
     weekday: "Sunday",
@@ -118,6 +121,7 @@ export const GEMSTONES: Record<string, GemstoneInfo> = {
     planet: "Moon",
     name: "Pearl",
     sanskrit: "Moti",
+    hindi: "मोती",
     aliases: ["pearl", "moti"],
     colour: "#e8e4dc",
     weekday: "Monday",
@@ -140,6 +144,7 @@ export const GEMSTONES: Record<string, GemstoneInfo> = {
     planet: "Mars",
     name: "Red Coral",
     sanskrit: "Moonga",
+    hindi: "मूंगा",
     aliases: ["coral", "moonga", "munga"],
     colour: "#d2442c",
     weekday: "Tuesday",
@@ -162,6 +167,7 @@ export const GEMSTONES: Record<string, GemstoneInfo> = {
     planet: "Mercury",
     name: "Emerald",
     sanskrit: "Panna",
+    hindi: "पन्ना",
     aliases: ["emerald", "panna"],
     colour: "#1f9d6a",
     weekday: "Wednesday",
@@ -184,6 +190,7 @@ export const GEMSTONES: Record<string, GemstoneInfo> = {
     planet: "Jupiter",
     name: "Yellow Sapphire",
     sanskrit: "Pukhraj",
+    hindi: "पुखराज",
     aliases: ["yellow sapphire", "pukhraj", "pukhraaj", "pushkaraj"],
     colour: "#f2b705",
     weekday: "Thursday",
@@ -206,6 +213,7 @@ export const GEMSTONES: Record<string, GemstoneInfo> = {
     planet: "Venus",
     name: "Diamond or White Sapphire",
     sanskrit: "Heera / Safed Pukhraj",
+    hindi: "हीरा",
     aliases: ["diamond", "heera", "hira", "white sapphire", "zircon"],
     colour: "#dfe9f5",
     weekday: "Friday",
@@ -228,6 +236,7 @@ export const GEMSTONES: Record<string, GemstoneInfo> = {
     planet: "Saturn",
     name: "Blue Sapphire",
     sanskrit: "Neelam",
+    hindi: "नीलम",
     aliases: ["blue sapphire", "neelam", "neelmani"],
     colour: "#1e3fa8",
     weekday: "Saturday",
@@ -250,6 +259,7 @@ export const GEMSTONES: Record<string, GemstoneInfo> = {
     planet: "Rahu",
     name: "Hessonite (Gomed)",
     sanskrit: "Gomed",
+    hindi: "गोमेद",
     aliases: ["hessonite", "gomed", "gomedh"],
     colour: "#b5651d",
     weekday: "Saturday",
@@ -269,6 +279,7 @@ export const GEMSTONES: Record<string, GemstoneInfo> = {
     planet: "Ketu",
     name: "Cat's Eye",
     sanskrit: "Lehsunia",
+    hindi: "लहसुनिया",
     aliases: ["cat's eye", "cats eye", "cat eye", "lehsunia", "chrysoberyl"],
     colour: "#8a9a3b",
     weekday: "Tuesday",

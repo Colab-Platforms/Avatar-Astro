@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, ChevronDown, Radio, LogIn, LogOut, User } from "lucide-react";
 import gsap from "gsap";
+import { ASTROLOGY_SEVA_LABEL, ASTROLOGY_SEVA_NAV, INNER_VOICE_LABEL, INNER_VOICE_NAV } from "@/data/featureCatalog";
 import { useAuthStore } from "@/store/authStore";
 import { useLogoutMutation } from "@/features/auth/hooks/useAuthMutations";
 import {
@@ -16,36 +17,24 @@ import {
 } from "@/components/ui/alert-dialog";
 
 // ── Nav config ────────────────────────────────────────────────────────────────
-const astrologyTools = [
-  { name: "Tarot Experience", path: "/tarot" },
-  { name: "Zodiac Signs",     path: "/zodiac" },
-  // { name: "Daily Horoscopes", path: "/horoscopes" },
-  { name: "Birth Chart",      path: "/birth-chart" },
-  { name: "Compatibility",    path: "/compatibility" },
-  { name: "Palm Reading",     path: "/palm-reading" },
-  { name: "Cosmic Blueprint", path: "/name-destiny-report" },
-  { name: "Ratna Jyotish",    path: "/ratna-jyotish" },
-];
+// Names and order come from the shared feature catalog (routes are unchanged).
+const astrologySeva = ASTROLOGY_SEVA_NAV; // Daily Horoscopes stays out of the menu, as before.
+const innerVoiceLinks = INNER_VOICE_NAV;
 
-const innerVoiceLinks = [
-  { name: "Know Your Karma", path: "/inner-voice" },
-  { name: "AI Guru",         path: "/inner-voice/chat" },
-  { name: "Karma Score",     path: "/inner-voice/dashboard" },
-  { name: "Future Life Path Prediction", path: "/inner-voice/future-path" },
-  { name: "Sacred Shloka", path: "/inner-voice/wisdom" },
-];
-
-const devotionLinks = [
-  { name: "Puja",     path: "/puja" },
-  { name: "Chadhawa", path: "/chadhawa" },
-  { name: "Shop",     path: "/shop" },
-];
+// Puja and Chadhawa are temporarily hidden from navigation. Their routes, pages and APIs are intact;
+// restore by re-adding these entries to a navbar group.
+// const hiddenDevotionLinks = [
+//   { name: "Puja",     path: "/puja" },
+//   { name: "Chadhawa", path: "/chadhawa" },
+// ];
 
 // Avatar Live sub-pages — used by mobile accordion + isActive check
 const avatarLiveLinks = [
   { name: "Live Darshan",     path: "/avatar-live/darshan" },
   { name: "Family Functions", path: "/avatar-live/family"  },
 ];
+
+const shopLink = { name: "Shop", path: "/shop" };
 
 const topLinks = [
   { name: "Blog",    path: "/blog" },
@@ -405,9 +394,13 @@ const Navbar = () => {
               {location.pathname === "/" && <span className="absolute -bottom-1 left-0 right-0 h-[2px] bg-[#BC6A4D] rounded-full" />}
             </Link>
 
-            <NavDropdown label="Astrology Tools" menuId="astrology-tools-menu" items={astrologyTools} currentPath={location.pathname} lightNav={lightNav} />
-            <NavDropdown label="Inner Voice"      menuId="inner-voice-menu"     items={innerVoiceLinks} currentPath={location.pathname} lightNav={lightNav} />
-            <NavDropdown label="Devotion"         menuId="devotion-menu"        items={devotionLinks}   currentPath={location.pathname} lightNav={lightNav} />
+            <NavDropdown label={ASTROLOGY_SEVA_LABEL} menuId="astrology-tools-menu" items={astrologySeva} currentPath={location.pathname} lightNav={lightNav} />
+            <NavDropdown label={INNER_VOICE_LABEL}      menuId="inner-voice-menu"     items={innerVoiceLinks} currentPath={location.pathname} lightNav={lightNav} />
+
+            <Link to={shopLink.path} className={desktopLinkCls(location.pathname.startsWith(shopLink.path))}>
+              {shopLink.name}
+              {location.pathname.startsWith(shopLink.path) && <span className="absolute -bottom-1 left-0 right-0 h-[2px] bg-[#BC6A4D] rounded-full" />}
+            </Link>
 
             {/* Avatar Live — dedicated premium dropdown */}
             <AvatarLiveDropdown currentPath={location.pathname} lightNav={lightNav} />
@@ -473,9 +466,18 @@ const Navbar = () => {
                 Home
               </Link>
 
-              <MobileAccordion label="Astrology Tools" items={astrologyTools}  currentPath={location.pathname} onNavigate={() => setIsOpen(false)} />
-              <MobileAccordion label="Inner Voice"     items={innerVoiceLinks} currentPath={location.pathname} onNavigate={() => setIsOpen(false)} />
-              <MobileAccordion label="Devotion"        items={devotionLinks}   currentPath={location.pathname} onNavigate={() => setIsOpen(false)} />
+              <MobileAccordion label={ASTROLOGY_SEVA_LABEL} items={astrologySeva}  currentPath={location.pathname} onNavigate={() => setIsOpen(false)} />
+              <MobileAccordion label={INNER_VOICE_LABEL}     items={innerVoiceLinks} currentPath={location.pathname} onNavigate={() => setIsOpen(false)} />
+
+              <Link
+                to={shopLink.path}
+                onClick={() => setIsOpen(false)}
+                className={`mobile-nav-link font-display text-base font-medium px-2 py-2 rounded-lg transition-colors duration-300 ${
+                  location.pathname.startsWith(shopLink.path) ? "text-[#BC6A4D]" : "text-foreground/70 hover:text-[#BC6A4D]"
+                }`}
+              >
+                {shopLink.name}
+              </Link>
 
               {/* Avatar Live accordion — links to hub + sub-pages */}
               <MobileAccordion

@@ -4,7 +4,7 @@ import OrbitalLoader from "@/components/Loader/OrbitalLoader";
 const STEPS = [
   "Mapping planetary positions",
   "Reading your birth chart",
-  "Matching gemstone associations",
+  "Matching Ratna associations",
   "Preparing your guidance",
 ];
 
@@ -29,11 +29,11 @@ const RatnaLoader = () => {
       <OrbitalLoader size={300} />
 
       <div role="status" aria-live="polite" className="mt-9">
-        <h2 className="font-astra text-2xl tracking-wide text-[#301607] sm:text-3xl">
+        <h2 className="font-home-serif text-2xl font-semibold tracking-wide text-[#592209] sm:text-3xl">
           Reading Your Birth Chart
         </h2>
         <p className="mt-3 max-w-md text-base text-[#6B4A37]">
-          Calculating your gemstone associations and traditional guidance…
+          Calculating your Ratna associations and traditional guidance…
         </p>
       </div>
       <ul className="orbital-steps" aria-hidden="true">

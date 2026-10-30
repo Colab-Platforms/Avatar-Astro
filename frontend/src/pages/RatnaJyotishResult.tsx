@@ -23,19 +23,19 @@ const RatnaJyotishResult = () => {
 
   const again = () => {
     clearResult();
-    navigate("/ratna-jyotish");
+    navigate("/ratna-jyotish", { replace: true }); // swap the result entry for the form: no result/form loop in history
   };
 
   if (!result) {
     return (
       <section className="mx-auto max-w-xl px-4 pb-20 pt-10 text-center" data-testid="ratna-empty">
         <RatnaEmblem size={72} className="mx-auto" />
-        <h1 className="mt-4 font-astra text-3xl text-[#301607]">No Ratna Jyotish result yet</h1>
-        <p className="mt-3 text-lg text-muted-foreground">
-          Enter your birth details to see the gemstone traditionally associated with your birth chart.
+        <h1 className="mt-4 font-home-serif text-3xl font-semibold text-[#592209]">No Ratna Jyotish result yet</h1>
+        <p className="mt-3 text-lg text-[#4A2E1F]">
+          Enter your birth details to see the Ratna traditionally associated with your birth chart.
         </p>
         <Link to="/ratna-jyotish" className="ratna-btn mt-6 inline-flex items-center justify-center">
-          Calculate My Gemstone
+          Calculate My Ratna
         </Link>
       </section>
     );
@@ -46,7 +46,7 @@ const RatnaJyotishResult = () => {
       <ResultView result={result} />
 
       <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-        <Link to="/ratna-jyotish" className="ratna-btn-ghost inline-flex items-center justify-center">
+        <Link to="/ratna-jyotish" replace className="ratna-btn-ghost inline-flex items-center justify-center">
           Back to Birth Details
         </Link>
         <button type="button" className="ratna-btn" onClick={again}>

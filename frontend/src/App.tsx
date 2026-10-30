@@ -4,7 +4,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { AnimatePresence } from "framer-motion";
 import Layout from "./components/Layout";
 import { NavigationProvider } from "./context/NavigationContext";
 import PageTransition from "./components/PageTransition";
@@ -105,7 +104,7 @@ const forceScrollTop = () => {
   requestAnimationFrame(reassert);
 };
 
-const AnimatedRoutes = () => {
+export const AnimatedRoutes = () => {
   const location = useLocation();
 
   // Reset scroll to top on every route change, before the browser paints —
@@ -118,8 +117,10 @@ const AnimatedRoutes = () => {
     forceScrollTop();
   }, [location.pathname]);
 
+  // No AnimatePresence "wait" here: it held the previous page mounted while its exit animation ran, so a
+  // quick Back/Forward could land on (or briefly mount) a stale route. Keying Routes by pathname swaps
+  // pages immediately; PageTransition still fades each new page in.
   return (
-    <AnimatePresence mode="wait" initial={false}>
       <Routes location={location} key={location.pathname}>
         <Route
           path="/"
@@ -390,7 +391,6 @@ const AnimatedRoutes = () => {
           }
         />
       </Routes>
-    </AnimatePresence>
   );
 };
 

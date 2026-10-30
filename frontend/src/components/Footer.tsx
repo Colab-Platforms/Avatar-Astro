@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Facebook, Linkedin, Instagram, Twitter, ArrowRight } from 'lucide-react';
+import { FEATURES } from '@/data/featureCatalog';
 import { subscribeNewsletter } from '@/lib/inquiry';
 
 const exploreLinks = [
   { label: 'Daily Horoscopes', path: '/horoscopes' },
-  { label: 'Zodiac Signs', path: '/zodiac' },
-  { label: 'Compatibility', path: '/compatibility' },
-  { label: 'Birth Chart', path: '/birth-chart' },
+  { label: FEATURES.zodiac.name, path: FEATURES.zodiac.path },
+  { label: FEATURES.compatibility.name, path: FEATURES.compatibility.path },
+  { label: FEATURES.birthChart.name, path: FEATURES.birthChart.path },
 ];
 
 const resourceLinks = [

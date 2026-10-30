@@ -95,6 +95,7 @@ const LocationPicker = ({ value, onSelect, error, disabled }: Props) => {
         id={id}
         type="text"
         role="combobox"
+        aria-label="Birthplace"
         aria-expanded={showList}
         aria-controls={`${id}-list`}
         aria-autocomplete="list"
@@ -102,7 +103,7 @@ const LocationPicker = ({ value, onSelect, error, disabled }: Props) => {
         aria-describedby={error ? `${id}-err` : undefined}
         aria-activedescendant={active >= 0 ? `${id}-opt-${active}` : undefined}
         autoComplete="off"
-        className="ratna-input"
+        className="ratna-input pr-11"
         placeholder="Search city or town"
         value={text}
         disabled={disabled}
@@ -114,8 +115,9 @@ const LocationPicker = ({ value, onSelect, error, disabled }: Props) => {
         onFocus={() => setOpen(true)}
         onKeyDown={onKeyDown}
       />
+      <span className="ratna-combo-chevron" aria-hidden="true" />
       {value && (
-        <p className="mt-1 text-sm text-emerald-800">
+        <p className="mt-1 text-sm font-medium text-[#2F6B3A]">
           Selected: {value.label} ({value.timezone})
         </p>
       )}
@@ -123,12 +125,12 @@ const LocationPicker = ({ value, onSelect, error, disabled }: Props) => {
         <ul
           id={`${id}-list`}
           role="listbox"
-          className="absolute z-30 mt-1 max-h-64 w-full overflow-auto rounded-lg border border-[#592209]/40 bg-[#FBF5EC] shadow-xl"
+          className="ratna-listbox absolute z-30 mt-1 max-h-64 w-full overflow-auto"
         >
-          {state === "loading" && <li className="px-4 py-3 text-muted-foreground">Searching…</li>}
-          {state === "empty" && <li className="px-4 py-3 text-muted-foreground">No places found. Try a nearby larger town.</li>}
+          {state === "loading" && <li className="px-4 py-3 text-[#4A2E1F]">Searching…</li>}
+          {state === "empty" && <li className="px-4 py-3 text-[#4A2E1F]">No places found. Try a nearby larger town.</li>}
           {state === "error" && (
-            <li className="px-4 py-3 text-red-800">
+            <li className="px-4 py-3 text-[#7A2216]">
               {errorMsg}{" "}
               <button
                 type="button"
@@ -148,7 +150,7 @@ const LocationPicker = ({ value, onSelect, error, disabled }: Props) => {
               id={`${id}-opt-${i}`}
               role="option"
               aria-selected={i === active}
-              className={`cursor-pointer px-4 py-2.5 text-muted-foreground ${i === active ? "bg-[#592209]/20" : "hover:bg-[#592209]/10"}`}
+              className="ratna-option cursor-pointer px-4 py-2.5"
               onMouseDown={(e) => {
                 e.preventDefault();
                 choose(p);
@@ -160,7 +162,7 @@ const LocationPicker = ({ value, onSelect, error, disabled }: Props) => {
         </ul>
       )}
       {error && (
-        <p id={`${id}-err`} role="alert" className="mt-1 text-sm text-red-800">
+        <p id={`${id}-err`} role="alert" className="mt-1 text-sm font-medium text-[#9B2C1D]">
           {error}
         </p>
       )}

@@ -39,6 +39,8 @@ export interface AscendantPosition {
 }
 
 export interface BirthChart {
+  /** The birth instant the chart was computed for (used for retrograde and dasha). */
+  instant?: Date;
   ayanamsa: number;
   ascendant: AscendantPosition;
   planets: Record<Planet, PlanetPosition>;
@@ -91,6 +93,10 @@ const tropicalLongitudeOfDate = (body: Astronomy.Body, date: Date): number => {
   const time = Astronomy.MakeTime(date);
   return norm(Astronomy.Ecliptic(Astronomy.GeoVector(body, time, true)).elon);
 };
+
+/** Sidereal (Lahiri) geocentric longitude of the Sun, degrees [0, 360). */
+export const siderealSunLongitude = (date: Date): number =>
+  norm(tropicalLongitudeOfDate(Astronomy.Body.Sun, date) - lahiriAyanamsa(date));
 
 /** Mean ascending node of the Moon (tropical, of date) — Meeus ch. 47. */
 const meanNodeTropical = (date: Date): number => {
@@ -163,6 +169,7 @@ export const computeBirthChart = (
   assertValidLocation(latitude, longitude);
   const ayanamsa = lahiriAyanamsa(date);
   return {
+    instant: date,
     ayanamsa,
     ascendant: toPosition(tropicalAscendant(date, latitude, longitude) - ayanamsa),
     planets: computePlanets(date),

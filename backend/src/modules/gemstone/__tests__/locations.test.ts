@@ -7,7 +7,7 @@ import {
   toPlaceResult,
   type HttpGet,
 } from "../locations.js";
-import { calculateRatna, parseInput } from "../gemstone.service.js";
+import { calculateRatna, parseLegacyInput } from "../gemstone.service.js";
 
 const vasai = {
   id: 1253372, name: "Vasai", latitude: 19.36071, longitude: 72.79558,
@@ -106,14 +106,14 @@ describe("location search", () => {
 describe("selected location reaches the calculation intact", () => {
   test("rejects unselected / invalid location objects", () => {
     const base = { dateOfBirth: "1990-05-05", timeOfBirth: "10:30", timeUnknown: false };
-    assert.throws(() => parseInput({ ...base, place: { name: "Vasai" } }), /select your birthplace/);
+    assert.throws(() => parseLegacyInput({ ...base, place: { name: "Vasai" } }), /select your birthplace/);
     assert.equal(toPlaceResult({ name: "Vasai", latitude: 999, longitude: 1, timezone: "Asia/Kolkata" }), null);
     assert.equal(toPlaceResult({ name: "Vasai", latitude: 1, longitude: 1, timezone: "Bad/Zone" }), null);
   });
 
   test("Vasai coordinates and timezone drive the chart", async () => {
     const place = toPlaceResult(vasai)!;
-    const r = await calculateRatna(parseInput({
+    const r = await calculateRatna(parseLegacyInput({
       dateOfBirth: "1990-05-05", timeOfBirth: "10:30", timeUnknown: false,
       place: { name: place.name, admin1: place.admin1, country: place.country, latitude: place.latitude, longitude: place.longitude, timezone: place.timezone },
     }));

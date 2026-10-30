@@ -1,4 +1,7 @@
 import { useState } from "react";
+import FullScreenLoader from "@/components/Loader/FullScreenLoader";
+import { FEATURES } from "@/data/featureCatalog";
+import { useFeatureTitle } from "@/hooks/useFeatureTitle";
 import { Link } from "react-router-dom";
 import { Compass, RotateCcw, Pencil, Loader2 } from "lucide-react";
 import FeatureIntro from "@/components/FeatureIntro";
@@ -36,6 +39,7 @@ const inputCls =
 const labelCls = "mb-2 block text-sm font-semibold text-[#592209]";
 
 export default function FutureLifePath() {
+  useFeatureTitle(FEATURES.futurePath);
   const [dob, setDob] = useState("");
   const [tob, setTob] = useState("");
   const [pob, setPob] = useState("");
@@ -93,13 +97,14 @@ export default function FutureLifePath() {
             className="mb-4 text-3xl leading-tight text-[#592209] sm:text-5xl"
             style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
           >
-            Future Life Path Prediction
+            {FEATURES.futurePath.name}
           </h1>
+          <p className="mx-auto max-w-2xl text-base leading-relaxed text-[#4A2E1F] sm:text-lg">{FEATURES.futurePath.subtitle}</p>
         </header>
 
         <FeatureIntro
           className="mb-10"
-          description="Explore possible directions for your future through personalized astrological insights. Future Life Path Prediction helps you reflect on potential opportunities, personal growth, relationships, career themes, and important life decisions through the lens of astrology."
+          description="Explore possible directions for your future through personalized astrological insights. Bhavishya Marg helps you reflect on potential opportunities, personal growth, relationships, career themes, and important life decisions through the lens of astrology."
           steps={[
             { title: "Enter Details", text: "Add your date of birth. Time, place and an area of interest are optional." },
             { title: "Generate Your Reading", text: "A life path interpretation is written for you from the details you provide." },
@@ -109,6 +114,8 @@ export default function FutureLifePath() {
         />
 
         {!result ? (
+          <>
+          {loading && <FullScreenLoader title="Reading Your Path" description="Preparing your life path reading…" steps={["Reading your birth details", "Exploring possible paths", "Preparing your reading"]} testId="futurepath-loader" />}
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -201,8 +208,10 @@ export default function FutureLifePath() {
               Your details are sent only to generate this reading and are not saved.
             </p>
           </form>
+          </>
         ) : (
           <div className="space-y-4" aria-live="polite">
+            <p className="text-center text-sm font-semibold uppercase tracking-[0.25em] text-[#592209]">{FEATURES.futurePath.name}</p>
             {SECTIONS.map(({ key, title }) =>
               result[key] ? (
                 <section key={key} className="rounded-2xl border border-primary/15 bg-card p-5 sm:p-6">

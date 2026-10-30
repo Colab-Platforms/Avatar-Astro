@@ -1,6 +1,6 @@
 import { test, describe, beforeEach } from "node:test";
 import assert from "node:assert/strict";
-import { calculateRatna, parseInput, DATE_METHOD, ValidationError } from "../gemstone.service.js";
+import { calculateRatna, parseLegacyInput, DATE_METHOD, ValidationError } from "../gemstone.service.js";
 import { BirthTimeError } from "../birth.time.js";
 import { localWeekdayIndex, selectByBirthDate, sunriseOnLocalDate, WEEKDAY_TABLE } from "../date.based.js";
 import {
@@ -16,7 +16,7 @@ const auckland = { name: "Auckland", admin1: "Auckland", country: "New Zealand",
 const tromso = { name: "Tromsø", admin1: "Troms", country: "Norway", latitude: 69.65, longitude: 18.96, timezone: "Europe/Oslo" };
 
 const unknown = (dateOfBirth: string, place: typeof delhi = delhi) =>
-  parseInput({ dateOfBirth, timeOfBirth: null, timeUnknown: true, place });
+  parseLegacyInput({ dateOfBirth, timeOfBirth: null, timeUnknown: true, place });
 
 beforeEach(() => {
   delete process.env.GROQ_API_KEY;
@@ -75,7 +75,7 @@ describe("Birth-Date & Place method: gemstone selection", () => {
   test("is not rejected because the time is unknown, and is labelled correctly", async () => {
     const r = await calculateRatna(unknown("1947-08-15"));
     assert.equal(r.status, "date_based");
-    assert.equal(r.method.name, "Birth-Date & Place Gemstone Method");
+    assert.equal(r.method.name, "Birth-Date & Place Ratna Method");
     assert.equal(r.method.id, "birth-date-place");
     assert.equal(r.dateBased?.weekday, "Friday");
     assert.equal(r.primary.stone.key, "diamond");
@@ -143,7 +143,7 @@ describe("birthplace and time zone", () => {
     assert.match(r.dateBased?.classicalNote ?? "", /could not be calculated/);
     // the exact-time method still refuses this latitude
     await assert.rejects(
-      calculateRatna(parseInput({ dateOfBirth: "2000-06-21", timeOfBirth: "10:00", timeUnknown: false, place: tromso })),
+      calculateRatna(parseLegacyInput({ dateOfBirth: "2000-06-21", timeOfBirth: "10:00", timeUnknown: false, place: tromso })),
       /66°/,
     );
   });
@@ -162,8 +162,8 @@ describe("invalid unknown-time input is handled honestly", () => {
     await assert.rejects(calculateRatna(unknown("1990-05-05", { ...delhi, longitude: 400 })), ValidationError);
   });
   test("still requires a selected birthplace and a valid date format", () => {
-    assert.throws(() => parseInput({ dateOfBirth: "1990-05-05", timeUnknown: true }), /select your birthplace/);
-    assert.throws(() => parseInput({ dateOfBirth: "05/05/1990", timeUnknown: true, place: delhi }), /YYYY-MM-DD/);
+    assert.throws(() => parseLegacyInput({ dateOfBirth: "1990-05-05", timeUnknown: true }), /select your birthplace/);
+    assert.throws(() => parseLegacyInput({ dateOfBirth: "05/05/1990", timeUnknown: true, place: delhi }), /YYYY-MM-DD/);
   });
 });
 

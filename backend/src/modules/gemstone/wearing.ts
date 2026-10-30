@@ -6,6 +6,14 @@
 import * as Astronomy from "astronomy-engine";
 import type { GemstoneInfo } from "./gemstone.catalogue.js";
 
+export interface WeightGuidance {
+  weightKg: number;
+  rattiApprox: number;
+  caratApprox: number;
+  text: string;
+  disclaimer: string;
+}
+
 export interface WearingGuidance {
   weekday: string;
   metal: string;
@@ -18,7 +26,29 @@ export interface WearingGuidance {
     locationLabel: string;
   } | null;
   sunriseNote: string;
+  /** Present only when the user entered a weight. Traditional guidance, never the basis for choosing the stone. */
+  weight: WeightGuidance | null;
 }
+
+const RATTI_IN_CARATS = 0.91;
+
+/**
+ * Traditional rule of thumb only: about one ratti for every 10 kg of body
+ * weight. Lineages differ (many use a fixed minimum instead), and there is
+ * no scientific basis for it, so the text says so and makes no health claim.
+ */
+export const buildWeightGuidance = (stone: GemstoneInfo, weightKg: number): WeightGuidance => {
+  const ratti = Math.round((weightKg / 10) * 10) / 10;
+  const carat = Math.round(ratti * RATTI_IN_CARATS * 10) / 10;
+  return {
+    weightKg,
+    rattiApprox: ratti,
+    caratApprox: carat,
+    text: `A commonly quoted traditional rule of thumb is about one ratti (roughly 0.9 carat) for every 10 kg of body weight. For ${weightKg} kg that is about ${ratti} ratti (roughly ${carat} carat) of ${stone.name}. Practitioners and lineages differ, and many prefer a fixed minimum weight instead.`,
+    disclaimer:
+      "This is traditional guidance only. It is not a scientific formula, was not used to choose your Ratna, and makes no claim about health or any life outcome. Please consult a qualified gemologist and astrologer before buying.",
+  };
+};
 
 const weekdayIn = (tz: string, d: Date) =>
   new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "long" }).format(d);
@@ -59,6 +89,7 @@ export const buildWearingGuidance = (
   stone: GemstoneInfo,
   place: { label: string; latitude: number; longitude: number; timeZone: string },
   now: Date = new Date(),
+  weightKg: number | null = null,
 ): WearingGuidance => {
   const rise = nextSunriseOnWeekday(
     stone.weekday,
@@ -84,5 +115,6 @@ export const buildWearingGuidance = (
     sunriseNote: rise
       ? `Sunrise on the next ${stone.weekday} at your birthplace, calculated astronomically. Morning is customarily preferred, but this is a convention, not a guarantee of any outcome. It may differ from sunrise where you live now.`
       : `No exact time was calculated; only the traditional weekday (${stone.weekday}) is shown.`,
+    weight: weightKg != null ? buildWeightGuidance(stone, weightKg) : null,
   };
 };

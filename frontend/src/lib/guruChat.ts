@@ -83,12 +83,12 @@ export async function askGuru(
     });
   } catch (e) {
     if (e instanceof SignInRequiredError) throw new GuruChatError("Please sign in to continue.");
-    throw new GuruChatError("We couldn't reach AI Guru. Check your connection and try again.");
+    throw new GuruChatError("We couldn't reach Divya Margdarshak. Check your connection and try again.");
   }
   if (res.status === 429) throw new GuruChatError("Too many messages. Please wait a minute and try again.");
   const data = await res.json().catch(() => null);
-  if (!res.ok || data?.error) throw new GuruChatError("AI Guru is unavailable right now. Please try again in a moment.");
+  if (!res.ok || data?.error) throw new GuruChatError("Divya Margdarshak is unavailable right now. Please try again in a moment.");
   const turn = parseGuruReply(data?.choices?.[0]?.message?.content ?? "");
-  if (!turn) throw new GuruChatError("AI Guru's reply came back incomplete. Please try again.");
+  if (!turn) throw new GuruChatError("Divya Margdarshak's reply came back incomplete. Please try again.");
   return turn;
 }

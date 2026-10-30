@@ -22,4 +22,4 @@ export const utcLabel = (offsetMinutes: number | null): string => {
 
 /** The notice shown with every result. */
 export const SCIENCE_NOTICE =
-  "Gemstone associations and wearing practices are traditional astrological interpretations. There is no established scientific evidence that a gemstone changes life outcomes, and no outcome is guaranteed. Buying or wearing any gemstone is optional.";
+  "Ratna associations and wearing practices are traditional astrological interpretations. There is no established scientific evidence that a gemstone changes life outcomes, and no outcome is guaranteed. Buying or wearing any Ratna is optional.";

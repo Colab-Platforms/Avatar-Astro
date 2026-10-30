@@ -1,3 +1,4 @@
+import { FEATURES } from "@/data/featureCatalog";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -76,9 +77,10 @@ const GuruSidebar = ({
           </div>
           <div>
             <div className="font-home-serif text-lg font-semibold leading-tight text-foreground">
-              AI Guru
+              {FEATURES.guru.name}
             </div>
             <div className="text-[11px] leading-tight text-muted-foreground">Your Vedic Guide</div>
+            <p className="mt-1.5 line-clamp-3 max-w-[200px] text-[11px] leading-snug text-muted-foreground/80">{FEATURES.guru.subtitle}</p>
           </div>
         </div>
         <button

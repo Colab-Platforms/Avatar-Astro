@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import RatnaJyotish from "@/pages/RatnaJyotish";
 import RatnaJyotishResult from "@/pages/RatnaJyotishResult";
 import { ratnaApi } from "../api";
-import { complete, delhi, emptyShop } from "./fixtures";
+import { complete, delhi, emptyShop, fillPersonalAndPanchang } from "./fixtures";
 
 vi.mock("../api", () => ({
   ratnaApi: { searchLocations: vi.fn(), calculate: vi.fn(), products: vi.fn() },
@@ -26,15 +26,15 @@ const renderApp = () =>
 
 /** Fill the form with real timers, then switch to fake ones for the timing part. */
 const fillThenFreezeTime = async () => {
-  fireEvent.change(screen.getByLabelText("Date of birth"), { target: { value: "1990-05-05" } });
+  fillPersonalAndPanchang();
   fireEvent.change(screen.getByLabelText("Exact birth time"), { target: { value: "10:00" } });
-  fireEvent.change(screen.getByRole("combobox"), { target: { value: "Delhi" } });
+  fireEvent.change(screen.getByRole("combobox", { name: "Birthplace" }), { target: { value: "Delhi" } });
   fireEvent.mouseDown(await screen.findByRole("option", { name: delhi.label }));
   vi.useFakeTimers();
 };
 
 // hidden: the form is aria-hidden while the loader is up, but the button is still clickable in the DOM.
-const submit = () => fireEvent.click(screen.getByRole("button", { name: "CALCULATE MY GEMSTONE", hidden: true }));
+const submit = () => fireEvent.click(screen.getByRole("button", { name: "CALCULATE MY RATNA", hidden: true }));
 const advance = (ms: number) => act(async () => { await vi.advanceTimersByTimeAsync(ms); });
 const loaderUp = () => screen.queryByTestId("ratna-loader") !== null;
 const resultUp = () => screen.queryByTestId("recommended-stone") !== null;
@@ -111,9 +111,10 @@ describe("minimum 5-second loader", () => {
     await advance(1);
     expect(loaderUp()).toBe(false);
     expect(screen.getByText(/66° latitude/)).toBeInTheDocument();
+    expect(screen.getByLabelText("Full name")).toHaveValue("Asha Verma");
     expect(screen.getByLabelText("Date of birth")).toHaveValue("1990-05-05");
     expect(screen.getByLabelText("Exact birth time")).toHaveValue("10:00");
-    expect(screen.getByRole("combobox")).toHaveValue(delhi.label);
+    expect(screen.getByRole("combobox", { name: "Birthplace" })).toHaveValue(delhi.label);
 
     // retry works and is subject to the same minimum
     apiAfter(100);
