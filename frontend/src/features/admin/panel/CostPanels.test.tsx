@@ -180,6 +180,12 @@ const prov = (over: object) => ({
   usage: { totalUsd: 3, dailyUsd: 0.1, weeklyUsd: 0.5, monthlyUsd: 2, note: null },
   lastCheckedAt: "2026-10-30T09:00:00.000Z", lastSuccessAt: "2026-10-30T09:00:00.000Z", error: null, ...over,
 });
+const diagnostics = {
+  captureInstalled: true, accountingEnabled: true, startedAt: "2026-10-30T08:00:00.000Z", pricingEntries: 1,
+  counters: { providerCallsSeen: 5, providerCallsWithoutRequestContext: 0, providerCallsWithoutTokens: 1, providerCallsWithoutCost: 2, aiRowsPersisted: 5, aiRowsPersistFailed: 0 },
+  providersConfigured: { openrouter: false, groq: true, sarvam: false }, windowDays: 7, recent: [],
+  features: [{ feature: "tarot", requests: 9, withAiUsage: 0, succeededWithoutAi: 0, notSuccessful: 9 }], note: "Per-process view.",
+};
 const integrations = { windowDays: 30, database: { name: "PostgreSQL", ok: true, latencyMs: 3, kind: "remote", host: "x" }, providers: [], security: { jwtSecretConfigured: true, jwtSecretStrong: true, mainAdminEmailPinned: true }, note: "n" };
 
 describe("Provider balance", () => {
@@ -189,6 +195,7 @@ describe("Provider balance", () => {
       if (url === "/admin/integrations") return integrations;
       if (url === "/admin/providers/balance/refresh" && opts?.method === "POST") return onRefresh ? onRefresh() : snapshot;
       if (url === "/admin/providers/balance") return snapshot;
+      if (url === "/admin/costs/diagnostics") return diagnostics;
       throw new Error("unexpected " + url);
     });
 
@@ -242,5 +249,40 @@ describe("Provider balance", () => {
     fireEvent.click(screen.getByRole("button", { name: /Refresh/ }));
     expect(await screen.findByText("Too many refreshes. Please wait a minute.")).toBeInTheDocument();
     expect(screen.getByRole("cell", { name: "OpenRouter" })).toBeInTheDocument();
+  });
+});
+
+describe("AI usage capture status", () => {
+  beforeEach(() => { authRequest.mockReset(); });
+
+  it("shows whether capture is active, which provider keys this server has, and where requests ended without AI usage", async () => {
+    authRequest.mockImplementation(async (url: string) => (url === "/admin/integrations" ? integrations : url === "/admin/costs/diagnostics" ? diagnostics : { providers: [], refreshedAt: null }));
+    mount(<IntegrationsPage />);
+    expect(await screen.findByText("Capture active")).toBeInTheDocument();
+    expect(screen.getByText("openrouter: not set")).toBeInTheDocument();
+    expect(screen.getByText("groq: set")).toBeInTheDocument();
+    const row = screen.getByRole("cell", { name: "tarot" }).closest("tr")!;
+    expect(row).toHaveTextContent("9");
+  });
+
+  it("tells the admin to restart when the server has no diagnostics (an older backend process)", async () => {
+    authRequest.mockImplementation(async (url: string) => {
+      if (url === "/admin/integrations") return integrations;
+      if (url === "/admin/costs/diagnostics") throw new Error("Not found");
+      return { providers: [], refreshedAt: null };
+    });
+    mount(<IntegrationsPage />);
+    expect(await screen.findByText(/Diagnostics are not available from this server/, {}, { timeout: 4000 })).toHaveTextContent(/restart or redeploy/);
+  });
+});
+
+describe("Activity detail explains a failed request with no AI usage", () => {
+  it("says the request failed before a provider call instead of implying a free AI call", async () => {
+    authRequest.mockReset();
+    authRequest.mockImplementation(async () => ({ items: [item({ id: "f1", status: "error", statusCode: 503, ai: null })], page: 1, pageSize: 25, total: 1, totalPages: 1, facets }));
+    mount(<ActivityPage />);
+    const table = await screen.findByRole("table");
+    fireEvent.click(within(table).getAllByRole("row")[1]);
+    expect(await screen.findByRole("dialog")).toHaveTextContent(/failed before one was made/);
   });
 });

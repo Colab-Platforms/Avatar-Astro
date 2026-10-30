@@ -3,6 +3,7 @@ import prisma from "@root/prisma.js";
 import { featureSettingKey } from "@/config/features.js";
 import { isFeatureEnabled } from "@/modules/admin/settings.js";
 import { EVENT_TYPES } from "@/config/events.js";
+import { diag } from "@/utils/aiDiagnostics.js";
 import { newUsageStore, runWithUsageStore, summarizeCalls, type RequestAiSummary } from "@/utils/aiUsageCapture.js";
 
 const SENSITIVE_KEY = /token|password|secret|key|authorization|cookie|otp|code/i;
@@ -39,28 +40,40 @@ export interface RecordEventInput {
 
 /** The single way customer activity is written. Fire-and-forget: tracking must never break the feature. */
 export function recordEvent(e: RecordEventInput): void {
+  const hasAi = !!e.ai?.aiCalls;
+  const base = {
+    userId: e.userId ?? null,
+    eventType: e.eventType,
+    feature: e.feature,
+    status: e.status,
+    statusCode: e.statusCode ?? 0,
+    durationMs: e.durationMs ?? 0,
+    metadata: safeMetadata(e.metadata) as any,
+  };
+  // AI columns are only sent when there is something to store, so ordinary activity keeps working even on a database
+  // where the AI cost migration has not been applied yet.
+  const aiFields = hasAi
+    ? {
+        aiProvider: e.ai!.aiProvider ?? null, aiModel: e.ai!.aiModel ?? null, aiCalls: e.ai!.aiCalls ?? null,
+        inputTokens: e.ai!.inputTokens ?? null, outputTokens: e.ai!.outputTokens ?? null, totalTokens: e.ai!.totalTokens ?? null,
+        costUsd: e.ai!.costUsd ?? null, costBasis: e.ai!.costBasis ?? null,
+      }
+    : {};
+  const cacheFields = e.servedFromCache ? { servedFromCache: true } : {};
   prisma.usageEvent
-    .create({
-      data: {
-        userId: e.userId ?? null,
-        eventType: e.eventType,
-        feature: e.feature,
-        status: e.status,
-        statusCode: e.statusCode ?? 0,
-        durationMs: e.durationMs ?? 0,
-        metadata: safeMetadata(e.metadata) as any,
-        aiProvider: e.ai?.aiProvider ?? null,
-        aiModel: e.ai?.aiModel ?? null,
-        aiCalls: e.ai?.aiCalls ?? null,
-        inputTokens: e.ai?.inputTokens ?? null,
-        outputTokens: e.ai?.outputTokens ?? null,
-        totalTokens: e.ai?.totalTokens ?? null,
-        costUsd: e.ai?.costUsd ?? null,
-        costBasis: e.ai?.costBasis ?? null,
-        servedFromCache: e.servedFromCache ?? false,
-      },
+    .create({ data: { ...base, ...aiFields, ...cacheFields }, select: { id: true } })
+    .then(() => {
+      if (hasAi) diag({ stage: "persist", feature: e.feature, persisted: true, aiCalls: e.ai!.aiCalls ?? undefined });
     })
-    .catch((err: any) => console.warn("[activity] not recorded:", err?.message));
+    .catch(async (err: any) => {
+      const missingColumns = err?.code === "P2022" || err?.code === "P2021";
+      if (hasAi) diag({ stage: "persist", feature: e.feature, persisted: false, aiCalls: e.ai!.aiCalls ?? undefined, reason: missingColumns ? "database_missing_ai_columns (apply migration 20261031120000_add_ai_cost_tracking)" : "database_error" });
+      console.warn("[activity] not recorded:", missingColumns ? "database is missing the AI cost columns" : err?.message);
+      // Keep the activity itself even though the AI details could not be stored.
+      if (missingColumns && (hasAi || e.servedFromCache)) {
+        await prisma.usageEvent.create({ data: base, select: { id: true } }).catch((e2: any) => console.warn("[activity] not recorded:", e2?.message));
+      }
+    });
 }
 
 type UserReq = Request & { user?: { id: string } };
@@ -78,7 +91,7 @@ export function trackFeature(feature: string) {
     if (res.locals.__usageTracked) return next();
     res.locals.__usageTracked = true;
     const started = Date.now();
-    const store = newUsageStore();
+    const store = newUsageStore(feature);
     res.on("finish", () => {
       const statusCode = res.statusCode;
       // Anonymous 401s are probes/bots, not usage.

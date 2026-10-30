@@ -34,7 +34,7 @@ function details(i: Item): string {
 
 function CostCell({ i }: { i: Item }) {
   if (!i.ai) return <span className="text-xs text-[#6B6259]">{i.servedFromCache ? "Cached" : "—"}</span>;
-  if (i.ai.costUsd === null) return <span className="text-xs text-[#6B6259]" title="The provider reported no cost and no price is configured">Not known</span>;
+  if (i.ai.costUsd === null) return <span className="text-xs text-[#6B6259]" title="No cost was recorded: the provider reported none (the call failed or returned no usage) and no price is configured for this model. Not the same as free.">Not known</span>;
   return (
     <span className="block">
       <span className="tabular-nums">{fmtUsd(i.ai.costUsd)}</span>
@@ -80,10 +80,16 @@ function DetailDialog({ item, onClose }: { item: Item | null; onClose: () => voi
                 <DetailRow k="Output tokens" v={fmtNum(ai.outputTokens)} />
                 <DetailRow k="Total tokens" v={fmtNum(ai.totalTokens)} />
                 <DetailRow k="Cost" v={ai.costUsd === null ? "Not known" : `${fmtUsd(ai.costUsd)} USD`} />
-                <DetailRow k="Cost type" v={ai.costBasis ? `${BASIS_LABEL[ai.costBasis]}${ai.costBasis === "actual" ? " (reported by the provider)" : " (tokens x configured price)"}` : "None: the provider reported no cost and no price is configured"} />
+                <DetailRow k="Cost type" v={ai.costBasis ? `${BASIS_LABEL[ai.costBasis]}${ai.costBasis === "actual" ? " (reported by the provider)" : " (tokens x configured price)"}` : "None recorded: the provider reported no cost, and either the call failed, it returned no token usage, or no price is configured for this model. This is not a free request"} />
               </dl>
             ) : (
-              <p className="text-sm text-[#6B6259]">{item.servedFromCache ? "This answer was reused, so no AI provider was called and nothing was charged." : "No AI provider was called for this activity (or it happened before cost tracking began), so no AI cost applies."}</p>
+              <p className="text-sm text-[#6B6259]">
+                {item.servedFromCache
+                  ? "This answer was reused, so no AI provider was called and nothing was charged."
+                  : item.status !== "success"
+                    ? "No AI provider call was recorded. The request failed before one was made (for example the provider is not configured on that server, or the input was rejected), so no AI usage exists. See AI & integrations > AI usage capture status."
+                    : "No AI provider was called for this activity (or it happened before cost tracking began, or on a server that had not yet been updated), so no AI cost applies."}
+              </p>
             )}
             {item.customer && !item.customer.removed && <Link className="mt-3 inline-block text-sm text-[#803003] hover:underline" to={`/admin/users?user=${item.customer.id}`}>Open customer profile</Link>}
           </>
