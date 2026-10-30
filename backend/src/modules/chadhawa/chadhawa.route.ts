@@ -1,7 +1,7 @@
 import { Router } from "express";
 import * as chadhawaController from "./chadhawa.controller.js";
 
-// Mounted under /api/admin/chadhawa, which already applies auth("ADMIN").
+// Mounted under /api/admin/chadhawa, which applies the main-admin guard (SUPERADMIN, re-checked in the database).
 const router = Router();
 
 router.get("/", chadhawaController.listChadhawas);

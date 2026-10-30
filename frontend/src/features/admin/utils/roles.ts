@@ -1,10 +1,8 @@
 import type { AuthUser, RoleName } from "@/features/auth/types";
 
-const ADMIN_ROLE_NAMES = new Set<RoleName>([
-  "ADMIN",
-  "SUPERADMIN",
-  "SUPER_ADMIN",
-]);
+// The admin panel is main-admin only (the backend returns 403 for every other
+// role, including legacy ADMIN), so only SUPERADMIN may enter it.
+const ADMIN_ROLE_NAMES = new Set<RoleName>(["SUPERADMIN", "SUPER_ADMIN"]);
 
 export function getUserRoleNames(user: AuthUser | null | undefined): string[] {
   return user?.userRoleMappings?.map((mapping) => mapping.role.name) ?? [];

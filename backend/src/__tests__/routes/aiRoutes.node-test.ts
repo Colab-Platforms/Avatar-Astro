@@ -7,9 +7,12 @@ import express from "express";
 import aiProxyRoutes from "../../routes/aiProxyRoutes.js";
 import innerVoiceRoutes from "../../routes/innerVoiceRoutes.js";
 import jwt from "jsonwebtoken";
+import { setAccountStatusChecker } from "../../middleware/authMiddleware.js";
 
 // Test-only secret and tokens: they exercise the real auth middleware, nothing is bypassed in the app.
 process.env.JWT_SECRET = "test-only-jwt-secret";
+// No database in these tests: every account is active except "gone-user" (a deactivated account).
+setAccountStatusChecker(async (id) => id !== "gone-user");
 const userToken = jwt.sign({ id: "test-user", role: "USER" }, process.env.JWT_SECRET);
 const adminToken = jwt.sign({ id: "test-admin", role: "ADMIN" }, process.env.JWT_SECRET);
 
@@ -278,6 +281,12 @@ test("life-path: rate limit (10/min/IP) -> 429", async () => {
 for (const path of ["/api/ai/chat", "/api/inner-voice/life-path", "/api/inner-voice/tts"]) {
   test(`auth: ${path} without a token -> 401 and the provider is never called`, async () => {
     const r = await post(path, { messages: userMsg, dob: "1990-01-01", text: "hi" }, undefined, null);
+    assert.equal(r.status, 401);
+    assert.equal(upstreamCalls.length, 0);
+  });
+  test(`auth: ${path} with a valid token for a deactivated account -> 401 and the provider is never called`, async () => {
+    const gone = jwt.sign({ id: "gone-user", role: "USER" }, process.env.JWT_SECRET!);
+    const r = await post(path, { messages: userMsg, dob: "1990-01-01", text: "hi" }, undefined, gone);
     assert.equal(r.status, 401);
     assert.equal(upstreamCalls.length, 0);
   });

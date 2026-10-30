@@ -4,7 +4,7 @@ import { Search, Users, MapPin, Play, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import DevotionLayout from '@/components/DevotionLayout';
 import PartnershipModal from '@/components/PartnershipModal';
-import { liveTemples as staticTemples, streamCategories, formatViewers, type StreamCategory, type LiveTemple } from '@/data/liveStreams';
+import { liveTemples as staticTemples, streamCategories, type StreamCategory, type LiveTemple } from '@/data/liveStreams';
 import { useDarshanTemples } from '@/hooks/useDarshanTemples';
 import { useDarshanLiveEvents } from '@/hooks/useDarshanLiveEvents';
 
@@ -63,13 +63,6 @@ const TempleCard = ({ temple, index }: { temple: LiveTemple; index: number }) =>
           {temple.isLive && <span style={{ width: 6, height: 6, background: '#FFF', borderRadius: '50%' }} />}
           {temple.isLive ? 'LIVE' : 'OFFLINE'}
         </div>
-
-        {/* Viewer count */}
-        {temple.isLive && (
-          <div style={{ position: 'absolute', bottom: 10, right: 10, background: 'rgba(0,0,0,0.55)', color: 'rgba(255,255,255,0.95)', fontSize: 12, padding: '4px 10px', borderRadius: 99, display: 'flex', alignItems: 'center', gap: 5 }}>
-            <Users style={{ width: 11, height: 11 }} /> {formatViewers(temple.viewers)} watching
-          </div>
-        )}
 
         {/* Category chip */}
         <div style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(0,0,0,0.5)', color: 'rgba(255,255,255,0.88)', fontSize: 10, padding: '3px 9px', borderRadius: 99, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
@@ -249,9 +242,6 @@ const DarshanPage = () => {
                   </h2>
                   <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.75)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
                     <MapPin style={{ width: 16, height: 16 }} /> {featured.city}, {featured.state}
-                    <span style={{ marginLeft: 12, display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <Users style={{ width: 15, height: 15 }} /> {formatViewers(featured.viewers)} watching
-                    </span>
                   </p>
                   <div style={{
                     display: 'inline-flex', alignItems: 'center', gap: 8,

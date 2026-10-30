@@ -1,3 +1,5 @@
+import { recordEvent } from "@/utils/usage.js";
+import { EVENT_TYPES, PROFILE_FEATURE } from "@/config/events.js";
 import { Request, Response } from "express";
 import { sendResponse } from "@/utils/responseUtils.js";
 import STATUS_CODES from "@/utils/statusCodes.js";
@@ -335,6 +337,7 @@ export const completeProfile = async (
     }
 
     const result = await authService.completeProfile(req.user!.id, value);
+    recordEvent({ userId: req.user!.id, eventType: EVENT_TYPES.profileUpdated, feature: PROFILE_FEATURE, status: "success", metadata: { fields: Object.keys(value ?? {}), source: "complete_profile" } });
     sendResponse(
       res,
       true,

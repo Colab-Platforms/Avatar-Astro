@@ -30,9 +30,13 @@ import NotFound from "./pages/NotFound";
 import CosmicBackground from "./components/CosmicBackground";
 import HideOnHome from "./components/HideOnHome";
 import { PublicRoute } from "./routes/PublicRoute";
-import { GoogleOnboardingRoute } from "./routes/ProtectedRoute";
+import { GoogleOnboardingRoute, ProtectedRoute } from "./routes/ProtectedRoute";
 import SignInPrompt from "./components/SignInPrompt";
+import AnnouncementBar from "./components/AnnouncementBar";
+import FeatureRouteGuard from "./components/FeatureRouteGuard";
+import Faq from "./pages/Faq";
 import { AdminRoute } from "./routes/AdminRoute";
+import { LegacyShell, MainOnly } from "./features/admin/panel/guards";
 import Loader from "./components/Loader/Loader";
 
 const LoginPage = lazy(() => import("./features/auth/pages/LoginPage"));
@@ -55,6 +59,23 @@ const AdminDashboardPage = lazy(
   () => import("./features/admin/pages/Dashboard"),
 );
 const AdminPujaPage = lazy(() => import("./features/admin/pages/Puja"));
+const AdminUsersPage = lazy(() => import("./features/admin/panel/pages/UsersPage"));
+const AdminToolsPage = lazy(() => import("./features/admin/panel/pages/ToolsPage"));
+const AdminActivityPage = lazy(() => import("./features/admin/panel/pages/ActivityPage"));
+const AdminInnerVoicePage = lazy(() => import("./features/admin/panel/pages/InnerVoiceAdminPage"));
+const AdminDevotionPage = lazy(() => import("./features/admin/panel/pages/CatalogPages").then((m) => ({ default: m.DevotionAdminPage })));
+const AdminShopOrdersPage = lazy(() => import("./features/admin/panel/pages/CatalogPages").then((m) => ({ default: m.ShopAdminPage })));
+const AdminPaymentsPage = lazy(() => import("./features/admin/panel/pages/CatalogPages").then((m) => ({ default: m.PaymentsAdminPage })));
+const AdminContentPage = lazy(() => import("./features/admin/panel/pages/ContentPage"));
+const AdminIntegrationsPage = lazy(() => import("./features/admin/panel/pages/IntegrationsPage"));
+const AdminReportsPage = lazy(() => import("./features/admin/panel/pages/ReportsPage"));
+const AdminSettingsPage = lazy(() => import("./features/admin/panel/pages/SettingsAuditPage"));
+const DashboardLayout = lazy(() => import("./features/dashboard/DashboardLayout"));
+const DashboardHome = lazy(() => import("./features/dashboard/DashboardPages").then((m) => ({ default: m.DashboardHome })));
+const MyAstrology = lazy(() => import("./features/dashboard/DashboardPages").then((m) => ({ default: m.MyAstrology })));
+const MyInnerVoice = lazy(() => import("./features/dashboard/DashboardPages").then((m) => ({ default: m.MyInnerVoice })));
+const MyDevotion = lazy(() => import("./features/dashboard/DashboardPages").then((m) => ({ default: m.MyDevotion })));
+const ProfileSettings = lazy(() => import("./features/dashboard/DashboardPages").then((m) => ({ default: m.ProfileSettings })));
 const AdminChadhawaPage = lazy(
   () => import("./features/admin/pages/Chadhawa"),
 );
@@ -192,6 +213,14 @@ const AnimatedRoutes = () => {
           element={
             <PageTransition>
               <About />
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/faq"
+          element={
+            <PageTransition>
+              <Faq />
             </PageTransition>
           }
         />
@@ -414,6 +443,7 @@ const App = () => {
         <Toaster />
         <Sonner />
         <SignInPrompt />
+        <AnnouncementBar />
         <Routes>
           {/* Full-screen standalone pages (no Layout/Navbar) */}
           <Route path="/solar-system" element={<SolarSystem />} />
@@ -493,10 +523,98 @@ const App = () => {
                 }
               />
               <Route
+                path="users"
+                element={
+                  <Suspense fallback={<AdminLazyFallback />}>
+                    <MainOnly><AdminUsersPage /></MainOnly>
+                  </Suspense>
+                }
+              />
+              <Route
+                path="activity"
+                element={
+                  <Suspense fallback={<AdminLazyFallback />}>
+                    <MainOnly><AdminActivityPage /></MainOnly>
+                  </Suspense>
+                }
+              />
+              <Route
+                path="tools"
+                element={
+                  <Suspense fallback={<AdminLazyFallback />}>
+                    <MainOnly><AdminToolsPage /></MainOnly>
+                  </Suspense>
+                }
+              />
+              <Route
+                path="inner-voice"
+                element={
+                  <Suspense fallback={<AdminLazyFallback />}>
+                    <MainOnly><AdminInnerVoicePage /></MainOnly>
+                  </Suspense>
+                }
+              />
+              <Route
+                path="devotion"
+                element={
+                  <Suspense fallback={<AdminLazyFallback />}>
+                    <MainOnly><AdminDevotionPage /></MainOnly>
+                  </Suspense>
+                }
+              />
+              <Route
+                path="shop-orders"
+                element={
+                  <Suspense fallback={<AdminLazyFallback />}>
+                    <MainOnly><AdminShopOrdersPage /></MainOnly>
+                  </Suspense>
+                }
+              />
+              <Route
+                path="content"
+                element={
+                  <Suspense fallback={<AdminLazyFallback />}>
+                    <MainOnly><AdminContentPage /></MainOnly>
+                  </Suspense>
+                }
+              />
+              <Route
+                path="payments"
+                element={
+                  <Suspense fallback={<AdminLazyFallback />}>
+                    <MainOnly><AdminPaymentsPage /></MainOnly>
+                  </Suspense>
+                }
+              />
+              <Route
+                path="integrations"
+                element={
+                  <Suspense fallback={<AdminLazyFallback />}>
+                    <MainOnly><AdminIntegrationsPage /></MainOnly>
+                  </Suspense>
+                }
+              />
+              <Route
+                path="reports"
+                element={
+                  <Suspense fallback={<AdminLazyFallback />}>
+                    <MainOnly><AdminReportsPage /></MainOnly>
+                  </Suspense>
+                }
+              />
+              <Route
+                path="settings"
+                element={
+                  <Suspense fallback={<AdminLazyFallback />}>
+                    <MainOnly><AdminSettingsPage /></MainOnly>
+                  </Suspense>
+                }
+              />
+              <Route
                 path="puja"
                 element={
                   <Suspense fallback={<AdminLazyFallback />}>
-                    <AdminPujaPage />
+                    <LegacyShell><AdminPujaPage /></LegacyShell>
                   </Suspense>
                 }
               />
@@ -504,7 +622,7 @@ const App = () => {
                 path="chadhawa"
                 element={
                   <Suspense fallback={<AdminLazyFallback />}>
-                    <AdminChadhawaPage />
+                    <LegacyShell><AdminChadhawaPage /></LegacyShell>
                   </Suspense>
                 }
               />
@@ -512,7 +630,7 @@ const App = () => {
                 path="shop/categories"
                 element={
                   <Suspense fallback={<AdminLazyFallback />}>
-                    <AdminShopCategoriesPage />
+                    <LegacyShell><AdminShopCategoriesPage /></LegacyShell>
                   </Suspense>
                 }
               />
@@ -520,10 +638,32 @@ const App = () => {
                 path="shop/products"
                 element={
                   <Suspense fallback={<AdminLazyFallback />}>
-                    <AdminShopProductsPage />
+                    <LegacyShell><AdminShopProductsPage /></LegacyShell>
                   </Suspense>
                 }
               />
+            </Route>
+          </Route>
+
+          {/* User dashboard — signed-in users only; data is scoped server-side by token */}
+          <Route element={<ProtectedRoute />}>
+            <Route
+              path="/dashboard"
+              element={
+                <NavigationProvider>
+                  <Layout>
+                    <Suspense fallback={<LazyFallback />}>
+                      <DashboardLayout />
+                    </Suspense>
+                  </Layout>
+                </NavigationProvider>
+              }
+            >
+              <Route index element={<Suspense fallback={<LazyFallback />}><DashboardHome /></Suspense>} />
+              <Route path="astrology" element={<Suspense fallback={<LazyFallback />}><MyAstrology /></Suspense>} />
+              <Route path="inner-voice" element={<Suspense fallback={<LazyFallback />}><MyInnerVoice /></Suspense>} />
+              <Route path="devotion" element={<Suspense fallback={<LazyFallback />}><MyDevotion /></Suspense>} />
+              <Route path="profile" element={<Suspense fallback={<LazyFallback />}><ProfileSettings /></Suspense>} />
             </Route>
           </Route>
 
@@ -535,7 +675,9 @@ const App = () => {
                 <HideOnHome><CosmicBackground /></HideOnHome>
                 <NavigationProvider>
                   <Layout>
-                    <AnimatedRoutes />
+                    <FeatureRouteGuard>
+                      <AnimatedRoutes />
+                    </FeatureRouteGuard>
                   </Layout>
                 </NavigationProvider>
               </>

@@ -1,9 +1,14 @@
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { tools } from "@/data/tools";
+import { useFeatureFlags } from "@/lib/featureFlags";
 import ToolCard from "./ToolCard";
 
-const AstrologyToolsSection = () => (
+const AstrologyToolsSection = () => {
+  // Tools the admin switched off are not listed (fails open if the config cannot load).
+  const { isPathDisabled } = useFeatureFlags();
+  const visibleTools = tools.filter((t) => !isPathDisabled(t.path));
+  return (
   <section className="relative w-full py-10 md:py-14" aria-labelledby="home-tools-h">
     <div className="container relative z-10 mx-auto px-4 md:px-6">
       <motion.div
@@ -23,12 +28,13 @@ const AstrologyToolsSection = () => (
       </motion.div>
 
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-5 md:grid-cols-2 md:gap-6 xl:grid-cols-3">
-        {tools.map((tool, index) => (
+        {visibleTools.map((tool, index) => (
           <ToolCard key={tool.title} tool={tool} index={index} />
         ))}
       </div>
     </div>
   </section>
-);
+  );
+};
 
 export default AstrologyToolsSection;

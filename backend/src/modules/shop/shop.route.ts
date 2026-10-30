@@ -2,7 +2,7 @@ import { Router } from "express";
 import { uploadSingleImage } from "@/middleware/upload.js";
 import * as shopController from "./shop.controller.js";
 
-// Mounted under /api/admin/shop, which already applies auth("ADMIN").
+// Mounted under /api/admin/shop, which applies the main-admin guard (SUPERADMIN, re-checked in the database).
 const router = Router();
 
 // Categories

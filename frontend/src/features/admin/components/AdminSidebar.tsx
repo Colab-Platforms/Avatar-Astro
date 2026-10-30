@@ -1,194 +1,123 @@
-import { useState } from "react";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard,
-  Flame,
-  Flower2,
-  Store,
-  ChevronDown,
-  Tags,
-  ShoppingBag,
-  LogOut,
-  X,
+  LayoutDashboard, Users, Activity, Sparkles, MessageCircleHeart, Flame, Store, FileText, CreditCard,
+  Plug, BarChart3, ScrollText, LogOut, X, Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useLogoutMutation } from "@/features/auth/hooks/useAuthMutations";
 import { useAuthStore } from "@/store/authStore";
+import { useMainAdmin } from "../panel/api";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-const navItems = [
-  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
-  { to: "/admin/puja", label: "Puja", icon: Flame, end: false },
-  { to: "/admin/chadhawa", label: "Chadhawa", icon: Flower2, end: false },
-] as const;
+interface NavDef { to: string; label: string; icon: typeof Users; end?: boolean; mainOnly?: boolean }
 
-const shopChildren = [
-  { to: "/admin/shop/categories", label: "Categories", icon: Tags },
-  { to: "/admin/shop/products", label: "Products", icon: ShoppingBag },
-] as const;
+const NAV: NavDef[] = [
+  { to: "/admin", label: "Overview", icon: LayoutDashboard, end: true, mainOnly: true },
+  { to: "/admin/users", label: "Users", icon: Users, mainOnly: true },
+  { to: "/admin/activity", label: "Customer activity", icon: Activity, mainOnly: true },
+  { to: "/admin/reports", label: "Reports", icon: BarChart3, mainOnly: true },
+  { to: "/admin/tools", label: "Astrology tools", icon: Sparkles, mainOnly: true },
+  { to: "/admin/inner-voice", label: "Inner Voice", icon: MessageCircleHeart, mainOnly: true },
+  { to: "/admin/devotion", label: "Devotion & Live", icon: Flame, mainOnly: true },
+  { to: "/admin/shop-orders", label: "Shop & Orders", icon: Store, mainOnly: true },
+  { to: "/admin/content", label: "Content & banners", icon: FileText, mainOnly: true },
+  { to: "/admin/payments", label: "Payments & plans", icon: CreditCard, mainOnly: true },
+  { to: "/admin/integrations", label: "AI & integrations", icon: Plug, mainOnly: true },
+  { to: "/admin/settings", label: "Settings & audit", icon: ScrollText, mainOnly: true },
+];
+
+const CATALOGUE: NavDef[] = [
+  { to: "/admin/puja", label: "Puja catalogue", icon: Flame, mainOnly: true },
+  { to: "/admin/chadhawa", label: "Chadhawa catalogue", icon: Flame, mainOnly: true },
+  { to: "/admin/shop/categories", label: "Shop categories", icon: Store, mainOnly: true },
+  { to: "/admin/shop/products", label: "Shop products", icon: Store, mainOnly: true },
+];
 
 interface AdminSidebarProps {
   mobileOpen?: boolean;
   onMobileClose?: () => void;
 }
 
-export function AdminSidebar({
-  mobileOpen = false,
-  onMobileClose,
-}: AdminSidebarProps) {
+const linkClass = ({ isActive }: { isActive: boolean }) =>
+  cn(
+    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#803003]",
+    isActive ? "bg-[#F4EEE6] font-semibold text-[#803003]" : "text-[#4A423A] hover:bg-[#F7F4EF] hover:text-[#1F1B16]",
+  );
+
+export function AdminSidebar({ mobileOpen = false, onMobileClose }: AdminSidebarProps) {
   const user = useAuthStore((s) => s.user);
   const logoutMutation = useLogoutMutation();
   const navigate = useNavigate();
-  const location = useLocation();
-  const isShopRoute = location.pathname.startsWith("/admin/shop");
-  const [shopExpanded, setShopExpanded] = useState(isShopRoute);
+  const { isMain, isLoading } = useMainAdmin();
 
-  const displayName =
-    [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
-    user?.email ||
-    "Admin";
+  const displayName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.email || "Admin";
 
   const handleLogout = async () => {
     await logoutMutation.mutateAsync();
     navigate("/login", { replace: true });
   };
 
-  const renderSidebarContent = (showClose: boolean) => (
+  const renderItem = ({ to, label, icon: Icon, end, mainOnly }: NavDef) => {
+    if (mainOnly && !isMain) {
+      // Hint only: the API refuses these calls for anyone but the main admin.
+      return isLoading ? null : (
+        <div key={to} className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-[#B8AFA4]" title="Main admin only">
+          <Icon className="h-4 w-4 shrink-0" /><span className="flex-1">{label}</span><Lock className="h-3.5 w-3.5" />
+        </div>
+      );
+    }
+    return (
+      <NavLink key={to} to={to} end={end} onClick={onMobileClose} className={linkClass}>
+        <Icon className="h-4 w-4 shrink-0" />
+        <span>{label}</span>
+      </NavLink>
+    );
+  };
+
+  const content = (showClose: boolean) => (
     <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b border-white/10 px-5 py-5">
+      <div className="flex items-center justify-between border-b border-[#E8E3DC] px-5 py-4">
         <div>
-          <p className="font-display text-lg tracking-wide text-white">Astro</p>
-          <p className="text-xs text-white/50">Admin Console</p>
+          <p className="text-base font-semibold tracking-tight text-[#1F1B16]">MyBhagya</p>
+          <p className="text-xs text-[#6B6259]">Admin panel</p>
         </div>
         {showClose && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="text-white/70 hover:bg-white/10 hover:text-white lg:hidden"
-            onClick={onMobileClose}
-            aria-label="Close sidebar"
-          >
+          <Button type="button" variant="ghost" size="icon" className="text-[#1F1B16] hover:bg-[#F7F4EF] lg:hidden" onClick={onMobileClose} aria-label="Close menu">
             <X className="h-5 w-5" />
           </Button>
         )}
       </div>
 
-      <nav className="flex-1 overflow-y-auto space-y-1 px-3 py-4">
-        {navItems.map(({ to, label, icon: Icon, end }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={end}
-            onClick={onMobileClose}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
-                isActive
-                  ? "bg-[#BC6A4D]/15 text-[#BC6A4D]"
-                  : "text-white/70 hover:bg-white/5 hover:text-white",
-              )
-            }
-          >
-            <Icon className="h-4 w-4 shrink-0" />
-            <span>{label}</span>
-          </NavLink>
-        ))}
-
-        <div>
-          <button
-            type="button"
-            onClick={() => setShopExpanded((prev) => !prev)}
-            className={cn(
-              "flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
-              isShopRoute
-                ? "bg-[#BC6A4D]/15 text-[#BC6A4D]"
-                : "text-white/70 hover:bg-white/5 hover:text-white",
-            )}
-            aria-expanded={shopExpanded}
-          >
-            <Store className="h-4 w-4 shrink-0" />
-            <span className="flex-1 text-left">Shop</span>
-            <ChevronDown
-              className={cn(
-                "h-4 w-4 shrink-0 transition-transform",
-                shopExpanded && "rotate-180",
-              )}
-            />
-          </button>
-
-          {shopExpanded && (
-            <div className="mt-1 space-y-1 pl-6">
-              {shopChildren.map(({ to, label, icon: Icon }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  onClick={onMobileClose}
-                  className={({ isActive }) =>
-                    cn(
-                      "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-                      isActive
-                        ? "bg-[#BC6A4D]/15 text-[#BC6A4D]"
-                        : "text-white/60 hover:bg-white/5 hover:text-white",
-                    )
-                  }
-                >
-                  <Icon className="h-4 w-4 shrink-0" />
-                  <span>{label}</span>
-                </NavLink>
-              ))}
-            </div>
-          )}
-        </div>
+      <nav aria-label="Admin sections" className="flex-1 space-y-0.5 overflow-y-auto px-3 py-3">
+        {NAV.map(renderItem)}
+        <p className="px-3 pb-1 pt-4 text-xs font-medium text-[#9A9086]">Catalogue editors</p>
+        {CATALOGUE.map(renderItem)}
       </nav>
 
-      <div className="border-t border-white/10 px-4 py-4">
+      <div className="border-t border-[#E8E3DC] px-4 py-4">
         <div className="mb-3 truncate px-1">
-          <p className="truncate text-sm text-white">{displayName}</p>
-          {user?.email && (
-            <p className="truncate text-xs text-white/45">{user.email}</p>
-          )}
+          <p className="truncate text-sm font-medium text-[#1F1B16]">{displayName}</p>
+          {user?.email && <p className="truncate text-xs text-[#6B6259]">{user.email}</p>}
+          <p className="mt-1 text-xs font-medium text-[#803003]">{isMain ? "Main admin" : isLoading ? "Checking access…" : "No admin access"}</p>
         </div>
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full justify-start gap-3 px-3 text-white/70 hover:bg-white/5 hover:text-white"
-              disabled={logoutMutation.isPending}
-            >
-              <LogOut className="h-4 w-4" />
-              Logout
+            <Button type="button" variant="ghost" className="w-full justify-start gap-3 px-3 text-[#4A423A] hover:bg-[#F7F4EF] hover:text-[#1F1B16]" disabled={logoutMutation.isPending}>
+              <LogOut className="h-4 w-4" /> Logout
             </Button>
           </AlertDialogTrigger>
-          <AlertDialogContent className="border-white/10 bg-[#0a1628] text-white">
+          <AlertDialogContent className="border-[#E8E3DC] bg-white text-[#1F1B16]">
             <AlertDialogHeader>
-              <AlertDialogTitle className="font-display text-lg tracking-wide text-white">Confirm Logout</AlertDialogTitle>
-              <AlertDialogDescription className="text-white/60">
-                Are you sure you want to log out of the admin console?
-              </AlertDialogDescription>
+              <AlertDialogTitle className="text-lg font-semibold">Confirm logout</AlertDialogTitle>
+              <AlertDialogDescription className="text-[#6B6259]">Are you sure you want to log out of the admin panel?</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel className="border-white/10 bg-transparent text-white hover:bg-white/5 hover:text-white">
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleLogout}
-                className="bg-[#BC6A4D] text-white hover:bg-[#BC6A4D]/80"
-              >
-                Logout
-              </AlertDialogAction>
+              <AlertDialogCancel className="border-[#DDD6CC] bg-white text-[#1F1B16] hover:bg-[#F7F4EF]">Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleLogout} className="bg-[#803003] text-white hover:bg-[#6B2802]">Logout</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -198,31 +127,11 @@ export function AdminSidebar({
 
   return (
     <>
-      <aside className="hidden h-screen w-64 shrink-0 border-r border-white/10 bg-[#0a1628] lg:block">
-        {renderSidebarContent(false)}
-      </aside>
-
-      <div
-        className={cn(
-          "fixed inset-0 z-50 lg:hidden",
-          mobileOpen ? "pointer-events-auto" : "pointer-events-none",
-        )}
-      >
-        <div
-          className={cn(
-            "absolute inset-0 bg-black/60 transition-opacity",
-            mobileOpen ? "opacity-100" : "opacity-0",
-          )}
-          onClick={onMobileClose}
-          aria-hidden={!mobileOpen}
-        />
-        <aside
-          className={cn(
-            "absolute left-0 top-0 h-full w-64 border-r border-white/10 bg-[#0a1628] transition-transform duration-200",
-            mobileOpen ? "translate-x-0" : "-translate-x-full",
-          )}
-        >
-          {renderSidebarContent(true)}
+      <aside className="hidden h-screen w-64 shrink-0 border-r border-[#E8E3DC] bg-white lg:block">{content(false)}</aside>
+      <div className={cn("fixed inset-0 z-50 lg:hidden", mobileOpen ? "pointer-events-auto" : "pointer-events-none")}>
+        <div className={cn("absolute inset-0 bg-black/40 transition-opacity", mobileOpen ? "opacity-100" : "opacity-0")} onClick={onMobileClose} aria-hidden="true" />
+        <aside className={cn("absolute left-0 top-0 h-full w-64 border-r border-[#E8E3DC] bg-white transition-transform duration-200", mobileOpen ? "translate-x-0" : "-translate-x-full")}>
+          {content(true)}
         </aside>
       </div>
     </>

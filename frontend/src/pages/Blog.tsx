@@ -4,6 +4,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ArrowRight, Calendar } from 'lucide-react';
 import { blogPosts } from '@/data/blogPosts';
+import PublishedArticles from '@/components/PublishedArticles';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -47,6 +48,8 @@ const Blog = () => {
             Explore the wisdom of the stars through our curated articles and guides
           </p>
         </div>
+
+        <PublishedArticles />
 
         {/* Categories */}
         <div className="flex flex-wrap justify-center gap-3 mb-12">

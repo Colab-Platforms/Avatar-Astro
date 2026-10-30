@@ -3,6 +3,7 @@ import DarshanService from "./darshan.service.js";
 import { getVideoLiveStatus } from "./darshan.youtube.js";
 import { darshanEvents, DARSHAN_STATUS_EVENT, broadcastDarshanStatus } from "./darshan.events.js";
 import type { DarshanChannelDTO } from "./darshan.types.js";
+import { verifyWebSubSignature, websubSecret } from "./darshan.signature.js";
 
 const darshanService = new DarshanService();
 
@@ -95,12 +96,20 @@ const VIDEO_ID_RE = /<yt:videoId>([^<]+)<\/yt:videoId>/g;
  * writing anything.
  */
 export const handleWebSubNotification = async (req: Request, res: Response): Promise<void> => {
+  const body = typeof req.body === "string" ? req.body : "";
+
+  // When a secret is configured, only the hub (which knows it) can produce a valid signature.
+  const secret = websubSecret();
+  if (secret && !verifyWebSubSignature(secret, body, req.get("x-hub-signature") ?? undefined)) {
+    res.status(403).end();
+    return;
+  }
+
   // Ack immediately — the hub expects a fast 2xx and will retry with backoff
   // if we're slow or non-2xx; it doesn't wait for us to finish processing.
   res.status(204).end();
 
   try {
-    const body = typeof req.body === "string" ? req.body : "";
     const videoIds = [...body.matchAll(VIDEO_ID_RE)].map((m) => m[1]);
     if (videoIds.length === 0) return;
 

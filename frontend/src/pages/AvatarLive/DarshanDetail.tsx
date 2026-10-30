@@ -3,14 +3,14 @@ import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Users, MapPin, Clock, Send, Heart, Globe, ExternalLink, BellRing, Radio } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import DevotionLayout from '@/components/DevotionLayout';
-import { liveTemples, samplePrayers, formatViewers, type PrayerMessage } from '@/data/liveStreams';
+import { liveTemples, type PrayerMessage } from '@/data/liveStreams';
 import { useDarshanTemple } from '@/hooks/useDarshanTemple';
 import { useDarshanTemples } from '@/hooks/useDarshanTemples';
 import { useDarshanLiveEvents } from '@/hooks/useDarshanLiveEvents';
 
 // ── Prayer wall ────────────────────────────────────────────────────────────────
 const PrayerWall = ({ templeId }: { templeId: string }) => {
-  const [prayers, setPrayers]   = useState<PrayerMessage[]>(samplePrayers);
+  const [prayers, setPrayers]   = useState<PrayerMessage[]>([]);
   const [text, setText]         = useState('');
   const [name, setName]         = useState('');
   const listRef                 = useRef<HTMLDivElement>(null);
@@ -23,7 +23,7 @@ const PrayerWall = ({ templeId }: { templeId: string }) => {
       emoji: ['🙏', '🕉️', '✨', '🪔', '🌸'][Math.floor(Math.random() * 5)],
       message: trimmed,
       from: name.trim() || 'Anonymous Devotee',
-      city: 'Your City',
+      city: '',
       time: 'Just now',
     };
     setPrayers(p => [msg, ...p]);
@@ -86,6 +86,11 @@ const PrayerWall = ({ templeId }: { templeId: string }) => {
 
       {/* Prayer list */}
       <div ref={listRef} style={{ height: 280, overflowY: 'auto', padding: '12px 0' }}>
+        {prayers.length === 0 && (
+          <p style={{ padding: '24px', fontSize: 13, lineHeight: 1.6, color: '#7A5C42', textAlign: 'center' }}>
+            No prayers yet. Prayers you write here stay on this device for now; they are not shared with other devotees.
+          </p>
+        )}
         <AnimatePresence initial={false}>
           {prayers.map(p => (
             <motion.div
@@ -114,7 +119,6 @@ const PrayerWall = ({ templeId }: { templeId: string }) => {
 
 // ── Offline state (shown in place of the player when the temple isn't live) ────
 const OfflineDarshanState = ({ temple }: { temple: (typeof liveTemples)[0] }) => {
-  const [notifyRequested, setNotifyRequested] = useState(false);
 
   return (
     <div style={{
@@ -146,20 +150,23 @@ const OfflineDarshanState = ({ temple }: { temple: (typeof liveTemples)[0] }) =>
         </div>
       )}
 
+      {/* No notification service exists yet, so this must not pretend to subscribe anyone. */}
       <button
-        onClick={() => setNotifyRequested(true)}
-        disabled={notifyRequested}
+        type="button"
+        disabled
+        aria-disabled="true"
+        title="Live notifications are not available yet"
         style={{
           display: 'inline-flex', alignItems: 'center', gap: 8,
-          background: notifyRequested ? 'rgba(255,255,255,0.15)' : 'linear-gradient(135deg, #BC6A4D 0%, #BC6A4D 100%)',
+          background: 'rgba(255,255,255,0.15)',
           color: '#FFF', fontSize: 14, fontWeight: 700, letterSpacing: '0.08em',
           padding: '13px 26px', borderRadius: 12, border: 'none',
-          cursor: notifyRequested ? 'default' : 'pointer',
+          cursor: 'not-allowed',
           fontFamily: 'Iceland, sans-serif',
         }}
       >
         <BellRing style={{ width: 15, height: 15 }} />
-        {notifyRequested ? "We'll Notify You" : 'Notify Me When Live'}
+        Notifications coming soon
       </button>
     </div>
   );
@@ -407,22 +414,25 @@ const DonationCard = ({ templeName }: { templeName: string }) => {
         />
 
         <button
-          onClick={() => {}}
+          type="button"
+          disabled
+          aria-disabled="true"
+          title="Online donations are not available yet"
           style={{
-            width: '100%', padding: '14px', borderRadius: 12, border: 'none', cursor: 'pointer',
-            background: amount ? 'linear-gradient(135deg, #BC6A4D 0%, #BC6A4D 100%)' : 'rgba(188,106,77,0.15)',
-            color: amount ? '#FFF' : 'rgba(188,106,77,0.5)',
+            width: '100%', padding: '14px', borderRadius: 12, border: 'none', cursor: 'not-allowed',
+            background: 'rgba(188,106,77,0.15)',
+            color: 'rgba(188,106,77,0.6)',
             fontSize: 15, fontWeight: 700, letterSpacing: '0.08em',
             fontFamily: 'Iceland, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             transition: 'all 0.25s',
           }}
         >
           <Heart style={{ width: 16, height: 16 }} />
-          {amount ? `Donate ₹${amount.toLocaleString()}` : 'Select Amount'}
+          Donations coming soon
         </button>
 
         <p style={{ fontSize: 12, color: '#9C7B62', textAlign: 'center', marginTop: 12 }}>
-          🔒 Secure UPI / Card / Net Banking
+          Online donations are not available yet.
         </p>
       </div>
     </div>
@@ -527,11 +537,6 @@ const DarshanDetail = () => {
                   {isLive && <span style={{ width: 6, height: 6, background: '#FFF', borderRadius: '50%' }} />}
                   {isLive ? 'LIVE' : 'OFFLINE'}
                 </div>
-                {isLive && (
-                  <span style={{ fontSize: 14, color: '#7A5C42', display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <Users style={{ width: 14, height: 14 }} /> {formatViewers(temple.viewers)} watching
-                  </span>
-                )}
                 <span style={{ fontSize: 13, color: '#9C7B62' }}>{temple.category}</span>
               </div>
 
@@ -709,7 +714,7 @@ const DarshanDetail = () => {
                           <p style={{ fontSize: 14, fontWeight: 700, color: '#2C1810', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.name}</p>
                           <p style={{ fontSize: 12, color: '#9C7B62', display: 'flex', alignItems: 'center', gap: 4 }}>
                             <span style={{ width: 6, height: 6, background: '#E53935', borderRadius: '50%', flexShrink: 0 }} />
-                            {formatViewers(t.viewers)} watching
+                            {t.isLive ? 'Live now' : 'Offline'}
                           </p>
                         </div>
                       </div>

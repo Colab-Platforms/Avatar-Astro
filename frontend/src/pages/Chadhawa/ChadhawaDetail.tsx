@@ -131,7 +131,23 @@ const ChadhawaDetail = () => {
   // FAQ
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   // Wishlist toggle
-  const [wishlisted, setWishlisted] = useState(false);
+  // Browser-only wishlist (localStorage). There is no account wishlist on the server.
+  const WISHLIST_KEY = 'mb_chadhawa_wishlist';
+  const readWishlist = (): string[] => {
+    try { const v = JSON.parse(localStorage.getItem(WISHLIST_KEY) || '[]'); return Array.isArray(v) ? v.filter((x) => typeof x === 'string') : []; } catch { return []; }
+  };
+  const [wishlisted, setWishlistedState] = useState<boolean>(() => !!slug && readWishlist().includes(slug));
+  const setWishlisted = (update: (w: boolean) => boolean) => {
+    setWishlistedState((prev) => {
+      const next = update(prev);
+      try {
+        const set = new Set(readWishlist());
+        if (slug) { if (next) set.add(slug); else set.delete(slug); }
+        localStorage.setItem(WISHLIST_KEY, JSON.stringify([...set]));
+      } catch { /* storage unavailable: still works for this visit */ }
+      return next;
+    });
+  };
   // Newsletter
   const [phone, setPhone] = useState('');
   const scrollToOfferings = () => document.getElementById('offerings')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -288,7 +304,7 @@ const ChadhawaDetail = () => {
                   }`}
                 >
                   <Heart className={`w-4 h-4 ${wishlisted ? 'fill-primary' : ''}`} />
-                  {wishlisted ? 'Added to Wishlist' : 'Add to Wishlist'}
+                  {wishlisted ? 'Saved on this device' : 'Save for later'}
                 </button>
               </div>
             </div>
@@ -431,17 +447,18 @@ const ChadhawaDetail = () => {
                     </div>
 
                     <button
-                      disabled={totalItems === 0}
+                      type="button"
+                      aria-disabled="true"
+                      title="Online offerings are not available yet"
+                      disabled
                       className={`btn-cosmic w-full py-3.5 rounded-xl text-sm tracking-wider font-semibold transition-opacity ${totalItems === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
                     >
                       🙏 Proceed to Offer
                     </button>
 
-                    {totalItems > 0 && (
-                      <p className="text-[10px] text-muted-foreground text-center mt-3 leading-relaxed">
-                        Prasad dispatched within 7 days of ritual completion
-                      </p>
-                    )}
+                    <p className="text-[11px] text-muted-foreground text-center mt-3 leading-relaxed">
+                      Online offerings are not available yet. Please check back soon.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -768,7 +785,11 @@ const ChadhawaDetail = () => {
             <p className="text-base font-bold text-primary">₹{totalAmt > 0 ? totalAmt : temple.priceFrom}</p>
           </div>
           <button
-            className={`btn-cosmic flex-1 py-3 rounded-xl text-sm tracking-wider font-semibold flex items-center justify-center gap-2 ${totalItems === 0 ? 'opacity-70' : ''}`}
+            type="button"
+            disabled
+            aria-disabled="true"
+            title="Online offerings are not available yet"
+            className={`btn-cosmic flex-1 py-3 rounded-xl text-sm tracking-wider font-semibold flex items-center justify-center gap-2 cursor-not-allowed opacity-60 ${totalItems === 0 ? 'opacity-70' : ''}`}
           >
             <ShoppingBag className="w-4 h-4" />
             {totalItems > 0 ? `Proceed (${totalItems} items)` : 'Participate Now'}

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Gem, ShieldCheck, Globe2, MapPinned, Sparkles } from "lucide-react";
 import { useReducedMotion } from "framer-motion";
+import { useFeatureFlags } from "@/lib/featureFlags";
 
 const stats = [
   { icon: Gem, value: "50,000+", label: "Happy Users" },
@@ -20,6 +21,7 @@ const STARS: [number, number, number][] = [
  * orbital rings as the only decoration.
  */
 const Hero = () => {
+  const { isPathDisabled } = useFeatureFlags();
   const reduceMotion = useReducedMotion();
 
   return (
@@ -69,13 +71,17 @@ const Hero = () => {
             </p>
 
             <div className="mb-12 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
-              <Link to="/birth-chart" className="hl-btn group w-full sm:w-auto">
-                Start Free Reading
-                <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-              </Link>
-              <Link to="/zodiac" className="hl-btn-ghost w-full sm:w-auto">
-                Explore Tools
-              </Link>
+              {!isPathDisabled("/birth-chart") && (
+                <Link to="/birth-chart" className="hl-btn group w-full sm:w-auto">
+                  Start Free Reading
+                  <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                </Link>
+              )}
+              {!isPathDisabled("/zodiac") && (
+                <Link to="/zodiac" className="hl-btn-ghost w-full sm:w-auto">
+                  Explore Tools
+                </Link>
+              )}
             </div>
 
             <dl className="flex flex-wrap items-center justify-center gap-x-7 gap-y-4 lg:justify-start">

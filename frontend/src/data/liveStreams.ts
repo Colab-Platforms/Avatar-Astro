@@ -542,14 +542,6 @@ export const upcomingEvents: UpcomingEvent[] = [
 ];
 
 // ── Sample prayer wall ─────────────────────────────────────────────────────────
-export const samplePrayers: PrayerMessage[] = [
-  { id: 'p1', emoji: '🙏', message: 'Please bless my family with health and happiness.', from: 'Priya Sharma', city: 'Delhi', time: '2 min ago' },
-  { id: 'p2', emoji: '🕉️', message: 'Thank you Lord Ganesha for your blessings. We are forever grateful.', from: 'Rajesh Patel', city: 'Ahmedabad', time: '5 min ago' },
-  { id: 'p3', emoji: '🌸', message: 'Seeking peace and prosperity for my entire family.', from: 'Ananya Iyer', city: 'Chennai', time: '8 min ago' },
-  { id: 'p4', emoji: '✨', message: 'Baba, please guide me on the right path. I trust in you.', from: 'Mohan Singh', city: 'Chandigarh', time: '12 min ago' },
-  { id: 'p5', emoji: '🪔', message: 'May the divine light always illuminate our lives.', from: 'Sunita Joshi', city: 'Pune', time: '15 min ago' },
-  { id: 'p6', emoji: '🌺', message: 'Praying for my son\'s good health and success in exams.', from: 'Kavitha Reddy', city: 'Hyderabad', time: '18 min ago' },
-];
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 export const formatViewers = (n: number): string => {
