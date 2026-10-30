@@ -2,7 +2,7 @@ import { Router } from "express";
 import { uploadTempleImages } from "@/middleware/upload.js";
 import * as pujaController from "./puja.controller.js";
 
-// Mounted under /api/admin/puja, which already applies auth("ADMIN").
+// Mounted under /api/admin/puja, which applies the main-admin guard (SUPERADMIN, re-checked in the database).
 const router = Router();
 
 // Temples

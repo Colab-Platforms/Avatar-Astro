@@ -151,14 +151,15 @@ const ShopDetail = () => {
                   +
                 </button>
               </div>
-              <button className="btn-outline-cosmic btn-pulse flex-1 py-3 rounded-xl text-sm tracking-wider inline-flex items-center justify-center gap-2">
+              <button type="button" disabled aria-disabled="true" title="Online ordering is not available yet" className="btn-outline-cosmic flex-1 py-3 rounded-xl text-sm tracking-wider inline-flex items-center justify-center gap-2 cursor-not-allowed opacity-60">
                 <ShoppingCart className="w-4 h-4" /> Add to Cart
               </button>
             </div>
 
-            <button className="btn-cosmic w-full py-4 rounded-xl text-sm tracking-wider inline-flex items-center justify-center gap-2">
+            <button type="button" disabled aria-disabled="true" title="Online ordering is not available yet" className="btn-cosmic w-full py-4 rounded-xl text-sm tracking-wider inline-flex items-center justify-center gap-2 cursor-not-allowed opacity-60">
               <Zap className="w-4 h-4" /> Buy Now
             </button>
+            <p className="text-center text-xs" style={{ color: '#9C7B62' }}>Online ordering is not available yet. Please check back soon.</p>
           </div>
         </div>
       </div>

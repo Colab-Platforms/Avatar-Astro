@@ -1,0 +1,109 @@
+// Admin panel + user dashboard support. Usage events are recorded by the API
+// itself (utils/usage.ts) so every admin metric is derived from real requests.
+
+enum ContentType {
+  BANNER
+  ANNOUNCEMENT
+  FAQ
+  ARTICLE
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+}
+
+/// One row per request to a tracked feature. Never stores request/response
+/// bodies, only who (if signed in), what, and whether it worked.
+model UsageEvent {
+  id String @id @default(cuid())
+
+  feature    String
+  userId     String? @map("user_id")
+  status     String
+  statusCode Int     @map("status_code")
+  durationMs Int     @map("duration_ms")
+
+  /// "feature.request" (an API call), "feature.opened", "auth.login", "auth.register", ...
+  eventType String @default("feature.request") @map("event_type")
+  /// Small, safe, non-secret context (method, route, reason...). Never tokens, passwords or user content.
+  metadata  Json?
+
+  /// AI usage for this request. All null for non-AI requests. Never filled with guessed numbers.
+  aiProvider    String?  @map("ai_provider")
+  aiModel       String?  @map("ai_model")
+  aiCalls       Int?     @map("ai_calls")
+  inputTokens   Int?     @map("input_tokens")
+  outputTokens  Int?     @map("output_tokens")
+  totalTokens   Int?     @map("total_tokens")
+  /// USD. Null when the provider gave no cost and no trusted price is configured.
+  costUsd       Decimal? @map("cost_usd") @db.Decimal(14, 8)
+  /// "actual" (provider reported) or "estimated" (tokens x configured price)
+  costBasis     String?  @map("cost_basis")
+  servedFromCache Boolean @default(false) @map("served_from_cache")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@index([aiProvider, createdAt])
+  @@index([feature, createdAt])
+  @@index([userId, createdAt])
+  @@index([eventType, createdAt])
+  @@index([status, createdAt])
+  @@map("usage_events")
+}
+
+/// Append-only record of sensitive admin actions.
+model AdminAuditLog {
+  id String @id @default(cuid())
+
+  actorId    String  @map("actor_id")
+  actorEmail String  @map("actor_email")
+  action     String
+  entityType String  @map("entity_type")
+  entityId   String? @map("entity_id")
+  summary    String
+  ip         String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@index([actorId])
+  @@index([action])
+  @@map("admin_audit_logs")
+}
+
+/// Small key/value store for safe platform settings (feature switches etc.).
+model PlatformSetting {
+  key       String   @id
+  value     Json
+  updatedBy String?  @map("updated_by")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("platform_settings")
+}
+
+model ContentItem {
+  id String @id @default(cuid())
+
+  type   ContentType
+  status ContentStatus @default(DRAFT)
+
+  title    String
+  body     String  @default("")
+  linkUrl  String? @map("link_url")
+  imageUrl String? @map("image_url")
+
+  sortOrder Int       @default(0) @map("sort_order")
+  startsAt  DateTime? @map("starts_at")
+  endsAt    DateTime? @map("ends_at")
+
+  createdBy   String?   @map("created_by")
+  publishedAt DateTime? @map("published_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime? @updatedAt @map("updated_at")
+
+  @@index([type, status])
+  @@index([status, sortOrder])
+  @@map("content_items")
+}

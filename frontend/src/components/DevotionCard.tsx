@@ -3,12 +3,15 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { devotionFeature } from "@/data/features";
 import FeatureButton from "./FeatureButton";
+import { useFeatureFlags } from "@/lib/featureFlags";
 
 interface DevotionCardProps {
   index: number;
 }
 
-const DevotionCard = ({ index }: DevotionCardProps) => (
+const DevotionCard = ({ index }: DevotionCardProps) => {
+  const { isPathDisabled } = useFeatureFlags();
+  return (
   <motion.div
     initial={{ opacity: 0, y: 28 }}
     whileInView={{ opacity: 1, y: 0 }}
@@ -24,7 +27,7 @@ const DevotionCard = ({ index }: DevotionCardProps) => (
     <p className="mb-2 font-home-sans text-[0.9rem] leading-[1.45] text-home-muted">{devotionFeature.description}</p>
 
     <div className="mb-3 grid auto-rows-fr grid-cols-2 gap-2 min-[460px]:grid-cols-3">
-      {devotionFeature.items.map((item) => (
+      {devotionFeature.items.filter((item) => !isPathDisabled(item.path)).map((item) => (
         <Link
           key={item.label}
           to={item.path}
@@ -38,6 +41,7 @@ const DevotionCard = ({ index }: DevotionCardProps) => (
 
     <FeatureButton to={devotionFeature.buttonPath} label={devotionFeature.buttonLabel} className="mt-auto self-start" />
   </motion.div>
-);
+  );
+};
 
 export default memo(DevotionCard);

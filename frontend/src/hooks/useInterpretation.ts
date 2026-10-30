@@ -66,7 +66,8 @@ export function useAIDailyHoroscope(sign: string) {
     if (!sign) return null;
     setState({ data: null, loading: true, error: null });
     try {
-      const response = await fetch(`${API_BASE_URL}/interpretation/horoscope/${sign}`);
+      // window.fetch on purpose: the local callback below is also named `fetch` and would otherwise call itself.
+      const response = await window.fetch(`${API_BASE_URL}/interpretation/horoscope/${sign}`);
 
       if (!response.ok) {
         throw new Error('Failed to generate horoscope');

@@ -6,9 +6,12 @@ import type { Server } from "node:http";
 import express from "express";
 import tarotRoutes from "../../routes/tarotRoutes.js";
 import jwt from "jsonwebtoken";
+import { setAccountStatusChecker } from "../../middleware/authMiddleware.js";
 
 // Test-only secret and tokens: they exercise the real auth middleware, nothing is bypassed in the app.
 process.env.JWT_SECRET = "test-only-jwt-secret";
+// No database in these tests: every account is active except "gone-user" (a deactivated account).
+setAccountStatusChecker(async (id) => id !== "gone-user");
 const userToken = jwt.sign({ id: "test-user", role: "USER" }, process.env.JWT_SECRET);
 const adminToken = jwt.sign({ id: "test-admin", role: "ADMIN" }, process.env.JWT_SECRET);
 
@@ -226,6 +229,12 @@ test("rate limit (10/min/IP) -> 429", async () => {
 
 test("auth: tarot reading without a token -> 401 and the provider is never called", async () => {
   const r = await post({ mode: "timeline", cards: ["The Sun", "The Hermit", "Temperance", "The Fool", "The Star"] }, undefined, null);
+  assert.equal(r.status, 401);
+  assert.equal(upstreamCalls.length, 0);
+});
+test("auth: tarot reading with a valid token for a deactivated account -> 401, provider never called", async () => {
+  const gone = jwt.sign({ id: "gone-user", role: "USER" }, process.env.JWT_SECRET!);
+  const r = await post({ mode: "timeline", cards: [] }, undefined, gone);
   assert.equal(r.status, 401);
   assert.equal(upstreamCalls.length, 0);
 });

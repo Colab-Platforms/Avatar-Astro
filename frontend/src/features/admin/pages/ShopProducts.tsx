@@ -111,7 +111,7 @@ export default function AdminShopProductsPage() {
     <div className="mx-auto max-w-7xl space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-2">
-          <h2 className="font-display text-2xl tracking-wide text-foreground sm:text-3xl">
+          <h2 className="font-semibold text-2xl tracking-normal text-foreground sm:text-3xl">
             Shop Products
           </h2>
           <p className="max-w-2xl text-sm text-foreground/70 sm:text-base">
@@ -122,7 +122,7 @@ export default function AdminShopProductsPage() {
         <Button
           type="button"
           onClick={openCreate}
-          className="shrink-0 bg-[#592209] text-[#F5E9D6] hover:bg-[#592209]/90"
+          className="shrink-0 bg-[#803003] text-white hover:bg-[#6B2802]"
         >
           <Plus className="h-4 w-4" />
           Add Product
@@ -136,7 +136,7 @@ export default function AdminShopProductsPage() {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search by product name or slug…"
-            className="border-primary/15 bg-card pl-9 text-foreground placeholder:text-foreground/70"
+            className="border-border bg-card pl-9 text-foreground placeholder:text-foreground/70"
           />
           {isFetching && !isLoading && (
             <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-foreground/70" />
@@ -150,7 +150,7 @@ export default function AdminShopProductsPage() {
             setPage(1);
           }}
         >
-          <SelectTrigger className="border-primary/15 bg-card text-foreground sm:w-52">
+          <SelectTrigger className="border-border bg-card text-foreground sm:w-52">
             <SelectValue placeholder="All categories" />
           </SelectTrigger>
           <SelectContent>
@@ -170,7 +170,7 @@ export default function AdminShopProductsPage() {
             setPage(1);
           }}
         >
-          <SelectTrigger className="border-primary/15 bg-card text-foreground sm:w-40">
+          <SelectTrigger className="border-border bg-card text-foreground sm:w-40">
             <SelectValue placeholder="All statuses" />
           </SelectTrigger>
           <SelectContent>
@@ -192,7 +192,7 @@ export default function AdminShopProductsPage() {
           </p>
         </div>
       ) : products.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-primary/15 py-16 text-center">
+        <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-border py-16 text-center">
           <ShoppingBag className="h-10 w-10 text-foreground/70" />
           {isFiltering ? (
             <p className="text-sm text-foreground/70">
@@ -207,7 +207,7 @@ export default function AdminShopProductsPage() {
               <Button
                 type="button"
                 onClick={openCreate}
-                className="mt-1 bg-[#592209] text-[#F5E9D6] hover:bg-[#592209]/90"
+                className="mt-1 bg-[#803003] text-white hover:bg-[#6B2802]"
               >
                 <Plus className="h-4 w-4" />
                 Add Product
@@ -216,16 +216,16 @@ export default function AdminShopProductsPage() {
           )}
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-primary/15">
+        <div className="overflow-x-auto rounded-lg border border-border">
           <Table>
             <TableHeader>
-              <TableRow className="border-primary/15 hover:bg-transparent">
+              <TableRow className="border-border hover:bg-transparent">
                 <TableHead className="text-foreground/70">Product</TableHead>
                 <TableHead className="text-foreground/70">Category</TableHead>
                 <TableHead className="text-foreground/70">Price</TableHead>
                 <TableHead className="hidden sm:table-cell text-foreground/70">Status</TableHead>
-                <TableHead className="hidden lg:table-cell text-foreground/70">Created</TableHead>
-                <TableHead className="text-right text-foreground/70">
+                <TableHead className="hidden 2xl:table-cell text-foreground/70">Created</TableHead>
+                <TableHead className="text-right text-foreground/70 max-md:sticky max-md:right-0 max-md:z-10 max-md:bg-card max-md:shadow-[-8px_0_8px_-8px_rgba(31,27,22,0.15)]">
                   Actions
                 </TableHead>
               </TableRow>
@@ -234,12 +234,12 @@ export default function AdminShopProductsPage() {
               {products.map((product) => (
                 <TableRow
                   key={product.id}
-                  className="border-primary/15 hover:bg-primary/10"
+                  className="border-border hover:bg-muted"
                 >
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div
-                        className="h-11 w-11 shrink-0 overflow-hidden rounded-md border border-primary/15 bg-card"
+                        className="h-11 w-11 shrink-0 overflow-hidden rounded-md border border-border bg-card"
                         style={
                           !product.image && product.gradient
                             ? { background: product.gradient }
@@ -269,7 +269,7 @@ export default function AdminShopProductsPage() {
                     {product.categoryName}
                   </TableCell>
                   <TableCell>
-                    <p className="text-sm text-[#592209]">
+                    <p className="text-sm text-[#803003]">
                       {formatPrice(product.price)}
                     </p>
                     {product.originalPrice && (
@@ -284,23 +284,23 @@ export default function AdminShopProductsPage() {
                       className={
                         product.isActive
                           ? "border-emerald-500/30 text-emerald-800"
-                          : "border-primary/25 text-foreground/70"
+                          : "border-border text-foreground/70"
                       }
                     >
                       {product.isActive ? "Active" : "Inactive"}
                     </Badge>
                   </TableCell>
-                  <TableCell className="hidden lg:table-cell whitespace-nowrap text-sm text-foreground/70">
+                  <TableCell className="hidden 2xl:table-cell whitespace-nowrap text-sm text-foreground/70">
                     {formatDate(product.createdAt)}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="max-md:sticky max-md:right-0 max-md:z-10 max-md:bg-card max-md:shadow-[-8px_0_8px_-8px_rgba(31,27,22,0.15)]">
                     <div className="flex justify-end gap-1">
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon"
                         onClick={() => openEdit(product)}
-                        className="text-foreground/70 hover:bg-primary/10 hover:text-foreground"
+                        className="text-foreground/70 hover:bg-muted hover:text-foreground"
                         aria-label={`Edit ${product.name}`}
                         title="Edit"
                       >
@@ -338,7 +338,7 @@ export default function AdminShopProductsPage() {
               size="sm"
               disabled={page <= 1 || isFetching}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="border-primary/15 bg-transparent text-foreground hover:bg-primary/10 hover:text-foreground"
+              className="border-border bg-transparent text-foreground hover:bg-muted hover:text-foreground"
             >
               Previous
             </Button>
@@ -348,7 +348,7 @@ export default function AdminShopProductsPage() {
               size="sm"
               disabled={page >= totalPages || isFetching}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              className="border-primary/15 bg-transparent text-foreground hover:bg-primary/10 hover:text-foreground"
+              className="border-border bg-transparent text-foreground hover:bg-muted hover:text-foreground"
             >
               Next
             </Button>
@@ -366,9 +366,9 @@ export default function AdminShopProductsPage() {
         open={Boolean(productToDelete)}
         onOpenChange={(next) => !next && setProductToDelete(null)}
       >
-        <AlertDialogContent className="border-primary/15 bg-[#FBF5EC] text-foreground">
+        <AlertDialogContent className="border-border bg-white text-foreground">
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-display text-lg tracking-wide text-foreground">
+            <AlertDialogTitle className="font-semibold text-lg tracking-normal text-foreground">
               Delete {productToDelete?.name}?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-foreground/70">
@@ -378,7 +378,7 @@ export default function AdminShopProductsPage() {
           <AlertDialogFooter>
             <AlertDialogCancel
               disabled={deleteProduct.isPending}
-              className="border-primary/15 bg-transparent text-foreground hover:bg-primary/10 hover:text-foreground"
+              className="border-border bg-transparent text-foreground hover:bg-muted hover:text-foreground"
             >
               Cancel
             </AlertDialogCancel>
@@ -388,7 +388,7 @@ export default function AdminShopProductsPage() {
                 confirmDelete();
               }}
               disabled={deleteProduct.isPending}
-              className="bg-red-600 text-[#F5E9D6] hover:bg-red-600/90"
+              className="bg-red-600 text-white hover:bg-red-600/90"
             >
               {deleteProduct.isPending && (
                 <Loader2 className="h-4 w-4 animate-spin" />

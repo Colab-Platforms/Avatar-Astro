@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Sparkles, ShieldCheck, Globe2, Users } from "lucide-react";
 import { useReducedMotion } from "framer-motion";
+import { useFeatureFlags } from "@/lib/featureFlags";
 
 const stats = [
   { icon: Sparkles, value: "50,000+", label: "Happy Users" },
@@ -18,6 +19,7 @@ const NEXT_SECTION_ID = "astrology-tools";
  * it becomes its own band above the copy so the subject is never covered by text.
  */
 const Hero = () => {
+  const { isPathDisabled } = useFeatureFlags();
   const reduceMotion = useReducedMotion();
 
   const scrollToNext = (e: React.MouseEvent<HTMLElement>) => {
@@ -82,9 +84,11 @@ const Hero = () => {
               Explore Astrology Seva
               <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
             </a>
-            <Link to="/inner-voice/chat" className="hl-btn-ghost w-full sm:w-auto">
-              Book a Consultation
-            </Link>
+            {!isPathDisabled("/inner-voice/chat") && (
+              <Link to="/inner-voice/chat" className="hl-btn-ghost w-full sm:w-auto">
+                Book a Consultation
+              </Link>
+            )}
           </div>
 
           <dl className="grid grid-cols-2 gap-x-6 gap-y-5 sm:flex sm:flex-wrap sm:items-center sm:gap-x-0 sm:gap-y-4">

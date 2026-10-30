@@ -9,7 +9,9 @@ import { ApiError } from "@/utils/ApiError.js";
 import STATUS_CODES from "@/utils/statusCodes.js";
 import { sendOtpEmail, sendPasswordResetEmail } from "@/utils/mailer.js";
 import { verifyMsg91AccessToken, getMsg91WidgetConfig } from "@/utils/msg91.js";
-import { verifyGoogleIdToken } from "@/utils/googleAuth.js";
+import { verifyGoogleIdToken, type GoogleProfile } from "@/utils/googleAuth.js";
+import { recordEvent } from "@/utils/usage.js";
+import { EVENT_TYPES, AUTH_FEATURE } from "@/config/events.js";
 import {
   RegisterBody,
   LoginBody,
@@ -82,10 +84,13 @@ const issueAuthTokens = async (
     [key: string]: unknown;
   },
   device?: string,
+  method: "password" | "otp" | "phone_otp" | "google" = "password",
 ) => {
   const roleNames = user.userRoleMappings.map((ur) => ur.role.name);
   const accessToken = signAccessToken(user.id, getHighestRole(roleNames));
   const refreshToken = await createSession(user.id, device);
+  // Customer activity: a session was really issued. Method only; never credentials.
+  recordEvent({ userId: user.id, eventType: EVENT_TYPES.authLogin, feature: AUTH_FEATURE, status: "success", metadata: { method } });
   const { password: _, ...safeUser } = user;
   return { user: safeUser, accessToken, refreshToken };
 };
@@ -193,6 +198,7 @@ class AuthService {
 
         return user;
       });
+      recordEvent({ userId: created.id, eventType: EVENT_TYPES.authRegister, feature: AUTH_FEATURE, status: "success", metadata: { method: "email" } });
     }
 
     return {
@@ -242,7 +248,7 @@ class AuthService {
     }
 
     const readyUser = await ensureEmailProfileCompleted(user);
-    const tokens = await issueAuthTokens(readyUser, device);
+    const tokens = await issueAuthTokens(readyUser, device, "otp");
 
     return {
       ...tokens,
@@ -308,7 +314,7 @@ class AuthService {
     user.isPhoneVerified = true;
 
     const readyUser = await ensureEmailProfileCompleted(user);
-    const tokens = await issueAuthTokens(readyUser, device);
+    const tokens = await issueAuthTokens(readyUser, device, "phone_otp");
 
     return {
       ...tokens,
@@ -348,6 +354,7 @@ class AuthService {
 
     const isPasswordValid = await comparePassword(data.password, user.password);
     if (!isPasswordValid) {
+      recordEvent({ userId: user.id, eventType: EVENT_TYPES.authLoginFailed, feature: AUTH_FEATURE, status: "failed", metadata: { method: "password", reason: "bad_password" } });
       throw new ApiError(
         "Invalid email or password",
         STATUS_CODES.UNAUTHORIZED,
@@ -355,6 +362,7 @@ class AuthService {
     }
 
     if (!user.isActive) {
+      recordEvent({ userId: user.id, eventType: EVENT_TYPES.authLoginFailed, feature: AUTH_FEATURE, status: "failed", metadata: { method: "password", reason: "inactive" } });
       throw new ApiError(
         "Your account has been deactivated. Contact support.",
         STATUS_CODES.FORBIDDEN,
@@ -362,6 +370,7 @@ class AuthService {
     }
 
     if (!user.isEmailVerified && !user.isPhoneVerified) {
+      recordEvent({ userId: user.id, eventType: EVENT_TYPES.authLoginFailed, feature: AUTH_FEATURE, status: "failed", metadata: { method: "password", reason: "unverified" } });
       await prisma.otpVerification.updateMany({
         where: { email: data.email, type: OtpType.LOGIN, used: false },
         data: { used: true },
@@ -390,7 +399,7 @@ class AuthService {
     }
 
     const readyUser = await ensureEmailProfileCompleted(user);
-    const tokens = await issueAuthTokens(readyUser, device);
+    const tokens = await issueAuthTokens(readyUser, device, "password");
     return tokens;
   }
 
@@ -405,6 +414,15 @@ class AuthService {
       );
     }
 
+    return this.loginWithGoogleProfile(profile, device);
+  }
+
+  /**
+   * Persists (or links) the user for an already VERIFIED Google profile and issues a session.
+   * Lookup order prevents duplicates: Google id first, then the same email (linking an existing account).
+   * New accounts get the default USER role. Runs against whatever database this process is connected to.
+   */
+  async loginWithGoogleProfile(profile: GoogleProfile, device?: string) {
     if (!profile.emailVerified) {
       throw new ApiError(
         "Google account email is not verified.",
@@ -464,6 +482,8 @@ class AuthService {
           return newUser;
         });
 
+        recordEvent({ userId: created.id, eventType: EVENT_TYPES.authRegister, feature: AUTH_FEATURE, status: "success", metadata: { method: "google" } });
+
         // Defer Google Sheets sync until /complete-profile — phone/location
         // are not available at Google account creation time.
 
@@ -475,13 +495,14 @@ class AuthService {
     }
 
     if (!user.isActive) {
+      recordEvent({ userId: user.id, eventType: EVENT_TYPES.authLoginFailed, feature: AUTH_FEATURE, status: "failed", metadata: { method: "google", reason: "inactive" } });
       throw new ApiError(
         "Your account has been deactivated. Contact support.",
         STATUS_CODES.FORBIDDEN,
       );
     }
 
-    return issueAuthTokens(user, device);
+    return issueAuthTokens(user, device, "google");
   }
 
   async refresh(rawRefreshToken: string, device?: string) {

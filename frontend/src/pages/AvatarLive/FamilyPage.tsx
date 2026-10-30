@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Search, Users, MapPin, Play, Lock, ArrowRight, Calendar } from 'lucide-react';
 import { motion } from 'framer-motion';
 import DevotionLayout from '@/components/DevotionLayout';
-import { familyEvents, formatViewers } from '@/data/liveStreams';
+import { familyEvents } from '@/data/liveStreams';
 
 const EVENT_TYPES = ['All', 'Wedding', 'Puja', 'Naming Ceremony', 'Birthday', 'Anniversary', 'Satyanarayan'] as const;
 
@@ -71,7 +71,7 @@ const FamilyCard = ({ event, index }: { event: (typeof familyEvents)[0]; index: 
         {/* Viewer / scheduled */}
         <div style={{ position: 'absolute', bottom: 10, right: 10, background: '#FBF5EC', color: '#F5E9D6', fontSize: 11, padding: '4px 10px', borderRadius: 99, display: 'flex', alignItems: 'center', gap: 5 }}>
           {event.isLive ? (
-            <><Users style={{ width: 11, height: 11 }} /> {formatViewers(event.viewers)} watching</>
+            <>Live</>
           ) : (
             <><Calendar style={{ width: 11, height: 11 }} /> {event.scheduledAt ?? 'Scheduled'}</>
           )}
@@ -275,15 +275,15 @@ const FamilyPage = () => {
                 </p>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14, flexShrink: 0 }}>
-                <button style={{
+                <Link to="/contact" style={{
                   display: 'inline-flex', alignItems: 'center', gap: 10,
                   background: '#FFF', color: '#592209',
                   fontSize: 13, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
                   padding: '16px 32px', borderRadius: 12, cursor: 'pointer', border: 'none',
-                  fontFamily: "'DM Sans', system-ui, sans-serif",
+                  fontFamily: "'DM Sans', system-ui, sans-serif", textDecoration: 'none',
                 }}>
                   <ArrowRight style={{ width: 15, height: 15 }} /> Book Your Stream
-                </button>
+                </Link>
                 <p style={{ fontSize: 12, color: 'rgba(48,22,7,0.9)', textAlign: 'center' }}>
                   Starting ₹1,999 · Setup in 24 hrs
                 </p>

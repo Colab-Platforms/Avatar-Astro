@@ -4,6 +4,7 @@ import { FEATURES } from "@/data/featureCatalog";
 import { useFeatureTitle } from "@/hooks/useFeatureTitle";
 import { Link } from "react-router-dom";
 import FeatureIntro from "@/components/FeatureIntro";
+import { useFeatureFlags } from "@/lib/featureFlags";
 import { fetchKarmaReading, KarmaReadingError, MIN_SITUATION_CHARS, MAX_SITUATION_CHARS, type KarmaReading } from "@/lib/karmaReading";
 
 
@@ -310,6 +311,7 @@ const NEXT_STEPS = [
 ];
 
 function ReportView({ result, onReset }: { result: KarmaReading; onReset: () => void }) {
+  const { isPathDisabled } = useFeatureFlags();
   return (
     <div className="iv-report iv-report-anim">
       <div className="iv-report-hdr">
@@ -386,7 +388,7 @@ function ReportView({ result, onReset }: { result: KarmaReading; onReset: () => 
       <div className="iv-card" style={{marginBottom:22}}>
         <span className="iv-card-lbl">Next Steps</span>
         <div className="iv-planets">
-          {NEXT_STEPS.map(n => (
+          {NEXT_STEPS.filter(n => !isPathDisabled(n.path, true)).map(n => (
             <Link key={n.path} to={n.path} className="iv-planet-card" style={{textDecoration:"none"}}>
               <div className="iv-planet-name">{n.icon} {n.name}</div>
               <div className="iv-planet-note">{n.desc}</div>
@@ -405,6 +407,7 @@ function ReportView({ result, onReset }: { result: KarmaReading; onReset: () => 
 
 export default function InnerVoice() {
   useFeatureTitle(FEATURES.karma);
+  const { isPathDisabled } = useFeatureFlags();
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<KarmaReading | null>(null);
@@ -474,7 +477,7 @@ export default function InnerVoice() {
         {/* Nav grid */}
         <div className="iv-nav-section">
           <div className="iv-nav-grid">
-            {NAV_CARDS.map(c => (
+            {NAV_CARDS.filter(c => !isPathDisabled(c.path, true)).map(c => (
               <Link key={c.path} to={c.path} className={`iv-nav-card ${c.color}`}>
                 <span className="iv-nc-icon">{c.icon}</span>
                 <div className="iv-nc-tag">{c.tag}</div>

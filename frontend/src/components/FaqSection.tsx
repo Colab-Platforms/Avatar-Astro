@@ -1,5 +1,6 @@
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import { Plus } from "lucide-react";
+import { usePublicContent } from "@/lib/publicContent";
 
 const faqs = [
   {
@@ -34,7 +35,11 @@ const faqs = [
   },
 ];
 
-const FaqSection = () => (
+const FaqSection = () => {
+  // FAQs published from the admin panel are listed after the built-in ones.
+  const published = usePublicContent("FAQ").map((f) => ({ question: f.title, answer: f.body }));
+  const allFaqs = [...faqs, ...published];
+  return (
   <section className="hl-section relative z-10 w-full border-t border-home-line" aria-labelledby="home-faq-h">
     <div className="container relative mx-auto px-4 md:px-6">
       <div className="grid gap-6 lg:grid-cols-[0.8fr_1.3fr] lg:gap-12">
@@ -46,9 +51,9 @@ const FaqSection = () => (
         </div>
 
         <AccordionPrimitive.Root type="single" collapsible defaultValue="faq-0" className="w-full space-y-2">
-          {faqs.map((faq, i) => (
+          {allFaqs.map((faq, i) => (
             <AccordionPrimitive.Item
-              key={faq.question}
+              key={`${i}-${faq.question}`}
               value={`faq-${i}`}
               className="group rounded-2xl border border-home-line bg-home-ivory transition-colors data-[state=open]:border-home-gerua/40"
             >
@@ -73,6 +78,7 @@ const FaqSection = () => (
       </div>
     </div>
   </section>
-);
+  );
+};
 
 export default FaqSection;

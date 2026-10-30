@@ -102,9 +102,9 @@ export function PujaFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => !isSubmitting && onOpenChange(next)}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto border-primary/15 bg-[#FBF5EC] text-foreground sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto border-border bg-white text-foreground sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-display text-lg tracking-wide text-foreground">
+          <DialogTitle className="font-semibold text-lg tracking-normal text-foreground">
             {isEdit ? "Edit Puja" : "Add Puja"}
           </DialogTitle>
           <DialogDescription className="text-foreground/70">
@@ -117,13 +117,13 @@ export function PujaFormDialog({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
             <Label className="text-sm text-foreground/80">
-              Puja Name<span className="ml-0.5 text-[#592209]">*</span>
+              Puja Name<span className="ml-0.5 text-[#803003]">*</span>
             </Label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Suprabhatam Seva"
-              className="border-primary/15 bg-card text-foreground"
+              className="border-border bg-card text-foreground"
             />
             {errors.name && <p className="text-xs text-red-800">{errors.name}</p>}
           </div>
@@ -131,14 +131,14 @@ export function PujaFormDialog({
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label className="text-sm text-foreground/80">
-                Price (₹)<span className="ml-0.5 text-[#592209]">*</span>
+                Price (₹)<span className="ml-0.5 text-[#803003]">*</span>
               </Label>
               <Input
                 type="number"
                 min={0}
                 value={price}
                 onChange={(e) => setPrice(Number(e.target.value))}
-                className="border-primary/15 bg-card text-foreground"
+                className="border-border bg-card text-foreground"
               />
               {errors.price && (
                 <p className="text-xs text-red-800">{errors.price}</p>
@@ -147,13 +147,13 @@ export function PujaFormDialog({
 
             <div className="space-y-1.5">
               <Label className="text-sm text-foreground/80">
-                Duration<span className="ml-0.5 text-[#592209]">*</span>
+                Duration<span className="ml-0.5 text-[#803003]">*</span>
               </Label>
               <Input
                 value={duration}
                 onChange={(e) => setDuration(e.target.value)}
                 placeholder="30 min"
-                className="border-primary/15 bg-card text-foreground"
+                className="border-border bg-card text-foreground"
               />
               {errors.duration && (
                 <p className="text-xs text-red-800">{errors.duration}</p>
@@ -163,7 +163,7 @@ export function PujaFormDialog({
 
           <div className="space-y-2">
             <Label className="text-sm text-foreground/80">
-              Benefits<span className="ml-0.5 text-[#592209]">*</span>
+              Benefits<span className="ml-0.5 text-[#803003]">*</span>
             </Label>
 
             <div className="space-y-2">
@@ -173,14 +173,14 @@ export function PujaFormDialog({
                     value={benefit}
                     onChange={(e) => updateBenefit(index, e.target.value)}
                     placeholder="Divine awakening blessings"
-                    className="border-primary/15 bg-card text-foreground"
+                    className="border-border bg-card text-foreground"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
                     onClick={() => removeBenefit(index)}
-                    className="shrink-0 text-foreground/70 hover:bg-primary/10 hover:text-foreground"
+                    className="shrink-0 text-foreground/70 hover:bg-muted hover:text-foreground"
                     aria-label="Remove benefit"
                   >
                     <X className="h-4 w-4" />
@@ -198,7 +198,7 @@ export function PujaFormDialog({
               variant="outline"
               size="sm"
               onClick={() => setBenefits((prev) => [...prev, ""])}
-              className="border-primary/15 bg-transparent text-foreground hover:bg-primary/10 hover:text-foreground"
+              className="border-border bg-transparent text-foreground hover:bg-muted hover:text-foreground"
             >
               <Plus className="h-3.5 w-3.5" />
               Add Benefit
@@ -211,14 +211,14 @@ export function PujaFormDialog({
               variant="ghost"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
-              className="text-foreground/70 hover:bg-primary/10 hover:text-foreground"
+              className="text-foreground/70 hover:bg-muted hover:text-foreground"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="bg-[#592209] text-[#F5E9D6] hover:bg-[#592209]/90"
+              className="bg-[#803003] text-white hover:bg-[#6B2802]"
             >
               {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
               {isEdit ? "Save Changes" : "Add Puja"}
