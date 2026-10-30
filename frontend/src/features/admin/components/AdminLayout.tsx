@@ -30,6 +30,24 @@ const FONT_HREF = "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;6
  * everything inside `.admin-ui` uses Inter at normal case. Scoped, so the public site is untouched.
  */
 const ADMIN_CSS = `
+/* One admin palette for every shared primitive (inputs, tables, selects, dialogs, confirmations). Radix renders dialogs and
+   menus in a portal under <body>, outside .admin-ui, so the tokens are applied to the body while the admin area is mounted. */
+.admin-ui, body.admin-theme-active {
+  --background: 36 33% 97%; --foreground: 33 17% 10%;
+  --card: 0 0% 100%; --card-foreground: 33 17% 10%;
+  --popover: 0 0% 100%; --popover-foreground: 33 17% 10%;
+  --primary: 22 95% 26%; --primary-foreground: 0 0% 100%;
+  --secondary: 37 33% 94%; --secondary-foreground: 33 17% 10%;
+  --muted: 37 33% 95%; --muted-foreground: 30 8% 38%;
+  --accent: 37 33% 94%; --accent-foreground: 33 17% 10%;
+  --destructive: 5 77% 40%; --destructive-foreground: 0 0% 100%;
+  --border: 36 20% 83%; --input: 36 20% 83%; --ring: 22 95% 26%;
+}
+body.admin-theme-active [role="dialog"], body.admin-theme-active [role="alertdialog"], body.admin-theme-active [role="listbox"],
+body.admin-theme-active [data-radix-popper-content-wrapper], body.admin-theme-active [data-radix-popper-content-wrapper] * ,
+body.admin-theme-active [role="dialog"] *, body.admin-theme-active [role="alertdialog"] * {
+  font-family: "Inter", ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif !important; text-transform: none !important; letter-spacing: normal;
+}
 .admin-ui, .admin-ui *:not(code):not(pre):not(.font-mono) { font-family: "Inter", ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif !important; text-transform: none !important; letter-spacing: normal; }
 .admin-ui { -webkit-font-smoothing: antialiased; font-size: 14.5px; }
 .admin-ui h1, .admin-ui h2, .admin-ui h3, .admin-ui h4 { letter-spacing: -0.01em !important; }
@@ -41,6 +59,12 @@ export function AdminLayout() {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const title = useMemo(() => TITLE_BY_PATH[location.pathname] ?? "Admin", [location.pathname]);
+
+  // While the admin area is open, switch the shared theme tokens to the admin palette (see ADMIN_CSS), including dialogs.
+  useEffect(() => {
+    document.body.classList.add("admin-theme-active");
+    return () => document.body.classList.remove("admin-theme-active");
+  }, []);
 
   // Load Inter only for the admin area (the public site never requests it).
   useEffect(() => {

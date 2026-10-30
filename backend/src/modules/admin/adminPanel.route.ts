@@ -13,6 +13,7 @@ import { cacheSetting, getAllSettings, setSetting } from "./settings.js";
 import { parseContent, parsePage, parseRange, toCsv, maskSecret, CONTENT_TYPES } from "./adminPanel.validation.js";
 import { EVENT_TYPES, EVENT_LABELS, ALL_EVENT_TYPES } from "@/config/events.js";
 import { createAnalyticsRouter } from "./adminAnalytics.js";
+import { createCostsRouter, aiCostCsv } from "./adminCosts.js";
 
 const DAY_MS = 86_400_000;
 /** Known ApiErrors pass through; anything else (e.g. Prisma, with file paths and SQL) is logged and replaced. */
@@ -565,11 +566,13 @@ export function createAdminPanelRouter(): Router {
         for (const r of rowsAll) { const d = r.createdAt.toISOString().slice(0, 10); perDay.set(d, (perDay.get(d) ?? 0) + r._count._all); }
         const rows = [...perDay.entries()].sort().map(([day, total]) => ({ day, total }));
         csv = toCsv(["date", "new_users"], rows.map((r) => [r.day, r.total]));
+      } else if (kind === "costs") {
+        csv = await aiCostCsv(from, to, featureFilter);
       } else if (kind === "audit") {
         const rows = await prisma.adminAuditLog.findMany({ where: { createdAt: { gte: from, lt: to } }, orderBy: { createdAt: "asc" }, take: 20000 });
         csv = toCsv(["time_utc", "actor", "action", "entity_type", "entity_id", "summary"], rows.map((r) => [r.createdAt, r.actorEmail, r.action, r.entityType, r.entityId, r.summary]));
       } else {
-        throw bad("kind must be usage, signups, activity or audit.");
+        throw bad("kind must be usage, signups, activity, costs or audit.");
       }
       await writeAudit(req, { action: "report.export", entityType: "report", entityId: kind, summary: `Exported ${kind} report ${stamp}` });
       res.setHeader("Content-Type", "text/csv; charset=utf-8");
@@ -606,6 +609,7 @@ export function createAdminPanelRouter(): Router {
   );
 
   router.use(createAnalyticsRouter());
+  router.use(createCostsRouter());
 
   return router;
 }

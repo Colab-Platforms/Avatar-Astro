@@ -1,6 +1,7 @@
 import { usePanel } from "../api";
 import { QueryView } from "../QueryView";
 import { Badge, Card, fmtDate, PageHeader, Table } from "../ui";
+import { ProviderBalances } from "../ProviderBalances";
 
 interface Provider {
   id: string; name: string; model: string | null; configured: boolean; masked: string | null; envVar?: string; issues?: string[];
@@ -52,7 +53,7 @@ export default function IntegrationsPage() {
                     <tr key={p.id}>
                       <td className="px-3 py-2">
                         <p className="font-medium">{p.name}</p>
-                        {p.envVar && <p className="font-mono text-[11px] text-[#9A9086]">{p.envVar}</p>}
+                        {p.envVar && <p className="font-mono text-[11px] text-[#756B61]">{p.envVar}</p>}
                         {p.detail && <p className="text-xs text-[#6B6259]">From: {p.detail.fromEmail ?? "not set"} · Support: {p.detail.supportEmail ?? "not set"}</p>}
                         {(p.issues ?? []).map((i) => <p key={i} className="text-xs text-amber-800">{i}</p>)}
                       </td>
@@ -61,12 +62,13 @@ export default function IntegrationsPage() {
                       <td className="px-3 py-2 text-xs">{p.model ?? "—"}</td>
                       <td className="px-3 py-2">{p.usage ? p.usage.requests : "n/a"}</td>
                       <td className="px-3 py-2">{p.usage ? (p.usage.errors ? <Badge tone="bad">{p.usage.errors}</Badge> : 0) : "n/a"}</td>
-                      <td className="px-3 py-2 text-xs">{p.usage ? (p.lastSuccessAt ? fmtDate(p.lastSuccessAt) : p.configured ? <span className="text-[#9A9086]">None recorded yet</span> : "—") : "n/a"}</td>
+                      <td className="px-3 py-2 text-xs">{p.usage ? (p.lastSuccessAt ? fmtDate(p.lastSuccessAt) : p.configured ? <span className="text-[#756B61]">None recorded yet</span> : "—") : "n/a"}</td>
                       <td className="px-3 py-2 text-xs">{p.usage ? (p.lastFailureAt ? fmtDate(p.lastFailureAt) : "None recorded") : "n/a"}</td>
                     </tr>
                   ))}
                 </Table>
               </Card>
+              <ProviderBalances />
               <Card title="Security configuration">
                 <ul className="space-y-1 text-sm">
                   <li>JWT secret: {d.security.jwtSecretConfigured ? (d.security.jwtSecretStrong ? <Badge tone="good">Set</Badge> : <Badge tone="warn">Set but shorter than 32 characters</Badge>) : <Badge tone="bad">Missing</Badge>}</li>

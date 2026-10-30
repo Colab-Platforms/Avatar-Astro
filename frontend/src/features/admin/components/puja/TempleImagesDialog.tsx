@@ -67,9 +67,9 @@ export function TempleImagesDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => !busy && onOpenChange(next)}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto border-primary/15 bg-[#FBF5EC] text-foreground sm:max-w-2xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto border-border bg-white text-foreground sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="font-display text-lg tracking-wide text-foreground">
+          <DialogTitle className="font-semibold text-lg tracking-normal text-foreground">
             Temple Images
           </DialogTitle>
           <DialogDescription className="text-foreground/70">
@@ -82,7 +82,7 @@ export function TempleImagesDialog({
             <Loader2 className="h-6 w-6 animate-spin text-foreground/70" />
           </div>
         ) : images.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-primary/15 py-10 text-center">
+          <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-border py-10 text-center">
             <ImageIcon className="h-8 w-8 text-foreground/70" />
             <p className="text-sm text-foreground/70">
               No temple images uploaded yet.
@@ -93,7 +93,7 @@ export function TempleImagesDialog({
             {images.map((image) => (
               <div
                 key={image.id}
-                className="group relative aspect-square overflow-hidden rounded-lg border border-primary/15"
+                className="group relative aspect-square overflow-hidden rounded-lg border border-border"
               >
                 <img
                   src={image.url}
@@ -132,7 +132,7 @@ export function TempleImagesDialog({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={busy || !templeId}
-            className="bg-[#592209] text-[#F5E9D6] hover:bg-[#592209]/90"
+            className="bg-[#803003] text-white hover:bg-[#6B2802]"
           >
             {uploadImages.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin" />

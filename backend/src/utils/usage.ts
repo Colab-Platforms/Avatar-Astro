@@ -3,6 +3,7 @@ import prisma from "@root/prisma.js";
 import { featureSettingKey } from "@/config/features.js";
 import { isFeatureEnabled } from "@/modules/admin/settings.js";
 import { EVENT_TYPES } from "@/config/events.js";
+import { newUsageStore, runWithUsageStore, summarizeCalls, type RequestAiSummary } from "@/utils/aiUsageCapture.js";
 
 const SENSITIVE_KEY = /token|password|secret|key|authorization|cookie|otp|code/i;
 
@@ -32,6 +33,8 @@ export interface RecordEventInput {
   statusCode?: number;
   durationMs?: number;
   metadata?: Record<string, unknown>;
+  ai?: Partial<RequestAiSummary>;
+  servedFromCache?: boolean;
 }
 
 /** The single way customer activity is written. Fire-and-forget: tracking must never break the feature. */
@@ -46,6 +49,15 @@ export function recordEvent(e: RecordEventInput): void {
         statusCode: e.statusCode ?? 0,
         durationMs: e.durationMs ?? 0,
         metadata: safeMetadata(e.metadata) as any,
+        aiProvider: e.ai?.aiProvider ?? null,
+        aiModel: e.ai?.aiModel ?? null,
+        aiCalls: e.ai?.aiCalls ?? null,
+        inputTokens: e.ai?.inputTokens ?? null,
+        outputTokens: e.ai?.outputTokens ?? null,
+        totalTokens: e.ai?.totalTokens ?? null,
+        costUsd: e.ai?.costUsd ?? null,
+        costBasis: e.ai?.costBasis ?? null,
+        servedFromCache: e.servedFromCache ?? false,
       },
     })
     .catch((err: any) => console.warn("[activity] not recorded:", err?.message));
@@ -62,13 +74,19 @@ type UserReq = Request & { user?: { id: string } };
 export function trackFeature(feature: string) {
   return (req: Request, res: Response, next: NextFunction) => {
     if (req.method === "OPTIONS") return next();
+    // One row per request, even if the middleware is mounted twice on the same path.
+    if (res.locals.__usageTracked) return next();
+    res.locals.__usageTracked = true;
     const started = Date.now();
+    const store = newUsageStore();
     res.on("finish", () => {
       const statusCode = res.statusCode;
       // Anonymous 401s are probes/bots, not usage.
       const userId = (req as UserReq).user?.id ?? null;
       if (statusCode === 401 && !userId) return;
       const status = statusCode < 400 ? "success" : statusCode >= 500 ? "error" : "rejected";
+      // A 304 means the browser reused its copy: nothing was generated, so it carries no AI cost.
+      const notModified = statusCode === 304;
       recordEvent({
         userId,
         eventType: EVENT_TYPES.featureRequest,
@@ -77,9 +95,11 @@ export function trackFeature(feature: string) {
         statusCode,
         durationMs: Date.now() - started,
         metadata: { method: req.method, route: `${req.baseUrl}${req.route?.path && req.route.path !== "/" ? req.route.path : ""}` || req.path },
+        ai: notModified ? undefined : summarizeCalls(store.calls),
+        servedFromCache: notModified || store.servedFromCache,
       });
     });
-    next();
+    runWithUsageStore(store, next);
   };
 }
 

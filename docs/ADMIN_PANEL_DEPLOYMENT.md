@@ -70,4 +70,6 @@ first (`is_active = true`); the script refuses inactive accounts.
 
 ## Second migration
 
-20261030120000_add_activity_tracking adds two columns (event_type default feature.request, metadata) and two indexes to usage_events. It is additive: existing rows stay valid. Apply both migrations with npm run db:deploy, as before.
+20261030120000_add_activity_tracking adds two columns (event_type default feature.request, metadata) and two indexes to usage_events. It is additive: existing rows stay valid. Apply the migrations with npm run db:deploy, as before.
+
+20261031120000_add_ai_cost_tracking adds nine NULLABLE columns (ai_provider, ai_model, ai_calls, input_tokens, output_tokens, total_tokens, cost_usd, cost_basis, served_from_cache default false) and one index to usage_events. It is additive: nothing is rewritten and existing rows keep NULL (old activity is never back-filled with invented costs). It has been applied and tested only on the LOCAL test database, NOT on Neon. That makes three migrations pending for production. Optional env vars: AI_PRICING_JSON (USD per 1M tokens, needed for any cost estimate on providers that do not report cost), USD_TO_INR_RATE (display only), OPENROUTER_MANAGEMENT_KEY (account-level OpenRouter credits), AI_USAGE_ACCOUNTING=off (disable capture).

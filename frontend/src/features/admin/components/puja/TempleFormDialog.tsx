@@ -205,9 +205,9 @@ export function TempleFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => !isSubmitting && onOpenChange(next)}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto border-primary/15 bg-[#FBF5EC] text-foreground sm:max-w-2xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto border-border bg-white text-foreground sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="font-display text-lg tracking-wide text-foreground">
+          <DialogTitle className="font-semibold text-lg tracking-normal text-foreground">
             {isEdit ? `Edit ${temple?.name}` : "Add Temple"}
           </DialogTitle>
           <DialogDescription className="text-foreground/70">
@@ -224,7 +224,7 @@ export function TempleFormDialog({
                 value={values.name}
                 onChange={(e) => handleNameChange(e.target.value)}
                 placeholder="Tirupati Balaji"
-                className="border-primary/15 bg-card text-foreground"
+                className="border-border bg-card text-foreground"
               />
             </Field>
 
@@ -236,7 +236,7 @@ export function TempleFormDialog({
                   setField("slug", slugify(e.target.value));
                 }}
                 placeholder="tirupati-balaji"
-                className="border-primary/15 bg-card text-foreground"
+                className="border-border bg-card text-foreground"
               />
             </Field>
 
@@ -245,7 +245,7 @@ export function TempleFormDialog({
                 value={values.location}
                 onChange={(e) => setField("location", e.target.value)}
                 placeholder="Tirumala, Tirupati"
-                className="border-primary/15 bg-card text-foreground"
+                className="border-border bg-card text-foreground"
               />
             </Field>
 
@@ -254,7 +254,7 @@ export function TempleFormDialog({
                 value={values.state}
                 onChange={(e) => setField("state", e.target.value)}
                 placeholder="Andhra Pradesh"
-                className="border-primary/15 bg-card text-foreground"
+                className="border-border bg-card text-foreground"
               />
             </Field>
 
@@ -263,7 +263,7 @@ export function TempleFormDialog({
                 value={values.deity}
                 onChange={(e) => setField("deity", e.target.value)}
                 placeholder="Lord Venkateswara"
-                className="border-primary/15 bg-card text-foreground"
+                className="border-border bg-card text-foreground"
               />
             </Field>
 
@@ -275,7 +275,7 @@ export function TempleFormDialog({
                 onChange={(e) =>
                   setField("priceFrom", Number(e.target.value))
                 }
-                className="border-primary/15 bg-card text-foreground"
+                className="border-border bg-card text-foreground"
               />
             </Field>
           </div>
@@ -286,7 +286,7 @@ export function TempleFormDialog({
               value={values.description}
               onChange={(e) => setField("description", e.target.value)}
               placeholder="One of the world's most visited religious sites…"
-              className="border-primary/15 bg-card text-foreground"
+              className="border-border bg-card text-foreground"
             />
           </Field>
 
@@ -307,7 +307,7 @@ export function TempleFormDialog({
                 {previews.map((preview, index) => (
                   <div
                     key={preview.url}
-                    className="relative h-20 w-20 overflow-hidden rounded-md border border-primary/15"
+                    className="relative h-20 w-20 overflow-hidden rounded-md border border-border"
                   >
                     <img
                       src={preview.url}
@@ -343,7 +343,7 @@ export function TempleFormDialog({
               type="button"
               variant="outline"
               onClick={() => fileInputRef.current?.click()}
-              className="border-primary/15 bg-transparent text-foreground hover:bg-primary/10 hover:text-foreground"
+              className="border-border bg-transparent text-foreground hover:bg-muted hover:text-foreground"
             >
               <ImagePlus className="h-4 w-4" />
               Select Images
@@ -359,14 +359,14 @@ export function TempleFormDialog({
               variant="ghost"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
-              className="text-foreground/70 hover:bg-primary/10 hover:text-foreground"
+              className="text-foreground/70 hover:bg-muted hover:text-foreground"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="bg-[#592209] text-[#F5E9D6] hover:bg-[#592209]/90"
+              className="bg-[#803003] text-white hover:bg-[#6B2802]"
             >
               {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
               {uploadImages.isPending
@@ -397,7 +397,7 @@ function Field({
     <div className="space-y-1.5">
       <Label className="text-sm text-foreground/80">
         {label}
-        {required && <span className="ml-0.5 text-[#592209]">*</span>}
+        {required && <span className="ml-0.5 text-[#803003]">*</span>}
       </Label>
       {children}
       {error && <p className="text-xs text-red-800">{error}</p>}

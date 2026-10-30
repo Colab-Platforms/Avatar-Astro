@@ -53,7 +53,7 @@ function Field({
     <div className="space-y-1.5">
       <Label className="text-sm text-foreground/80">
         {label}
-        {required && <span className="ml-0.5 text-[#592209]">*</span>}
+        {required && <span className="ml-0.5 text-[#803003]">*</span>}
       </Label>
       {children}
       {error && <p className="text-xs text-red-800">{error}</p>}
@@ -146,9 +146,9 @@ export function ChadhawaFormDialog({
       open={open}
       onOpenChange={(next) => !isSubmitting && onOpenChange(next)}
     >
-      <DialogContent className="max-h-[90vh] overflow-y-auto border-primary/15 bg-[#FBF5EC] text-foreground sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto border-border bg-white text-foreground sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-display text-lg tracking-wide text-foreground">
+          <DialogTitle className="font-semibold text-lg tracking-normal text-foreground">
             {isEdit ? "Edit Chadhawa Offering" : "Add Chadhawa Offering"}
           </DialogTitle>
           <DialogDescription className="text-foreground/70">
@@ -165,14 +165,14 @@ export function ChadhawaFormDialog({
               onValueChange={setTempleId}
               disabled={templesLoading}
             >
-              <SelectTrigger className="border-primary/15 bg-card text-foreground">
+              <SelectTrigger className="border-border bg-card text-foreground">
                 <SelectValue
                   placeholder={
                     templesLoading ? "Loading temples…" : "Select a temple"
                   }
                 />
               </SelectTrigger>
-              <SelectContent className="border-primary/15 bg-[#FBF5EC] text-foreground">
+              <SelectContent className="border-border bg-white text-foreground">
                 {temples.map((temple) => (
                   <SelectItem key={temple.id} value={temple.id}>
                     {temple.name}
@@ -193,7 +193,7 @@ export function ChadhawaFormDialog({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Flower Basket"
-                className="border-primary/15 bg-card text-foreground"
+                className="border-border bg-card text-foreground"
               />
             </Field>
 
@@ -202,7 +202,7 @@ export function ChadhawaFormDialog({
                 value={emoji}
                 onChange={(e) => setEmoji(e.target.value)}
                 placeholder="🌺"
-                className="w-24 border-primary/15 bg-card text-center text-foreground"
+                className="w-24 border-border bg-card text-center text-foreground"
               />
             </Field>
           </div>
@@ -213,7 +213,7 @@ export function ChadhawaFormDialog({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Fresh flowers offered at the deity's feet"
-              className="border-primary/15 bg-card text-foreground"
+              className="border-border bg-card text-foreground"
             />
           </Field>
 
@@ -224,7 +224,7 @@ export function ChadhawaFormDialog({
                 min={1}
                 value={price}
                 onChange={(e) => setPrice(Number(e.target.value))}
-                className="border-primary/15 bg-card text-foreground"
+                className="border-border bg-card text-foreground"
               />
             </Field>
 
@@ -234,7 +234,7 @@ export function ChadhawaFormDialog({
                 min={0}
                 value={displayOrder}
                 onChange={(e) => setDisplayOrder(Number(e.target.value))}
-                className="border-primary/15 bg-card text-foreground"
+                className="border-border bg-card text-foreground"
               />
             </Field>
           </div>
@@ -244,10 +244,10 @@ export function ChadhawaFormDialog({
               value={isActive ? "active" : "inactive"}
               onValueChange={(value) => setIsActive(value === "active")}
             >
-              <SelectTrigger className="border-primary/15 bg-card text-foreground">
+              <SelectTrigger className="border-border bg-card text-foreground">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="border-primary/15 bg-[#FBF5EC] text-foreground">
+              <SelectContent className="border-border bg-white text-foreground">
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="inactive">Inactive</SelectItem>
               </SelectContent>
@@ -260,14 +260,14 @@ export function ChadhawaFormDialog({
               variant="ghost"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
-              className="text-foreground/70 hover:bg-primary/10 hover:text-foreground"
+              className="text-foreground/70 hover:bg-muted hover:text-foreground"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="bg-[#592209] text-[#F5E9D6] hover:bg-[#592209]/90"
+              className="bg-[#803003] text-white hover:bg-[#6B2802]"
             >
               {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
               {isEdit ? "Save Changes" : "Add Offering"}

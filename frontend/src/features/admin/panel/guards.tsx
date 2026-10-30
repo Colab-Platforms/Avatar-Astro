@@ -26,7 +26,11 @@ export function MainOnly({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
-/** The older catalogue editors were built for a dark theme; keep them readable on the cream shell. */
+/**
+ * Container for the catalogue editors (Puja, Chadhawa, Shop). They use the shared theme tokens (text-foreground,
+ * bg-card, border-border...), which the admin layout maps to the admin light palette. It must stay a LIGHT surface:
+ * a dark wrapper here makes their dark text unreadable.
+ */
 export function LegacyShell({ children }: { children: ReactNode }) {
-  return <div className="mx-auto max-w-6xl rounded-2xl bg-[#081426] p-4 text-white shadow-md sm:p-6">{children}</div>;
+  return <div className="mx-auto max-w-6xl rounded-xl border border-[#E8E3DC] bg-white p-4 text-[#1F1B16] shadow-[0_1px_2px_rgba(31,27,22,0.04)] sm:p-6">{children}</div>;
 }

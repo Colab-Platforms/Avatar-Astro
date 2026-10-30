@@ -28,6 +28,12 @@ export function createAnalyticsRouter(): Router {
       if (typeof q.eventType === "string" && ALL_EVENT_TYPES.includes(q.eventType)) where.eventType = q.eventType;
       if (typeof q.feature === "string" && ACTIVITY_FEATURES.includes(q.feature)) where.feature = q.feature;
       if (typeof q.status === "string" && STATUSES.includes(q.status)) where.status = q.status;
+      // AI cost filters. "ai=yes" = a provider was actually called; "costBasis=none" = AI was called but no cost is known.
+      if (q.ai === "yes") where.aiCalls = { gt: 0 };
+      if (q.ai === "no") where.aiCalls = null;
+      if (typeof q.provider === "string" && /^[a-z0-9+_-]{1,40}$/.test(q.provider)) where.aiProvider = { contains: q.provider };
+      if (q.costBasis === "actual" || q.costBasis === "estimated") where.costBasis = q.costBasis;
+      if (q.costBasis === "none") { where.aiCalls = { gt: 0 }; where.costUsd = null; }
       if (typeof q.from === "string" || typeof q.to === "string") {
         const { from, to } = parseRange({ from: q.from, to: q.to }, 30);
         where.createdAt = { gte: from, lt: to };
@@ -65,6 +71,14 @@ export function createAnalyticsRouter(): Router {
             statusCode: r.statusCode,
             durationMs: r.durationMs,
             metadata: r.metadata,
+            ai: r.aiCalls
+              ? {
+                  provider: r.aiProvider, model: r.aiModel, calls: r.aiCalls,
+                  inputTokens: r.inputTokens, outputTokens: r.outputTokens, totalTokens: r.totalTokens,
+                  costUsd: r.costUsd == null ? null : Number(r.costUsd), costBasis: r.costBasis,
+                }
+              : null,
+            servedFromCache: r.servedFromCache,
             customer: r.userId ? { id: r.userId, email: u?.email ?? null, name: u ? [u.firstName, u.lastName].filter(Boolean).join(" ") || null : null, removed: !u } : null,
           };
         }),
@@ -76,6 +90,7 @@ export function createAnalyticsRouter(): Router {
           eventTypes: ALL_EVENT_TYPES.map((t) => ({ value: t, label: EVENT_LABELS[t] ?? t })),
           features: ACTIVITY_FEATURES.map((k) => ({ value: k, label: FEATURES.find((f) => f.key === k)?.label ?? (k === AUTH_FEATURE ? "Sign-in & accounts" : "Profile") })),
           statuses: STATUSES,
+          providers: ["openrouter", "groq", "sarvam"],
         },
       });
     }),

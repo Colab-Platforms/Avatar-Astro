@@ -13,6 +13,7 @@ import inquiryRoutes from "./routes/inquiryRoutes.js";
 import { auth } from "./middleware/authMiddleware.js";
 import { createRateLimiter } from "./utils/rateLimit.js";
 import { feature } from "./utils/usage.js";
+import { installAiUsageCapture } from "./utils/aiUsageCapture.js";
 import { createMeRouter } from "./modules/me/me.route.js";
 import { createPublicContentRouter } from "./routes/publicContentRoutes.js";
 import darshanRoutes from "./modules/darshan/darshan.public.route.js";
@@ -27,6 +28,7 @@ import { startDarshanRefreshLoop } from "./modules/darshan/darshan.refresh.js";
 
 dotenv.config();
 
+installAiUsageCapture();
 const app = express();
 
 // Loud (non-fatal) startup report of missing configuration. Names only, never values.
