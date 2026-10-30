@@ -96,8 +96,7 @@ export const ZodiacWheelSection = () => {
             className="hl-serif mb-2 font-semibold leading-[1.15] tracking-[0.04em]"
             style={{ fontSize: 'clamp(28px, 4.6vw, 50px)' }}
           >
-            <span className="block text-home-ink md:inline">THE TWELVE </span>
-            <span className="block text-home-gerua md:inline">ZODIAC SIGNS</span>
+            <span className="block text-home-gerua md:inline">RASHI CHAKRA</span>
           </h2>
           <p className="font-home-sans text-base tracking-wide text-home-muted md:text-[18.5px]">
             Explore the cosmic wisdom of each celestial sign

@@ -1,4 +1,5 @@
-import type { GemstoneInfo, MatchedProduct, PlaceResult, RatnaResult, ShopMatches } from "../types";
+import { fireEvent, screen } from "@testing-library/react";
+import type { ChartAnalysis, GemstoneInfo, MatchedProduct, PlaceResult, PlanetProfile, RatnaResult, ShopMatches, StoneAssessment } from "../types";
 
 export const delhi: PlaceResult = {
   id: "1",
@@ -16,6 +17,7 @@ export const diamond: GemstoneInfo = {
   planet: "Venus",
   name: "Diamond or White Sapphire",
   sanskrit: "Heera",
+  hindi: "हीरा",
   colour: "#dfe9f5",
   weekday: "Friday",
   customs: { metal: "Platinum", finger: "Middle finger" },
@@ -31,6 +33,7 @@ export const emerald: GemstoneInfo = {
   planet: "Mercury",
   name: "Emerald",
   sanskrit: "Panna",
+  hindi: "पन्ना",
   colour: "#1f9d6a",
   weekday: "Wednesday",
   customs: { metal: "Gold or silver", finger: "Little finger" },
@@ -39,6 +42,85 @@ export const emerald: GemstoneInfo = {
     { label: "Communication", note: "Mercury is linked with speech and writing." },
     { label: "Learning and study", note: "Traditionally associated with curiosity and education." },
   ],
+};
+
+export const pearl: GemstoneInfo = {
+  key: "pearl",
+  planet: "Moon",
+  name: "Pearl",
+  sanskrit: "Moti",
+  hindi: "मोती",
+  colour: "#e8e4dc",
+  weekday: "Monday",
+  customs: { metal: "Silver", finger: "Little finger" },
+  significance: ["Traditionally associated with the Moon."],
+  themes: [{ label: "Calm and emotional balance", note: "The Moon is linked with the mind." }],
+};
+
+const profile = (planet: string, over: Partial<PlanetProfile> = {}): PlanetProfile => ({
+  planet,
+  sign: "Cancer",
+  house: 3,
+  degree: 22.6,
+  nakshatra: "Ashlesha",
+  pada: 2,
+  nakshatraLord: "Mercury",
+  dignity: "enemy sign",
+  retrograde: false,
+  combust: false,
+  housesOwned: [1, 6],
+  conjunctions: ["Sun"],
+  aspectedBy: [],
+  ...over,
+});
+
+const assess = (
+  stone: GemstoneInfo,
+  category: StoneAssessment["category"],
+  over: Partial<StoneAssessment> = {},
+): StoneAssessment => ({
+  stone,
+  planet: stone.planet,
+  category,
+  profile: profile(stone.planet),
+  functional: { nature: "benefic", houses: [1, 6], reason: "Venus rules the 1st and 6th houses." },
+  reasons: [`${stone.planet} reason one.`, `${stone.planet} reason two.`],
+  cautions: [],
+  dashaNote: null,
+  ...over,
+});
+
+const analysisFixture: ChartAnalysis = {
+  lagna: { sign: "Taurus", degree: 5, nakshatra: "Krittika", pada: 4 },
+  moon: { sign: "Cancer", nakshatra: "Pushya", pada: 1 },
+  dasha: {
+    asOf: "2026-10-30",
+    moonNakshatra: "Pushya",
+    mahadasha: { lord: "Mars", start: "2025-09-09", end: "2032-09-09" },
+    antardasha: { lord: "Rahu", start: "2026-02-05", end: "2027-02-24" },
+  },
+  primary: assess(diamond, "primary", {
+    cautions: ["Venus is conjunct Sun, traditionally malefic planets."],
+    dashaNote: null,
+  }),
+  alternatives: [
+    assess(emerald, "alternative", {
+      profile: profile("Mercury", { housesOwned: [2, 5], dignity: "enemy sign", nakshatra: "Pushya", pada: 4 }),
+      functional: { nature: "benefic", houses: [2, 5], reason: "Mercury rules the 2nd and 5th houses." },
+      reasons: ["Mercury rules the 5th house (Virgo) and owns no 6th, 8th or 12th house."],
+      cautions: ["Mercury is conjunct Sun, traditionally malefic planets."],
+    }),
+  ],
+  cautionedStones: [
+    assess(pearl, "caution", {
+      profile: profile("Moon", { housesOwned: [3], dignity: "own sign", nakshatra: "Pushya", pada: 1 }),
+      functional: { nature: "malefic", houses: [3], reason: "Moon rules only the 3rd house." },
+      reasons: ["Moon rules only the 3rd house, which is classed as mildly unfavourable."],
+    }),
+  ],
+  notIndicated: ["Sun"],
+  notCalculated: ["Shadbala / Ashtakavarga (numeric planetary strength)"],
+  ascendantNearBoundary: false,
 };
 
 const lagnaMethod: RatnaResult["method"] = {
@@ -72,7 +154,7 @@ export const complete: RatnaResult = {
   status: "complete",
   method: lagnaMethod,
   birth: { dateOfBirth: "1990-05-05", timeOfBirth: "10:00", place: "New Delhi, Delhi, India", timeZone: "Asia/Kolkata", utcOffsetMinutes: 330, ambiguousLocalTime: false },
-  chart: { ascendant: { sign: "Taurus", degree: 5 }, planets: [{ planet: "Venus", sign: "Cancer", degree: 3, house: 3 }] },
+  chart: { ascendant: { sign: "Taurus", degree: 5 }, planets: [{ planet: "Venus", sign: "Cancer", degree: 3, house: 3, nakshatra: "Ashlesha", pada: 2, dignity: "enemy sign", retrograde: false, combust: true }] },
   stableSigns: [],
   primary: {
     stone: diamond,
@@ -91,6 +173,7 @@ export const complete: RatnaResult = {
     secondary: [],
     excluded: [],
     cautions: [],
+    analysis: analysisFixture,
   },
   wearing: wearingFor(diamond),
   explanation: { text: "Rule based explanation text.", source: "rules" },
@@ -102,7 +185,7 @@ export const dateBased: RatnaResult = {
   status: "date_based",
   method: {
     id: "birth-date-place",
-    name: "Birth-Date & Place Gemstone Method",
+    name: "Birth-Date & Place Ratna Method",
     zodiac: "Sidereal (context only)",
     ayanamsa: "Lahiri",
     houses: "Not calculated: the Ascendant and houses need an exact birth time",
@@ -118,7 +201,7 @@ export const dateBased: RatnaResult = {
     stone: emerald,
     planet: "Mercury",
     basis: "birth-weekday",
-    summary: "Using your local birth date (a Wednesday) and birthplace, the Birth-Date & Place Gemstone Method identifies Emerald, traditionally associated with Mercury, as your gemstone association.",
+    summary: "Using your local birth date (a Wednesday) and birthplace, the Birth-Date & Place Ratna Method identifies Emerald, traditionally associated with Mercury, as your gemstone association.",
     factors: [
       { label: "Local birth date", value: "Wednesday, 9 May 1990" },
       { label: "Weekday ruler", value: "Wednesday: Mercury" },
@@ -167,4 +250,12 @@ export const emptyShop: ShopMatches = {
   jewellery: [],
   chartLinked: [],
   complementary: [],
+};
+
+/** Fills name, gender, weight and an ordinary date of birth on the form. */
+export const fillPersonalAndPanchang = () => {
+  fireEvent.change(screen.getByLabelText("Full name"), { target: { value: "Asha Verma" } });
+  fireEvent.change(screen.getByLabelText("Gender"), { target: { value: "Female" } });
+  fireEvent.change(screen.getByLabelText("Weight (kg)"), { target: { value: "58" } });
+  fireEvent.change(screen.getByLabelText("Date of birth"), { target: { value: "1990-05-05" } });
 };

@@ -76,12 +76,12 @@ const Hero = () => {
           </h1>
 
           <p className="mb-6 max-w-[34rem] font-home-sans text-base leading-relaxed text-home-muted md:text-lg lg:mb-7">
-            Get accurate astrology insights, personalised guidance, and powerful tools to help you make better decisions in love, career, health and life.
+            Get accurate astrology insights, personalised guidance, and powerful Seva to help you make better decisions in love, career, health and life.
           </p>
 
           <div className="mb-8 flex flex-col gap-3 sm:flex-row lg:mb-8">
             <a href={`#${NEXT_SECTION_ID}`} onClick={scrollToNext} className="hl-btn group w-full sm:w-auto">
-              Explore Astrology Tools
+              Explore Astrology Seva
               <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
             </a>
             {!isPathDisabled("/inner-voice/chat") && (

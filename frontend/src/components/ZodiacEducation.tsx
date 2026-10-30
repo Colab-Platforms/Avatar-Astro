@@ -10,7 +10,7 @@ const blocks: EducationBlock[] = [
     ],
   },
   {
-    heading: "How Does the Zodiac Sign Tool Work?",
+    heading: "How Does Rashi Chakra Work?",
     list: [
       "Explore the wheel. Tap any sign to see its dates, element, ruling planet and a short description. The wheel also cycles through the signs by itself until you tap one.",
       "Filter by element if you want to compare Fire, Earth, Air or Water signs side by side.",
@@ -18,13 +18,13 @@ const blocks: EducationBlock[] = [
     ],
     ordered: true,
     after: [
-      "This tool does not ask for your name or birth details, and it does not use AI. Every description is fixed text written for MyBhagya Astro, so the same sign always shows the same profile.",
+      "This Seva does not ask for your name or birth details, and it does not use AI. Every description is fixed text written for MyBhagya Astro, so the same sign always shows the same profile.",
     ],
   },
   {
     heading: "How Are Zodiac Signs Determined?",
     paragraphs: [
-      "A Sun sign is found by date. Find the range your birthday falls in and you have your sign. The table lists the commonly used Western (tropical) date ranges that this tool shows.",
+      "A Sun sign is found by date. Find the range your birthday falls in and you have your sign. The table lists the commonly used Western (tropical) date ranges that this Seva shows.",
     ],
     table: {
       caption: "Commonly used Western (tropical) Sun-sign date ranges",
@@ -60,7 +60,7 @@ const faqs: EducationFaq[] = [
   {
     question: "What if my birthday falls on the boundary between two signs?",
     answer:
-      "The boundary dates shift a little each year and depend on your birth time and time zone. If you were born within a day or two of a change, ask a qualified astrologer, or use chart software that works from your exact birth time and place, to see which sign the Sun was in. MyBhagya Astro's Birth Chart tool uses your date only, so it cannot settle a boundary case.",
+      "The boundary dates shift a little each year and depend on your birth time and time zone. If you were born within a day or two of a change, ask a qualified astrologer, or use chart software that works from your exact birth time and place, to see which sign the Sun was in. MyBhagya Astro's Janma Kundali Seva uses your date only, so it cannot settle a boundary case.",
   },
   {
     question: "Is my Sun sign the same as my Vedic sign?",
@@ -70,11 +70,11 @@ const faqs: EducationFaq[] = [
   {
     question: "Does this page predict my future?",
     answer:
-      "No. It describes the traditional themes linked with each sign. For a daily outlook, see the Daily Horoscope page, which is a separate tool.",
+      "No. It describes the traditional themes linked with each sign. For a daily outlook, see the Daily Horoscope page, which is a separate Seva.",
   },
   {
-    question: "Can I use the Zodiac Signs tool for free?",
-    answer: "Yes. Zodiac Signs is one of MyBhagya Astro's free tools and needs no sign-in or personal details.",
+    question: "Can I use Rashi Chakra for free?",
+    answer: "Yes. Rashi Chakra is one of MyBhagya Astro's free Seva and needs no sign-in or personal details.",
   },
 ];
 
@@ -82,5 +82,5 @@ const DISCLAIMER =
   "Zodiac sign profiles are offered for personal interest, cultural exploration and reflection. They describe traditional symbolism, are not scientifically proven, and are not predictions or professional advice.";
 
 export default function ZodiacEducation() {
-  return <EducationSection idPrefix="zodiac" title="About Zodiac Signs" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
+  return <EducationSection idPrefix="zodiac" title="About Rashi Chakra" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
 }

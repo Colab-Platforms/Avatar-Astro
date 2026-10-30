@@ -1,4 +1,7 @@
 import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react';
+import FullScreenLoader from "@/components/Loader/FullScreenLoader";
+import { FEATURES } from "@/data/featureCatalog";
+import { useFeatureTitle } from "@/hooks/useFeatureTitle";
 import { motion, AnimatePresence } from 'framer-motion';
 import { authedFetch, SignInRequiredError } from '@/lib/authedFetch';
 import gsap from 'gsap';
@@ -493,7 +496,7 @@ const QuestionSelectScene = ({ onSelect }: { onSelect: (q: string) => void }) =>
           <div style={{display:'flex',alignItems:'center',justifyContent:'center',flexWrap:'wrap',gap:'10px 16px',marginBottom:20,padding:'0 12px'}}>
             <div style={{width:'clamp(24px,6vw,52px)',height:1,background:'linear-gradient(to right,transparent,#FBF5EC)'}}/>
             <p style={{fontFamily:"'DM Sans', system-ui, sans-serif",fontWeight:600,fontSize:12,letterSpacing:'clamp(0.14em,1.4vw,0.5em)',color:'#592209',textTransform:'uppercase',margin:0,whiteSpace:'nowrap'}}>
-              ✦&nbsp; Life Timeline Tarot &nbsp;✦
+              ✦&nbsp; {FEATURES.tarot.name} &nbsp;✦
             </p>
             <div style={{width:'clamp(24px,6vw,52px)',height:1,background:'linear-gradient(to left,transparent,#FBF5EC)'}}/>
           </div>
@@ -502,6 +505,7 @@ const QuestionSelectScene = ({ onSelect }: { onSelect: (q: string) => void }) =>
             <span style={{display:'block',fontSize:36,color:'#301607',letterSpacing:0}}>What Calls To</span>
             <span style={{display:'block',fontSize:36,color:'#592209',letterSpacing:0}}>Your Soul</span>
           </h1>
+          <p style={{fontFamily:"'DM Sans', system-ui, sans-serif",fontSize:17,color:'rgba(48,22,7,0.78)',margin:'16px auto 0',maxWidth:640,lineHeight:1.6}}>{FEATURES.tarot.subtitle}</p>
 
           <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:14,marginTop:25}}>
             <div style={{width:48,height:1,background:'linear-gradient(to right,transparent,rgba(89,34,9,0.5))'}}/>
@@ -1392,7 +1396,7 @@ const TimelineReadingDisplay = ({
       <motion.div initial={{ opacity: 0, y: -14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
         style={{ textAlign: 'center', zIndex: 10, marginBottom: 32 }}>
         <p style={{ letterSpacing: '4px', fontSize: 16, color: '#592209', textTransform: 'none', fontFamily: "'DM Sans', system-ui, sans-serif", marginBottom: 14 }}>
-          Life Timeline Tarot™ • {question}
+          {FEATURES.tarot.name} · Life Timeline Tarot™ • {question}
         </p>
         <h1 style={{ margin: '0 0 16px', fontSize: 'clamp(32px,5vw,48px)', fontFamily: "'DM Sans', system-ui, sans-serif", letterSpacing: '3px', textTransform: 'uppercase', fontWeight: 700 }}>
           <span style={{ color: '#301607' }}>Your Soul&apos;s </span>
@@ -1563,7 +1567,7 @@ const KarmaMirrorDisplay = ({
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
         style={{ textAlign: 'center', marginBottom: '52px', position: 'relative', zIndex: 10 }}>
         <p style={{ letterSpacing: '6px', fontSize: '14px', color: 'rgba(48,22,7,1)', textTransform: 'uppercase', fontFamily: "'DM Sans', system-ui, sans-serif", marginBottom: '10px' }}>
-          Karma Mirror™ Reading
+          {FEATURES.tarot.name} · Karma Mirror™ Reading
         </p>
         <h2 style={{ fontSize: 'clamp(26px,5vw,52px)', fontFamily: "'DM Sans', system-ui, sans-serif", letterSpacing: '5px', textTransform: 'uppercase', color: '#592209', textShadow: '0 0 30px rgba(89,34,9,0.4)', marginBottom: '12px' }}>
           The Mirror Reveals
@@ -1727,61 +1731,20 @@ const ResetButton = ({ onReset }: { onReset: () => void }) => (
 );
 
 // ─── Loading Overlay ──────────────────────────────────────────────────────────
-const LOADING_MESSAGES = [
-  'Consulting the Cosmic Archive...',
-  'Reading the Threads of Destiny...',
-  'Decoding Hidden Influences...',
-  'Aligning Sacred Energies...',
-  'Traversing the Akashic Records...',
-  'Unveiling the Soul\'s Pattern...',
-  'Weaving Your Timeline...',
+const LOADING_STEPS = [
+  "Laying out your cards",
+  "Reading each position",
+  "Interpreting the cards together",
+  "Preparing your reading",
 ];
 
-const LoadingOverlay = () => {
-  const [msgIdx, setMsgIdx] = useState(0);
-  const [fade, setFade] = useState(true);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setFade(false);
-      setTimeout(() => {
-        setMsgIdx(i => (i + 1) % LOADING_MESSAGES.length);
-        setFade(true);
-      }, 400);
-    }, 2800);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: '#FBF5EC', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 100, backdropFilter: 'blur(14px)' }}>
-      <Particles count={35} />
-
-      {/* Nested spinning rings */}
-      <div style={{ position: 'relative', width: 120, height: 120, marginBottom: '40px' }}>
-        <motion.div animate={{ rotate: 360 }} transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-          style={{ position: 'absolute', inset: 0, border: '2px solid transparent', borderTop: '2px solid #592209', borderRadius: '50%', boxShadow: '0 0 20px rgba(89,34,9,0.5)' }} />
-        <motion.div animate={{ rotate: -360 }} transition={{ duration: 5, repeat: Infinity, ease: 'linear' }}
-          style={{ position: 'absolute', inset: '14px', border: '1px solid transparent', borderTop: '1px solid rgba(89,34,9,0.5)', borderRadius: '50%' }} />
-        <motion.div animate={{ rotate: 360 }} transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
-          style={{ position: 'absolute', inset: '28px', border: '1px solid transparent', borderBottom: '1px solid rgba(89,34,9,0.3)', borderRadius: '50%' }} />
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <motion.span animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 2, repeat: Infinity }} style={{ fontSize: '28px' }}>🔮</motion.span>
-        </div>
-      </div>
-
-      <p style={{
-        color: '#592209', fontFamily: "'DM Sans', system-ui, sans-serif", letterSpacing: '4px', fontSize: '15px',
-        textTransform: 'uppercase', transition: 'opacity 0.4s ease', opacity: fade ? 1 : 0,
-        textShadow: '0 0 20px rgba(89,34,9,0.4)',
-      }}>
-        {LOADING_MESSAGES[msgIdx]}
-      </p>
-    </div>
-  );
-};
+const LoadingOverlay = () => (
+  <FullScreenLoader title="Reading Your Cards" description="Interpreting your spread…" steps={LOADING_STEPS} testId="tarot-loader" />
+);
 
 // ─── Main Experience ──────────────────────────────────────────────────────────
 const TarotExperience = () => {
+  useFeatureTitle(FEATURES.tarot);
   const [phase, setPhase] = useState<Phase>('landing');
   const [mode, setMode] = useState<Mode | null>(null);
   const [question, setQuestion] = useState('');

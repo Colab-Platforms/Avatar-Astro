@@ -1,4 +1,7 @@
 import { useState, useEffect, useRef } from "react";
+import FullScreenLoader from "@/components/Loader/FullScreenLoader";
+import { FEATURES } from "@/data/featureCatalog";
+import { useFeatureTitle } from "@/hooks/useFeatureTitle";
 import { Link } from "react-router-dom";
 import FeatureIntro from "@/components/FeatureIntro";
 import { useFeatureFlags } from "@/lib/featureFlags";
@@ -202,10 +205,10 @@ type SpeechCtor = new () => any;
 type SpeechWindow = { SpeechRecognition?: SpeechCtor; webkitSpeechRecognition?: SpeechCtor };
 
 const NAV_CARDS = [
-  { icon:"🧘", name:"AI Guru", tag:"Pandit Intelligence", desc:"Converse with a Vedic pandit. Get pooja prescriptions, mantra remedies, and personal dharmic guidance.", path:"/inner-voice/chat", color:"gold" },
-  { icon:"⚡", name:"Karma Score", tag:"Daily Practice Tracker", desc:"A simple, symbolic daily score based on the mindful practices you complete. Track your consistency over time.", path:"/inner-voice/dashboard", color:"purple" },
-  { icon:"🧭", name:"Future Life Path Prediction", tag:"Interpretive Astrology", desc:"Explore possible life directions through interpretive astrological guidance.", path:"/inner-voice/future-path", color:"rose" },
-  { icon:"🕉", name:"Sacred Shloka", tag:"Vedic Wisdom", desc:"Discover the meaning and practical wisdom of traditional Sanskrit verses.", path:"/inner-voice/wisdom", color:"cyan" },
+  { icon:"🧘", name:FEATURES.guru.name, tag:"Pandit Intelligence", desc:FEATURES.guru.subtitle, path:"/inner-voice/chat", color:"gold" },
+  { icon:"⚡", name:FEATURES.karmaScore.name, tag:"Daily Practice Tracker", desc:FEATURES.karmaScore.subtitle, path:"/inner-voice/dashboard", color:"purple" },
+  { icon:"🧭", name:FEATURES.futurePath.name, tag:"Interpretive Astrology", desc:FEATURES.futurePath.subtitle, path:"/inner-voice/future-path", color:"rose" },
+  { icon:"🕉", name:FEATURES.shloka.name, tag:"Vedic Wisdom", desc:FEATURES.shloka.subtitle, path:"/inner-voice/wisdom", color:"cyan" },
 ];
 
 const HINTS = [
@@ -302,9 +305,9 @@ function StarCanvas() {
 }
 
 const NEXT_STEPS = [
-  { icon:"🧘", name:"Ask AI Guru", desc:"Talk through a specific question.", path:"/inner-voice/chat" },
-  { icon:"⚡", name:"Track your Karma Score", desc:"Log daily actions and watch your progress.", path:"/inner-voice/dashboard" },
-  { icon:"🕉", name:"Read a Sacred Shloka", desc:"Find a verse to reflect on.", path:"/inner-voice/wisdom" },
+  { icon:"🧘", name:`Ask ${FEATURES.guru.name}`, desc:"Talk through a specific question.", path:"/inner-voice/chat" },
+  { icon:"⚡", name:`Track your ${FEATURES.karmaScore.name}`, desc:"Log daily actions and watch your progress.", path:"/inner-voice/dashboard" },
+  { icon:"🕉", name:`Read a ${FEATURES.shloka.name}`, desc:"Find a verse to reflect on.", path:"/inner-voice/wisdom" },
 ];
 
 function ReportView({ result, onReset }: { result: KarmaReading; onReset: () => void }) {
@@ -314,7 +317,7 @@ function ReportView({ result, onReset }: { result: KarmaReading; onReset: () => 
       <div className="iv-report-hdr">
         <div className="iv-report-title">
           Your Karma Reflection
-          <span>An AI-generated interpretation for reflection</span>
+          <span>{FEATURES.karma.name} · An AI-generated interpretation for reflection</span>
         </div>
         <div className="iv-report-badges">
           {result.lifeDomain && <span className="iv-badge" style={{background:"rgba(89,34,9,.08)",border:"1px solid rgba(89,34,9,.25)",color:"#592209"}}>{result.lifeDomain}</span>}
@@ -403,6 +406,7 @@ function ReportView({ result, onReset }: { result: KarmaReading; onReset: () => 
 }
 
 export default function InnerVoice() {
+  useFeatureTitle(FEATURES.karma);
   const { isPathDisabled } = useFeatureFlags();
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
@@ -464,7 +468,7 @@ export default function InnerVoice() {
           <p className="iv-hero-sub">Your personal Vedic guidance system — powered by ancient wisdom and modern AI. Diagnose karmic patterns, track your dharmic progress, and receive actionable remedies.</p>
           {latestScore !== null && (
             <div className="iv-karma-strip">
-              <div className="iv-ks-item"><div className="iv-ks-val">{latestScore}</div><div className="iv-ks-lbl">Karma Score</div></div>
+              <div className="iv-ks-item"><div className="iv-ks-val">{latestScore}</div><div className="iv-ks-lbl">{FEATURES.karmaScore.name}</div></div>
               <div className="iv-ks-item"><div className="iv-ks-val">{karmaHistory.length}</div><div className="iv-ks-lbl">Days Saved</div></div>
             </div>
           )}
@@ -500,8 +504,9 @@ export default function InnerVoice() {
             />
             <div className="iv-diag-inner">
               <div>
-                <h2 className="iv-diag-heading">Know Your Karma</h2>
-                <p className="iv-diag-sub">Share your situation in any language — Hindi, English, or Hinglish. You will receive a reflective reading with practical guidance.</p>
+                <h2 className="iv-diag-heading">{FEATURES.karma.name}</h2>
+                <p className="iv-diag-sub" style={{ maxWidth: 560, margin: "0 auto 16px", color: "rgba(48,22,7,0.78)", lineHeight: 1.6 }}>{FEATURES.karma.subtitle}</p>
+                <p className="iv-diag-sub" style={{ maxWidth: 560, margin: "0 auto 16px", color: "rgba(48,22,7,0.78)", lineHeight: 1.6 }}>Share your situation in any language — Hindi, English, or Hinglish. You will receive a reflective reading with practical guidance.</p>
                 <div className="iv-diag-hints">
                   {HINTS.map((h, i) => (
                     <div key={i} className="iv-hint" onClick={() => onHintClick(h.text)} role="button" tabIndex={0} onKeyDown={e => e.key==="Enter" && onHintClick(h.text)}>
@@ -526,10 +531,7 @@ export default function InnerVoice() {
                     onChange={e => setText(e.target.value.slice(0, MAX_SITUATION_CHARS))}
                   />
                   {loading ? (
-                    <div className="iv-loading">
-                      <div className="iv-loader" />
-                      <div className="iv-loading-text">Preparing your reading...</div>
-                    </div>
+                    <FullScreenLoader title="Preparing Your Karma Reflection" description="Reflecting on the situation you shared…" steps={["Reading your situation", "Finding the karmic pattern", "Preparing your reflection"]} testId="karma-loader" />
                   ) : (
                     <button className="iv-submit-btn" onClick={diagnose} disabled={text.trim().length < MIN_SITUATION_CHARS}>
                       ॐ &nbsp; Know My Karma

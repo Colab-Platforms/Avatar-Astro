@@ -1,6 +1,6 @@
 import { test, describe, beforeEach } from "node:test";
 import assert from "node:assert/strict";
-import { calculateRatna, parseInput, ValidationError } from "../gemstone.service.js";
+import { calculateRatna, parseLegacyInput, ValidationError } from "../gemstone.service.js";
 import { BirthTimeError } from "../birth.time.js";
 import {
   buildRuleExplanation,
@@ -30,25 +30,25 @@ beforeEach(() => {
 
 describe("request validation", () => {
   test("accepts a valid body", () => {
-    assert.equal(parseInput(body).place.name, "New Delhi");
+    assert.equal(parseLegacyInput(body).place.name, "New Delhi");
   });
   test("rejects malformed input", () => {
-    assert.throws(() => parseInput(null), ValidationError);
-    assert.throws(() => parseInput({ ...body, dateOfBirth: "15-08-1947" }), /YYYY-MM-DD/);
-    assert.throws(() => parseInput({ ...body, timeOfBirth: "25:00" }), /HH:mm/);
-    assert.throws(() => parseInput({ ...body, timeOfBirth: undefined }), /HH:mm/);
-    assert.throws(() => parseInput({ ...body, place: undefined }), /select your birthplace/);
-    assert.throws(() => parseInput({ ...body, place: { ...delhi, latitude: "28" } }), ValidationError);
+    assert.throws(() => parseLegacyInput(null), ValidationError);
+    assert.throws(() => parseLegacyInput({ ...body, dateOfBirth: "15-08-1947" }), /YYYY-MM-DD/);
+    assert.throws(() => parseLegacyInput({ ...body, timeOfBirth: "25:00" }), /HH:mm/);
+    assert.throws(() => parseLegacyInput({ ...body, timeOfBirth: undefined }), /HH:mm/);
+    assert.throws(() => parseLegacyInput({ ...body, place: undefined }), /select your birthplace/);
+    assert.throws(() => parseLegacyInput({ ...body, place: { ...delhi, latitude: "28" } }), ValidationError);
   });
   test("time is optional only when marked unknown", () => {
-    const p = parseInput({ ...body, timeOfBirth: undefined, timeUnknown: true });
+    const p = parseLegacyInput({ ...body, timeOfBirth: undefined, timeUnknown: true });
     assert.equal(p.timeOfBirth, null);
   });
 });
 
 describe("calculateRatna", () => {
   test("complete result for a known chart, without AI configured", async () => {
-    const r = await calculateRatna(parseInput(body));
+    const r = await calculateRatna(parseLegacyInput(body));
     assert.equal(r.status, "complete");
     assert.equal(r.chart?.ascendant.sign, "Taurus");
     assert.equal(r.recommendation?.stone.key, "diamond");
@@ -62,7 +62,7 @@ describe("calculateRatna", () => {
   });
 
   test("exact-time result is unchanged and now reports its method and primary stone", async () => {
-    const r = await calculateRatna(parseInput(body));
+    const r = await calculateRatna(parseLegacyInput(body));
     assert.equal(r.method.id, "lagna-lord");
     assert.equal(r.method.name, "Parashari Lagna-lord method");
     assert.equal(r.dateBased, null);
@@ -74,15 +74,15 @@ describe("calculateRatna", () => {
 
   test("propagates timezone and coordinate errors", async () => {
     await assert.rejects(
-      calculateRatna(parseInput({ ...body, place: { ...delhi, timezone: "Mars/Olympus" } })),
+      calculateRatna(parseLegacyInput({ ...body, place: { ...delhi, timezone: "Mars/Olympus" } })),
       BirthTimeError,
     );
     await assert.rejects(
-      calculateRatna(parseInput({ ...body, place: { ...delhi, latitude: 80 } })),
+      calculateRatna(parseLegacyInput({ ...body, place: { ...delhi, latitude: 80 } })),
       /66°/,
     );
     await assert.rejects(
-      calculateRatna(parseInput({ ...body, place: { ...delhi, latitude: 123 } })),
+      calculateRatna(parseLegacyInput({ ...body, place: { ...delhi, latitude: 123 } })),
       /Invalid geographic/,
     );
   });

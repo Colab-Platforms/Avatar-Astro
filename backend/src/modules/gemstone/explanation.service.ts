@@ -7,6 +7,7 @@
 import axios from "axios";
 import { GEMSTONES, SIGNS, type GemstoneInfo, type Planet, type Sign } from "./gemstone.catalogue.js";
 import type { Recommendation } from "./recommendation.js";
+import { NAKSHATRAS } from "./analysis.js";
 
 export interface ExplanationContext {
   recommendation: Recommendation;
@@ -68,7 +69,7 @@ export const validateExplanation = (
     if (re.test(t) && !allowedStones.has(key)) return `mentions unsupported gemstone (${key})`;
   }
   if (!new RegExp(rec.primary.name.split(" or ")[0], "i").test(t)) {
-    return "does not mention the calculated gemstone";
+    return "does not mention the calculated Ratna";
   }
 
   const allowedSigns = new Set<string>([
@@ -85,6 +86,19 @@ export const validateExplanation = (
     if (actual && actual !== m[2]) return `contradicts ${m[1]} placement`;
     if (!actual) return `invents ${m[1]} placement`;
   }
+  const allowedNak = new Set<string>(
+    [rec.analysis.primary, ...rec.analysis.alternatives].map((a) => a.profile.nakshatra),
+  );
+  allowedNak.add(rec.analysis.lagna.nakshatra);
+  allowedNak.add(rec.analysis.moon.nakshatra);
+  for (const n of NAKSHATRAS) {
+    if (new RegExp(`\\b${n}\\b`, "i").test(t) && !allowedNak.has(n)) return `mentions nakshatra not in the chart (${n})`;
+  }
+  if (/\d+(\.\d+)?\s?(%|percent)|\bshadbala\b|\bstrength score\b/i.test(t)) return "states a strength figure that was not calculated";
+  for (const m of t.matchAll(new RegExp(`\\b(${PLANET_RE})\\b[^.]{0,30}?\\b(Mahadasha|Antardasha)\\b`, "g"))) {
+    const d = rec.analysis.dasha;
+    if (!d || (d.mahadasha.lord !== m[1] && d.antardasha.lord !== m[1])) return `invents a dasha period (${m[1]})`;
+  }
   for (const m of t.matchAll(new RegExp(`\\b(Ascendant|Lagna|rising sign)\\b[^.]{0,20}?\\b(${SIGN_RE})\\b`, "gi"))) {
     if (m[2] !== rec.lagnaSign) return "contradicts Ascendant sign";
   }
@@ -94,9 +108,13 @@ export const validateExplanation = (
 export const buildRuleExplanation = (ctx: ExplanationContext): string => {
   const r = ctx.recommendation;
   const parts = [
-    `Your Ascendant (Lagna) is ${r.lagnaSign}, whose ruler is ${r.lagnaLord}. Under the Parashari Lagna-lord method, the gemstone traditionally associated with ${r.lagnaLord} is ${r.primary.name}.`,
-    `In your chart ${r.lagnaLord} is placed in ${r.lagnaLordSign}, in the ${r.lagnaLordHouse}${suffix(r.lagnaLordHouse)} house.`,
+    `Your Ascendant (Lagna) is ${r.lagnaSign}, whose ruler is ${r.lagnaLord}. Under the Parashari Lagna-lord method, the Ratna traditionally associated with ${r.lagnaLord} is ${r.primary.name}.`,
+    `In your chart ${r.lagnaLord} is placed in ${r.lagnaLordSign}, in the ${r.lagnaLordHouse}${suffix(r.lagnaLordHouse)} house, in ${r.analysis.primary.profile.nakshatra} nakshatra (pada ${r.analysis.primary.profile.pada}).`,
   ];
+  const dignity = r.analysis.primary.profile.dignity;
+  if (dignity !== "not assessed" && dignity !== "neutral sign") parts.push(`${r.lagnaLord} is in ${dignity === "exalted" ? "its sign of exaltation" : dignity === "debilitated" ? "its sign of debilitation" : dignity === "mooltrikona" ? "its mooltrikona sign" : dignity}.`);
+  const dn = r.analysis.primary.dashaNote;
+  if (dn) parts.push(dn);
   if (r.secondary.length > 0) {
     parts.push(
       `As optional secondary perspectives, ${r.secondary
@@ -120,6 +138,10 @@ const buildPrompt = (ctx: ExplanationContext) => {
     lagnaLordSign: r.lagnaLordSign,
     lagnaLordHouse: r.lagnaLordHouse,
     recommendedGemstone: r.primary.name,
+    lagnaLordNakshatra: `${r.analysis.primary.profile.nakshatra} pada ${r.analysis.primary.profile.pada}`,
+    lagnaLordDignity: r.analysis.primary.profile.dignity,
+    currentDasha: r.analysis.dasha ? `${r.analysis.dasha.mahadasha.lord} Mahadasha / ${r.analysis.dasha.antardasha.lord} Antardasha` : "not calculated",
+    chartReasons: r.analysis.primary.reasons,
     secondaryPerspectives: r.secondary.map((s) => ({
       house: s.house,
       planet: s.planet,
@@ -131,7 +153,7 @@ const buildPrompt = (ctx: ExplanationContext) => {
     {
       role: "system",
       content:
-        "You write short, careful explanations of a Vedic astrology gemstone result. The gemstone is already decided; never suggest another. Use only the supplied facts; never invent planetary positions or signs. Describe the stone as a traditional association. Never promise or guarantee outcomes (wealth, job, marriage, health, luck). Do not give medical advice. Reply as JSON: {\"explanation\": \"<two short paragraphs, 90-150 words>\"}.",
+        "You write short, careful explanations of a Vedic astrology Ratna result. The Ratna is already decided; never suggest another. Use only the supplied facts; never invent planetary positions, signs, nakshatras, dasha periods or strength percentages. Describe the stone as a traditional association. Never promise or guarantee outcomes (wealth, job, marriage, health, luck). Do not give medical advice. Reply as JSON: {\"explanation\": \"<two short paragraphs, 90-150 words>\"}.",
     },
     { role: "user", content: JSON.stringify(facts) },
   ];
@@ -225,7 +247,7 @@ export const validateDateExplanation = (
     if (re.test(t) && key !== ctx.stone.key) return `mentions unsupported gemstone (${key})`;
   }
   if (!new RegExp(ctx.stone.name.split(" or ")[0], "i").test(t)) {
-    return "does not mention the calculated gemstone";
+    return "does not mention the calculated Ratna";
   }
 
   // Ascendant / house statements are only acceptable as statements of what is NOT known.
@@ -254,7 +276,7 @@ export const validateDateExplanation = (
 
 export const buildDateRuleExplanation = (ctx: DateExplanationContext): string => {
   const parts = [
-    `Using your local birth date and birthplace, you were born on a ${ctx.weekday} (${ctx.localDate}) in ${ctx.place}. In the traditional weekday-ruler convention, ${ctx.weekday} belongs to ${ctx.weekdayLord}, and the gemstone traditionally associated with ${ctx.weekdayLord} is ${ctx.stone.name}.`,
+    `Using your local birth date and birthplace, you were born on a ${ctx.weekday} (${ctx.localDate}) in ${ctx.place}. In the traditional weekday-ruler convention, ${ctx.weekday} belongs to ${ctx.weekdayLord}, and the Ratna traditionally associated with ${ctx.weekdayLord} is ${ctx.stone.name}.`,
   ];
   if (ctx.weekdayLordSign) {
     parts.push(
@@ -262,7 +284,7 @@ export const buildDateRuleExplanation = (ctx: DateExplanationContext): string =>
     );
   }
   parts.push(
-    "Because your exact birth time is unknown, no Ascendant or houses were used, so this reading is less specific than a full birth-chart reading. It is a traditional association, not a prediction or a guarantee, and other schools of Vedic astrology may choose a different gemstone.",
+    "Because your exact birth time is unknown, no Ascendant or houses were used, so this reading is less specific than a full birth-chart reading. It is a traditional association, not a prediction or a guarantee, and other schools of Vedic astrology may choose a different Ratna.",
   );
   return parts.join(" ");
 };
@@ -271,7 +293,7 @@ const buildDatePrompt = (ctx: DateExplanationContext) => [
   {
     role: "system",
     content:
-      "You write short, careful explanations of a Vedic astrology gemstone result that was chosen from the birth DATE and PLACE only, because the birth time is unknown. The gemstone is already decided by the weekday-ruler rule; never suggest another. Use only the supplied facts; never invent planetary positions, signs, weekdays or timings. Do not mention an Ascendant, rising sign, Lagna or houses except to say they are not known. Say plainly that the reading is less specific than a full birth chart. Describe the stone as a traditional association. Never promise or guarantee outcomes (wealth, job, marriage, health, luck). Do not give medical advice. Reply as JSON: {\"explanation\": \"<two short paragraphs, 90-150 words>\"}.",
+      "You write short, careful explanations of a Vedic astrology Ratna result that was chosen from the birth DATE and PLACE only, because the birth time is unknown. The Ratna is already decided by the weekday-ruler rule; never suggest another. Use only the supplied facts; never invent planetary positions, signs, weekdays or timings. Do not mention an Ascendant, rising sign, Lagna or houses except to say they are not known. Say plainly that the reading is less specific than a full birth chart. Describe the stone as a traditional association. Never promise or guarantee outcomes (wealth, job, marriage, health, luck). Do not give medical advice. Reply as JSON: {\"explanation\": \"<two short paragraphs, 90-150 words>\"}.",
   },
   {
     role: "user",
@@ -281,7 +303,7 @@ const buildDatePrompt = (ctx: DateExplanationContext) => [
       birthTimeKnown: false,
       weekday: ctx.weekday,
       weekdayRulingPlanet: ctx.weekdayLord,
-      rule: "The ruling planet of the local birth weekday gives its traditional gemstone.",
+      rule: "The ruling planet of the local birth weekday gives its traditional Ratna.",
       recommendedGemstone: ctx.stone.name,
       weekdayLordSignAllDay: ctx.weekdayLordSign,
       planetarySignsUnchangedAllDay: ctx.stableSigns.map((s) => `${s.planet} in ${s.sign}`),

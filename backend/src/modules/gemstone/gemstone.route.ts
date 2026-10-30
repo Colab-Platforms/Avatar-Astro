@@ -7,6 +7,7 @@ import { LocationProviderError, searchLocations } from "./locations.js";
 import { getGemstone } from "./gemstone.catalogue.js";
 import { calculateRatna, parseInput, ValidationError } from "./gemstone.service.js";
 import { matchShop } from "./shop.match.js";
+import { buildKundali, parseKundaliInput } from "./kundali.js";
 
 // Mounted at /api/gemstone-calculator. Stateless: nothing is stored.
 const router = Router();
@@ -85,10 +86,28 @@ router.post("/calculate", limiter(20), async (req, res) => {
   }
 });
 
+/** Vedic (sidereal, Lahiri) Janma Kundali profile: Surya/Chandra Rashi, Nakshatra, Lagna and Panchang. */
+router.post("/kundali", limiter(20), (req, res) => {
+  try {
+    sendResponse(res, true, buildKundali(parseKundaliInput(req.body)), "Calculated");
+  } catch (e) {
+    if (e instanceof ValidationError || e instanceof BirthTimeError) {
+      sendResponse(res, false, null, e.message, STATUS_CODES.BAD_REQUEST);
+      return;
+    }
+    if (e instanceof Error && /coordinates|latitude/i.test(e.message)) {
+      sendResponse(res, false, null, e.message, STATUS_CODES.BAD_REQUEST);
+      return;
+    }
+    console.error("Kundali calculation failed:", e);
+    sendResponse(res, false, null, "We could not complete the calculation. Please try again.", STATUS_CODES.SERVER_ERROR);
+  }
+});
+
 router.get("/products/:stone", limiter(60), async (req, res) => {
   const stone = getGemstone(req.params.stone);
   if (!stone) {
-    sendResponse(res, false, null, "Unknown gemstone", STATUS_CODES.NOT_FOUND);
+    sendResponse(res, false, null, "Unknown Ratna", STATUS_CODES.NOT_FOUND);
     return;
   }
   try {

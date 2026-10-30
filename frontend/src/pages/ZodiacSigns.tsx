@@ -1,4 +1,6 @@
 // import { useEffect, useRef, useState, useCallback } from 'react';
+import { FEATURES } from "@/data/featureCatalog";
+import { useFeatureTitle } from "@/hooks/useFeatureTitle";
 // import { useNavigate } from 'react-router-dom';
 // import gsap from 'gsap';
 // import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -545,6 +547,7 @@ const AUTO_CYCLE_INTERVAL = 2500;  // ms each sign stays highlighted
 const INACTIVITY_TIMEOUT = 10000; // resume auto after 10s of no interaction
 
 const ZodiacSigns = () => {
+  useFeatureTitle(FEATURES.zodiac);
   const navigate = useNavigate();
   const pageRef = useRef<HTMLDivElement>(null);
   const wheelRef = useRef<HTMLDivElement>(null);
@@ -717,13 +720,13 @@ const ZodiacSigns = () => {
           {/* Section header */}
           <div className="text-center mb-12">
             <h1 className="page-title font-display text-4xl md:text-5xl lg:text-6xl text-glow text-primary mb-4">
-              The Twelve Zodiac Signs
+              {FEATURES.zodiac.name}
             </h1>
             <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto">
-              Explore the traditional traits, elements and symbolism of each zodiac sign. Tap a sign on the wheel to read about it.
+              {FEATURES.zodiac.subtitle} Tap a sign on the wheel to read about it.
             </p>
             <p className="text-muted-foreground/80 text-sm max-w-2xl mx-auto mt-3">
-              Dates shown are the commonly used Western (tropical) Sun-sign ranges.
+              Dates shown are the Western (tropical) Sun-sign ranges, which run about 24 days later than Vedic (sidereal) Rashi dates. Your own Vedic Rashi is calculated from your birth details in Janma Kundali.
             </p>
           </div>
 

@@ -65,7 +65,7 @@ export function downloadBlueprintPDF(profile: NameProfile) {
     }
   }
 
-  text("Cosmic Blueprint", 22, true, PURPLE, 28);
+  text("Naamank Jyotish", 22, true, PURPLE, 28);
   text("Name and birth-date numerology", 11, false, SLATE, 18);
   y += 8;
   text(`Name: ${profile.name}`, 11, true, INDIGO);
@@ -110,5 +110,5 @@ export function downloadBlueprintPDF(profile: NameProfile) {
     13,
   );
 
-  doc.save(`Cosmic-Blueprint-${profile.name.replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "") || "report"}.pdf`);
+  doc.save(`Naamank-Jyotish-${profile.name.replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "") || "report"}.pdf`);
 }

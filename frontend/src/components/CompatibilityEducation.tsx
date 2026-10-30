@@ -5,14 +5,14 @@ const blocks: EducationBlock[] = [
     heading: "What Is Astrological Compatibility?",
     paragraphs: [
       "Astrological compatibility is the traditional practice of comparing two people's astrology to see how their themes fit together. The simplest form compares Sun signs. Fuller methods compare whole birth charts (called synastry in Western astrology) or, in Vedic astrology, use the Guna Milan or Ashtakoota system, which scores matches using the Moon sign and nakshatra.",
-      "This tool uses the simplest method, a comparison of two Sun signs. It suits you if you are curious how two signs traditionally relate, for a partner, friend, family member or colleague. It gives a written reading and no score.",
+      "This Seva uses the simplest method, a comparison of two Sun signs. It suits you if you are curious how two signs traditionally relate, for a partner, friend, family member or colleague. It gives a written reading and no score.",
     ],
   },
   {
-    heading: "How Does the Compatibility Tool Work?",
+    heading: "How Does Jodi Jyotish Work?",
     list: [
       "Enter a name and a date of birth for each person.",
-      "The tool works out each person's Sun sign from the birth date, then compares the two signs' elements and the aspect between them.",
+      "The Seva works out each person's Sun sign from the birth date, then compares the two signs' elements and the aspect between them.",
       "You see the two signs, the aspect, the element pairing and a short traditional reading of each, plus a few conversation starters.",
     ],
     ordered: true,
@@ -22,9 +22,9 @@ const blocks: EducationBlock[] = [
     list: [
       "Date of birth (day, month and year) is the only detail that affects the result. It decides each person's Sun sign.",
       "Names are shown on the result page and do not change the result.",
-      "The tool does not ask for birth time or place, and it does not use numerology, Moon signs or any birth chart.",
+      "The Seva does not ask for birth time or place, and it does not use numerology, Moon signs or any birth chart.",
     ],
-    after: ["Your entries are processed in your browser. This tool does not send them to MyBhagya Astro's servers and does not use AI."],
+    after: ["Your entries are processed in your browser. This Seva does not send them to MyBhagya Astro's servers and does not use AI."],
   },
   {
     heading: "How Is the Compatibility Result Calculated?",
@@ -50,7 +50,7 @@ const blocks: EducationBlock[] = [
     },
     after: [
       "Worked example: Aries and Libra. Aries is the first sign and Libra the seventh, so they are 6 apart, an opposition. Aries is Fire and Libra is Air, a harmonious element pairing. The reading therefore describes magnetic opposites with an energising element mix.",
-      "The tool deliberately gives no percentage. No recognised formula turns two Sun signs into a single number, so a score would look precise without being meaningful. The written readings are fixed text, so every pair of the same two signs sees the same reading.",
+      "The Seva deliberately gives no percentage. No recognised formula turns two Sun signs into a single number, so a score would look precise without being meaningful. The written readings are fixed text, so every pair of the same two signs sees the same reading.",
     ],
   },
   {
@@ -75,7 +75,7 @@ const faqs: EducationFaq[] = [
   {
     question: "Is this the Vedic Guna Milan (Ashtakoota) match?",
     answer:
-      "No. Guna Milan uses the Moon sign and nakshatra from a calculated chart and gives a score out of 36. This tool compares Western Sun signs only and does not calculate either.",
+      "No. Guna Milan uses the Moon sign and nakshatra from a calculated chart and gives a score out of 36. This Seva compares Western Sun signs only and does not calculate either.",
   },
   {
     question: "Do the names I enter matter?",
@@ -88,7 +88,7 @@ const faqs: EducationFaq[] = [
   },
   {
     question: "Can I use it for free?",
-    answer: "Yes. The Compatibility tool is one of MyBhagya Astro's free tools and needs no sign-in.",
+    answer: "Yes. Jodi Jyotish is one of MyBhagya Astro's free Seva and needs no sign-in.",
   },
 ];
 
@@ -96,5 +96,5 @@ const DISCLAIMER =
   "Compatibility readings are offered for personal interest, cultural exploration and reflection. They describe traditional symbolism, are not scientifically proven, and are not predictions or relationship advice.";
 
 export default function CompatibilityEducation() {
-  return <EducationSection idPrefix="compat" title="About the Compatibility Tool" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
+  return <EducationSection idPrefix="compat" title="About Jodi Jyotish" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
 }

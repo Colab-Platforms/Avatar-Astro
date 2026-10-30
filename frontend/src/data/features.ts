@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
-import { Landmark, PartyPopper, Flame, BookOpen, Bell, Music2 } from "lucide-react";
+import { FEATURES } from "./featureCatalog";
+import { Landmark, Flame, BookOpen, Music2 } from "lucide-react"; // PartyPopper, Bell: re-add with the hidden Puja entries
 
 export interface FeaturedSlide {
   badge: string;
@@ -17,10 +18,9 @@ export interface FeaturedSlide {
 export const featuredSlides: FeaturedSlide[] = [
   {
     badge: "Featured",
-    title: "AI Birth Chart",
-    description:
-      "Generate your accurate Kundli in seconds with AI and get detailed planetary insights.",
-    buttonLabel: "Generate Your Chart",
+    title: FEATURES.birthChart.name,
+    description: FEATURES.birthChart.subtitle,
+    buttonLabel: "Explore Janma Kundali",
     buttonPath: "/birth-chart",
     image: "/images/tools/birth-chart-feature.jpg",
     imageAlt: "A printed natal chart being marked with a pen",
@@ -33,9 +33,8 @@ export const featuredSlides: FeaturedSlide[] = [
   },
   {
     badge: "Featured",
-    title: "AI Tarot Reading",
-    description:
-      "Receive AI-powered tarot guidance for love, career, finance, and life's important decisions.",
+    title: FEATURES.tarot.name,
+    description: FEATURES.tarot.subtitle,
     buttonLabel: "Start Your Reading",
     buttonPath: "/tarot",
     image: "/images/tools/tarot-feature.jpg",
@@ -49,10 +48,9 @@ export const featuredSlides: FeaturedSlide[] = [
   },
   {
     badge: "Featured",
-    title: "Compatibility Report",
-    description:
-      "Discover relationship compatibility using advanced astrology matching.",
-    buttonLabel: "Check Compatibility",
+    title: FEATURES.compatibility.name,
+    description: FEATURES.compatibility.subtitle,
+    buttonLabel: "Explore Jodi Jyotish",
     buttonPath: "/compatibility",
     image: "/images/tools/compatibility-feature.jpg",
     imageAlt: "A couple sitting across a table by a lake",
@@ -65,9 +63,8 @@ export const featuredSlides: FeaturedSlide[] = [
   },
   {
     badge: "Featured",
-    title: "AI Palm Reading",
-    description:
-      "Upload your palm and receive an AI-generated palm analysis.",
+    title: FEATURES.palm.name,
+    description: FEATURES.palm.subtitle,
     buttonLabel: "Scan Your Palm",
     buttonPath: "/palm-reading",
     image: "/images/tools/palm-reading-feature.jpg",
@@ -117,13 +114,12 @@ export interface AIGuruFeature {
 }
 
 export const aiGuruFeature: AIGuruFeature = {
-  title: "AI Guru",
-  description:
-    "Ask anything, anytime. Get spiritual guidance, answers and clarity from our AI-powered guru.",
+  title: FEATURES.guru.name,
+  description: FEATURES.guru.subtitle,
   image: "/images/tools/ai-guru.jpg",
   imageAlt: "A man meditating on the riverside steps at Varanasi in the early morning",
   inputPlaceholder: "Ask your question...",
-  buttonLabel: "Talk to AI Guru",
+  buttonLabel: "Talk to Divya Margdarshak",
   buttonPath: "/inner-voice/chat",
 };
 
@@ -135,10 +131,11 @@ export interface DevotionItem {
 
 export const devotionItems: DevotionItem[] = [
   { label: "Temples", icon: Landmark, path: "/avatar-live/darshan" },
-  { label: "Festivals", icon: PartyPopper, path: "/puja" },
+  // Puja entry points are temporarily hidden (route and pages remain):
+  // { label: "Festivals", icon: PartyPopper, path: "/puja" },
   { label: "Daily Aarti", icon: Flame, path: "/avatar-live/darshan" },
   { label: "Spiritual Books", icon: BookOpen, path: "/inner-voice/wisdom" },
-  { label: "Puja & Remedies", icon: Bell, path: "/puja" },
+  // { label: "Puja & Remedies", icon: Bell, path: "/puja" },
   { label: "Mantras & Chants", icon: Music2, path: "/inner-voice/wisdom" },
 ];
 
@@ -148,5 +145,5 @@ export const devotionFeature = {
     "Temples, festivals, daily aarti, spiritual books, remedies and mantras in one place.",
   items: devotionItems,
   buttonLabel: "Explore All",
-  buttonPath: "/puja",
+  buttonPath: "/avatar-live", // was "/puja" while Puja is hidden
 };

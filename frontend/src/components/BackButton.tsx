@@ -46,6 +46,18 @@ export const getFallback = (pathname: string): string => {
   return nested ? nested[1] : '/';
 };
 
+/**
+ * True when browser history holds an earlier entry that belongs to this app.
+ * React Router stores the entry's position in `history.state.idx` (0 = the first entry of this
+ * session of the app, e.g. a deep link or a refresh), which survives refreshes unlike the router's
+ * in-memory key. Outside a browser history (tests, MemoryRouter) fall back to the location key.
+ */
+export const hasPreviousAppEntry = (locationKey: string): boolean => {
+  const idx = (typeof window !== 'undefined' ? (window.history.state as { idx?: number } | null)?.idx : undefined);
+  if (typeof idx === 'number') return idx > 0;
+  return locationKey !== 'default';
+};
+
 const BackButton = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -61,13 +73,12 @@ const BackButton = () => {
       onBackOverride();
       return;
     }
-    // Go back through history only when the previous entry belongs to this app.
-    // `location.key === 'default'` marks the first in-app entry (deep link, refresh or
-    // arriving from another site), where navigate(-1) would leave the site.
-    if (location.key !== 'default') {
+    if (hasPreviousAppEntry(location.key)) {
       navigate(-1);
     } else {
-      navigate(getFallback(location.pathname));
+      // Deep link, refresh or arrival from another site: nothing of ours to go back to, so
+      // go to the logical parent. `replace` keeps the dead-end entry from being kept behind us.
+      navigate(getFallback(location.pathname), { replace: true });
     }
   };
 

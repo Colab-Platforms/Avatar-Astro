@@ -46,17 +46,19 @@ describe("homepage content and structure", () => {
     renderAt("/");
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(/Discover Clarity,\s*Align Your Energy,\s*Create a Better Tomorrow/);
     for (const name of [
-      /Explore Our\s+Astrology Tools/,
-      /Explore the\s+Solar System/,
-      /THE TWELVE\s+ZODIAC SIGNS/,
+      /Explore Our\s+Astrology Seva/,
+      /RASHI CHAKRA/,
       /Read from our\s+blog\./,
       /Why do\s+You\s+need astrology\?/,
       /Start Your Journey With\s+Clarity\./,
     ]) {
       expect(screen.getByRole("heading", { level: 2, name })).toBeInTheDocument();
     }
-    for (const t of ["AI Birth Chart", "Live Darshan", "AI Guru", "Devotion & Spirituality"]) {
+    for (const t of ["Live Darshan", "Divya Margdarshak", "Devotion & Spirituality"]) {
       expect(screen.getByRole("heading", { level: 3, name: t })).toBeInTheDocument();
+    }
+    for (const t of ["Janma Kundali"]) {
+      expect(screen.getAllByRole("heading", { level: 3, name: t }).length).toBeGreaterThan(0); // card grid and featured carousel
     }
   });
 
@@ -67,7 +69,7 @@ describe("homepage content and structure", () => {
     expect(screen.getByText("Create a Better Tomorrow").className).toContain("text-home-gerua");
     expect(screen.queryByText(/YOUR PERSONAL ASTROLOGY/)).toBeNull();
     expect(screen.getByText(/Get accurate astrology insights, personalised guidance/)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Explore Astrology Tools/ })).toHaveAttribute("href", "#astrology-tools");
+    expect(screen.getByRole("link", { name: /Explore Astrology Seva/ })).toHaveAttribute("href", "#astrology-tools");
     expect(screen.getByRole("link", { name: "Book a Consultation" })).toHaveAttribute("href", "/inner-voice/chat");
     for (const [v, l] of [["50,000+", "Happy Users"], ["Verified", "Astrologers"], ["13+", "Languages"], ["60+", "Countries"]]) {
       expect(screen.getByText(v)).toBeInTheDocument();
@@ -85,18 +87,18 @@ describe("homepage content and structure", () => {
     expect(container.querySelector("#astrology-tools")).not.toBeNull();
   });
 
-  it("Astrology Tools: every tool renders in data order, led by the four photo cards, each with its route", () => {
+  it("Astrology Seva: every card renders in data order, led by the four photo cards, each with its route", () => {
     renderAt("/");
-    const section = sectionOf(/Astrology\s+Tools/);
-    expect(screen.getAllByRole("heading", { level: 2, name: /Astrology\s+Tools/ })).toHaveLength(1); // one section only
+    const section = sectionOf(/Astrology\s+Seva/);
+    expect(screen.getAllByRole("heading", { level: 2, name: /Astrology\s+Seva/ })).toHaveLength(1); // one section only
     const titles = [...section.querySelectorAll(".hl-card h3")].map((h) => h.textContent);
     expect(titles).toEqual(tools.map((t) => t.title)); // follows tools.ts, whatever it contains
-    expect(titles.slice(0, 4)).toEqual(["Birth Chart", "AI Tarot Reading", "Compatibility", "Palm Reading"]);
+    expect(titles.slice(0, 4)).toEqual(["Janma Kundali", "Tarot Drishti", "Jodi Jyotish", "Hasta Rekha"]);
     for (const tool of tools.slice(0, 4)) {
       expect(tool.image).toMatch(/^\/images\/tools\/.+\.jpg$/); // the photo cards
     }
     for (const tool of tools) {
-      const card = screen.getByRole("heading", { level: 3, name: tool.title }).closest(".hl-card") as HTMLElement;
+      const card = within(document.getElementById("astrology-tools")!).getByRole("heading", { level: 3, name: tool.title }).closest(".hl-card") as HTMLElement;
       const img = within(card).getByRole("img", { name: tool.title });
       expect(img.getAttribute("src")).toBe(tool.image);
       expect(within(card).getByText(tool.description)).toBeInTheDocument();
@@ -107,7 +109,7 @@ describe("homepage content and structure", () => {
 
   it("tool grid: 1 column, 2 from 768px, 3 from 1280px, inside a 6xl container", () => {
     renderAt("/");
-    const grid = sectionOf(/Astrology\s+Tools/).querySelector(".grid")!;
+    const grid = sectionOf(/Astrology\s+Seva/).querySelector(".grid")!;
     expect(grid.className).toContain("grid-cols-1");
     expect(grid.className).toContain("md:grid-cols-2");
     expect(grid.className).toContain("xl:grid-cols-3");
@@ -118,7 +120,7 @@ describe("homepage content and structure", () => {
   it("tool cards are plain ivory surfaces: no pastel tone classes anywhere on the homepage", () => {
     const { container } = renderAt("/");
     for (const t of tools) {
-      const card = screen.getByRole("heading", { level: 3, name: t.title }).closest(".hl-card") as HTMLElement;
+      const card = within(document.getElementById("astrology-tools")!).getByRole("heading", { level: 3, name: t.title }).closest(".hl-card") as HTMLElement;
       expect(card.className).not.toMatch(/hl-tone/);
     }
     expect(container.querySelector("[class*='hl-tone']")).toBeNull();
@@ -127,22 +129,22 @@ describe("homepage content and structure", () => {
 
   it("Featured carousel: four slides, arrows wrap, dots jump, one slide visible at a time", () => {
     const { container } = renderAt("/");
-    const region = screen.getByRole("region", { name: "Featured tools" });
+    const region = screen.getByRole("region", { name: "Featured Seva" });
     expect(region).toHaveAttribute("aria-roledescription", "carousel");
     const slides = () => [...container.querySelectorAll("[aria-roledescription='slide']")];
     const visible = () => slides().filter((s) => s.getAttribute("aria-hidden") === "false").map((s) => s.querySelector("h3")!.textContent);
     expect(slides()).toHaveLength(4);
-    expect(visible()).toEqual(["AI Birth Chart"]);
+    expect(visible()).toEqual(["Janma Kundali"]);
 
-    fireEvent.click(screen.getByRole("button", { name: "Next featured tool" }));
-    expect(visible()).toEqual(["AI Tarot Reading"]);
-    fireEvent.click(screen.getByRole("button", { name: "Show AI Palm Reading" }));
-    expect(visible()).toEqual(["AI Palm Reading"]);
-    fireEvent.click(screen.getByRole("button", { name: "Next featured tool" })); // wraps
-    expect(visible()).toEqual(["AI Birth Chart"]);
-    fireEvent.click(screen.getByRole("button", { name: "Previous featured tool" })); // wraps back
-    expect(visible()).toEqual(["AI Palm Reading"]);
-    expect(screen.getByRole("button", { name: "Show AI Palm Reading" })).toHaveAttribute("aria-current", "true");
+    fireEvent.click(screen.getByRole("button", { name: "Next featured Seva" }));
+    expect(visible()).toEqual(["Tarot Drishti"]);
+    fireEvent.click(screen.getByRole("button", { name: "Show Hasta Rekha" }));
+    expect(visible()).toEqual(["Hasta Rekha"]);
+    fireEvent.click(screen.getByRole("button", { name: "Next featured Seva" })); // wraps
+    expect(visible()).toEqual(["Janma Kundali"]);
+    fireEvent.click(screen.getByRole("button", { name: "Previous featured Seva" })); // wraps back
+    expect(visible()).toEqual(["Hasta Rekha"]);
+    expect(screen.getByRole("button", { name: "Show Hasta Rekha" })).toHaveAttribute("aria-current", "true");
   });
 
   it("Featured slides keep their copy, photo, checklist and destination", () => {
@@ -159,24 +161,26 @@ describe("homepage content and structure", () => {
     });
   });
 
-  it("Live Darshan, AI Guru and Devotion keep their photos, tiles and links", () => {
+  it("Live Darshan, Divya Margdarshak and Devotion keep their photos, tiles and links", () => {
     renderAt("/");
     const live = screen.getByRole("heading", { level: 3, name: "Live Darshan" }).closest(".hl-card") as HTMLElement;
     expect(within(live).getByText("LIVE")).toBeInTheDocument();
     expect(live.querySelectorAll("img")).toHaveLength(1 + liveDarshanFeature.thumbnails.length);
     expect(within(live).getByRole("link", { name: /Watch Live/ })).toHaveAttribute("href", "/avatar-live/darshan");
 
-    const guru = screen.getByRole("heading", { level: 3, name: "AI Guru" }).closest(".hl-card") as HTMLElement;
+    const guru = screen.getByRole("heading", { level: 3, name: "Divya Margdarshak" }).closest(".hl-card") as HTMLElement;
     expect(within(guru).getByRole("img", { name: aiGuruFeature.imageAlt })).toHaveAttribute("src", "/images/tools/ai-guru.jpg");
     expect(within(guru).getByText("Ask your question...")).toBeInTheDocument();
-    expect(within(guru).getByRole("link", { name: /Talk to AI Guru/ })).toHaveAttribute("href", "/inner-voice/chat");
+    expect(within(guru).getByRole("link", { name: /Talk to Divya Margdarshak/ })).toHaveAttribute("href", "/inner-voice/chat");
 
     const dev = screen.getByRole("heading", { level: 3, name: "Devotion & Spirituality" }).closest(".hl-card") as HTMLElement;
     expect(within(dev).getByText(devotionFeature.description)).toBeInTheDocument();
     for (const item of devotionFeature.items) {
       expect(within(dev).getByRole("link", { name: item.label })).toHaveAttribute("href", item.path);
     }
-    expect(within(dev).getByRole("link", { name: /Explore All/ })).toHaveAttribute("href", "/puja");
+    expect(within(dev).getByRole("link", { name: /Explore All/ })).toHaveAttribute("href", "/avatar-live");
+    // Puja entry points are temporarily hidden from the card.
+    expect(within(dev).queryByRole("link", { name: /Puja|Festivals/ })).toBeNull();
   });
 
   it("zodiac carousel: arrows and dots change the selected sign, with the profile link on the pills row", () => {
@@ -217,7 +221,7 @@ describe("homepage content and structure", () => {
 
   it("FAQ keeps its content and toggles", () => {
     renderAt("/");
-    const q = screen.getByRole("button", { name: "How does the Spiritual Birth Chart work?" });
+    const q = screen.getByRole("button", { name: "How does Janma Kundali work on Spiritual?" });
     expect(q).toHaveAttribute("aria-expanded", "false");
     fireEvent.click(q);
     expect(q).toHaveAttribute("aria-expanded", "true");
@@ -287,10 +291,35 @@ describe("site-wide light theme scoping", () => {
     for (const [name, href] of [["Blog", "/blog"], ["About", "/about"], ["Contact", "/contact"]] as const) {
       expect(nav.getByRole("link", { name })).toHaveAttribute("href", href);
     }
-    for (const label of ["Astrology Tools", "Inner Voice", "Devotion", "Live"]) {
+    for (const label of ["Astrology Seva", "Inner Voice", "Live"]) {
       expect(nav.getByRole("button", { name: new RegExp(label) })).toBeInTheDocument();
     }
     expect(nav.getByRole("link", { name: /Sign in/ })).toBeInTheDocument();
+  });
+
+  it("navbar: Shop is a permanent top-level link, Devotion, Puja and Chadhawa are hidden", () => {
+    renderAt("/");
+    const nav = within(document.querySelector("nav")!);
+    expect(nav.getByRole("link", { name: "Shop" })).toHaveAttribute("href", "/shop");
+    expect(nav.queryByRole("button", { name: /Devotion/ })).toBeNull();
+    expect(nav.queryByText(/Devotion/)).toBeNull();
+    expect(nav.queryByRole("link", { name: /Puja/ })).toBeNull();
+    expect(nav.queryByRole("link", { name: /Chadhawa/ })).toBeNull();
+    // order: Home, Astrology Seva, Inner Voice, Shop, Live, Blog, About, Contact, Sign in
+    const text = document.querySelector("nav [class~=\"lg:flex\"]")!.textContent!;
+    const order = ["Home", "Astrology Seva", "Inner Voice", "Shop", "Live", "Blog", "About", "Contact", "Sign in"].map((l) => text.indexOf(l));
+    expect(order.every((i) => i >= 0)).toBe(true);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+  });
+
+  it("mobile menu shows Shop directly (not in a dropdown) and no Devotion", () => {
+    renderAt("/");
+    fireEvent.click(screen.getByRole("button", { name: "Open menu" }));
+    const menu = within(document.getElementById("mobile-menu")!);
+    expect(menu.getByRole("link", { name: "Shop" })).toHaveAttribute("href", "/shop");
+    expect(menu.queryByText(/Devotion/)).toBeNull();
+    expect(menu.queryByText(/Puja|Chadhawa/)).toBeNull();
+    expect(menu.getByRole("link", { name: "Sign in" })).toBeInTheDocument();
   });
 
   it("homepage sections carry no dark-theme styling", () => {
@@ -316,16 +345,10 @@ describe("no dark sections remain", () => {
     expect(footer).not.toMatch(/5, 11, 24|#081426|#020B1F|const t = |#FAF7F1|#8C3F18/);
   });
 
-  it("Solar System is a centred ivory card with the unchanged CTA", () => {
+  it("the homepage no longer shows the Solar System feature", () => {
     renderAt("/");
-    const section = sectionOf(/Explore the\s+Solar System/);
-    const card = section.firstElementChild as HTMLElement;
-    expect(card.className).toContain("max-w-4xl");
-    expect(card.className).toContain("bg-home-ivory");
-    expect(card.className).not.toMatch(/bg-home-(ink|foot)/);
-    expect(section.getAttribute("style")).toBeNull();
-    expect(within(section).getByRole("link", { name: /Launch Solar System/ })).toHaveAttribute("href", "/solar-system");
-    expect(section.querySelectorAll("img")).toHaveLength(0); // the design has no imagery here
+    expect(screen.queryByText(/Explore the\s+Solar System/i)).toBeNull();
+    expect(screen.queryByRole("link", { name: /Launch Solar System/ })).toBeNull();
   });
 
   it("every section sits directly on the parchment page: no tinted band, no inline dark background", () => {
@@ -338,7 +361,7 @@ describe("no dark sections remain", () => {
 
   it("carousel arrows are gerua with ivory icons", () => {
     renderAt("/");
-    for (const name of ["Previous sign", "Next sign", "Previous featured tool", "Next featured tool"]) {
+    for (const name of ["Previous sign", "Next sign", "Previous featured Seva", "Next featured Seva"]) {
       expect(screen.getByRole("button", { name }).className, name).toContain("bg-home-gerua");
       expect(screen.getByRole("button", { name }).className, name).toContain("text-home-ivory");
     }
@@ -353,7 +376,7 @@ describe("layout matches the design", () => {
 
   it("featured, zodiac and blog use the 1440px content width; the trio is 1/2/3 columns", () => {
     renderAt("/");
-    for (const sec of [sectionOf(/Read from our\s+blog\./), screen.getByRole("region", { name: "Featured tools" }).closest("section")!]) {
+    for (const sec of [sectionOf(/Read from our\s+blog\./), screen.getByRole("region", { name: "Featured Seva" }).closest("section")!]) {
       expect(sec.querySelector("[class*='max-w-[1440px]']")).not.toBeNull();
     }
     const trio = screen.getByRole("heading", { level: 3, name: "Live Darshan" }).closest(".grid")!;
@@ -413,13 +436,13 @@ describe("parchment / gerua / gold palette", () => {
 
   it("cosmic navy is not used as any homepage background", () => {
     expect(css.slice(css.indexOf("HOMEPAGE LIGHT THEME"))).not.toMatch(/background[^;]*var\(--mb-cosmic-navy\)/);
-    const files = ["pages/Index.tsx", "components/hero/Hero.tsx", "components/ToolCard.tsx", "components/AstrologyToolsSection.tsx", "components/SolarSystemSection.tsx", "components/FeatureShowcase.tsx", "components/FeaturedCarousel.tsx", "components/LiveDarshanCard.tsx", "components/AIGuruCard.tsx", "components/DevotionCard.tsx", "components/ZodiacWheelSection.tsx", "components/HomeBlogSection.tsx", "components/WhyAstrologySection.tsx", "components/FaqSection.tsx", "components/Footer.tsx"];
+    const files = ["pages/Index.tsx", "components/hero/Hero.tsx", "components/ToolCard.tsx", "components/AstrologyToolsSection.tsx", "components/FeatureShowcase.tsx", "components/FeaturedCarousel.tsx", "components/LiveDarshanCard.tsx", "components/AIGuruCard.tsx", "components/DevotionCard.tsx", "components/ZodiacWheelSection.tsx", "components/HomeBlogSection.tsx", "components/WhyAstrologySection.tsx", "components/FaqSection.tsx", "components/Footer.tsx"];
     for (const f of files) expect(src(f), f).not.toMatch(/bg-home-navy|#1C2740/);
   });
 
   it("no homepage source still uses the superseded rust-orange, indigo-purple or earlier palettes", () => {
     const old = ["#5136BC", "#8754D9", "#EDEBFF", "#E7E6F0", "#252B72", "#202950", "#FFFCF8", "#5B6380", "#F8F7FC", "#D05F2F", "#121212", "#FE9F30", "#FFF3EC", "#A14C28", "#F2CAB7", "#54514F", "#F8F3EB", "#EFE4D5", "#FFFCF7", "#B95638", "#98432D", "#E9CF78", "#C7A46A", "#081426", "#020B1F", "home-purple", "home-violet", "home-lavender", "home-indigo", "home-peach", "home-mint", "home-pink", "home-mist", "home-rust", "home-orange", "home-cream", "home-deep", "home-card", "hl-gradient", "hl-tone", "brand-accent", "--mb-ivory", "--mb-purple", "--mb-violet", "--mb-rust", "--mb-orange", "--mb-cream"];
-    const files = ["pages/Index.tsx", "components/Footer.tsx", "components/hero/Hero.tsx", "components/ToolCard.tsx", "components/AstrologyToolsSection.tsx", "components/SolarSystemSection.tsx", "components/FeatureShowcase.tsx", "components/FeaturedCarousel.tsx", "components/LiveDarshanCard.tsx", "components/AIGuruCard.tsx", "components/DevotionCard.tsx", "components/FeatureButton.tsx", "components/ZodiacWheelSection.tsx", "components/HomeBlogSection.tsx", "components/WhyAstrologySection.tsx", "components/FaqSection.tsx"];
+    const files = ["pages/Index.tsx", "components/Footer.tsx", "components/hero/Hero.tsx", "components/ToolCard.tsx", "components/AstrologyToolsSection.tsx", "components/FeatureShowcase.tsx", "components/FeaturedCarousel.tsx", "components/LiveDarshanCard.tsx", "components/AIGuruCard.tsx", "components/DevotionCard.tsx", "components/FeatureButton.tsx", "components/ZodiacWheelSection.tsx", "components/HomeBlogSection.tsx", "components/WhyAstrologySection.tsx", "components/FaqSection.tsx"];
     const themeCss = css.slice(css.indexOf("HOMEPAGE LIGHT THEME"));
     for (const f of files) for (const o of old) expect(src(f), `${f} -> ${o}`).not.toContain(o);
     for (const o of old) expect(themeCss, o).not.toContain(o);

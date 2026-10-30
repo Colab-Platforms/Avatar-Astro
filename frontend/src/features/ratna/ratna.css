@@ -16,26 +16,89 @@
   .ratna-star { opacity: 0.6; }
 }
 
-/* Shared form + result styling (navy / antique gold) */
-.ratna-input {
+/* Shared form + result styling (parchment / chocolate brown / orange accent) */
+.ratna-input,
+.ratna-select {
   width: 100%;
   min-height: 48px;
-  border-radius: 10px;
-  border: 1px solid rgba(229,138,69,0.35);
-  background: #FBF5EC;
+  border-radius: 12px;
+  border: 1.5px solid rgba(89, 34, 9, 0.55);
+  background-color: #FBF5EC;
   padding: 0 14px;
   color: #301607;
   font-size: 1.05rem;
-  color-scheme: dark;
+  /* light scheme: the browser's own date/time/select chrome must not render white-on-cream */
+  color-scheme: light;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 }
-.ratna-input:focus { outline: 2px solid #E58A45; outline-offset: 1px; }
-.ratna-input:disabled { opacity: 0.45; cursor: not-allowed; }
-.ratna-input[aria-invalid="true"] { border-color: #ff8a80; }
+.ratna-input::placeholder { color: #6B4A37; opacity: 0.85; }
+.ratna-input:hover:not(:disabled):not(:focus),
+.ratna-select:hover:not(:disabled):not(:focus) { border-color: #592209; background-color: #FFFAF2; }
+.ratna-input:focus,
+.ratna-select:focus { outline: none; border-color: #592209; box-shadow: 0 0 0 3px rgba(229, 138, 69, 0.45); background-color: #FFFAF2; }
+.ratna-input:focus-visible,
+.ratna-select:focus-visible { outline: 2px solid transparent; }
+.ratna-input:disabled,
+.ratna-select:disabled {
+  background-color: #EBDDC6; color: #6B4A37; border-color: rgba(89, 34, 9, 0.3); cursor: not-allowed;
+  -webkit-text-fill-color: #6B4A37;
+}
+.ratna-input[aria-invalid="true"],
+.ratna-select[aria-invalid="true"] { border-color: #9B2C1D; background-color: #FFF6F1; }
+.ratna-input[aria-invalid="true"]:focus,
+.ratna-select[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px rgba(155, 44, 29, 0.28); }
+
+/* Date and time fields: visible brown calendar / clock icons, readable parts of the value */
+.ratna-input[type="date"],
+.ratna-input[type="time"] { padding-right: 8px; }
+.ratna-input[type="date"]::-webkit-datetime-edit,
+.ratna-input[type="time"]::-webkit-datetime-edit { color: #301607; padding: 0; }
+.ratna-input[type="date"]::-webkit-datetime-edit-fields-wrapper,
+.ratna-input[type="time"]::-webkit-datetime-edit-fields-wrapper { color: #301607; }
+.ratna-input[type="date"]::-webkit-datetime-edit-text,
+.ratna-input[type="time"]::-webkit-datetime-edit-text { color: #6B4A37; padding: 0 2px; }
+.ratna-input[type="date"]::-webkit-datetime-edit-month-field:focus,
+.ratna-input[type="date"]::-webkit-datetime-edit-day-field:focus,
+.ratna-input[type="date"]::-webkit-datetime-edit-year-field:focus,
+.ratna-input[type="time"]::-webkit-datetime-edit-hour-field:focus,
+.ratna-input[type="time"]::-webkit-datetime-edit-minute-field:focus,
+.ratna-input[type="time"]::-webkit-datetime-edit-ampm-field:focus { background: #E58A45; color: #301607; border-radius: 4px; outline: none; }
+.ratna-input[type="date"]::-webkit-calendar-picker-indicator,
+.ratna-input[type="time"]::-webkit-calendar-picker-indicator {
+  width: 26px; height: 26px; padding: 4px; margin-left: 4px; border-radius: 8px; cursor: pointer; opacity: 1;
+  background-color: transparent; background-repeat: no-repeat; background-position: center; background-size: 20px 20px;
+}
+.ratna-input[type="date"]::-webkit-calendar-picker-indicator { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23592209' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4.5' width='18' height='16.5' rx='2.5'/%3E%3Cpath d='M3 10h18M8 2.5v4M16 2.5v4'/%3E%3C/svg%3E"); }
+.ratna-input[type="time"]::-webkit-calendar-picker-indicator { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23592209' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9.5'/%3E%3Cpath d='M12 6.5V12l3.5 2'/%3E%3C/svg%3E"); }
+.ratna-input[type="date"]::-webkit-calendar-picker-indicator:hover,
+.ratna-input[type="time"]::-webkit-calendar-picker-indicator:hover { background-color: rgba(229, 138, 69, 0.25); }
+.ratna-input:disabled::-webkit-calendar-picker-indicator { opacity: 0.45; cursor: not-allowed; }
+
+/* Native selects (for any Ratna Jyotish form that uses one): cream field, brown arrow, orange selected option */
+.ratna-select {
+  appearance: none; -webkit-appearance: none; -moz-appearance: none; cursor: pointer;
+  padding-right: 44px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23592209' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 9l7 7 7-7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center; background-size: 16px 16px;
+}
+.ratna-select option { background: #FBF5EC; color: #301607; padding: 8px 12px; }
+.ratna-select option:hover,
+.ratna-select option:focus,
+.ratna-select option:checked { background: #E58A45 linear-gradient(#E58A45, #E58A45); color: #301607; }
+.ratna-select option:disabled { color: #8A6E5B; }
+
+/* Birthplace listbox */
+.ratna-listbox { background: #FBF5EC; border: 1.5px solid rgba(89, 34, 9, 0.55); border-radius: 12px; box-shadow: 0 12px 28px rgba(89, 34, 9, 0.18); }
+.ratna-option { color: #301607; }
+.ratna-option:hover { background: rgba(229, 138, 69, 0.2); }
+.ratna-option[aria-selected="true"] { background: #E58A45; color: #301607; font-weight: 600; }
+.ratna-combo-chevron { position: absolute; right: 14px; top: 24px; width: 16px; height: 16px; transform: translateY(-50%); pointer-events: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23592209' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 9l7 7 7-7'/%3E%3C/svg%3E") center / 16px 16px no-repeat; }
+
 .ratna-card {
-  border: 1px solid rgba(229,138,69,0.28);
+  border: 1px solid rgba(89, 34, 9, 0.22);
   background: #FBF5EC;
   border-radius: 16px;
-  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 14px rgba(89, 34, 9, 0.06);
 }
 .ratna-btn {
   min-height: 52px;
@@ -43,20 +106,23 @@
   padding: 0 28px;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: #1a1204;
-  background: linear-gradient(135deg, #E58A45, #E58A45);
+  color: #F5E9D6;
+  background: #592209;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
 }
-.ratna-btn:hover:not(:disabled) { filter: brightness(1.08); }
+.ratna-btn:hover:not(:disabled) { background: #461B07; }
 .ratna-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .ratna-btn:focus-visible, .ratna-link:focus-visible { outline: 2px solid #E58A45; outline-offset: 2px; }
 .ratna-btn-ghost {
   min-height: 48px;
   border-radius: 12px;
   padding: 0 22px;
-  border: 1px solid rgba(229,138,69,0.5);
-  color: #301607;
+  border: 1.5px solid rgba(89, 34, 9, 0.55);
+  color: #592209;
+  background: transparent;
 }
-.ratna-btn-ghost:hover { background: rgba(229,138,69,0.12); }
+.ratna-btn-ghost:hover { background: rgba(229, 138, 69, 0.18); border-color: #592209; }
+.ratna-btn-ghost:focus-visible { outline: 2px solid #E58A45; outline-offset: 2px; }
 
 /* ---- Results page ---------------------------------------------------- */
 /* Everything below is transform/opacity only, so it stays on the compositor. */

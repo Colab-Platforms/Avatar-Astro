@@ -1042,6 +1042,9 @@
 
 //komal nsp
 import { useState, useEffect, useRef, useCallback, type CSSProperties } from "react";
+import { FEATURES } from "@/data/featureCatalog";
+import { useFeatureTitle } from "@/hooks/useFeatureTitle";
+import FullScreenLoader from "@/components/Loader/FullScreenLoader";
 import { useBackOverride } from "../context/NavigationContext";
 import { User, ArrowRight } from "lucide-react";
 import { zodiacSigns } from "@/data/zodiacData";
@@ -1526,26 +1529,7 @@ function PersonForm({ idp, title, accentColor, data, onChange }: { idp: string; 
 const LOADING_STEPS = ["Finding both Sun signs", "Comparing the elements", "Comparing the signs' aspect"];
 
 function LoadingScreen() {
-  const [step, setStep] = useState(0);
-  useEffect(() => { const t = setInterval(() => setStep(s => Math.min(s+1,LOADING_STEPS.length-1)), 400); return () => clearInterval(t); }, []);
-  return (
-    <div className="loading-screen" role="status" aria-live="polite">
-      <div className="loading-cosmos">
-        <div className="orbit-ring"><div className="orbit-dot" style={{ background:"#592209", color:"#F5E9D6" }}/></div>
-        <div className="orbit-ring"><div className="orbit-dot" style={{ background:"#592209", color:"#F5E9D6" }}/></div>
-        <div className="orbit-ring"><div className="orbit-dot" style={{ background:"#592209", color:"#F5E9D6" }}/></div>
-        <div className="orbit-ring"><div className="orbit-dot" style={{ background:"#E58A45", color:"#301607" }}/></div>
-        <div className="orbit-center"/>
-      </div>
-      <div className="loading-steps">
-        {LOADING_STEPS.map((s,i) => (
-          <div key={s} className={`loading-step ${i===step?"active":i<step?"done":""}`}>
-            <div className="step-dot"/><span>{s}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  return <FullScreenLoader title="Comparing Your Signs" description="Finding both Sun signs and comparing them…" steps={LOADING_STEPS} testId="compatibility-loader" />;
 }
 
 function ZodiacPortrait({ zodiac, color }: { zodiac: string; color: string }) {
@@ -1578,7 +1562,7 @@ function Results({ result, onReset }: { result: Result; onReset: () => void }) {
           {p1.name} <span style={{color:"#592209"}}>✦</span> {p2.name}
         </h1>
         <div style={{color:"#592209", fontWeight:600, fontSize:15, letterSpacing:"0.05em", textTransform:"uppercase", marginTop:10}}>
-          Sun Sign Compatibility · {p1.zodiac} &amp; {p2.zodiac}
+          {FEATURES.compatibility.name} · Sun Sign Compatibility · {p1.zodiac} &amp; {p2.zodiac}
         </div>
       </div>
 
@@ -1591,7 +1575,7 @@ function Results({ result, onReset }: { result: Result; onReset: () => void }) {
       <div className="r-note" style={{...cardStyle, marginBottom:40, borderColor:"rgba(89,34,9,0.35)"}}>
         <div style={{...label, color:"#592209"}}>How this comparison was made</div>
         <p style={{fontSize:16, lineHeight:1.7, color:"#4A2E1F"}}>
-          Each person's Sun sign comes from their birth date. The tool then compares the two signs' elements and the traditional aspect between them. It uses fixed written text, no AI, and it does not give a score or percentage, because no recognised formula turns two Sun signs into a single number. Names are shown only for display and do not affect the result.
+          Each person's Sun sign comes from their birth date. The Seva then compares the two signs' elements and the traditional aspect between them. It uses fixed written text, no AI, and it does not give a score or percentage, because no recognised formula turns two Sun signs into a single number. Names are shown only for display and do not affect the result.
         </p>
       </div>
 
@@ -1653,6 +1637,7 @@ function checkPerson(p: Person, who: string): string | null {
 }
 
 export default function App() {
+  useFeatureTitle(FEATURES.compatibility);
   const [p1,setP1] = useState<Person>(empty());
   const [p2,setP2] = useState<Person>(empty());
   const [phase,setPhase] = useState("form");
@@ -1698,12 +1683,13 @@ export default function App() {
             <style>{formCss}</style>
             <div style={{textAlign:"center", padding:"60px 20px 40px"}}>
               <div style={{color:"#301607", fontStyle:"italic", fontSize:15, letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:24}}>
-                <span style={{color:"#592209"}}>✦</span> Sun Sign Compatibility <span style={{color:"#592209"}}>✦</span>
+                <span style={{color:"#592209"}}>✦</span> {FEATURES.compatibility.name} <span style={{color:"#592209"}}>✦</span>
               </div>
               <h1 style={{fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:"clamp(28px,5vw,48px)", fontWeight:700, color:"#301607", letterSpacing:"0.05em", textTransform:"uppercase", lineHeight:1.25, marginBottom:20}}>
-                Cosmic Compatibility<br/><span style={{color:"#592209"}}>Oracle</span>
+                {FEATURES.compatibility.name}<br/><span style={{color:"#592209"}}>Sun Sign Compatibility</span>
               </h1>
-              <p style={{color:"#301607", fontStyle:"italic", fontSize:18, maxWidth:560, margin:"0 auto"}}>Enter two birth dates to compare the two Sun signs.</p>
+              <p style={{color:"#301607", fontStyle:"italic", fontSize:18, maxWidth:620, margin:"0 auto 8px"}}>{FEATURES.compatibility.subtitle}</p>
+              <p style={{color:"#301607", fontStyle:"italic", fontSize:16, maxWidth:560, margin:"0 auto"}}>This Seva compares the two Western (tropical) Sun signs only. It is not Ashtakoota Guna Milan, which uses both Moon signs and Nakshatras. Enter two birth dates to compare.</p>
             </div>
             <div style={{maxWidth:1000, margin:"0 auto", padding:"20px 24px 80px"}}>
               {error && <div role="alert" style={{background:"rgba(248,113,113,0.08)", border:"1px solid rgba(248,113,113,0.3)", borderRadius:10, padding:"12px 16px", color:"#9B2C1D", fontSize:14, marginBottom:24, textAlign:"center"}}>⚠ {error}</div>}

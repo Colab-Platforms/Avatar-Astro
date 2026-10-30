@@ -1,4 +1,6 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { FEATURES } from "@/data/featureCatalog";
+import { useFeatureTitle } from "@/hooks/useFeatureTitle";
 import { useBackOverride } from "../context/NavigationContext";
 import {
   defaultPalmAnalysisEngine, loadImageFromDataUrl,
@@ -134,6 +136,7 @@ function LiveBlueprintOverlay({ landmarks, locked }: { landmarks: HandLandmarks 
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function PalmReading() {
+  useFeatureTitle(FEATURES.palm);
   const [stage, setStage]           = useState<Stage>("landing");
   const [imageUrl, setImageUrl]     = useState<string | null>(null); // preprocessed (cropped/aligned/enhanced) palm photo
   const [imageDims, setImageDims]   = useState({ width: 3, height: 4 });
@@ -409,11 +412,11 @@ export default function PalmReading() {
         <div style={{ textAlign: "center", marginBottom: 72, animation: "fade-in 0.7s ease" }}>
           <div style={{ fontSize: 14, color: "#592209", letterSpacing: "0.3em", marginBottom: 16, fontWeight: 600 }}>✦ HAND SHAPE ANALYSIS ✦</div>
           <h1 style={{ fontSize: 58, fontWeight: 900, color: "#301607", letterSpacing: "0.06em", margin: "0 0 20px", lineHeight: 1.1 }}>
-            Palm Reading<br/>
+            {FEATURES.palm.name}<br/>
             <span style={{ background: "#592209", backgroundSize: "200% auto", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", animation: "shimmer 3s linear infinite" }}>Hand Shape</span>
           </h1>
           <p style={{ fontSize: 20, color: "rgba(48,22,7,0.72)", maxWidth: 620, margin: "0 auto 40px", lineHeight: 1.8 }}>
-            Upload a photo of your palm or use your camera. The tool detects your hand, measures its proportions and describes your hand shape (Earth, Air, Water or Fire) using classical palmistry rules. Your photo is processed on your device and is not uploaded.
+            Upload a photo of your palm or use your camera. The Seva detects your hand, measures its proportions and describes your hand shape (Earth, Air, Water or Fire) using classical palmistry rules. Your photo is processed on your device and is not uploaded.
           </p>
           {/* Premium palm hero image */}
           <div className="pr-hero-img-wrap" style={{ marginBottom: 48, marginTop: 8, borderRadius: 28 }}>
@@ -488,7 +491,7 @@ export default function PalmReading() {
 
         {/* Line legend */}
         <div style={sec}>
-          <SectionTitle icon="🖐️" title="What This Tool Does"/>
+          <SectionTitle icon="🖐️" title="What This Seva Does"/>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }} className="pr-scope">
             <div style={card}>
               <div style={{ color: "#2F6B3A", fontWeight: 700, fontSize: 14, letterSpacing: "0.15em", marginBottom: 16 }}>✅ MEASURED FROM YOUR PHOTO</div>
@@ -663,7 +666,7 @@ export default function PalmReading() {
 
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 40, animation: "fade-in 0.6s ease" }}>
-          <div style={{ fontSize: 13, color: "rgba(188,106,77,0.75)", letterSpacing: "0.3em", marginBottom: 12, fontWeight: 600 }}>✦ YOUR HAND SHAPE READING ✦</div>
+          <div style={{ fontSize: 13, color: "rgba(188,106,77,0.75)", letterSpacing: "0.3em", marginBottom: 12, fontWeight: 600 }}>✦ {FEATURES.palm.name.toUpperCase()} · YOUR HAND SHAPE READING ✦</div>
           <h1 style={{ fontSize: "clamp(30px,5vw,44px)", fontWeight: 900, color: "#301607", margin: "0 0 12px" }}>{shape.label}</h1>
           <p style={{ color: "#4A2E1F", fontSize: 16, maxWidth: 620, margin: "0 auto" }}>
             Based on measurements of the hand in your photo. {shape.shape}.
@@ -727,7 +730,7 @@ export default function PalmReading() {
         <div style={{ ...card, marginTop: 28, borderColor: "rgba(188,106,77,0.4)" }}>
           <div style={{ fontSize: 13, color: "rgba(188,106,77,0.9)", letterSpacing: "0.15em", marginBottom: 10, textTransform: "uppercase", fontWeight: 700 }}>What this reading does not cover</div>
           <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: "#4A2E1F" }}>
-            This tool does not read the lines or marks on your palm. It measures the shape of your hand and gives the traditional description for that shape. There is no AI interpretation, no score, and no prediction of your future, health, career or relationships.
+            This Seva does not read the lines or marks on your palm. It measures the shape of your hand and gives the traditional description for that shape. There is no AI interpretation, no score, and no prediction of your future, health, career or relationships.
           </p>
         </div>
 
@@ -735,7 +738,7 @@ export default function PalmReading() {
           This reading is for personal interest and reflection. Palmistry is a traditional practice that is not scientifically proven, and the result is not a prediction or professional advice.
         </p>
         <div style={{ textAlign: "center" }}>
-          <button style={goldBtn} onClick={resetToLanding}>🔄 New Palm Reading</button>
+          <button style={goldBtn} onClick={resetToLanding}>🔄 New Hasta Rekha Reading</button>
         </div>
       </div>
       <PalmEducation />

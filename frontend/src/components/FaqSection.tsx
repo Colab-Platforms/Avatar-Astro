@@ -6,22 +6,22 @@ const faqs = [
   {
     question: "What can I explore on Spiritual?",
     answer:
-      "Spiritual brings astrology and spiritual guidance together in one place. You can explore Birth Charts, Tarot Readings, Name Analysis, Palm Reading, Compatibility, Daily Horoscope, AI Guru guidance, Live Darshan, and devotional experiences.",
+      "Spiritual brings astrology and spiritual guidance together in one place. You can explore Janma Kundali, Tarot Drishti, Naamank Jyotish, Hasta Rekha, Jodi Jyotish, Rashi Chakra, Ratna Jyotish, Daily Horoscope, Divya Margdarshak guidance, Live Darshan, and devotional experiences.",
   },
   {
-    question: "How does the Spiritual Birth Chart work?",
+    question: "How does Janma Kundali work on Spiritual?",
     answer:
-      "Enter your birth details to generate your personalized birth chart. Spiritual uses your birth information to present planetary positions and astrology-based insights in an easy-to-understand format.",
+      "Enter your birth details to generate your personalized Janma Kundali. Spiritual uses your birth information to present planetary positions and astrology-based insights in an easy-to-understand format.",
   },
   {
     question: "Can I use Spiritual without knowing much about astrology?",
     answer:
-      "Yes. Spiritual is designed for both beginners and people who already follow astrology. Our tools explain insights in a simple way so you can explore your chart, predictions, and spiritual guidance without needing advanced astrology knowledge.",
+      "Yes. Spiritual is designed for both beginners and people who already follow astrology. Our Seva explain insights in a simple way so you can explore your chart, predictions, and spiritual guidance without needing advanced astrology knowledge.",
   },
   {
-    question: "What is AI Guru on Spiritual?",
+    question: "What is Divya Margdarshak on Spiritual?",
     answer:
-      "AI Guru is your conversational spiritual guide. You can ask questions about astrology, life situations, spirituality, and personal guidance and receive AI-powered responses based on the information available to the experience.",
+      "Divya Margdarshak is your conversational spiritual guide. You can ask questions about astrology, life situations, spirituality, and personal guidance and receive AI-powered responses based on the information available to the experience.",
   },
   {
     question: "Can I get a daily horoscope on Spiritual?",
@@ -31,7 +31,7 @@ const faqs = [
   {
     question: "What other spiritual experiences are available?",
     answer:
-      "Along with astrology tools, Spiritual includes Live Darshan, temples, festivals, Daily Aarti, spiritual books, Puja & Remedies, and Mantras & Chants, bringing multiple spiritual experiences together in one platform.",
+      "Along with astrology Seva, Spiritual includes Live Darshan, temples, Daily Aarti, spiritual books, and Mantras & Chants, bringing multiple spiritual experiences together in one platform.",
   },
 ];
 
@@ -42,7 +42,7 @@ const FaqSection = () => {
   return (
   <section className="hl-section relative z-10 w-full border-t border-home-line" aria-labelledby="home-faq-h">
     <div className="container relative mx-auto px-4 md:px-6">
-      <div className="grid gap-10 lg:grid-cols-[0.8fr_1.3fr] lg:gap-16">
+      <div className="grid gap-6 lg:grid-cols-[0.8fr_1.3fr] lg:gap-12">
         <div className="text-center lg:text-left">
           <p className="hl-eyebrow mb-3">Questions, Answered</p>
           <h2 id="home-faq-h" className="hl-serif text-3xl font-bold leading-tight text-home-ink sm:text-4xl md:text-[2.5rem]">
@@ -50,7 +50,7 @@ const FaqSection = () => {
           </h2>
         </div>
 
-        <AccordionPrimitive.Root type="single" collapsible defaultValue="faq-0" className="w-full space-y-3">
+        <AccordionPrimitive.Root type="single" collapsible defaultValue="faq-0" className="w-full space-y-2">
           {allFaqs.map((faq, i) => (
             <AccordionPrimitive.Item
               key={`${i}-${faq.question}`}
@@ -58,7 +58,7 @@ const FaqSection = () => {
               className="group rounded-2xl border border-home-line bg-home-ivory transition-colors data-[state=open]:border-home-gerua/40"
             >
               <AccordionPrimitive.Header>
-                <AccordionPrimitive.Trigger className="flex w-full items-center justify-between gap-4 rounded-2xl px-5 py-4 text-left">
+                <AccordionPrimitive.Trigger className="flex w-full items-center justify-between gap-4 rounded-2xl px-5 py-3 text-left">
                   <span className="font-home-sans text-base font-semibold text-home-ink sm:text-lg">
                     {faq.question}
                   </span>
@@ -68,7 +68,7 @@ const FaqSection = () => {
                 </AccordionPrimitive.Trigger>
               </AccordionPrimitive.Header>
               <AccordionPrimitive.Content className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
-                <p className="px-5 pb-5 pr-14 font-home-sans text-sm leading-relaxed text-home-muted sm:text-base">
+                <p className="px-5 pb-4 pr-14 font-home-sans text-sm leading-[1.6] text-home-muted sm:text-base">
                   {faq.answer}
                 </p>
               </AccordionPrimitive.Content>

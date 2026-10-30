@@ -1,3 +1,4 @@
+import { FEATURES } from "@/data/featureCatalog";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { zodiacSigns } from "@/data/zodiacData";
@@ -43,12 +44,12 @@ const ZodiacDetail = () => {
           <img src={zodiacImages[zodiac.name]} alt={`${zodiac.name} constellation illustration`} className="w-full object-contain drop-shadow-[0_0_24px_rgba(245,195,106,0.35)]" />
         </div>
         <div className="text-center md:text-left">
-          <p className="mb-2 text-sm uppercase tracking-[0.25em] text-primary/80">Sun sign profile</p>
+          <p className="mb-2 text-sm uppercase tracking-[0.25em] text-primary/80">{FEATURES.zodiac.name} · Sun sign profile</p>
           <h1 className="mb-2 font-display text-4xl tracking-wider text-foreground md:text-6xl">
             {zodiac.name} <span aria-hidden="true">{zodiac.symbol}</span>
           </h1>
           <p className="mb-5 text-lg text-muted-foreground">
-            {zodiac.dates} <span className="text-sm">(Western / tropical dates)</span>
+            {zodiac.dates} <span className="text-sm">(Western tropical dates; the Vedic Rashi starts about 24 days later)</span>
           </p>
           <div className="mb-5 flex flex-wrap justify-center gap-2 md:justify-start">
             <span className={chip}>Element: {zodiac.element}</span>
@@ -110,9 +111,9 @@ const ZodiacDetail = () => {
           Your Sun sign is one part of a full birth chart. See your Sun sign and Life Path profile, or see what the day holds for {zodiac.name}.
         </p>
         <div className="flex flex-col justify-center gap-3 sm:flex-row">
-          <Link to="/birth-chart" className="btn-outline-cosmic rounded-lg px-6 py-3">Birth Chart Profile</Link>
+          <Link to="/birth-chart" className="btn-outline-cosmic rounded-lg px-6 py-3">Janma Kundali</Link>
           <Link to="/horoscopes" className="btn-outline-cosmic rounded-lg px-6 py-3">Daily Horoscope</Link>
-          <Link to="/compatibility" className="btn-outline-cosmic rounded-lg px-6 py-3">Check Compatibility</Link>
+          <Link to="/compatibility" className="btn-outline-cosmic rounded-lg px-6 py-3">Explore Jodi Jyotish</Link>
         </div>
       </section>
 

@@ -120,7 +120,7 @@ export const selectByBirthDate = (
     weekdayIndex,
     weekdayLord,
     stone,
-    rule: `Weekday-ruler rule: the planet ruling the local weekday of birth gives the gemstone traditionally associated with that planet. ${weekday} is ruled by ${weekdayLord}, whose traditional gemstone is ${stone.name}.`,
+    rule: `Weekday-ruler rule: the planet ruling the local weekday of birth gives the Ratna traditionally associated with that planet. ${weekday} is ruled by ${weekdayLord}, whose traditional Ratna is ${stone.name}.`,
     weekdayLordSign,
     stableSigns,
     sunrise: rise ? { local: localHm(place.timezone, rise), timeZone: place.timezone } : null,
