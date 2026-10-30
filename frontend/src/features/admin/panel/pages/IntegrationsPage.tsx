@@ -2,6 +2,7 @@ import { usePanel } from "../api";
 import { QueryView } from "../QueryView";
 import { Badge, Card, fmtDate, PageHeader, Table } from "../ui";
 import { ProviderBalances } from "../ProviderBalances";
+import { CaptureStatus } from "../CaptureStatus";
 
 interface Provider {
   id: string; name: string; model: string | null; configured: boolean; masked: string | null; envVar?: string; issues?: string[];
@@ -69,6 +70,7 @@ export default function IntegrationsPage() {
                 </Table>
               </Card>
               <ProviderBalances />
+              <CaptureStatus />
               <Card title="Security configuration">
                 <ul className="space-y-1 text-sm">
                   <li>JWT secret: {d.security.jwtSecretConfigured ? (d.security.jwtSecretStrong ? <Badge tone="good">Set</Badge> : <Badge tone="warn">Set but shorter than 32 characters</Badge>) : <Badge tone="bad">Missing</Badge>}</li>

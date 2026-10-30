@@ -1,6 +1,7 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import axios from "axios";
 import { estimateCostUsd, priceFor } from "@/config/aiPricing.js";
+import { diag, markCaptureInstalled } from "@/utils/aiDiagnostics.js";
 
 /**
  * Captures what each AI provider call actually reported (tokens, cost) and attributes it to the customer
@@ -22,12 +23,14 @@ export interface AiCall {
 export interface UsageStore {
   calls: AiCall[];
   servedFromCache: boolean;
+  /** which feature this request belongs to (diagnostics only) */
+  feature?: string;
 }
 
 const als = new AsyncLocalStorage<UsageStore>();
 
 export const runWithUsageStore = <T>(store: UsageStore, fn: () => T): T => als.run(store, fn);
-export const newUsageStore = (): UsageStore => ({ calls: [], servedFromCache: false });
+export const newUsageStore = (feature?: string): UsageStore => ({ calls: [], servedFromCache: false, feature });
 /** Call from a code path that answers from a stored result instead of generating. */
 export const markServedFromCache = () => {
   const s = als.getStore();
@@ -77,6 +80,29 @@ export function extractCall(provider: string, requestedModel: string | null, ok:
 function record(call: AiCall) {
   const store = als.getStore();
   if (store) store.calls.push(call);
+  diag({
+    stage: "provider_call", provider: call.provider, feature: store?.feature, hasRequestContext: !!store, httpOk: call.ok,
+    modelFound: !!call.model, tokensFound: call.totalTokens != null, costFound: call.costUsd != null, costBasis: call.costBasis,
+    reason: store ? undefined : "no_request_context",
+  });
+}
+
+/**
+ * For AI clients that do NOT go through global fetch or axios (a provider SDK with its own HTTP stack, an internal
+ * gateway). Reports one finished provider call into the current request. Only pass what the provider actually reported:
+ * omit usage fields you do not have. Do not call this for requests that fetch/axios already capture (that would count twice).
+ */
+export function reportAiCall(c: { provider: string; model?: string | null; ok?: boolean; inputTokens?: number | null; outputTokens?: number | null; totalTokens?: number | null; costUsd?: number | null }): void {
+  if (process.env.AI_USAGE_ACCOUNTING === "off") return;
+  const input = num(c.inputTokens), output = num(c.outputTokens);
+  const total = num(c.totalTokens) ?? (input != null && output != null ? input + output : null);
+  const reported = num(c.costUsd);
+  let costUsd = reported, costBasis: CostBasis | null = reported != null ? "actual" : null;
+  if (reported == null) {
+    const est = estimateCostUsd(priceFor(c.provider, c.model), input, output);
+    if (est != null) { costUsd = est; costBasis = "estimated"; }
+  }
+  record({ provider: c.provider, model: c.model ?? null, ok: c.ok !== false, inputTokens: input, outputTokens: output, totalTokens: total, costUsd, costBasis });
 }
 
 /** Asks OpenRouter to include the exact cost in the response. Adds one field; never changes the prompt. */
@@ -92,12 +118,18 @@ let installed = false;
 export function installAiUsageCapture(): void {
   if (installed) return;
   installed = true;
+  markCaptureInstalled();
 
   const origFetch = globalThis.fetch.bind(globalThis);
   globalThis.fetch = (async (input: any, init?: any) => {
     const url: string | undefined = typeof input === "string" ? input : input instanceof URL ? input.href : input?.url;
     const provider = enabled() && url ? providerOf(url) : null;
-    if (!url || !provider || !als.getStore()) return origFetch(input, init);
+    if (!url || !provider) return origFetch(input, init);
+    if (!als.getStore()) {
+      // Not inside a customer request (background job, or the request context was lost). Not counted, but visible.
+      diag({ stage: "provider_call", provider, hasRequestContext: false, reason: "no_request_context" });
+      return origFetch(input, init);
+    }
     let reqModel: string | null = null;
     let nextInit = init;
     if (isChatCompletion(url) && typeof init?.body === "string") {
@@ -139,7 +171,11 @@ export function installAiUsageCapture(): void {
   const onDone = (config: any, ok: boolean, body: any) => {
     const url = (config?.baseURL ?? "") + (config?.url ?? "");
     const provider = enabled() ? providerOf(url) : null;
-    if (!provider || !als.getStore()) return;
+    if (!provider) return;
+    if (!als.getStore()) {
+      diag({ stage: "provider_call", provider, hasRequestContext: false, reason: "no_request_context" });
+      return;
+    }
     let reqModel: string | null = null;
     try {
       const d = typeof config.data === "string" ? JSON.parse(config.data) : config.data;

@@ -3,7 +3,7 @@
 // AI cost tracking, the cost reports and provider balance checks. Needs a DISPOSABLE localhost Postgres with all
 // migrations applied (refuses anything else). Providers are replaced by in-process stubs: no real AI call is made
 // and no real key is used, so every number below comes from the stub's reply, not from a paid request.
-import { test, before, after, beforeEach } from "node:test";
+import { test, before, after, beforeEach, mock } from "node:test";
 import assert from "node:assert/strict";
 import type { AddressInfo } from "node:net";
 import type { Server } from "node:http";
@@ -93,7 +93,7 @@ before(async () => {
   prisma = (await import("../../../prisma.js")).default;
   const { default: adminRoutes } = await import("../../modules/admin/admin.route.js");
   const { feature } = await import("../../utils/usage.js");
-  const { markServedFromCache } = await import("../../utils/aiUsageCapture.js");
+  const { markServedFromCache, reportAiCall } = await import("../../utils/aiUsageCapture.js");
   const { auth } = await import("../../middleware/authMiddleware.js");
   const { errorHandler } = await import("../../middleware/errorHandler.js");
 
@@ -148,6 +148,12 @@ before(async () => {
   app.post("/api/p/axios", ...feature("gemstone"), auth("USER"), async (_req, res) => {
     const r = await axios.post(OR, { model: "or/model-x", messages: [] }, { validateStatus: () => true });
     res.status(r.status === 200 ? 200 : 502).json({ ok: true });
+  });
+  // An AI client that does not use fetch/axios (e.g. a provider SDK with its own HTTP stack) reports its call explicitly.
+  app.post("/api/p/sdk", ...feature("compatibility"), auth("USER"), (_req, res) => {
+    reportAiCall({ provider: "openrouter", model: "sdk/model", inputTokens: 7, outputTokens: 3, costUsd: 0.001 });
+    reportAiCall({ provider: "groq", model: "test-groq-model", inputTokens: 1000, outputTokens: 500 });
+    res.json({ ok: true });
   });
   app.post("/api/p/non-ai", ...feature("zodiac"), auth("USER"), (_req, res) => res.json({ ok: true }));
   app.get("/api/p/not-modified", ...feature("palm-reading"), auth("USER"), (_req, res) => res.status(304).end());
@@ -531,4 +537,57 @@ test("GET balance never calls a provider; refresh calls once, caches, throttles,
   assert.equal(seen.length, callsAfterFirst);
   assert.ok(!cached.text.includes("ROUTESECRET"));
   assert.equal(await prisma.adminAuditLog.count({ where: { action: "providers.balance_refresh" } }), 1);
+});
+
+test("SDK-style clients can report calls explicitly: actual when the provider gave a cost, estimated from the price table otherwise", { skip }, async () => {
+  await call("POST", "/api/p/sdk", t.alice);
+  const row = await lastRow("compatibility");
+  assert.equal(row.aiCalls, 2);
+  assert.equal(row.aiProvider, "openrouter+groq");
+  assert.equal(row.totalTokens, 10 + 1500);
+  assert.equal(Number(row.costUsd), 0.001 + 0.002);
+  assert.equal(row.costBasis, "estimated", "mixed actual + estimated is reported as estimated, never as actual");
+});
+
+test("a database without the AI columns still keeps the activity row (details dropped, nothing lost silently)", { skip }, async () => {
+  const real = prisma.usageEvent;
+  const fake = new Proxy(real, {
+    get: (target, key) =>
+      key === "create"
+        ? async (args: any) => {
+            if (args?.data && ("aiCalls" in args.data || "servedFromCache" in args.data)) throw Object.assign(new Error("column does not exist"), { code: "P2022" });
+            return target.create(args);
+          }
+        : (target as any)[key],
+  });
+  Object.defineProperty(prisma, "usageEvent", { configurable: true, get: () => fake });
+  const warn = mock.method(console, "warn", () => {});
+  try {
+    reply = () => ({ status: 200, body: orBody(0.0123) });
+    const before = await rowCount("tarot");
+    await call("POST", "/api/p/tarot", t.alice);
+    for (let i = 0; i < 50 && (await rowCount("tarot")) < before + 1; i++) await sleep(40);
+    assert.equal(await rowCount("tarot"), before + 1, "the activity row was kept");
+    const row = await lastRow("tarot");
+    assert.equal(row.aiCalls, null, "AI details could not be stored on this database");
+    const { diagnosticsSnapshot } = await import("../../utils/aiDiagnostics.js");
+    const d = diagnosticsSnapshot();
+    assert.ok(d.counters.aiRowsPersistFailed >= 1);
+    assert.match(String(d.recent.find((e) => e.stage === "persist" && e.persisted === false)?.reason), /missing_ai_columns/);
+  } finally {
+    Object.defineProperty(prisma, "usageEvent", { configurable: true, get: () => real });
+    warn.mock.restore();
+  }
+});
+
+test("diagnostics: a provider call outside any customer request is visible, not silently lost", { skip }, async () => {
+  const { diagnosticsSnapshot, resetDiagnostics } = await import("../../utils/aiDiagnostics.js");
+  resetDiagnostics();
+  reply = () => ({ status: 200, body: orBody(0.01) });
+  await fetch("https://openrouter.ai/api/v1/chat/completions", { method: "POST", body: JSON.stringify({ model: "x", messages: [] }) });
+  const d = diagnosticsSnapshot();
+  assert.equal(d.counters.providerCallsWithoutRequestContext, 1);
+  assert.equal(d.recent[0].reason, "no_request_context");
+  const dump = JSON.stringify(d);
+  assert.ok(!dump.includes("messages"), "no request content in diagnostics");
 });

@@ -9,6 +9,8 @@ import { parseRange, toCsv } from "./adminPanel.validation.js";
 import { wrap } from "./adminPanel.route.js";
 import { writeAudit } from "./audit.js";
 import { readSnapshot, refreshSnapshot } from "./providerBalance.js";
+import { diagnosticsSnapshot } from "@/utils/aiDiagnostics.js";
+import { loadPricing } from "@/config/aiPricing.js";
 
 const DAY_MS = 86_400_000;
 const num = (v: unknown) => Number(v ?? 0);
@@ -154,6 +156,28 @@ export function createCostsRouter(): Router {
           const r = dailyMap.get(d);
           return { day: d, requests: num(r?.requests), tokens: r?.tokens == null ? 0 : num(r.tokens), costUsd: r?.cost ?? 0, actualUsd: r?.actual ?? 0, estimatedUsd: r?.estimated ?? 0 };
         }),
+      });
+    }),
+  );
+
+  // ── Why is AI usage missing? Flags and counts only: no prompts, content, keys or prices ──
+  router.get(
+    "/costs/diagnostics",
+    wrap(async (_req, res) => {
+      const since = new Date(Date.now() - 7 * DAY_MS);
+      const rows = await prisma.$queryRaw<{ feature: string; requests: bigint; withAi: bigint; okWithoutAi: bigint; failed: bigint }[]>`
+        SELECT feature, COUNT(*) AS requests, COUNT(*) FILTER (WHERE ai_calls > 0) AS "withAi",
+               COUNT(*) FILTER (WHERE status = 'success' AND ai_calls IS NULL AND NOT served_from_cache) AS "okWithoutAi",
+               COUNT(*) FILTER (WHERE status <> 'success') AS failed
+        FROM usage_events WHERE event_type = 'feature.request' AND created_at >= ${since} GROUP BY feature ORDER BY feature`;
+      const configured = (name: string) => !!process.env[name];
+      sendResponse(res, true, {
+        ...diagnosticsSnapshot(),
+        providersConfigured: { openrouter: configured("OPENROUTER_API_KEY"), groq: configured("GROQ_API_KEY"), sarvam: configured("SARVAM_API_KEY") },
+        pricingEntries: Object.keys(loadPricing()).length,
+        windowDays: 7,
+        features: rows.map((r) => ({ feature: r.feature, requests: num(r.requests), withAiUsage: num(r.withAi), succeededWithoutAi: num(r.okWithoutAi), notSuccessful: num(r.failed) })),
+        note: "Per-process view: counters reset when the server restarts. A feature request that succeeded without AI usage either called no provider (cached, validation, or the provider is not configured on this server) or ran on a server that has not been restarted since this version was installed.",
       });
     }),
   );
