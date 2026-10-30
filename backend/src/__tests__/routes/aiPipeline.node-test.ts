@@ -9,7 +9,7 @@
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
-import { createServer } from "node:net";
+import { createServer, connect } from "node:net";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -200,14 +200,49 @@ test("provider reply without usage: the call and provider/model are recorded, to
   assert.equal(row.ai.costBasis, null);
 });
 
-test("OpenRouter usage without a cost field: tokens kept, cost not invented (no price configured for it)", { skip }, async () => {
+test("OpenRouter usage without a cost field: tokens kept, cost ESTIMATED from OpenRouter's own price list (never actual, never zero)", { skip }, async () => {
+  for (let i = 0; i < 60; i++) { // the price list is fetched in the background after start
+    if ((await call("GET", "/api/admin/costs/diagnostics", t.owner)).data?.data?.openRouterPriceList > 0) break;
+    await sleep(250);
+  }
   setMode("nocost");
   const before = (await activity("&feature=inner-voice")).length;
   await call("POST", "/api/inner-voice/guru-chat", t.alice, { message: "again" });
   const row = (await rowsFor("inner-voice", before + 1))[0];
   assert.equal(row.ai.totalTokens, 200);
-  assert.equal(row.ai.costUsd, null);
+  assert.equal(row.ai.costBasis, "estimated");
+  assert.ok(Math.abs(row.ai.costUsd - (120 * 1 + 80 * 2) / 1e6) < 1e-12, "120 in x $1/M + 80 out x $2/M from the catalogue");
 });
+
+// What a real provider connection looks like: latency, chunked transfer, gzip split across chunks, keep-alive padding.
+// Mocked-in-process responses cannot show problems with the real response stream, so this goes over a real socket.
+for (const m of ["network", "network-ws"]) {
+  test(`real socket (${m}): slow, chunked${m === "network" ? ", gzip" : ", blank-line padding"} responses are still captured with provider, model, tokens and cost`, { skip }, async () => {
+    setMode(m);
+    const before = { tarot: (await activity("&feature=tarot")).length, chat: (await activity("&feature=ai-chat")).length, interp: (await activity("&feature=interpretation")).length };
+    const calls0 = providerCalls().length;
+    const r1 = await call("POST", "/api/tarot/reading", t.alice, TAROT); // fetch -> OpenRouter
+    const r2 = await call("POST", "/api/ai/chat", t.alice, { messages: [{ role: "user", content: "slow" }] }); // fetch -> Groq
+    const r3 = await call("GET", "/api/interpretation/compatibility?sign1=aries&sign2=leo", t.alice); // axios -> OpenRouter
+    assert.ok(r1.status > 0 && r2.status === 200 && r3.status === 200, `statuses ${r1.status}/${r2.status}/${r3.status}`);
+    assert.equal(providerCalls().length - calls0, 3, "three real-socket provider calls");
+    const tarot = (await rowsFor("tarot", before.tarot + 1))[0];
+    assert.equal(tarot.ai.provider, "openrouter");
+    assert.equal(tarot.ai.model, "stub/openrouter-model");
+    assert.equal(tarot.ai.totalTokens, 200);
+    assert.equal(tarot.ai.costBasis, "actual");
+    assert.equal(tarot.ai.costUsd, 0.00042);
+    const chat = (await rowsFor("ai-chat", before.chat + 1))[0];
+    assert.equal(chat.ai.provider, "groq");
+    assert.equal(chat.ai.totalTokens, 1500);
+    assert.equal(chat.ai.costBasis, "estimated");
+    const interp = (await rowsFor("interpretation", before.interp + 1))[0];
+    assert.equal(interp.ai.provider, "openrouter");
+    assert.equal(interp.ai.costUsd, 0.00042);
+    assert.equal(interp.ai.costBasis, "actual");
+    setMode("ok");
+  });
+}
 
 test("failed provider call: row is a failure with no cost", { skip }, async () => {
   setMode("error");
@@ -244,4 +279,28 @@ test("diagnostics: capture installed, calls observed, rows persisted, nothing wi
   assert.ok(!dump.includes("fake-pipeline-key") && !dump.includes("hello") && !dump.includes("guide me"));
   assert.equal((await call("GET", "/api/admin/costs/diagnostics", t.alice)).status, 403);
   assert.equal((await call("GET", "/api/admin/costs/diagnostics")).status, 401);
+});
+
+// Behind a browser, a dev proxy or a tunnel the body often arrives AFTER the headers. The tracker runs before these routes' body
+// parser, so this proves the request context survives a late body (it does: this was investigated as a possible cause of missing costs).
+test("a request body that arrives after the headers is still captured (tarot and ai/chat, whose body parser runs after the tracker)", { skip }, async () => {
+  setMode("ok");
+  const raw = (p: string, body: unknown, delayMs: number) => new Promise<number>((resolve) => {
+    const payload = JSON.stringify(body);
+    const s = connect(Number(new URL(base).port), "127.0.0.1", () => {
+      const CRLF = String.fromCharCode(13, 10);
+      s.write([`POST ${p} HTTP/1.1`, "Host: x", `Authorization: Bearer ${t.alice}`, "Content-Type: application/json", `Content-Length: ${Buffer.byteLength(payload)}`, "Connection: close", "", ""].join(CRLF));
+      setTimeout(() => s.write(payload), delayMs);
+    });
+    let out = "";
+    s.on("data", (d) => (out += d));
+    s.on("close", () => resolve(Number(/^HTTP\/1\.1 (\d+)/.exec(out)?.[1])));
+  });
+  const before = { tarot: (await activity("&feature=tarot")).length, chat: (await activity("&feature=ai-chat")).length };
+  await raw("/api/tarot/reading", TAROT, 400);
+  assert.equal(await raw("/api/ai/chat", { messages: [{ role: "user", content: "late body" }] }, 400), 200);
+  const tarot = (await rowsFor("tarot", before.tarot + 1))[0];
+  const chat = (await rowsFor("ai-chat", before.chat + 1))[0];
+  assert.equal(tarot.ai?.provider, "openrouter");
+  assert.equal(chat.ai?.provider, "groq");
 });

@@ -184,7 +184,7 @@ const diagnostics = {
   captureInstalled: true, accountingEnabled: true, startedAt: "2026-10-30T08:00:00.000Z", pricingEntries: 1,
   counters: { providerCallsSeen: 5, providerCallsWithoutRequestContext: 0, providerCallsWithoutTokens: 1, providerCallsWithoutCost: 2, aiRowsPersisted: 5, aiRowsPersistFailed: 0 },
   providersConfigured: { openrouter: false, groq: true, sarvam: false }, windowDays: 7, recent: [],
-  features: [{ feature: "tarot", requests: 9, withAiUsage: 0, succeededWithoutAi: 0, notSuccessful: 9 }], note: "Per-process view.",
+  features: [{ feature: "tarot", requests: 9, withAiUsage: 0, succeededWithoutAi: 0, notSuccessful: 9 }], note: "Per-process view.", openRouterPriceList: 456, lastProviderCallAt: "2026-10-30T09:00:00.000Z",
 };
 const integrations = { windowDays: 30, database: { name: "PostgreSQL", ok: true, latencyMs: 3, kind: "remote", host: "x" }, providers: [], security: { jwtSecretConfigured: true, jwtSecretStrong: true, mainAdminEmailPinned: true }, note: "n" };
 
@@ -263,6 +263,14 @@ describe("AI usage capture status", () => {
     expect(screen.getByText("groq: set")).toBeInTheDocument();
     const row = screen.getByRole("cell", { name: "tarot" }).closest("tr")!;
     expect(row).toHaveTextContent("9");
+  });
+
+  it("says plainly that nothing can be shown yet when no AI request has run since the server started", async () => {
+    const idle = { ...diagnostics, counters: { ...diagnostics.counters, providerCallsSeen: 0, aiRowsPersisted: 0 }, lastProviderCallAt: null, features: [] };
+    authRequest.mockImplementation(async (url: string) => (url === "/admin/integrations" ? integrations : url === "/admin/costs/diagnostics" ? idle : { providers: [], refreshedAt: null }));
+    mount(<IntegrationsPage />);
+    expect(await screen.findByText(/No AI request has run on this server since it started/)).toHaveTextContent(/never back-filled/);
+    expect(screen.getByText(/OpenRouter price list: 456 models/)).toBeInTheDocument();
   });
 
   it("tells the admin to restart when the server has no diagnostics (an older backend process)", async () => {

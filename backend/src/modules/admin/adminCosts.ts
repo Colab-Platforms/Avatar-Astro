@@ -10,7 +10,7 @@ import { wrap } from "./adminPanel.route.js";
 import { writeAudit } from "./audit.js";
 import { readSnapshot, refreshSnapshot } from "./providerBalance.js";
 import { diagnosticsSnapshot } from "@/utils/aiDiagnostics.js";
-import { loadPricing } from "@/config/aiPricing.js";
+import { loadPricing, openRouterCatalogueSize } from "@/config/aiPricing.js";
 
 const DAY_MS = 86_400_000;
 const num = (v: unknown) => Number(v ?? 0);
@@ -175,6 +175,7 @@ export function createCostsRouter(): Router {
         ...diagnosticsSnapshot(),
         providersConfigured: { openrouter: configured("OPENROUTER_API_KEY"), groq: configured("GROQ_API_KEY"), sarvam: configured("SARVAM_API_KEY") },
         pricingEntries: Object.keys(loadPricing()).length,
+        openRouterPriceList: openRouterCatalogueSize(),
         windowDays: 7,
         features: rows.map((r) => ({ feature: r.feature, requests: num(r.requests), withAiUsage: num(r.withAi), succeededWithoutAi: num(r.okWithoutAi), notSuccessful: num(r.failed) })),
         note: "Per-process view: counters reset when the server restarts. A feature request that succeeded without AI usage either called no provider (cached, validation, or the provider is not configured on this server) or ran on a server that has not been restarted since this version was installed.",
