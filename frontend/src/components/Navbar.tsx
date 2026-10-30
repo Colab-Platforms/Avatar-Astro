@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, ChevronDown, Radio, LogIn, LogOut, User } from "lucide-react";
 import gsap from "gsap";
 import { useAuthStore } from "@/store/authStore";
+import { useFeatureFlags } from "@/lib/featureFlags";
 import { useLogoutMutation } from "@/features/auth/hooks/useAuthMutations";
 import {
   AlertDialog,
@@ -329,6 +330,10 @@ const Navbar = () => {
   const location              = useLocation();
   const navigate              = useNavigate();
   const isAuthenticated       = useAuthStore((s) => s.isAuthenticated);
+  // Tools the admin switched off disappear from the menus (the API refuses them too).
+  const { isPathDisabled } = useFeatureFlags();
+  const visibleAstrologyTools = astrologyTools.filter((l) => !isPathDisabled(l.path, true));
+  const visibleInnerVoiceLinks = innerVoiceLinks.filter((l) => !isPathDisabled(l.path, true));
   const user                  = useAuthStore((s) => s.user);
   const logoutMutation        = useLogoutMutation();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -405,8 +410,8 @@ const Navbar = () => {
               {location.pathname === "/" && <span className="absolute -bottom-1 left-0 right-0 h-[2px] bg-[#BC6A4D] rounded-full" />}
             </Link>
 
-            <NavDropdown label="Astrology Tools" menuId="astrology-tools-menu" items={astrologyTools} currentPath={location.pathname} lightNav={lightNav} />
-            <NavDropdown label="Inner Voice"      menuId="inner-voice-menu"     items={innerVoiceLinks} currentPath={location.pathname} lightNav={lightNav} />
+            <NavDropdown label="Astrology Tools" menuId="astrology-tools-menu" items={visibleAstrologyTools} currentPath={location.pathname} lightNav={lightNav} />
+            <NavDropdown label="Inner Voice"      menuId="inner-voice-menu"     items={visibleInnerVoiceLinks} currentPath={location.pathname} lightNav={lightNav} />
             <NavDropdown label="Devotion"         menuId="devotion-menu"        items={devotionLinks}   currentPath={location.pathname} lightNav={lightNav} />
 
             {/* Avatar Live — dedicated premium dropdown */}
@@ -421,10 +426,10 @@ const Navbar = () => {
 
             {isAuthenticated ? (
               <div className="flex items-center gap-3 pl-2 border-l border-border/30">
-                <span className={`flex items-center gap-1.5 font-display text-xs tracking-wider ${lightNav ? "text-[#2C1810]/70" : "text-foreground/70"}`}>
+                <Link to="/dashboard" title="Open your dashboard" className={`flex items-center gap-1.5 font-display text-xs tracking-wider hover:underline ${lightNav ? "text-[#2C1810]/70" : "text-foreground/70"}`}>
                   <User size={14} className="text-[#BC6A4D]" />
                   {displayName}
-                </span>
+                </Link>
                 <button
                   type="button"
                   onClick={() => setShowLogoutConfirm(true)}
@@ -473,8 +478,8 @@ const Navbar = () => {
                 Home
               </Link>
 
-              <MobileAccordion label="Astrology Tools" items={astrologyTools}  currentPath={location.pathname} onNavigate={() => setIsOpen(false)} />
-              <MobileAccordion label="Inner Voice"     items={innerVoiceLinks} currentPath={location.pathname} onNavigate={() => setIsOpen(false)} />
+              <MobileAccordion label="Astrology Tools" items={visibleAstrologyTools}  currentPath={location.pathname} onNavigate={() => setIsOpen(false)} />
+              <MobileAccordion label="Inner Voice"     items={visibleInnerVoiceLinks} currentPath={location.pathname} onNavigate={() => setIsOpen(false)} />
               <MobileAccordion label="Devotion"        items={devotionLinks}   currentPath={location.pathname} onNavigate={() => setIsOpen(false)} />
 
               {/* Avatar Live accordion — links to hub + sub-pages */}
@@ -496,6 +501,15 @@ const Navbar = () => {
                 </Link>
               ))}
 
+              {isAuthenticated && (
+                <Link
+                  to="/dashboard"
+                  onClick={() => setIsOpen(false)}
+                  className="mobile-nav-link font-display text-base font-medium px-2 py-2 rounded-lg text-[#BC6A4D]"
+                >
+                  My Dashboard
+                </Link>
+              )}
               {isAuthenticated ? (
                 <button
                   type="button"

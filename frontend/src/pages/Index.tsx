@@ -7,6 +7,7 @@ import SolarSystemSection from "@/components/SolarSystemSection";
 import HomeBlogSection from "@/components/HomeBlogSection";
 import WhyAstrologySection from "@/components/WhyAstrologySection";
 import FaqSection from "@/components/FaqSection";
+import PublishedBanners from "@/components/PublishedBanners";
 
 /* ── Component ─────────────────────────────────────────────────────────── */
 
@@ -19,6 +20,9 @@ const Index = () => {
         <div className="relative z-10">
           {/* ── HERO ──────────────────────────────────────────────────── */}
           <Hero />
+
+          {/* ── BANNERS PUBLISHED FROM THE ADMIN PANEL (renders nothing if none) ── */}
+          <PublishedBanners />
 
           {/* ── ASTROLOGY TOOLS ──────────────────────────────────────── */}
           <AstrologyToolsSection />

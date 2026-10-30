@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Play, Radio, Users, Calendar, ArrowRight, Video, Sparkles } from 'lucide-react';
 import DevotionLayout from '@/components/DevotionLayout';
-import { liveTemples, familyEvents, upcomingEvents, formatViewers } from '@/data/liveStreams';
+import { liveTemples, familyEvents, upcomingEvents } from '@/data/liveStreams';
 
 // ── Decorative temple gopuram SVG ─────────────────────────────────────────────
 const TempleSVG = ({ opacity = 0.15 }: { opacity?: number }) => (
@@ -75,9 +75,6 @@ const LiveCard = ({ temple }: { temple: (typeof liveTemples)[0] }) => (
             <span style={{ width: 5, height: 5, background: 'rgba(89,34,9,0.25)', borderRadius: '50%' }} /> LIVE
           </div>
         )}
-        <div style={{ position: 'absolute', bottom: 8, right: 8, background: '#FBF5EC', color: '#F5E9D6', fontSize: 11, padding: '3px 8px', borderRadius: 99, display: 'flex', alignItems: 'center', gap: 4 }}>
-          <Users style={{ width: 10, height: 10 }} /> {formatViewers(temple.viewers)}
-        </div>
       </div>
       <div style={{ padding: '14px 16px' }}>
         <span style={{ fontSize: 11, fontWeight: 600, color: '#592209', letterSpacing: '0.08em', textTransform: 'uppercase', background: 'rgba(89,34,9,0.08)', border: '1px solid rgba(89,34,9,0.2)', borderRadius: 99, padding: '2px 8px', display: 'inline-block', marginBottom: 6 }}>
@@ -172,17 +169,6 @@ const AvatarLivePage = () => {
                     }}>
                       <span style={{ width: 7, height: 7, background: 'rgba(89,34,9,0.25)', borderRadius: '50%' }} />
                       LIVE NOW
-                    </div>
-
-                    {/* Viewer count */}
-                    <div style={{
-                      position: 'absolute', top: 24, right: 24,
-                      background: 'rgba(89,34,9,0.08)', backdropFilter: 'blur(8px)',
-                      color: '#301607', fontSize: 12, fontWeight: 600,
-                      padding: '6px 14px', borderRadius: 99, display: 'flex', alignItems: 'center', gap: 6,
-                    }}>
-                      <Users style={{ width: 13, height: 13 }} />
-                      {formatViewers(liveTemples.reduce((s, t) => s + (t.isLive ? t.viewers : 0), 0))} watching
                     </div>
 
                     {/* Bottom content overlay */}
@@ -345,9 +331,6 @@ const AvatarLivePage = () => {
                         {e.isLive && (
                           <div style={{ position: 'absolute', top: 10, left: 10, background: '#E53935', color: '#F5E9D6', fontSize: 9, fontWeight: 700, padding: '3px 9px', borderRadius: 99, letterSpacing: '0.12em' }}>● LIVE</div>
                         )}
-                        <div style={{ position: 'absolute', bottom: 8, right: 8, background: '#FBF5EC', color: '#F5E9D6', fontSize: 10, padding: '3px 8px', borderRadius: 99 }}>
-                          {formatViewers(e.viewers)} watching
-                        </div>
                       </div>
                       <div style={{ padding: '14px 16px' }}>
                         <span style={{ fontSize: 10, fontWeight: 600, color: '#592209', background: 'rgba(89,34,9,0.08)', border: '1px solid rgba(89,34,9,0.2)', borderRadius: 99, padding: '2px 8px', display: 'inline-block', marginBottom: 6 }}>
@@ -451,16 +434,16 @@ const AvatarLivePage = () => {
               <p style={{ fontSize: 16, color: 'rgba(48,22,7,1)', lineHeight: 1.7, maxWidth: 480, margin: '0 auto 32px' }}>
                 Share spiritual events and family celebrations with loved ones anywhere in the world.
               </p>
-              <button style={{
+              <Link to="/contact" style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
                 background: '#FFF', color: '#592209', fontSize: 14, fontWeight: 700,
                 letterSpacing: '0.1em', textTransform: 'uppercase',
                 padding: '16px 32px', borderRadius: 14,
                 boxShadow: '0 4px 20px rgba(89,34,9,0.2)',
-                fontFamily: "'DM Sans', system-ui, sans-serif", cursor: 'pointer', border: 'none',
+                fontFamily: "'DM Sans', system-ui, sans-serif", cursor: 'pointer', border: 'none', textDecoration: 'none',
               }}>
                 <Video style={{ width: 16, height: 16 }} /> Create Live Event
-              </button>
+              </Link>
             </div>
           </div>
         </section>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Facebook, Linkedin, Instagram, Twitter, ArrowRight } from 'lucide-react';
 import { subscribeNewsletter } from '@/lib/inquiry';
+import { useFeatureFlags } from '@/lib/featureFlags';
 
 const exploreLinks = [
   { label: 'Daily Horoscopes', path: '/horoscopes' },
@@ -31,6 +32,7 @@ const socialIcons = [
  * lines up with its 1400px container, other routes keep the wider original layout.
  */
 const Footer = () => {
+  const { isPathDisabled } = useFeatureFlags();
   const [email, setEmail] = useState('');
   const home = useLocation().pathname === '/';
 
@@ -73,7 +75,7 @@ const Footer = () => {
           <nav aria-label="Explore">
             <p className={colHead} style={{ color: '#F5E9D6' }}>Explore</p>
             <div className="flex flex-col gap-4">
-              {exploreLinks.map((link) => (
+              {exploreLinks.filter((l) => !isPathDisabled(l.path)).map((link) => (
                 <Link key={link.path} to={link.path} className={linkCls}>
                   {link.label}
                 </Link>

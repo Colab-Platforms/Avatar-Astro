@@ -12,6 +12,9 @@ import tarotRoutes from "./routes/tarotRoutes.js";
 import inquiryRoutes from "./routes/inquiryRoutes.js";
 import { auth } from "./middleware/authMiddleware.js";
 import { createRateLimiter } from "./utils/rateLimit.js";
+import { feature } from "./utils/usage.js";
+import { createMeRouter } from "./modules/me/me.route.js";
+import { createPublicContentRouter } from "./routes/publicContentRoutes.js";
 import darshanRoutes from "./modules/darshan/darshan.public.route.js";
 import authRoutes from "./modules/auth/auth.route.js";
 import adminRoutes from "./modules/admin/admin.route.js";
@@ -25,6 +28,15 @@ import { startDarshanRefreshLoop } from "./modules/darshan/darshan.refresh.js";
 dotenv.config();
 
 const app = express();
+
+// Loud (non-fatal) startup report of missing configuration. Names only, never values.
+{
+  const critical = ["DATABASE_URL", "JWT_SECRET"].filter((k) => !process.env[k]);
+  if (critical.length) console.error(`✗ MISSING REQUIRED ENV: ${critical.join(", ")} — sign-in and most features will fail`);
+  if (process.env.JWT_SECRET && process.env.JWT_SECRET.length < 32) console.warn("! JWT_SECRET is shorter than 32 characters");
+  const optional = ["OPENROUTER_API_KEY", "GROQ_API_KEY", "RESEND_API_KEY", "SMTP_FROM_EMAIL", "SUPPORT_EMAIL", "YOUTUBE_API_KEY", "CORS_ORIGIN"].filter((k) => !process.env[k]);
+  if (optional.length) console.warn(`! Optional env not set (related features disabled or degraded): ${optional.join(", ")}`);
+}
 // Render (and most hosts) terminate TLS at one proxy hop. Without this, req.ip is the proxy for every visitor,
 // so the per-IP rate limits would be shared by all users at once.
 app.set("trust proxy", 1);
@@ -60,15 +72,17 @@ app.use(
       if (PRODUCTION_ORIGIN && origin === PRODUCTION_ORIGIN)
         return callback(null, true);
       console.warn(`✗ CORS rejected origin: ${origin}`);
-      callback(new Error("Not allowed by CORS"));
+      callback(Object.assign(new Error("Not allowed by CORS"), { statusCode: 403 }));
     },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    // Lets the browser read the dated filename of admin CSV exports.
+    exposedHeaders: ["Content-Disposition"],
     credentials: true,
   }),
 );
 // Mounted before the global 20mb body parser: it applies its own 250kb limit.
-app.use("/api/ai", aiProxyRoutes);
-app.use("/api/tarot", tarotRoutes);
+app.use("/api/ai", ...feature("ai-chat"), aiProxyRoutes);
+app.use("/api/tarot", ...feature("tarot"), tarotRoutes);
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true, limit: "20mb" }));
 
@@ -78,6 +92,7 @@ app.get("/api/health", (_req: Request, res: Response) => {
 });
 
 // Zodiac endpoints
+app.use("/api/zodiac", ...feature("zodiac"));
 app.get("/api/zodiac/signs", (_req: Request, res: Response) => {
   const signs = [
     {
@@ -279,18 +294,22 @@ app.use("/api/chadhawa", publicChadhawaRoutes);
 app.use("/api/shop", publicShopRoutes);
 
 // Ratna Jyotish (stateless gemstone calculator)
-app.use("/api/gemstone-calculator", gemstoneRoutes);
+app.use("/api/gemstone-calculator", ...feature("gemstone"), gemstoneRoutes);
 
 // AI routes
-app.use("/api/interpretation", interpretationRoutes);
-app.use("/api/compatibility", compatibilityRoutes);
-app.use("/api/birthchart", birthChartRoutes);
-app.use("/api/name-analysis", nameAnalysisRoutes);
-app.use("/api/inner-voice", innerVoiceRoutes);
+app.use("/api/interpretation", ...feature("interpretation"), interpretationRoutes);
+app.use("/api/compatibility", ...feature("compatibility"), compatibilityRoutes);
+app.use("/api/birthchart", ...feature("birth-chart"), birthChartRoutes);
+app.use("/api/name-analysis", ...feature("name-analysis"), nameAnalysisRoutes);
+app.use("/api/inner-voice", ...feature("inner-voice"), innerVoiceRoutes);
+
+// Signed-in user dashboard data and what the main admin publishes (public, read-only).
+app.use("/api/me", createMeRouter());
+app.use("/api/public", createPublicContentRouter());
 app.use("/api/darshan", darshanRoutes);
 
 // TTS proxy — matches the /api/tts path used by VoiceConsultation.tsx
-app.post("/api/tts", auth("USER"), async (req: Request, res: Response) => {
+app.post("/api/tts", ...feature("tts"), auth("USER"), async (req: Request, res: Response) => {
   const { text, language } = req.body ?? {};
   if (!String(text ?? "").trim()) {
     return res.status(400).json({ error: "text is required" });
@@ -338,7 +357,7 @@ app.post("/api/tts", auth("USER"), async (req: Request, res: Response) => {
 // It is kept (and locked down) because it forwards an image to a paid vision model.
 const PALM_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const PALM_MAX_BASE64_CHARS = 8_000_000; // ~6 MB of image data
-app.post("/api/palm-reading", auth("USER"), createRateLimiter({ windowMs: 60_000, max: 5 }), async (req: Request, res: Response) => {
+app.post("/api/palm-reading", ...feature("palm-reading"), auth("USER"), createRateLimiter({ windowMs: 60_000, max: 5 }), async (req: Request, res: Response) => {
   const { imageBase64, imageType, fingerprint } = req.body;
   if (!imageBase64 || !imageType) {
     return res.status(400).json({

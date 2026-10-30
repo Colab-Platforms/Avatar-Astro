@@ -1,5 +1,6 @@
 import axios from "axios";
 import DarshanService from "./darshan.service.js";
+import { websubSecret } from "./darshan.signature.js";
 
 const darshanService = new DarshanService();
 
@@ -26,15 +27,20 @@ function callbackUrl(): string {
 export async function subscribeChannel(channelId: string): Promise<void> {
   if (!channelId) return;
 
+  const params = new URLSearchParams({
+    "hub.mode": "subscribe",
+    "hub.topic": topicUrl(channelId),
+    "hub.callback": callbackUrl(),
+    "hub.verify": "async",
+    "hub.lease_seconds": String(LEASE_SECONDS),
+  });
+  // Optional: have the hub sign notifications so forged POSTs to the webhook are rejected.
+  const secret = websubSecret();
+  if (secret) params.set("hub.secret", secret);
+
   await axios.post(
     HUB_URL,
-    new URLSearchParams({
-      "hub.mode": "subscribe",
-      "hub.topic": topicUrl(channelId),
-      "hub.callback": callbackUrl(),
-      "hub.verify": "async",
-      "hub.lease_seconds": String(LEASE_SECONDS),
-    }),
+    params,
     { headers: { "Content-Type": "application/x-www-form-urlencoded" } },
   );
 }
