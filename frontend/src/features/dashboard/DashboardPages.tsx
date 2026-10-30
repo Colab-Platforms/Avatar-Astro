@@ -85,7 +85,7 @@ export function MyAstrology() {
     <Loaded>
       {(d) => (
         <>
-          <Heading title="My Astrology" sub="Open any astrology tool. Free with your account." />
+          <Heading title="My Astrology" sub="Open any astrology Seva. Free with your account." />
           <div className="grid gap-3 sm:grid-cols-2">
             {tools.filter((t) => !isPathDisabled(t.path)).map((t) => <Link key={t.path} to={t.path} className={linkCard}><p className="font-medium">{t.title}</p><p className="mt-1 line-clamp-2 text-sm text-[#301607]/70">{t.description}</p></Link>)}
           </div>
@@ -111,7 +111,7 @@ export function MyInnerVoice() {
     <Loaded>
       {(d) => (
         <>
-          <Heading title="My Inner Voice" sub="Your reflection tools." />
+          <Heading title="My Inner Voice" sub="Your reflection Seva." />
           <div className="grid gap-3 sm:grid-cols-2">
             {[
               { to: "/inner-voice", t: "Know Your Karma", s: "A written karmic reading from your situation" },
