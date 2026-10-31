@@ -4,6 +4,7 @@ import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Line, Line
 import { errorMessage, panelDownloadCsv, usePanel } from "../api";
 import { QueryView } from "../QueryView";
 import { CostAnalytics } from "../CostAnalytics";
+import { FeatureCostBreakdown } from "../FeatureCostBreakdown";
 import { Card, Empty, fmtDate, fmtPct, ghostBtn, inputClass, isoDay, PageHeader, Stat, Table } from "../ui";
 
 interface FeatureRow { key: string; label: string; provider: string; total: number; success: number; failed: number; rejected: number }
@@ -112,8 +113,8 @@ export default function ReportsPage() {
               <>
                 <p className="text-xs text-[#6B6259]">{d.from} to {d.to} (UTC){d.trackingSince ? ` · activity tracked since ${fmtDate(d.trackingSince)}; earlier history was never recorded` : " · no activity has been recorded yet"}</p>
                 <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-                  <Stat label="Registered users" value={k.totalUsers.toLocaleString()} hint="All time" to="/admin/users" />
-                  <Stat label="New users" value={k.newUsers.toLocaleString()} hint="Registered in this period" to={`/admin/users?registeredFrom=${d.from}&registeredTo=${d.to}`} />
+                  <Stat label="Registered users" value={k.totalUsers.toLocaleString()} hint="All time" to="/admin/customers" />
+                  <Stat label="New users" value={k.newUsers.toLocaleString()} hint="Registered in this period" to={`/admin/customers?registeredFrom=${d.from}&registeredTo=${d.to}`} />
                   <Stat label="Active users" value={k.activeUsers.toLocaleString()} hint="Signed in or used a feature" to={`/admin/activity?status=success&${rangeQs}`} />
                   <Stat label="Returning users" value={k.returningUsers.toLocaleString()} hint="Active now, registered earlier" to={`/admin/activity?status=success&${rangeQs}`} />
                   <Stat label="Monthly active users" value={k.monthlyActiveUsers.toLocaleString()} hint="30 days ending on the last day" />
@@ -128,7 +129,7 @@ export default function ReportsPage() {
 
                 <div className="grid gap-4 lg:grid-cols-2">
                   <ChartCard title="User registrations" description="Click a bar to see that day's new customers." empty={d.registrations.every((r) => r.email + r.google === 0)} label="New registrations per day, split by email and Google">
-                    <ResponsiveContainer><BarChart data={d.registrations} onClick={(s: any) => s?.activeLabel && go(`/admin/users?registeredFrom=${s.activeLabel}&registeredTo=${s.activeLabel}`)} style={{ cursor: "pointer" }}>
+                    <ResponsiveContainer><BarChart data={d.registrations} onClick={(s: any) => s?.activeLabel && go(`/admin/customers?registeredFrom=${s.activeLabel}&registeredTo=${s.activeLabel}`)} style={{ cursor: "pointer" }}>
                       {grid}<XAxis dataKey="day" tickFormatter={shortDay} tick={axis} minTickGap={24} /><YAxis allowDecimals={false} tick={axis} width={32} />{tip}<Legend wrapperStyle={{ fontSize: 12 }} formatter={legendText} />
                       <Bar dataKey="email" name="Email" stackId="r" fill={C.accent} /><Bar dataKey="google" name="Google" stackId="r" fill={C.sand} radius={[3, 3, 0, 0]} />
                     </BarChart></ResponsiveContainer>
@@ -164,7 +165,7 @@ export default function ReportsPage() {
                   </ChartCard>
                   <ChartCard title="Authentication methods" description="Accounts by sign-in method (all time). Click a slice to list those customers." empty={d.authMethods.accountsByProvider.length === 0} label="Registered accounts by authentication method">
                     <ResponsiveContainer><PieChart>
-                      <Pie data={d.authMethods.accountsByProvider.map((a) => ({ name: a.provider === "GOOGLE" ? "Google" : "Email & password", provider: a.provider, users: a.users }))} dataKey="users" nameKey="name" innerRadius={55} outerRadius={90} paddingAngle={2} onClick={(s: any) => s?.provider && go(`/admin/users?provider=${s.provider}`)} style={{ cursor: "pointer" }}>
+                      <Pie data={d.authMethods.accountsByProvider.map((a) => ({ name: a.provider === "GOOGLE" ? "Google" : "Email & password", provider: a.provider, users: a.users }))} dataKey="users" nameKey="name" innerRadius={55} outerRadius={90} paddingAngle={2} onClick={(s: any) => s?.provider && go(`/admin/customers?provider=${s.provider}`)} style={{ cursor: "pointer" }}>
                         {d.authMethods.accountsByProvider.map((a) => <Cell key={a.provider} fill={a.provider === "GOOGLE" ? C.sand : C.accent} />)}
                       </Pie>{tip}<Legend wrapperStyle={{ fontSize: 12 }} formatter={legendText} />
                     </PieChart></ResponsiveContainer>
@@ -208,6 +209,7 @@ export default function ReportsPage() {
         </QueryView>
       )}
       {valid && <CostAnalytics from={from} to={to} />}
+      {valid && <FeatureCostBreakdown from={from} to={to} />}
     </div>
   );
 }

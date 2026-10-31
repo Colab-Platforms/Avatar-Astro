@@ -20,6 +20,7 @@ import GuruChatInput from "@/components/ai-guru/GuruChatInput";
 import LanguageControls from "@/components/ai-guru/LanguageControls";
 import { detectLanguage, buildLanguageDirective, type InputLanguageChoice, type ReplyLanguageChoice } from "@/components/ai-guru/languages";
 import { aiChat } from "@/lib/aiClient";
+import { authRequest } from "@/lib/authClient";
 import { askGuru, GuruChatError, MAX_GURU_INPUT_CHARS } from "@/lib/guruChat";
 import { authedFetch } from "@/lib/authedFetch";
 
@@ -138,6 +139,7 @@ async function callDiagnosis(conversationHistory) {
   const res = await aiChat({
       temperature: 0.6, max_tokens: 4000,
       json: true,
+      library: { feature: "guru-report" },
       messages: [
         { role: "system", content: PANDIT_DIAGNOSIS_SYSTEM },
         { role: "user", content: `Based on this consultation, generate the complete diagnosis report:\n\n${summary}` },
@@ -1111,6 +1113,19 @@ export default function InnerVoiceChat(){
   const [replyLanguage,setReplyLanguage]=useState<ReplyLanguageChoice>("same");
   const [savedMantras,setSavedMantras]=useState(()=>{try{return JSON.parse(localStorage.getItem("iv_saved_mantras")||"[]");}catch{return [];}});
   const [chatSessions,setChatSessions]=useState(()=>{try{return JSON.parse(localStorage.getItem("iv_chat_sessions")||"[]");}catch{return [];}});
+  const conversationIdRef=useRef(null); // the saved conversation this chat belongs to (set by the server)
+  // "Continue this conversation" from the dashboard opens /inner-voice/chat?conversation=<id>: load the saved messages (the server only returns the signed-in user's own).
+  useEffect(()=>{
+    const id=new URLSearchParams(window.location.search).get("conversation");
+    if(!id)return;
+    let cancelled=false;
+    authRequest<any>(`/me/conversations/${encodeURIComponent(id)}`).then((c:any)=>{
+      if(cancelled||c?.feature!=="ai-guru"||!Array.isArray(c.messages))return;
+      conversationIdRef.current=c.id;
+      setMessages(c.messages.map((m:any)=>m.role==="user"?{role:"user",content:m.content}:{role:"guru",content:{type:"gathering",message:m.content}}));
+    }).catch(()=>{/* not found or not yours: start a normal new chat */});
+    return()=>{cancelled=true;};
+  },[]);
   const bottomRef=useRef(null),textareaRef=useRef(null),recognitionRef=useRef(null),mainScrollRef=useRef(null);
   const profile=(()=>{try{return JSON.parse(localStorage.getItem("iv_profile")||"null");}catch{return null;}})();
 
@@ -1155,7 +1170,8 @@ export default function InnerVoiceChat(){
       const baseHistory=retry?history.slice(0,-1):history;
       const detected=detectLanguage(msg);
       const languageDirective=buildLanguageDirective(inputLanguage,replyLanguage,detected);
-      const data=await askGuru(baseHistory,msg,languageDirective);
+      const data=await askGuru(baseHistory,msg,languageDirective,conversationIdRef.current||undefined);
+      if(data.conversationId)conversationIdRef.current=data.conversationId;
       setMessages(prev=>[...prev.filter(m=>!m.error),{role:"guru",content:data}]);
       if(data.progress)setProgress(data.progress);
       if(data.readyForDiagnosis)setReadyForDiagnosis(true);
@@ -1221,7 +1237,7 @@ export default function InnerVoiceChat(){
   // triggers this from the sidebar while on Voice/Report, we don't yank
   // them into Consultation Mode.
   const newConversation=()=>{
-    setMessages([]);
+    setMessages([]);conversationIdRef.current=null;
     setInput("");
     setProgress(0);
     setReadyForDiagnosis(false);

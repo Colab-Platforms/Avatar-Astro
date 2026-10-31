@@ -1,0 +1,98 @@
+/// A user's personal library: the original output of every successful AI generation, saved by the server at generation time.
+/// Reopening a reading returns this stored output; it never calls a provider again.
+model GeneratedReading {
+  id String @id @default(cuid())
+
+  userId  String  @map("user_id")
+  /// Feature key (tarot, horoscope, karma, shloka, ...). Validated against an allow-list when written.
+  feature String
+  title   String
+  /// Short plain-text preview for cards and lists.
+  summary String
+  /// The complete original output exactly as returned to the user (structured JSON).
+  output  Json
+  /// Small, safe, non-sensitive context needed to understand the result (a zodiac sign, tarot mode and cards...). Never prompts.
+  inputMeta Json? @map("input_meta")
+
+  provider String?
+  model    String?
+
+  isSaved Boolean   @default(false) @map("is_saved")
+  savedAt DateTime? @map("saved_at")
+
+  /// Optional client-supplied key that makes a retried save idempotent. Unique per user.
+  clientRequestId String? @map("client_request_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, clientRequestId])
+  @@index([userId, createdAt])
+  @@index([userId, feature, createdAt])
+  @@index([userId, isSaved, createdAt])
+  @@map("generated_readings")
+}
+
+/// A conversation with a conversational feature (AI Guru, Inner Voice). Owned by exactly one user.
+model Conversation {
+  id String @id @default(cuid())
+
+  userId  String @map("user_id")
+  feature String
+  title   String
+  /// Last message, shortened, for lists.
+  preview String @default("")
+
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  lastMessageAt DateTime @default(now()) @map("last_message_at")
+
+  user     User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages ConversationMessage[]
+
+  @@index([userId, lastMessageAt])
+  @@index([userId, feature, lastMessageAt])
+  @@map("conversations")
+}
+
+model ConversationMessage {
+  id             String @id @default(cuid())
+  conversationId String @map("conversation_id")
+  /// "user" or "assistant"
+  role           String
+  content        String @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@map("conversation_messages")
+}
+
+/// The signed-in user's own activity timeline. Safe fields only: what happened, to which feature, and a link to the record.
+/// Never message text or prompts. Independent of the admin usage_events analytics.
+model UserActivityEvent {
+  id      String  @id @default(cuid())
+  userId  String  @map("user_id")
+  /// reading.generated | reading.saved | reading.unsaved | reading.removed | conversation.started | conversation.continued | conversation.removed | feature.opened | profile.updated
+  kind    String
+  feature String?
+  /// "reading" | "conversation"
+  refType String? @map("ref_type")
+  refId   String? @map("ref_id")
+  /// Short safe label, e.g. the reading title. Not user-written content.
+  title   String?
+  status  String  @default("success")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, feature, createdAt])
+  @@index([userId, kind, createdAt])
+  @@map("user_activity_events")
+}

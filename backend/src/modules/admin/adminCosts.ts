@@ -11,6 +11,7 @@ import { writeAudit } from "./audit.js";
 import { readSnapshot, refreshSnapshot } from "./providerBalance.js";
 import { diagnosticsSnapshot } from "@/utils/aiDiagnostics.js";
 import { loadPricing, openRouterCatalogueSize } from "@/config/aiPricing.js";
+import { createFeatureCostsRouter } from "./adminFeatureCosts.js";
 
 const DAY_MS = 86_400_000;
 const num = (v: unknown) => Number(v ?? 0);
@@ -201,6 +202,8 @@ export function createCostsRouter(): Router {
       sendResponse(res, true, snap, snap.throttled ? "Checked less than a minute ago; showing the saved result." : "Provider balances refreshed");
     }),
   );
+
+  router.use(createFeatureCostsRouter());
 
   return router;
 }

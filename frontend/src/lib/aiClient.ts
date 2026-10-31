@@ -7,6 +7,8 @@ export interface AiChatBody {
   max_tokens?: number;
   /** Ask the model for a JSON object response. */
   json?: boolean;
+  /** Labels the result for the user's library (My Readings / My Conversations). A label only: the saved content is the provider's reply. */
+  library?: { feature: "karma" | "shloka" | "ai-guru" | "guru-report"; conversationId?: string };
 }
 
 /**

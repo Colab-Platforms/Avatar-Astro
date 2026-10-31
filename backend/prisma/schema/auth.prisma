@@ -36,6 +36,9 @@ model User {
   isDeleted       Boolean @default(false) @map("is_deleted")
 
   deletedAt DateTime? @map("deleted_at")
+  /// Who created this account from the admin panel (null = self-registered) and who deleted it.
+  createdById String? @map("created_by_id")
+  deletedById String? @map("deleted_by_id")
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @updatedAt @map("updated_at")
@@ -43,6 +46,9 @@ model User {
   userRoleMappings UserRoleMapping[]
 
   sessions         Session[]
+  readings         GeneratedReading[]
+  conversations    Conversation[]
+  activityEvents   UserActivityEvent[]
   otpVerifications OtpVerification[]
   passwordResets   PasswordResetToken[]
 

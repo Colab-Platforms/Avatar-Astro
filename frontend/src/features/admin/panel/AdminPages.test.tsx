@@ -45,9 +45,9 @@ const calls = () => authRequest.mock.calls.map((c) => String(c[0]));
 
 describe("Stat tiles", () => {
   it("are real links only when a destination is given", () => {
-    mount(<><Stat label="Registered users" value={5} to="/admin/users" /><Stat label="Not available" value="Not available" /></>);
+    mount(<><Stat label="Registered users" value={5} to="/admin/customers" /><Stat label="Not available" value="Not available" /></>);
     const link = screen.getByRole("link", { name: /Registered users/ });
-    expect(link).toHaveAttribute("href", "/admin/users");
+    expect(link).toHaveAttribute("href", "/admin/customers");
     expect(screen.queryByRole("link", { name: /Not available/ })).toBeNull();
   });
 });
@@ -56,47 +56,48 @@ describe("Users page", () => {
   beforeEach(() => {
     authRequest.mockReset();
     authRequest.mockImplementation(async (url: string) => {
-      if (url.startsWith("/admin/users/u1")) {
+      if (url.startsWith("/admin/customers/u1")) {
         return { ...user(), address: null, gender: null, dateOfBirth: null, profileImage: null, activeSessions: 1, usageLast30Days: [], lastLoginAt: "2026-10-29T09:00:00.000Z",
           loginHistory: [{ id: "e1", eventType: "auth.login", status: "success", metadata: { method: "google" }, createdAt: "2026-10-29T09:00:00.000Z" }],
           recentActivity: [{ id: "e2", eventType: "feature.request", feature: "tarot", status: "success", statusCode: 200, metadata: null, createdAt: "2026-10-29T10:00:00.000Z", label: "Used" }],
-          featureUsage: [{ feature: "tarot", total: 2, success: 1, failed: 1 }], eventCounts: [], notStored: ["Reading content is not saved on the server."] };
+          featureUsage: [{ feature: "tarot", total: 2, success: 1, failed: 1 }], eventCounts: [], credentialStatus: "none (signs in with Google)", createdBy: null, library: { readings: 3, saved: 1, conversations: 2 }, auditHistory: [], notStored: ["Reading content is not saved on the server."] };
       }
-      if (url.startsWith("/admin/users")) return { items: [user()], page: 1, pageSize: 15, total: 1, totalPages: 1 };
+      if (url.startsWith("/admin/customers")) return { items: [user()], page: 1, pageSize: 15, total: 1, totalPages: 1 };
       return { mainAdmin: true, email: "owner@example.com" };
     });
   });
 
   it("sends every filter in the URL to the API, and shows the returned customers", async () => {
-    mount(<UsersPage />, "/admin/users?status=inactive&provider=GOOGLE&emailVerified=true&registeredFrom=2026-10-01&role=USER&search=asha");
+    mount(<UsersPage />, "/admin/customers?status=inactive&provider=GOOGLE&emailVerified=true&registeredFrom=2026-10-01&role=ADMIN&search=asha");
     await screen.findByText("asha@example.com");
-    const req = calls().find((c) => c.startsWith("/admin/users?"))!;
+    const req = calls().find((c) => c.startsWith("/admin/customers?"))!;
     const qs = new URLSearchParams(req.split("?")[1]);
-    expect(Object.fromEntries(qs)).toMatchObject({ status: "inactive", provider: "GOOGLE", emailVerified: "true", registeredFrom: "2026-10-01", role: "USER", search: "asha", page: "1", pageSize: "15" });
+    expect(Object.fromEntries(qs)).toMatchObject({ status: "inactive", provider: "GOOGLE", emailVerified: "true", registeredFrom: "2026-10-01", search: "asha", page: "1", pageSize: "15" });
+    expect(Object.fromEntries(qs)).not.toHaveProperty("role"); // the customer list can never be widened to administrators from the address bar
     expect(within(screen.getByRole("table")).getByText("Google")).toBeInTheDocument();
   });
 
   it("changing a filter updates the address bar and resets to page 1", async () => {
-    mount(<UsersPage />, "/admin/users?page=3");
+    mount(<UsersPage />, "/admin/customers?page=3");
     await screen.findByText("asha@example.com");
     fireEvent.change(screen.getByLabelText("Sign-in method"), { target: { value: "GOOGLE" } });
-    await waitFor(() => expect(screen.getByTestId("where").textContent).toBe("/admin/users?provider=GOOGLE"));
+    await waitFor(() => expect(screen.getByTestId("where").textContent).toBe("/admin/customers?provider=GOOGLE"));
   });
 
   it("opens the Customer 360 profile from a row and from a deep link", async () => {
-    mount(<UsersPage />, "/admin/users");
+    mount(<UsersPage />, "/admin/customers");
     fireEvent.click(await screen.findByRole("button", { name: /Open profile of Asha Rao/ }));
     await screen.findByText("Customer profile");
     await screen.findByText("Sign-in history");
     expect(screen.getByText(/Signed in/)).toBeInTheDocument();
     expect(screen.getByText(/Reading content is not saved on the server/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "View all activity" })).toHaveAttribute("href", "/admin/activity?userId=u1");
-    expect(calls()).toContain("/admin/users/u1");
+    expect(calls()).toContain("/admin/customers/u1");
   });
 
   it("shows an honest empty state when filters match nobody", async () => {
-    authRequest.mockImplementation(async (url: string) => (url.startsWith("/admin/users") ? { items: [], page: 1, pageSize: 15, total: 0, totalPages: 1 } : { mainAdmin: true }));
-    mount(<UsersPage />, "/admin/users?status=inactive");
+    authRequest.mockImplementation(async (url: string) => (url.startsWith("/admin/customers") ? { items: [], page: 1, pageSize: 15, total: 0, totalPages: 1 } : { mainAdmin: true }));
+    mount(<UsersPage />, "/admin/customers?status=inactive");
     await screen.findByText("No customers match these filters");
     expect(screen.getByRole("button", { name: "Clear filters" })).toBeInTheDocument();
   });
@@ -112,7 +113,7 @@ describe("Activity page", () => {
     }));
     mount(<ActivityPage />, "/admin/activity?feature=tarot&status=error&eventType=feature.request");
     const row = await screen.findByText("Asha Rao");
-    expect(row.closest("a")).toHaveAttribute("href", "/admin/users?user=u1");
+    expect(row.closest("a")).toHaveAttribute("href", "/admin/customers?user=u1");
     const qs = new URLSearchParams(calls().find((c) => c.startsWith("/admin/activity?"))!.split("?")[1]);
     expect(Object.fromEntries(qs)).toMatchObject({ feature: "tarot", status: "error", eventType: "feature.request", page: "1", pageSize: "25" });
     expect(screen.getByText(/HTTP 500/)).toBeInTheDocument();
@@ -146,14 +147,14 @@ describe("Overview KPIs", () => {
     });
     mount(<AdminOverviewPage />, "/admin");
     const reg = await screen.findByRole("link", { name: /Registered users/ });
-    expect(reg).toHaveAttribute("href", "/admin/users");
-    expect(screen.getByRole("link", { name: /New users/ }).getAttribute("href")).toMatch(/^\/admin\/users\?registeredFrom=\d{4}-\d{2}-\d{2}&registeredTo=\d{4}-\d{2}-\d{2}$/);
+    expect(reg).toHaveAttribute("href", "/admin/customers");
+    expect(screen.getByRole("link", { name: /New users/ }).getAttribute("href")).toMatch(/^\/admin\/customers\?registeredFrom=\d{4}-\d{2}-\d{2}&registeredTo=\d{4}-\d{2}-\d{2}$/);
     expect(screen.getByRole("link", { name: /Feature requests/ }).getAttribute("href")).toMatch(/^\/admin\/activity\?eventType=feature\.request&from=/);
     expect(screen.getByRole("link", { name: /Server failures/ }).getAttribute("href")).toMatch(/status=error/);
     expect(screen.getByRole("link", { name: /Live Darshan channels/ })).toHaveAttribute("href", "/admin/devotion");
     expect(screen.getByRole("link", { name: /Shop products/ })).toHaveAttribute("href", "/admin/shop-orders");
     expect(screen.getByRole("link", { name: /Orders \/ bookings \/ payments/ })).toHaveAttribute("href", "/admin/payments");
-    expect(screen.getByRole("link", { name: /Gita S/ })).toHaveAttribute("href", "/admin/users?user=u9");
+    expect(screen.getByRole("link", { name: /Gita S/ })).toHaveAttribute("href", "/admin/customers?user=u9");
     const failure = screen.getAllByRole("link").find((l) => /feature=tarot&status=error&from=2026-10-30/.test(l.getAttribute("href") ?? ""));
     expect(failure).toBeTruthy();
   });
@@ -169,7 +170,8 @@ describe("Reports page", () => {
 
   // The page also asks for /costs/summary (covered in CostPanels.test.tsx); here it answers "no AI usage yet".
   const noCosts = { from: "", to: "", currency: "USD", inrRate: null, trackingSince: null, note: "", kpis: { totalAiRequests: 0 }, byFeature: [], byProvider: [], byModel: [], topCustomers: [], daily: [] };
-  const serve = (payload: object) => authRequest.mockImplementation(async (url: string) => (String(url).startsWith("/admin/costs/summary") ? noCosts : payload));
+  const noFeatureCosts = { from: "", to: "", note: "", formula: "", pricingVerifiedAt: "", fx: { rate: 1, kind: "reference", asOf: null, source: "" }, rows: [], counts: { free: 0, "free-model": 0, paid: 0, estimated: 0, unknown: 0 }, totals: { actualUsd: 0, actualInr: 0, estimatedUsd: 0, estimatedInr: 0, requestsWithActual: 0, requestsWithEstimate: 0, unpricedRequests: 0 }, providerModel: [] };
+  const serve = (payload: object) => authRequest.mockImplementation(async (url: string) => (String(url).startsWith("/admin/costs/summary") ? noCosts : String(url).startsWith("/admin/costs/features") ? noFeatureCosts : payload));
 
   it("requests the chosen preset range, links its KPIs, and says so when there is no activity", async () => {
     authRequest.mockReset();
@@ -178,7 +180,7 @@ describe("Reports page", () => {
     await screen.findByText("Registered users");
     expect(calls().some((c) => /^\/admin\/reports\/analytics\?from=\d{4}-\d{2}-\d{2}&to=\d{4}-\d{2}-\d{2}$/.test(c))).toBe(true);
     expect(screen.getByText("No customer activity in this period")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /^Registered users/ })).toHaveAttribute("href", "/admin/users");
+    expect(screen.getByRole("link", { name: /^Registered users/ })).toHaveAttribute("href", "/admin/customers");
 
     const before = calls().length;
     fireEvent.click(screen.getByRole("button", { name: "Today" }));

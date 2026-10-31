@@ -11,6 +11,7 @@ import aiProxyRoutes from "./routes/aiProxyRoutes.js";
 import tarotRoutes from "./routes/tarotRoutes.js";
 import inquiryRoutes from "./routes/inquiryRoutes.js";
 import { auth, optionalAuth } from "./middleware/authMiddleware.js";
+import { captureReadings } from "./modules/library/readingCapture.js";
 import { createRateLimiter } from "./utils/rateLimit.js";
 import { feature } from "./utils/usage.js";
 import { installAiUsageCapture } from "./utils/aiUsageCapture.js";
@@ -78,10 +79,12 @@ app.use(
     },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     // Lets the browser read the dated filename of admin CSV exports.
-    exposedHeaders: ["Content-Disposition"],
+    exposedHeaders: ["Content-Disposition", "X-Reading-Id", "X-Reading-Saved", "X-Conversation-Id"],
     credentials: true,
   }),
 );
+// Saves the original result of each successful AI generation to the signed-in user library (see modules/library).
+app.use("/api", captureReadings());
 // Mounted before the global 20mb body parser: it applies its own 250kb limit.
 app.use("/api/ai", ...feature("ai-chat"), aiProxyRoutes);
 app.use("/api/tarot", ...feature("tarot"), tarotRoutes);
@@ -300,10 +303,10 @@ app.use("/api/shop", publicShopRoutes);
 app.use("/api/gemstone-calculator", ...feature("gemstone"), optionalAuth(), gemstoneRoutes);
 
 // AI routes
-app.use("/api/interpretation", ...feature("interpretation"), interpretationRoutes);
-app.use("/api/compatibility", ...feature("compatibility"), compatibilityRoutes);
-app.use("/api/birthchart", ...feature("birth-chart"), birthChartRoutes);
-app.use("/api/name-analysis", ...feature("name-analysis"), nameAnalysisRoutes);
+app.use("/api/interpretation", ...feature("interpretation"), optionalAuth(), interpretationRoutes);
+app.use("/api/compatibility", ...feature("compatibility"), optionalAuth(), compatibilityRoutes);
+app.use("/api/birthchart", ...feature("birth-chart"), optionalAuth(), birthChartRoutes);
+app.use("/api/name-analysis", ...feature("name-analysis"), optionalAuth(), nameAnalysisRoutes);
 app.use("/api/inner-voice", ...feature("inner-voice"), innerVoiceRoutes);
 
 // Signed-in user dashboard data and what the main admin publishes (public, read-only).
