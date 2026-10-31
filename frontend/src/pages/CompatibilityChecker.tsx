@@ -1044,6 +1044,7 @@
 import { useState, useEffect, useRef, useCallback, type CSSProperties } from "react";
 import { FEATURES } from "@/data/featureCatalog";
 import { useFeatureTitle } from "@/hooks/useFeatureTitle";
+import AskDivyaSection from "@/features/guru/AskDivyaSection";
 import FullScreenLoader from "@/components/Loader/FullScreenLoader";
 import { useBackOverride } from "../context/NavigationContext";
 import { User, ArrowRight } from "lucide-react";
@@ -1393,8 +1394,10 @@ const DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const YEARS = Array.from({ length: 120 }, (_, i) => new Date().getFullYear() - i);
 
-type Person = { name: string; day: string; month: string; year: string };
-const empty = (): Person => ({ name: "", day: "", month: "", year: "" });
+// Gender is collected separately for each partner. It is optional and is not used in the Sun-sign comparison.
+const GENDER_OPTIONS = ["Male", "Female", "Other", "Prefer not to say"] as const;
+type Person = { name: string; gender: string; day: string; month: string; year: string };
+const empty = (): Person => ({ name: "", gender: "", day: "", month: "", year: "" });
 
 function getZodiac(day: number, month: number) {
   const signs: [string, number, number][] = [
@@ -1503,6 +1506,14 @@ function PersonForm({ idp, title, accentColor, data, onChange }: { idp: string; 
           <User size={16} style={{position:"absolute", left:14, top:"50%", transform:"translateY(-50%)", color:"rgba(48,22,7,0.72)", pointerEvents:"none"}}/>
           <input id={`${idp}-name`} maxLength={60} autoComplete="off" value={data.name} onChange={e => up("name", e.target.value)} placeholder="First name or nickname" style={{...ccInputStyle, paddingLeft:38}} />
         </div>
+      </div>
+
+      <div style={{marginBottom:20}}>
+        <label htmlFor={`${idp}-gender`} style={ccLabelStyle}>Gender <span style={{opacity:0.7, fontWeight:400}}>(optional)</span></label>
+        <select id={`${idp}-gender`} value={data.gender} onChange={e => up("gender", e.target.value)} style={ccInputStyle}>
+          <option value="">Select gender</option>
+          {GENDER_OPTIONS.map(g => <option key={g} value={g}>{g}</option>)}
+        </select>
       </div>
 
       <div>
@@ -1620,7 +1631,8 @@ function Results({ result, onReset }: { result: Result; onReset: () => void }) {
       <p style={{maxWidth:680, margin:"0 auto 28px", textAlign:"center", fontSize:14, lineHeight:1.7, fontStyle:"italic", color:"#6B4A37"}}>
         Sun sign compatibility is a traditional idea for personal interest and reflection. It does not predict whether a relationship will succeed, and people with any pairing can have a good relationship.
       </p>
-      <button onClick={onReset} style={{display:"block", margin:"0 auto", padding:"16px 44px", background:"#592209", border:"none", borderRadius:40, color:"#F5E9D6", fontWeight:700, fontSize:16, cursor:"pointer"}}>
+      <AskDivyaSection feature="compatibility" context={`${p1.name} (${p1.zodiac}) and ${p2.name} (${p2.zodiac}). Element pairing: ${c.e1} with ${c.e2}. Aspect between the signs: ${c.aspect.name}. This compares sun signs only.`} />
+      <button onClick={onReset} style={{display:"block", margin:"28px auto 0", padding:"16px 44px", background:"#592209", border:"none", borderRadius:40, color:"#F5E9D6", fontWeight:700, fontSize:16, cursor:"pointer"}}>
         Compare Another Pair ✦
       </button>
     </div>
@@ -1656,7 +1668,7 @@ export default function App() {
 
   const compute = useCallback(async () => {
     if (phase !== "form") return; // ignore double submits
-    if (!requireSignIn()) return; // account required to generate a reading
+    if (!requireSignIn(() => { void compute(); })) return; // signed out: ask, keep the form, then run this once
     setError("");
     const problem = checkPerson(p1, "Person 1") || checkPerson(p2, "Person 2");
     if (problem) { setError(problem); return; }

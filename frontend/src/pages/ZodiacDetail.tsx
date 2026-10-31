@@ -1,4 +1,5 @@
 import { FEATURES } from "@/data/featureCatalog";
+import AskDivyaSection from "@/features/guru/AskDivyaSection";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { zodiacSigns } from "@/data/zodiacData";
@@ -125,6 +126,8 @@ const ZodiacDetail = () => {
           {next.name} <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </Link>
       </nav>
+
+      <AskDivyaSection feature="zodiac" context={`Viewing the ${zodiac.name} sign profile: element ${zodiac.element}, ruler ${ruler}. These are general traditional themes for the sign, not a personal chart.`} />
 
       <p className="mt-10 text-center text-sm italic leading-relaxed text-muted-foreground">
         Sun sign profiles describe general traditional themes for personal interest and reflection. They are not predictions, and one sign cannot describe a whole person.

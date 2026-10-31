@@ -6,8 +6,8 @@ import type {
   ShopMatches,
 } from "./types";
 
-// Public, stateless endpoints. A signed-in visitor's token is sent so their activity is attributed to them (the server ignores it
-// for access decisions and never rejects on it), without any refresh round-trips.
+// Searching places and matching shop products are public. Generating a result (calculate) needs a signed-in
+// user: the server returns 401 otherwise, so the access token is sent (and refreshed once if it expired).
 export const ratnaApi = {
   searchLocations(q: string, signal?: AbortSignal) {
     return authRequest<PlaceResult[]>(
@@ -20,8 +20,6 @@ export const ratnaApi = {
     return authRequest<RatnaResult>("/gemstone-calculator/calculate", {
       method: "POST",
       body,
-      skipAuth: true,
-      sendTokenIfPresent: true,
     });
   },
 

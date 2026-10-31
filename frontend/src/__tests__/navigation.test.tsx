@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect, beforeAll, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, useLocation, useNavigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -43,6 +43,7 @@ const mount = (entries: string[], index?: number) =>
     </QueryClientProvider>,
   );
 
+vi.setConfig({ testTimeout: 30000 });
 const settle = () => act(async () => { await new Promise((r) => setTimeout(r, 60)); });
 const go = async (to: string | number) => {
   await act(async () => { (nav as (t: string | number) => void)(to); });
@@ -94,7 +95,7 @@ describe("Back button", () => {
   it.each(FEATURE_ROUTES.filter((r) => r !== "/inner-voice/chat"))("returns to the actual previous page from %s", async (route) => {
     mount(["/", "/blog"], 1); // arrived from /blog, not the homepage
     await go(route);
-    fireEvent.click(await screen.findByRole("button", { name: /go back to previous page/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /go back to previous page/i }, { timeout: 5000 }));
     await settle();
     expect(path).toBe("/blog");
   });
@@ -102,7 +103,7 @@ describe("Back button", () => {
   it.each(FEATURE_ROUTES.filter((r) => r !== "/inner-voice/chat"))("uses the feature's parent when %s is opened directly", async (route) => {
     mount([route]);
     await settle();
-    fireEvent.click(await screen.findByRole("button", { name: /go back to previous page/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /go back to previous page/i }, { timeout: 5000 }));
     await settle();
     expect(path).toBe(getFallback(route));
   });

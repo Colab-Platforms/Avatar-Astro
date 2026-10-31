@@ -7,7 +7,7 @@ import RatnaJyotishResult from "@/pages/RatnaJyotishResult";
 import { ratnaApi } from "../api";
 import { loadResult, saveResult } from "../storage";
 import type { RatnaResult } from "../types";
-import { complete, dateBased, delhi, diamond as stone, emptyShop, fillPersonalAndPanchang } from "./fixtures";
+import { complete, dateBased, delhi, diamond as stone, emptyShop, fillPersonalAndPanchang, signInForTests } from "./fixtures";
 
 vi.mock("../api", () => ({
   ratnaApi: { searchLocations: vi.fn(), calculate: vi.fn(), products: vi.fn() },
@@ -44,6 +44,7 @@ const fillAndSelectPlace = async () => {
 beforeEach(() => {
   vi.clearAllMocks();
   sessionStorage.clear();
+  signInForTests();
   api.searchLocations.mockResolvedValue([delhi]);
   api.products.mockResolvedValue(emptyShop);
 });

@@ -1,9 +1,9 @@
 import { authRequest } from "@/lib/authClient";
 import type { KundaliRequest, KundaliResult } from "./types";
 
-// Public, stateless endpoint (nothing is stored), like the Ratna Jyotish calculation.
+// Stateless (nothing is stored), but generating a result needs a signed-in user: the server returns 401 otherwise.
 export const kundaliApi = {
   calculate(body: KundaliRequest) {
-    return authRequest<KundaliResult>("/gemstone-calculator/kundali", { method: "POST", body, skipAuth: true, sendTokenIfPresent: true });
+    return authRequest<KundaliResult>("/gemstone-calculator/kundali", { method: "POST", body });
   },
 };

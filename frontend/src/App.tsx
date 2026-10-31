@@ -96,6 +96,8 @@ const ChadhawaPage  = lazy(() => import("./pages/Chadhawa/index"));
 const ChadhawaDetail = lazy(() => import("./pages/Chadhawa/ChadhawaDetail"));
 const RatnaJyotish = lazy(() => import("./pages/RatnaJyotish"));
 const RatnaJyotishResult = lazy(() => import("./pages/RatnaJyotishResult"));
+const Astrologers = lazy(() => import("./pages/Astrologers"));
+const AstrologerProfile = lazy(() => import("./pages/AstrologerProfile"));
 const ShopPage      = lazy(() => import("./pages/Shop/index"));
 const ShopDetail    = lazy(() => import("./pages/Shop/ShopDetail"));
 const AvatarLivePage   = lazy(() => import("./pages/AvatarLive/index"));
@@ -367,6 +369,26 @@ export const AnimatedRoutes = () => {
         />
         {/* Legacy alias: old gemstone-calculator links keep working. */}
         <Route path="/gemstone-calculator" element={<Navigate to="/ratna-jyotish" replace />} />
+        <Route
+          path="/astrologers"
+          element={
+            <PageTransition>
+              <Suspense fallback={<LazyFallback />}>
+                <Astrologers />
+              </Suspense>
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/astrologers/:slug"
+          element={
+            <PageTransition>
+              <Suspense fallback={<LazyFallback />}>
+                <AstrologerProfile />
+              </Suspense>
+            </PageTransition>
+          }
+        />
         <Route
           path="/shop"
           element={

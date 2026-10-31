@@ -9,6 +9,9 @@ router.use(auth("USER"));
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const MODEL = "google/gemma-4-31b-it:free";
 
+// Every AI reply defaults to Hinglish, which is how most users speak and write.
+export const HINGLISH_RULE = `\n\nLanguage: write every human-readable text value in natural Hinglish (Roman-script Hindi mixed with English, the way people actually speak). Keep JSON keys, fixed values and any Sanskrit verses or mantras exactly as specified. Only if the person wrote in Devanagari Hindi, answer in Hindi instead.`;
+
 async function callAI(apiKey: string, prompt: string, maxTokens = 1000): Promise<string> {
   const res = await fetch(OPENROUTER_URL, {
     method: "POST",
@@ -22,7 +25,7 @@ async function callAI(apiKey: string, prompt: string, maxTokens = 1000): Promise
     body: JSON.stringify({
       model: MODEL,
       max_tokens: maxTokens,
-      messages: [{ role: "user", content: prompt }],
+      messages: [{ role: "user", content: prompt + HINGLISH_RULE }],
     }),
   });
   const data = await res.json() as any;

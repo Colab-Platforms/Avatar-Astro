@@ -1,4 +1,5 @@
 import { useState } from "react";
+import AskDivyaSection from "@/features/guru/AskDivyaSection";
 import { FEATURES } from "@/data/featureCatalog";
 import { useFeatureTitle } from "@/hooks/useFeatureTitle";
 import NameDestinyReport from "@/components/NameDestinyReport";
@@ -41,7 +42,7 @@ export default function NameDestinyReportPage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!requireSignIn()) return; // account required to generate a report
+    if (!requireSignIn(() => handleSubmit({ preventDefault() {} } as React.FormEvent))) return; // signed out: ask, keep the form, then run this once
     if (!form.firstName.trim() || !form.dob) {
       setError("Please enter your first name and date of birth.");
       return;
@@ -158,6 +159,13 @@ export default function NameDestinyReportPage() {
             ✦ Analyze Another Name
           </button>
         </>
+      )}
+
+      {profile && (
+        <AskDivyaSection
+          feature="numerology"
+          context={`Name: ${profile.name}. Born ${profile.dob}. Destiny ${profile.destiny.result}, Soul Urge ${profile.soulUrge.result}, Personality ${profile.personality.result}, Chaldean ${profile.chaldean.result}, Life Path ${profile.lifePath.result}, Birth number ${profile.birth.result}.`}
+        />
       )}
 
       <NameNumerologyEducation />

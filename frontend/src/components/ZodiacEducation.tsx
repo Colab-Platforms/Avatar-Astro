@@ -1,4 +1,5 @@
-import EducationSection, { EducationBlock, EducationFaq } from "@/components/EducationSection";
+import EducationSection, { EducationBlock } from "@/components/EducationSection";
+import { FEATURE_FAQS } from "@/data/featureFaqs";
 import { zodiacSigns } from "@/data/zodiacData";
 
 const blocks: EducationBlock[] = [
@@ -56,27 +57,7 @@ const blocks: EducationBlock[] = [
   },
 ];
 
-const faqs: EducationFaq[] = [
-  {
-    question: "What if my birthday falls on the boundary between two signs?",
-    answer:
-      "The boundary dates shift a little each year and depend on your birth time and time zone. If you were born within a day or two of a change, ask a qualified astrologer, or use chart software that works from your exact birth time and place, to see which sign the Sun was in. MyBhagya Astro's Janma Kundali Seva uses your date only, so it cannot settle a boundary case.",
-  },
-  {
-    question: "Is my Sun sign the same as my Vedic sign?",
-    answer:
-      "Often not. Vedic astrology uses the sidereal zodiac, so your Vedic Sun sign is frequently the sign before your Western one, and the Moon sign (Rashi) is usually emphasised. The dates on this page are Western.",
-  },
-  {
-    question: "Does this page predict my future?",
-    answer:
-      "No. It describes the traditional themes linked with each sign. For a daily outlook, see the Daily Horoscope page, which is a separate Seva.",
-  },
-  {
-    question: "Can I use Rashi Chakra for free?",
-    answer: "Yes. Rashi Chakra is one of MyBhagya Astro's free Seva and needs no sign-in or personal details.",
-  },
-];
+const faqs = FEATURE_FAQS.zodiac;
 
 const DISCLAIMER =
   "Zodiac sign profiles are offered for personal interest, cultural exploration and reflection. They describe traditional symbolism, are not scientifically proven, and are not predictions or professional advice.";

@@ -70,6 +70,8 @@ export async function askGuru(
   userMessage: string,
   languageDirective: string,
   conversationId?: string,
+  /** Extra instructions for this conversation: the guidance profile's expertise and the user's result summary. */
+  extraSystem = "",
 ): Promise<GuruTurn> {
   let res: Response;
   try {
@@ -81,6 +83,7 @@ export async function askGuru(
       messages: [
         { role: "system", content: GURU_CONSULTATION_SYSTEM },
         { role: "system", content: languageDirective },
+        ...(extraSystem ? [{ role: "system" as const, content: extraSystem }] : []),
         ...trimHistory(history),
         { role: "user", content: userMessage.slice(0, MAX_GURU_INPUT_CHARS) },
       ],

@@ -12,7 +12,7 @@ const STEPS = [
 const AnalysisTimeline = () => (
   <div className="rounded-[20px] border border-primary/15 bg-[#FBF5EC]/70 px-6 py-8">
     <h3 className="mb-8 text-center font-home-serif text-xl font-semibold text-foreground">
-      How Pandit Ji Analyses Your Question
+      How Divya Margdarshak Analyses Your Question
     </h3>
     <div className="flex flex-col items-center gap-8 md:flex-row md:items-start md:justify-between md:gap-2">
       {STEPS.map(({ icon: Icon, label }, i) => (

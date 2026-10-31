@@ -77,3 +77,30 @@ describe("no user-facing 'Tools' wording", () => {
     expect(offenders).toEqual([]);
   });
 });
+
+describe("no unfinished-product wording in visible text", () => {
+  const root = join(__dirname, "..", "..");
+  const files: string[] = [];
+  const walk = (dir: string) => {
+    for (const name of readdirSync(dir)) {
+      const p = join(dir, name);
+      if (statSync(p).isDirectory()) {
+        if (["__tests__", "admin", "node_modules"].includes(name)) continue;
+        walk(p);
+      } else if (/.(tsx|ts)$/.test(name) && !/.test./.test(name)) files.push(p);
+    }
+  };
+  walk(root);
+  it("finds no 'coming soon', 'not available yet', 'sample profile' or 'placeholder' messages", () => {
+    const bad = /coming soon|not available yet|sample profile|sample figures|not real|are placeholders/i;
+    const hits: string[] = [];
+    for (const f of files) {
+      readFileSync(f, "utf8").split(/\r?\n/).forEach((line, i) => {
+        const t = line.trim();
+        if (t.startsWith("//") || t.startsWith("*") || t.startsWith("/*") || t.startsWith("{/*")) return;
+        if (bad.test(line)) hits.push(`${f.replace(root, "src")}:${i + 1}: ${t.slice(0, 90)}`);
+      });
+    }
+    expect(hits).toEqual([]);
+  });
+});
