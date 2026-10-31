@@ -10,15 +10,23 @@ import { kundaliApi } from "../kundali/api";
 
 beforeEach(() => { authRequest.mockReset(); authRequest.mockResolvedValue({}); });
 
-describe("public gemstone API calls", () => {
-  it("ask the client to send the token when present, on every call, and never to refresh", async () => {
+describe("gemstone API calls", () => {
+  it("the public lookups send the token when present and never refresh", async () => {
     await ratnaApi.searchLocations("pune");
-    await ratnaApi.calculate({} as never);
     await ratnaApi.products("ruby");
-    await kundaliApi.calculate({} as never);
-    expect(authRequest).toHaveBeenCalledTimes(4);
+    expect(authRequest).toHaveBeenCalledTimes(2);
     for (const [, opts] of authRequest.mock.calls) {
       expect(opts).toMatchObject({ skipAuth: true, sendTokenIfPresent: true });
+    }
+  });
+
+  it("the result-generating calls are authenticated (the server answers 401 without a token) and refresh an expired one", async () => {
+    await ratnaApi.calculate({} as never);
+    await kundaliApi.calculate({} as never);
+    expect(authRequest).toHaveBeenCalledTimes(2);
+    for (const [, opts] of authRequest.mock.calls) {
+      expect(opts).not.toHaveProperty("skipAuth");
+      expect(opts).toMatchObject({ method: "POST" });
     }
   });
 });
