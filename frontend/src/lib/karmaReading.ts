@@ -92,6 +92,7 @@ export async function fetchKarmaReading(situation: string): Promise<KarmaReading
       temperature: 0.6,
       max_tokens: 1500,
       json: true,
+      library: { feature: "karma" },
       messages: [
         { role: "system", content: KARMA_SYSTEM_PROMPT },
         { role: "user", content: `My situation: ${text}` },

@@ -27,7 +27,9 @@ function answer(url) {
   count(host);
   if (m === "error") return { status: 500, body: { error: { message: "stub provider failure" } } };
   if (/sarvam/.test(host)) return { status: 200, body: { audios: ["AAAA"] } };
-  const content = JSON.stringify({ ok: true });
+  // A test can make the provider "say" something feature-valid by writing { "content": "..." } to STUB_CONTENT_FILE.
+  let content = JSON.stringify({ ok: true });
+  try { const c = JSON.parse(fs.readFileSync(process.env.STUB_CONTENT_FILE, "utf8")).content; if (typeof c === "string") content = c; } catch { /* default */ }
   if (/openrouter/.test(host)) {
     // Shaped like OpenRouter's documented response: usage always present, with cost and details.
     const usage = m === "nousage" ? undefined : {

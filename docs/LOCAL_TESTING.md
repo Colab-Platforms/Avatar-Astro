@@ -86,3 +86,6 @@ YouTube/WebSub and Cloudinary are deliberately not offered.
 ## Why a Google account can be missing from this admin panel
 
 The admin panel shows the database the backend it talks to is connected to. Your usual dev backend (backend/.env) points at a different, hosted database than the local test stack (embedded, port 5544). An account created through one is stored only in that one. The AI & integrations page shows which database you are looking at.
+
+## Rebuilding the local database
+If `npm run local:db` aborts with `PANIC: could not locate a valid checkpoint record` / `Aborted()`, the embedded database was killed mid-write and its folder is unrecoverable by PGlite. Do not delete it. Start a new folder instead: `MYBHAGYA_LOCAL_DB_DIR=<new folder> npm run local:db`, then `npm run local:setup`. The setup script recreates the demo accounts with the password above (the main admin is `local.admin@example.com` again). Rebuilt locally on 2026-10-31 in `~/.mybhagya-local-testdb-fresh`; the old folder was kept untouched.

@@ -8,6 +8,8 @@ export interface AuditInput {
   entityType: string;
   entityId?: string | null;
   summary: string;
+  /** Non-sensitive context only (field names, role from/to). Never passwords, tokens or personal content. */
+  metadata?: Record<string, unknown> | null;
 }
 
 /**
@@ -27,6 +29,7 @@ export async function writeAudit(req: Request, input: AuditInput, db: Prisma.Tra
       entityId: input.entityId ?? null,
       summary: input.summary.slice(0, 500),
       ip: req.ip ?? null,
+      ...(input.metadata ? { metadata: input.metadata as Prisma.InputJsonValue } : {}),
     },
   });
 }

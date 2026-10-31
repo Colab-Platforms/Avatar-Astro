@@ -30,6 +30,8 @@ export interface UsageStore {
 const als = new AsyncLocalStorage<UsageStore>();
 
 export const runWithUsageStore = <T>(store: UsageStore, fn: () => T): T => als.run(store, fn);
+/** The usage store of the customer request currently being handled (undefined outside one). */
+export const currentUsageStore = (): UsageStore | undefined => als.getStore();
 export const newUsageStore = (feature?: string): UsageStore => ({ calls: [], servedFromCache: false, feature });
 /** Call from a code path that answers from a stored result instead of generating. */
 export const markServedFromCache = () => {

@@ -91,7 +91,7 @@ function DetailDialog({ item, onClose }: { item: Item | null; onClose: () => voi
                     : "No AI provider was called for this activity (or it happened before cost tracking began, or on a server that had not yet been updated), so no AI cost applies."}
               </p>
             )}
-            {item.customer && !item.customer.removed && <Link className="mt-3 inline-block text-sm text-[#803003] hover:underline" to={`/admin/users?user=${item.customer.id}`}>Open customer profile</Link>}
+            {item.customer && !item.customer.removed && <Link className="mt-3 inline-block text-sm text-[#803003] hover:underline" to={`/admin/customers?user=${item.customer.id}`}>Open customer profile</Link>}
           </>
         )}
       </DialogContent>
@@ -188,7 +188,7 @@ export default function ActivityPage() {
         {active && <button type="button" className={ghostBtn} onClick={() => { setCustomer(""); setParams(new URLSearchParams(), { replace: true }); }}>Clear filters</button>}
       </form>
       {params.get("userId") && (
-        <p className="text-sm text-[#6B6259]">Showing one customer's activity. <Link className="text-[#803003] hover:underline" to={`/admin/users?user=${params.get("userId")}`}>Open their profile</Link></p>
+        <p className="text-sm text-[#6B6259]">Showing one customer's activity. <Link className="text-[#803003] hover:underline" to={`/admin/customers?user=${params.get("userId")}`}>Open their profile</Link></p>
       )}
       {msg && <p role="status" className={`rounded-lg px-3 py-2 text-sm ${msg.ok ? "bg-emerald-50 text-emerald-900" : "bg-red-50 text-red-900"}`}>{msg.text}</p>}
 
@@ -205,7 +205,7 @@ export default function ActivityPage() {
                     <td className="px-3 py-2">
                       {i.customer ? (
                         i.customer.removed ? <span className="text-xs text-[#756B61]">Removed account</span> : (
-                          <Link className="block hover:text-[#803003]" to={`/admin/users?user=${i.customer.id}`}>
+                          <Link className="block hover:text-[#803003]" to={`/admin/customers?user=${i.customer.id}`}>
                             <span className="block font-medium">{i.customer.name ?? i.customer.email}</span>
                             {i.customer.name && <span className="block text-xs text-[#6B6259]">{i.customer.email}</span>}
                           </Link>
