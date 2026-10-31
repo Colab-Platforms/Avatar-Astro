@@ -32,6 +32,7 @@ const counters = {
   aiRowsPersisted: 0,
   aiRowsPersistFailed: 0,
 };
+let lastProviderCallAt: string | null = null;
 let installed = false;
 
 export const markCaptureInstalled = () => {
@@ -44,6 +45,7 @@ export function diag(e: Omit<DiagEvent, "at">): void {
   if (ring.length > MAX) ring.shift();
   if (e.stage === "provider_call") {
     counters.providerCallsSeen++;
+    lastProviderCallAt = ev.at;
     if (e.hasRequestContext === false) counters.providerCallsWithoutRequestContext++;
     else {
       if (e.tokensFound === false) counters.providerCallsWithoutTokens++;
@@ -57,10 +59,11 @@ export function diag(e: Omit<DiagEvent, "at">): void {
 }
 
 export function diagnosticsSnapshot() {
-  return { captureInstalled: installed, accountingEnabled: process.env.AI_USAGE_ACCOUNTING !== "off", startedAt, counters: { ...counters }, recent: [...ring].reverse() };
+  return { captureInstalled: installed, accountingEnabled: process.env.AI_USAGE_ACCOUNTING !== "off", startedAt, lastProviderCallAt, counters: { ...counters }, recent: [...ring].reverse() };
 }
 
 export function resetDiagnostics(): void {
   ring.length = 0;
+  lastProviderCallAt = null;
   for (const k of Object.keys(counters) as (keyof typeof counters)[]) counters[k] = 0;
 }

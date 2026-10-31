@@ -6,7 +6,9 @@ import { MainOnly } from "../panel/guards";
 
 const TITLE_BY_PATH: Record<string, string> = {
   "/admin": "Overview",
-  "/admin/users": "Users",
+  "/admin/customers": "Customers",
+  "/admin/admins": "Admin management",
+  "/admin/customer-library": "Customer readings / library",
   "/admin/activity": "Customer activity",
   "/admin/tools": "Astrology tools",
   "/admin/inner-voice": "Inner Voice",

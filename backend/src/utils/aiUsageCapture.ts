@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import axios from "axios";
-import { estimateCostUsd, priceFor } from "@/config/aiPricing.js";
+import { ensureOpenRouterCatalogue, estimateCostUsd, priceFor } from "@/config/aiPricing.js";
 import { diag, markCaptureInstalled } from "@/utils/aiDiagnostics.js";
 
 /**
@@ -30,6 +30,8 @@ export interface UsageStore {
 const als = new AsyncLocalStorage<UsageStore>();
 
 export const runWithUsageStore = <T>(store: UsageStore, fn: () => T): T => als.run(store, fn);
+/** The usage store of the customer request currently being handled (undefined outside one). */
+export const currentUsageStore = (): UsageStore | undefined => als.getStore();
 export const newUsageStore = (feature?: string): UsageStore => ({ calls: [], servedFromCache: false, feature });
 /** Call from a code path that answers from a stored result instead of generating. */
 export const markServedFromCache = () => {
@@ -121,6 +123,9 @@ export function installAiUsageCapture(): void {
   markCaptureInstalled();
 
   const origFetch = globalThis.fetch.bind(globalThis);
+  // Prices for the "tokens but no cost" case. Needs no key; skipped when no OpenRouter key is configured on this server.
+  const warmCatalogue = () => { if (process.env.OPENROUTER_API_KEY && enabled()) ensureOpenRouterCatalogue(origFetch); };
+  warmCatalogue();
   globalThis.fetch = (async (input: any, init?: any) => {
     const url: string | undefined = typeof input === "string" ? input : input instanceof URL ? input.href : input?.url;
     const provider = enabled() && url ? providerOf(url) : null;
@@ -148,6 +153,7 @@ export function installAiUsageCapture(): void {
       record({ provider, model: reqModel, ok: false, inputTokens: null, outputTokens: null, totalTokens: null, costUsd: null, costBasis: null });
       throw err;
     }
+    if (provider === "openrouter") warmCatalogue();
     if (isChatCompletion(url)) {
       try {
         record(extractCall(provider, reqModel, res.ok, await res.clone().json()));

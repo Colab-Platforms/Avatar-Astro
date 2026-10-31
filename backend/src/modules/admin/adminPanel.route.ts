@@ -14,6 +14,7 @@ import { parseContent, parsePage, parseRange, toCsv, maskSecret, CONTENT_TYPES }
 import { EVENT_TYPES, EVENT_LABELS, ALL_EVENT_TYPES } from "@/config/events.js";
 import { createAnalyticsRouter } from "./adminAnalytics.js";
 import { createCostsRouter, aiCostCsv } from "./adminCosts.js";
+import { createAccountsRouter, kindWhere } from "./adminAccounts.js";
 
 const DAY_MS = 86_400_000;
 /** Known ApiErrors pass through; anything else (e.g. Prisma, with file paths and SQL) is logged and replaced. */
@@ -35,13 +36,6 @@ export const wrap =
     fn(req as MainAdminRequest, res).catch((err) => next(publicError(err, "admin")));
 const notFound = (what: string) => new ApiError(`${what} not found`, STATUS_CODES.NOT_FOUND);
 const bad = (m: string) => new ApiError(m, STATUS_CODES.BAD_REQUEST);
-
-const ADMIN_ROLE_NAMES = new Set(["ADMIN", "SUPERADMIN", "SUPER_ADMIN"]);
-const roleOf = (mappings: { role: { name: string } }[]): string => {
-  const names = mappings.map((m) => m.role.name);
-  if (names.some((n) => n === "SUPERADMIN" || n === "SUPER_ADMIN")) return "SUPERADMIN";
-  return names.includes("ADMIN") ? "ADMIN" : "USER";
-};
 
 interface UsageRow {
   feature: string;
@@ -104,7 +98,7 @@ export function createAdminPanelRouter(): Router {
       const to = new Date(Date.now() + 1000);
       const from = new Date(Date.now() - days * DAY_MS);
       const d7 = new Date(Date.now() - 7 * DAY_MS);
-      const live = { isDeleted: false };
+      const live = kindWhere("customer"); // the Overview counts customers only; administrators are managed separately
 
       const [totalUsers, activeUsers, verifiedUsers, newInWindow, new7, usage, recentErrors, recentSignups, channels, products, categories, temples, pujas, chadhawas, since, recentAudit, contentGroups, inactiveUsers] =
         await Promise.all([
@@ -149,130 +143,6 @@ export function createAdminPanelRouter(): Router {
           { key: "payments", label: "Payments & subscriptions", reason: "No payment provider is integrated." },
         ],
       });
-    }),
-  );
-
-  // ── Users ──────────────────────────────────────────────────────────────────
-  const userSelect = {
-    id: true, firstName: true, lastName: true, email: true, phoneNo: true, city: true, state: true, country: true,
-    authProvider: true, isEmailVerified: true, isPhoneVerified: true, isActive: true, profileCompleted: true, createdAt: true,
-    userRoleMappings: { select: { role: { select: { name: true } } } },
-  } as const;
-
-  /** The one place that turns query-string filters into a database filter, so counts and lists always agree. */
-  const buildUserWhere = (query: any) => {
-    const where: any = { isDeleted: false };
-    const q = typeof query.search === "string" ? query.search.trim().slice(0, 100) : "";
-    if (query.status === "active" || query.status === "inactive") where.isActive = query.status === "active";
-    if (query.emailVerified === "true" || query.emailVerified === "false") where.isEmailVerified = query.emailVerified === "true";
-    if (query.phoneVerified === "true" || query.phoneVerified === "false") where.isPhoneVerified = query.phoneVerified === "true";
-    if (query.provider === "LOCAL" || query.provider === "GOOGLE") where.authProvider = query.provider;
-    if (["USER", "ADMIN", "SUPERADMIN"].includes(query.role)) where.userRoleMappings = { some: { role: { name: query.role } } };
-    const day = /^\d{4}-\d{2}-\d{2}$/;
-    const created: any = {};
-    if (typeof query.registeredFrom === "string" && day.test(query.registeredFrom)) created.gte = new Date(`${query.registeredFrom}T00:00:00.000Z`);
-    if (typeof query.registeredTo === "string" && day.test(query.registeredTo)) created.lt = new Date(new Date(`${query.registeredTo}T00:00:00.000Z`).getTime() + DAY_MS);
-    if (created.gte || created.lt) where.createdAt = created;
-    if (q) where.OR = ["email", "firstName", "lastName", "phoneNo"].map((f) => ({ [f]: { contains: q, mode: "insensitive" } }));
-    return where;
-  };
-
-  router.get(
-    "/users",
-    wrap(async (req, res) => {
-      const { page, pageSize } = parsePage(req.query);
-      const where = buildUserWhere(req.query);
-      const [total, rows] = await Promise.all([
-        prisma.user.count({ where }),
-        prisma.user.findMany({ where, orderBy: { createdAt: "desc" }, skip: (page - 1) * pageSize, take: pageSize, select: userSelect }),
-      ]);
-      // One grouped query for the whole page (last activity + number of events); no per-user queries.
-      const ids = rows.map((r) => r.id);
-      const act = ids.length
-        ? await prisma.usageEvent.groupBy({ by: ["userId"], where: { userId: { in: ids } }, _max: { createdAt: true }, _count: { _all: true } })
-        : [];
-      const actById = new Map(act.map((a) => [a.userId, a]));
-      const items = rows.map(({ userRoleMappings, ...u }) => ({
-        ...u,
-        role: roleOf(userRoleMappings),
-        lastActiveAt: actById.get(u.id)?._max.createdAt ?? null,
-        activityCount: actById.get(u.id)?._count._all ?? 0,
-      }));
-      sendResponse(res, true, { items, page, pageSize, total, totalPages: Math.max(1, Math.ceil(total / pageSize)) });
-    }),
-  );
-
-  router.get(
-    "/users/:id",
-    wrap(async (req, res) => {
-      const user = await prisma.user.findFirst({
-        where: { id: req.params.id, isDeleted: false },
-        select: { ...userSelect, address: true, gender: true, dateOfBirth: true, profileImage: true, updatedAt: true, _count: { select: { sessions: true } } },
-      });
-      if (!user) throw notFound("User");
-      const since = new Date(Date.now() - 30 * DAY_MS);
-      const mine = { userId: user.id };
-      const [usage30, usageAll, lastActive, lastLogin, logins, recent, totals] = await Promise.all([
-        prisma.usageEvent.groupBy({ by: ["feature"], where: { ...mine, eventType: EVENT_TYPES.featureRequest, createdAt: { gte: since } }, _count: { _all: true } }),
-        prisma.usageEvent.groupBy({ by: ["feature", "status"], where: { ...mine, eventType: EVENT_TYPES.featureRequest }, _count: { _all: true } }),
-        prisma.usageEvent.aggregate({ where: mine, _max: { createdAt: true } }),
-        prisma.usageEvent.aggregate({ where: { ...mine, eventType: EVENT_TYPES.authLogin }, _max: { createdAt: true } }),
-        prisma.usageEvent.findMany({ where: { ...mine, eventType: { in: [EVENT_TYPES.authLogin, EVENT_TYPES.authLoginFailed, EVENT_TYPES.authRegister] } }, orderBy: { createdAt: "desc" }, take: 20, select: { id: true, eventType: true, status: true, metadata: true, createdAt: true } }),
-        prisma.usageEvent.findMany({ where: mine, orderBy: { createdAt: "desc" }, take: 25, select: { id: true, eventType: true, feature: true, status: true, statusCode: true, metadata: true, createdAt: true } }),
-        prisma.usageEvent.groupBy({ by: ["eventType"], where: mine, _count: { _all: true } }),
-      ]);
-      const { userRoleMappings, _count, ...rest } = user;
-      const byFeature = new Map<string, { feature: string; total: number; success: number; failed: number }>();
-      for (const r of usageAll) {
-        const f = byFeature.get(r.feature) ?? { feature: r.feature, total: 0, success: 0, failed: 0 };
-        f.total += r._count._all;
-        if (r.status === "success") f.success += r._count._all;
-        if (r.status === "error") f.failed += r._count._all;
-        byFeature.set(r.feature, f);
-      }
-      sendResponse(res, true, {
-        ...rest,
-        role: roleOf(userRoleMappings),
-        activeSessions: _count.sessions,
-        usageLast30Days: usage30.map((u) => ({ feature: u.feature, count: u._count._all })),
-        lastActiveAt: lastActive._max.createdAt,
-        lastLoginAt: lastLogin._max.createdAt,
-        loginHistory: logins,
-        recentActivity: recent.map((e) => ({ ...e, label: EVENT_LABELS[e.eventType] ?? e.eventType })),
-        featureUsage: [...byFeature.values()].sort((a, b) => b.total - a.total),
-        eventCounts: totals.map((t) => ({ eventType: t.eventType, count: t._count._all })),
-        // Be explicit about what is NOT stored so nobody reads an empty list as "no readings happened".
-        notStored: [
-          "Reading and chat content (Tarot, AI Guru, Karma, Shloka, Life Path) is not saved on the server, only that the feature was used.",
-          "Saved items and wishlists live in the user's browser only.",
-          "Orders, bookings and payments do not exist yet.",
-        ],
-      });
-    }),
-  );
-
-  router.patch(
-    "/users/:id/status",
-    wrap(async (req, res) => {
-      if (typeof req.body?.isActive !== "boolean") throw bad("isActive (true/false) is required.");
-      const isActive: boolean = req.body.isActive;
-      if (req.params.id === req.user!.id) throw new ApiError("You cannot change your own account status.", STATUS_CODES.FORBIDDEN);
-      const target = await prisma.user.findFirst({ where: { id: req.params.id, isDeleted: false }, select: { id: true, email: true, isActive: true, userRoleMappings: { select: { role: { select: { name: true } } } } } });
-      if (!target) throw notFound("User");
-      if (target.userRoleMappings.some((m) => ADMIN_ROLE_NAMES.has(m.role.name))) {
-        throw new ApiError("Admin accounts cannot be changed from the panel.", STATUS_CODES.FORBIDDEN);
-      }
-      if (target.isActive !== isActive) {
-        // One transaction: the change, the session wipe and the audit row all commit or none do.
-        await prisma.$transaction(async (tx) => {
-          await tx.user.update({ where: { id: target.id }, data: { isActive } });
-          // Deactivating also ends every refresh session so the user is signed out at next refresh.
-          if (!isActive) await tx.session.deleteMany({ where: { userId: target.id } });
-          await writeAudit(req, { action: isActive ? "user.reactivate" : "user.deactivate", entityType: "user", entityId: target.id, summary: `${isActive ? "Reactivated" : "Deactivated"} user ${target.email}` }, tx);
-        });
-        invalidateAccountStatus(target.id); // their access token stops working on the very next request
-      }
-      sendResponse(res, true, { id: target.id, isActive }, "User status updated");
     }),
   );
 
@@ -501,8 +371,8 @@ export function createAdminPanelRouter(): Router {
         windowDays: 30,
         database: { name: "PostgreSQL", ...db, ...dbHost },
         providers: [
-          { id: "openrouter", name: "OpenRouter (Tarot, horoscope, life path, palm)", model: OPENROUTER_MODEL, envVar: "OPENROUTER_API_KEY", ...secret("OPENROUTER_API_KEY"), usage: providerUsage("openrouter"), ...oOpenrouter },
-          { id: "groq", name: "Groq (Karma, AI Guru, Sacred Shloka)", model: process.env.GROQ_MODEL || null, envVar: "GROQ_API_KEY", ...secret("GROQ_API_KEY"), usage: providerUsage("groq"), ...oGroq },
+          { id: "openrouter", name: "OpenRouter (Tarot, horoscope, chart interpretation, birth chart, compatibility, name analysis, Inner Voice, palm)", model: OPENROUTER_MODEL, envVar: "OPENROUTER_API_KEY", ...secret("OPENROUTER_API_KEY"), usage: providerUsage("openrouter"), ...oOpenrouter },
+          { id: "groq", name: "Groq (Karma, AI Guru, Sacred Shloka, gemstone wording)", model: process.env.GROQ_MODEL || null, envVar: "GROQ_API_KEY", ...secret("GROQ_API_KEY"), usage: providerUsage("groq"), ...oGroq },
           { id: "sarvam", name: "Sarvam (voice)", model: null, envVar: "SARVAM_API_KEY", ...secret("SARVAM_API_KEY"), usage: providerUsage("sarvam"), ...oSarvam },
           { id: "resend", name: "Resend (email: inquiries, OTP)", model: null, envVar: "RESEND_API_KEY", issues: process.env.RESEND_API_KEY && !process.env.SMTP_FROM_EMAIL ? ["SMTP_FROM_EMAIL is not set, so no email can be sent"] : [], ...secret("RESEND_API_KEY"), detail: { fromEmail: process.env.SMTP_FROM_EMAIL || null, supportEmail: process.env.SUPPORT_EMAIL || null }, usage: null },
           { id: "youtube", name: "YouTube Data API (Live Darshan)", model: null, envVar: "YOUTUBE_API_KEY", ...secret("YOUTUBE_API_KEY"), usage: null, issues: process.env.YOUTUBE_API_KEY && !process.env.BACKEND_PUBLIC_URL ? ["BACKEND_PUBLIC_URL is not set, so live-status pushes cannot reach this server"] : [] },
@@ -599,7 +469,8 @@ export function createAdminPanelRouter(): Router {
     wrap(async (req, res) => {
       const { page, pageSize } = parsePage(req.query, 25, 100);
       const action = typeof req.query.action === "string" && req.query.action ? req.query.action.slice(0, 60) : undefined;
-      const where = action ? { action } : {};
+      const prefix = typeof req.query.actionPrefix === "string" && /^[a-z_.]{1,30}$/.test(req.query.actionPrefix) ? req.query.actionPrefix : undefined;
+      const where: any = { ...(action ? { action } : {}), ...(!action && prefix ? { action: { startsWith: prefix } } : {}) };
       const [total, items] = await Promise.all([
         prisma.adminAuditLog.count({ where }),
         prisma.adminAuditLog.findMany({ where, orderBy: { createdAt: "desc" }, skip: (page - 1) * pageSize, take: pageSize }),
@@ -608,6 +479,7 @@ export function createAdminPanelRouter(): Router {
     }),
   );
 
+  router.use(createAccountsRouter());
   router.use(createAnalyticsRouter());
   router.use(createCostsRouter());
 

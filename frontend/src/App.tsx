@@ -57,6 +57,8 @@ const AdminDashboardPage = lazy(
 );
 const AdminPujaPage = lazy(() => import("./features/admin/pages/Puja"));
 const AdminUsersPage = lazy(() => import("./features/admin/panel/pages/UsersPage"));
+const AdminAdminsPage = lazy(() => import("./features/admin/panel/pages/AdminsPage"));
+const AdminCustomerLibraryPage = lazy(() => import("./features/admin/panel/pages/CustomerLibraryPage"));
 const AdminToolsPage = lazy(() => import("./features/admin/panel/pages/ToolsPage"));
 const AdminActivityPage = lazy(() => import("./features/admin/panel/pages/ActivityPage"));
 const AdminInnerVoicePage = lazy(() => import("./features/admin/panel/pages/InnerVoiceAdminPage"));
@@ -68,10 +70,15 @@ const AdminIntegrationsPage = lazy(() => import("./features/admin/panel/pages/In
 const AdminReportsPage = lazy(() => import("./features/admin/panel/pages/ReportsPage"));
 const AdminSettingsPage = lazy(() => import("./features/admin/panel/pages/SettingsAuditPage"));
 const DashboardLayout = lazy(() => import("./features/dashboard/DashboardLayout"));
-const DashboardHome = lazy(() => import("./features/dashboard/DashboardPages").then((m) => ({ default: m.DashboardHome })));
-const MyAstrology = lazy(() => import("./features/dashboard/DashboardPages").then((m) => ({ default: m.MyAstrology })));
-const MyInnerVoice = lazy(() => import("./features/dashboard/DashboardPages").then((m) => ({ default: m.MyInnerVoice })));
-const MyDevotion = lazy(() => import("./features/dashboard/DashboardPages").then((m) => ({ default: m.MyDevotion })));
+const DashboardHome = lazy(() => import("./features/dashboard/library/pages").then((m) => ({ default: m.Overview })));
+const MyReadings = lazy(() => import("./features/dashboard/library/pages").then((m) => ({ default: m.MyReadings })));
+const ReadingDetail = lazy(() => import("./features/dashboard/library/pages").then((m) => ({ default: m.ReadingDetail })));
+const MyActivity = lazy(() => import("./features/dashboard/library/pages").then((m) => ({ default: m.MyActivity })));
+const SavedItems = lazy(() => import("./features/dashboard/library/pages").then((m) => ({ default: m.Saved })));
+const MyConversations = lazy(() => import("./features/dashboard/library/pages").then((m) => ({ default: m.Conversations })));
+const ConversationDetail = lazy(() => import("./features/dashboard/library/pages").then((m) => ({ default: m.ConversationDetail })));
+const MyBookings = lazy(() => import("./features/dashboard/library/pages").then((m) => ({ default: m.MyBookings })));
+const MyOrders = lazy(() => import("./features/dashboard/library/pages").then((m) => ({ default: m.MyOrders })));
 const ProfileSettings = lazy(() => import("./features/dashboard/DashboardPages").then((m) => ({ default: m.ProfileSettings })));
 const AdminChadhawaPage = lazy(
   () => import("./features/admin/pages/Chadhawa"),
@@ -97,6 +104,15 @@ const DarshanDetail    = lazy(() => import("./pages/AvatarLive/DarshanDetail"));
 const FamilyPage       = lazy(() => import("./pages/AvatarLive/FamilyPage"));
 
 const LazyFallback = () => <div className="min-h-screen" />;
+
+/** The old /admin/users address now lives at /admin/customers; bookmarks and filters keep working. */
+const LegacyUsersRedirect = () => {
+  const loc = useLocation();
+  const params = new URLSearchParams(loc.search);
+  params.delete("role"); // customers only; the role filter no longer exists
+  const qs = params.toString();
+  return <Navigate to={`/admin/customers${qs ? `?${qs}` : ""}`} replace />;
+};
 
 const AdminLazyFallback = () => (
   <div className="flex min-h-screen items-center justify-center bg-[#FBF5EC]">
@@ -521,10 +537,27 @@ const App = () => {
                 }
               />
               <Route
-                path="users"
+                path="customers"
                 element={
                   <Suspense fallback={<AdminLazyFallback />}>
                     <MainOnly><AdminUsersPage /></MainOnly>
+                  </Suspense>
+                }
+              />
+              <Route path="users" element={<LegacyUsersRedirect />} />
+              <Route
+                path="admins"
+                element={
+                  <Suspense fallback={<AdminLazyFallback />}>
+                    <MainOnly><AdminAdminsPage /></MainOnly>
+                  </Suspense>
+                }
+              />
+              <Route
+                path="customer-library"
+                element={
+                  <Suspense fallback={<AdminLazyFallback />}>
+                    <MainOnly><AdminCustomerLibraryPage /></MainOnly>
                   </Suspense>
                 }
               />
@@ -658,9 +691,17 @@ const App = () => {
               }
             >
               <Route index element={<Suspense fallback={<LazyFallback />}><DashboardHome /></Suspense>} />
-              <Route path="astrology" element={<Suspense fallback={<LazyFallback />}><MyAstrology /></Suspense>} />
-              <Route path="inner-voice" element={<Suspense fallback={<LazyFallback />}><MyInnerVoice /></Suspense>} />
-              <Route path="devotion" element={<Suspense fallback={<LazyFallback />}><MyDevotion /></Suspense>} />
+              <Route path="readings" element={<Suspense fallback={<LazyFallback />}><MyReadings /></Suspense>} />
+              <Route path="readings/:id" element={<Suspense fallback={<LazyFallback />}><ReadingDetail /></Suspense>} />
+              <Route path="activity" element={<Suspense fallback={<LazyFallback />}><MyActivity /></Suspense>} />
+              <Route path="saved" element={<Suspense fallback={<LazyFallback />}><SavedItems /></Suspense>} />
+              <Route path="conversations" element={<Suspense fallback={<LazyFallback />}><MyConversations /></Suspense>} />
+              <Route path="conversations/:id" element={<Suspense fallback={<LazyFallback />}><ConversationDetail /></Suspense>} />
+              <Route path="bookings" element={<Suspense fallback={<LazyFallback />}><MyBookings /></Suspense>} />
+              <Route path="orders" element={<Suspense fallback={<LazyFallback />}><MyOrders /></Suspense>} />
+              <Route path="astrology" element={<Navigate to="/dashboard/readings" replace />} />
+              <Route path="inner-voice" element={<Navigate to="/dashboard/conversations" replace />} />
+              <Route path="devotion" element={<Navigate to="/dashboard/bookings" replace />} />
               <Route path="profile" element={<Suspense fallback={<LazyFallback />}><ProfileSettings /></Suspense>} />
             </Route>
           </Route>

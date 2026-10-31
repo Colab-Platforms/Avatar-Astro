@@ -1,17 +1,12 @@
 import { useState, type ReactNode } from "react";
-import { Link } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Loader2 } from "lucide-react";
-import { tools } from "@/data/tools";
 import { authRequest } from "@/lib/authClient";
 import { authApi } from "@/features/auth/api/authApi";
 import { useAuthStore } from "@/store/authStore";
-import { isAdminUser } from "@/features/admin/utils/roles";
-import { useFeatureFlags } from "@/lib/featureFlags";
 import { useMyDashboard } from "./useMyDashboard";
 
 const card = "rounded-2xl border border-[#803003]/15 bg-white/70 p-5 shadow-sm";
-const linkCard = "block rounded-xl border border-[#803003]/20 bg-white/70 p-4 transition hover:bg-[#E58A45]/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#E58A45]";
 const btn = "inline-flex items-center justify-center gap-2 rounded-lg bg-[#803003] px-4 py-2 text-sm font-medium text-white hover:bg-[#803003]/90 disabled:opacity-50";
 const ghost = "inline-flex items-center justify-center gap-2 rounded-lg border border-[#803003]/30 bg-white/60 px-3 py-1.5 text-sm hover:bg-[#E58A45]/20 disabled:opacity-50";
 const input = "w-full rounded-lg border border-[#803003]/25 bg-white px-3 py-2 text-sm text-[#301607] focus:border-[#803003] focus:outline-none focus:ring-2 focus:ring-[#E58A45]/50";
@@ -19,10 +14,6 @@ const input = "w-full rounded-lg border border-[#803003]/25 bg-white px-3 py-2 t
 const Heading = ({ title, sub }: { title: string; sub?: string }) => (
   <div className="mb-5"><h1 className="font-display text-2xl tracking-wide sm:text-3xl">{title}</h1>{sub && <p className="mt-1 text-sm text-[#301607]/70">{sub}</p>}</div>
 );
-
-function Note({ children }: { children: ReactNode }) {
-  return <p className="rounded-xl border border-dashed border-[#803003]/40 bg-[#E58A45]/10 p-4 text-sm text-[#301607]/80">{children}</p>;
-}
 
 function Loaded({ children }: { children: (d: NonNullable<ReturnType<typeof useMyDashboard>["data"]>) => ReactNode }) {
   const q = useMyDashboard();
@@ -39,115 +30,6 @@ function Loaded({ children }: { children: (d: NonNullable<ReturnType<typeof useM
 }
 
 const when = (iso: string) => new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
-
-export function DashboardHome() {
-  const user = useAuthStore((s) => s.user);
-  return (
-    <Loaded>
-      {(d) => (
-        <>
-          <Heading title={`Namaste, ${d.profile.firstName || "friend"}`} sub="Your starting point for everything on MyBhagya." />
-          {!d.profile.profileCompleted && (
-            <Note>Your profile is not complete yet. <Link className="underline" to="/dashboard/profile">Finish it</Link> so readings can be personal.</Note>
-          )}
-          {isAdminUser(user) && <p className="mt-3 text-sm"><Link className="text-[#803003] underline" to="/admin">Open the admin panel</Link></p>}
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              { to: "/dashboard/astrology", t: "My Astrology", s: "Birth chart, tarot, compatibility and more" },
-              { to: "/dashboard/inner-voice", t: "My Inner Voice", s: "Karma, AI Guru, shlokas, life path" },
-              { to: "/dashboard/devotion", t: "Devotion & Live", s: "Live Darshan, pujas, chadhawa" },
-            ].map((x) => <Link key={x.to} to={x.to} className={linkCard}><p className="font-medium">{x.t}</p><p className="text-sm text-[#301607]/70">{x.s}</p></Link>)}
-          </div>
-          <section className={`${card} mt-6`} aria-labelledby="recent-h">
-            <h2 id="recent-h" className="mb-3 font-semibold">Recent activity</h2>
-            {d.recentActivity.length === 0 ? (
-              <p className="text-sm text-[#301607]/70">No activity recorded yet. Features you use while signed in will appear here. Only the feature name, time and whether it worked are kept, never what you asked or were told.</p>
-            ) : (
-              <ul className="divide-y divide-[#803003]/10 text-sm">
-                {d.recentActivity.map((a) => (
-                  <li key={a.id} className="flex items-center justify-between gap-3 py-2">
-                    <span>{a.label}</span>
-                    <span className="flex items-center gap-2 text-xs text-[#301607]/65">{a.status !== "success" && <span className="rounded-full bg-red-100 px-2 py-0.5 text-red-900">didn't complete</span>}{when(a.at)}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-        </>
-      )}
-    </Loaded>
-  );
-}
-
-export function MyAstrology() {
-  const { isPathDisabled } = useFeatureFlags();
-  return (
-    <Loaded>
-      {(d) => (
-        <>
-          <Heading title="My Astrology" sub="Open any astrology Seva. Free with your account." />
-          <div className="grid gap-3 sm:grid-cols-2">
-            {tools.filter((t) => !isPathDisabled(t.path)).map((t) => <Link key={t.path} to={t.path} className={linkCard}><p className="font-medium">{t.title}</p><p className="mt-1 line-clamp-2 text-sm text-[#301607]/70">{t.description}</p></Link>)}
-          </div>
-          <section className={`${card} mt-6`}>
-            <h2 className="mb-2 font-semibold">Saved reports</h2>
-            <Note>{d.persistence.savedReports ? "" : "Reports are generated on demand and are not saved to your account, so there is no history to show. Nothing is stored about what you asked."}</Note>
-            {d.usage.byFeature.length > 0 && (
-              <>
-                <h3 className="mb-1 mt-4 text-sm font-medium">Times you used each feature (last {d.usage.windowDays} days)</h3>
-                <ul className="text-sm">{d.usage.byFeature.map((u) => <li key={u.feature} className="flex justify-between border-b border-[#803003]/10 py-1.5"><span>{u.label}</span><span>{u.count}</span></li>)}</ul>
-              </>
-            )}
-          </section>
-        </>
-      )}
-    </Loaded>
-  );
-}
-
-export function MyInnerVoice() {
-  const { isPathDisabled } = useFeatureFlags();
-  return (
-    <Loaded>
-      {(d) => (
-        <>
-          <Heading title="My Inner Voice" sub="Your reflection Seva." />
-          <div className="grid gap-3 sm:grid-cols-2">
-            {[
-              { to: "/inner-voice", t: "Know Your Karma", s: "A written karmic reading from your situation" },
-              { to: "/inner-voice/chat", t: "AI Guru", s: "Ask for guidance in conversation" },
-              { to: "/inner-voice/dashboard", t: "Karma Score", s: "Track your daily actions and your score" },
-              { to: "/inner-voice/future-path", t: "Future Life Path", s: "Reflective guidance for the months ahead" },
-              { to: "/inner-voice/wisdom", t: "Sacred Shloka", s: "A verse chosen for your situation" },
-            ].filter((x) => !isPathDisabled(x.to, true)).map((x) => <Link key={x.to} to={x.to} className={linkCard}><p className="font-medium">{x.t}</p><p className="text-sm text-[#301607]/70">{x.s}</p></Link>)}
-          </div>
-          <div className="mt-6"><Note>{d.persistence.note}</Note></div>
-        </>
-      )}
-    </Loaded>
-  );
-}
-
-export function MyDevotion() {
-  return (
-    <Loaded>
-      {(d) => (
-        <>
-          <Heading title="Devotion & Live Darshan" />
-          <div className="grid gap-3 sm:grid-cols-2">
-            {[
-              { to: "/avatar-live/darshan", t: "Live Darshan", s: "Watch live aarti and darshan from temples" },
-              { to: "/puja", t: "Puja", s: "Browse temple puja offerings" },
-              { to: "/chadhawa", t: "Chadhawa", s: "Devotional offerings" },
-              { to: "/shop", t: "Divine Shop", s: "Sacred items" },
-            ].map((x) => <Link key={x.to} to={x.to} className={linkCard}><p className="font-medium">{x.t}</p><p className="text-sm text-[#301607]/70">{x.s}</p></Link>)}
-          </div>
-          <div className="mt-6"><Note>{d.persistence.bookings ? "" : "Bookings and orders are not part of the site yet, so there is nothing to list here."}</Note></div>
-        </>
-      )}
-    </Loaded>
-  );
-}
 
 export function ProfileSettings() {
   const qc = useQueryClient();
@@ -219,6 +101,15 @@ export function ProfileSettings() {
               <h2 id="priv-h" className="mb-2 font-semibold">Privacy</h2>
               <p className="mb-3 text-sm text-[#301607]/75">We keep a short activity trail (feature name, time, success or failure) to show your recent activity. It never includes what you asked or were told. You can delete it at any time.</p>
               <button className={ghost} disabled={clear.isPending || !d.hasTrackedActivity} onClick={() => { if (window.confirm("Delete your activity history?")) clear.mutate(); }}>Clear my activity history</button>
+              <p className="mt-3 text-xs text-[#301607]/60">Clearing activity does not delete your readings or conversations. Delete those from My Readings and My Conversations.</p>
+            </section>
+            <section className={`${card} mt-4`} aria-labelledby="pref-h">
+              <h2 id="pref-h" className="mb-2 font-semibold">Preferences</h2>
+              <p className="text-sm text-[#301607]/75">MyBhagya does not send marketing messages or notifications, so there are no notification settings to change. Your privacy controls are above.</p>
+            </section>
+            <section className={`${card} mt-4`} aria-labelledby="del-h">
+              <h2 id="del-h" className="mb-2 font-semibold">Delete my account</h2>
+              <p className="text-sm text-[#301607]/75">There is no self-service deletion yet. To have your account and everything saved in it (readings, conversations, activity) permanently removed, email <a className="underline" href="mailto:support@avatarindia.com">support@avatarindia.com</a> from your registered address. Deletion cannot be undone.</p>
             </section>
           </>
         );

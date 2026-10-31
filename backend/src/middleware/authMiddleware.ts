@@ -62,6 +62,28 @@ async function isAccountActive(userId: string): Promise<boolean> {
     return active;
 }
 
+/**
+ * For PUBLIC routes that still want to know who is calling (usage attribution only). It never rejects: a missing, invalid or
+ * expired token, a deactivated account, or a failed status check all simply leave the request anonymous. It grants nothing:
+ * routes that need a signed-in user must keep using auth().
+ */
+export const optionalAuth = () => {
+    return async (req: Request, _res: Response, next: NextFunction) => {
+        try {
+            const header = req.headers.authorization;
+            if (header && header.startsWith("Bearer ") && process.env.JWT_SECRET) {
+                const decoded = jwt.verify(header.split(" ")[1], process.env.JWT_SECRET) as { id?: string; role?: Role };
+                if (decoded?.id && decoded.role && (await isAccountActive(decoded.id))) {
+                    (req as AuthRequest).user = { id: decoded.id, role: decoded.role };
+                }
+            }
+        } catch {
+            /* stay anonymous */
+        }
+        next();
+    };
+};
+
 export const auth = (...allowedRoles: Role[]) => {
     return async (req: Request, _res: Response, next: NextFunction) => {
         try {

@@ -64,6 +64,8 @@ model AdminAuditLog {
   entityId   String? @map("entity_id")
   summary    String
   ip         String?
+  /// Small non-sensitive context (changed field names, role from/to). Never passwords, tokens or personal content.
+  metadata   Json?
 
   createdAt DateTime @default(now()) @map("created_at")
 

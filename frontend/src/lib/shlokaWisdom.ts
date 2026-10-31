@@ -94,6 +94,7 @@ export async function fetchWisdom(situation: string, scripture: string): Promise
       temperature: 0.5,
       max_tokens: 900,
       json: true,
+      library: { feature: "shloka" },
       messages: [
         { role: "system", content: buildPrompt(scripture) },
         { role: "user", content: `My situation: ${situation.trim().slice(0, MAX_SITUATION_CHARS)}` },

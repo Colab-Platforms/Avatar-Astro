@@ -120,7 +120,7 @@ after(async () => {
   await prisma?.$disconnect();
 });
 
-const ADMIN_GETS = ["/overview", "/users", "/tools", "/inner-voice", "/devotion", "/shop-summary", "/payments", "/content", "/integrations", "/reports/summary", "/settings", "/audit-logs"];
+const ADMIN_GETS = ["/overview", "/customers", "/tools", "/inner-voice", "/devotion", "/shop-summary", "/payments", "/content", "/integrations", "/reports/summary", "/settings", "/audit-logs"];
 
 test("unauthenticated visitors get 401 on every admin API", { skip }, async () => {
   for (const p of ["/access", ...ADMIN_GETS]) assert.equal((await call("GET", `/api/admin${p}`)).status, 401, p);
@@ -135,14 +135,14 @@ test("forged token (wrong signing secret) is rejected", { skip }, async () => {
 test("normal users get 403 on every admin API (reads and writes)", { skip }, async () => {
   for (const p of ["/access", ...ADMIN_GETS]) assert.equal((await call("GET", `/api/admin${p}`, t.alice)).status, 403, p);
   assert.equal((await call("PUT", "/api/admin/tools/tarot", t.alice, { enabled: false })).status, 403);
-  assert.equal((await call("PATCH", `/api/admin/users/${ids.bob}/status`, t.alice, { isActive: false })).status, 403);
+  assert.equal((await call("PATCH", `/api/admin/customers/${ids.bob}/status`, t.alice, { isActive: false })).status, 403);
   assert.equal((await call("POST", "/api/admin/content", t.alice, { type: "FAQ", title: "Hacked", body: "x" })).status, 403);
   assert.equal(await prisma.contentItem.count(), 0);
 });
 
 test("legacy ADMIN role cannot use the admin APIs", { skip }, async () => {
   assert.equal((await call("GET", "/api/admin/overview", t.staff)).status, 403);
-  assert.equal((await call("GET", "/api/admin/users", t.staff)).status, 403);
+  assert.equal((await call("GET", "/api/admin/customers", t.staff)).status, 403);
   // Policy: the old ADMIN role no longer opens ANY /api/admin route, including the original dashboard probe.
   assert.equal((await call("GET", "/api/admin/dashboard", t.staff)).status, 403);
 });
@@ -171,45 +171,47 @@ test("main admin: access check and overview reflect real database counts", { ski
   const ov = await call("GET", "/api/admin/overview", t.owner);
   assert.equal(ov.status, 200, ov.text);
   const o = ov.data.data;
-  const dbTotal = await prisma.user.count({ where: { isDeleted: false } });
+  const customerWhere = { isDeleted: false, userRoleMappings: { none: { role: { name: { in: ["ADMIN", "SUPERADMIN", "SUPER_ADMIN"] } } } } };
+  const dbTotal = await prisma.user.count({ where: customerWhere });
   assert.equal(o.users.total, dbTotal);
-  assert.equal(o.users.active, await prisma.user.count({ where: { isDeleted: false, isActive: true } }));
+  assert.equal(o.users.active, await prisma.user.count({ where: { ...customerWhere, isActive: true } }));
   assert.equal(o.usage.totalRequests, 0, "no usage recorded yet, so none is invented");
   assert.equal(o.trackingSince, null);
   assert.deepEqual(o.notConfigured.map((n: any) => n.key).sort(), ["bookings", "orders", "payments"]);
 });
 
 test("users: search, pagination, and no secrets in responses", { skip }, async () => {
-  const list = await call("GET", "/api/admin/users?search=alice@admin-test.example&pageSize=5", t.owner);
+  const list = await call("GET", "/api/admin/customers?search=alice@admin-test.example&pageSize=5", t.owner);
   assert.equal(list.status, 200);
   assert.equal(list.data.data.total, 1);
   assert.equal(list.data.data.items[0].email, "alice@admin-test.example");
   assert.equal(list.data.data.items[0].role, "USER");
 
-  const page1 = (await call("GET", "/api/admin/users?pageSize=2&page=1", t.owner)).data.data;
+  const page1 = (await call("GET", "/api/admin/customers?pageSize=2&page=1", t.owner)).data.data;
   assert.equal(page1.items.length, 2);
   assert.ok(page1.totalPages >= 2);
 
-  const detail = await call("GET", `/api/admin/users/${ids.alice}`, t.owner);
+  const detail = await call("GET", `/api/admin/customers/${ids.alice}`, t.owner);
   assert.equal(detail.status, 200);
   assert.equal(detail.data.data.activeSessions, 1);
   assert.ok(!/HASH-should-never-leak|password|googleId|refreshToken/i.test(JSON.stringify([list.data, detail.data])));
-  assert.equal((await call("GET", "/api/admin/users/does-not-exist", t.owner)).status, 404);
+  assert.equal(detail.data.data.credentialStatus, "set");
+  assert.equal((await call("GET", "/api/admin/customers/does-not-exist", t.owner)).status, 404);
 });
 
 test("user status: deactivate ends sessions, is audited, and protects admins and self", { skip }, async () => {
-  const r = await call("PATCH", `/api/admin/users/${ids.alice}/status`, t.owner, { isActive: false });
+  const r = await call("PATCH", `/api/admin/customers/${ids.alice}/status`, t.owner, { isActive: false });
   assert.equal(r.status, 200);
   assert.equal((await prisma.user.findUnique({ where: { id: ids.alice } })).isActive, false);
   assert.equal(await prisma.session.count({ where: { userId: ids.alice } }), 0);
-  assert.ok(await prisma.adminAuditLog.findFirst({ where: { action: "user.deactivate", entityId: ids.alice } }));
+  assert.ok(await prisma.adminAuditLog.findFirst({ where: { action: "customer.deactivate", entityId: ids.alice } }));
 
-  assert.equal((await call("PATCH", `/api/admin/users/${ids.owner}/status`, t.owner, { isActive: false })).status, 403, "self");
-  assert.equal((await call("PATCH", `/api/admin/users/${ids.staff}/status`, t.owner, { isActive: false })).status, 403, "other admin");
-  assert.equal((await call("PATCH", `/api/admin/users/${ids.bob}/status`, t.owner, { isActive: "no" })).status, 400);
+  assert.equal((await call("PATCH", `/api/admin/customers/${ids.owner}/status`, t.owner, { isActive: false })).status, 403, "self");
+  assert.equal((await call("PATCH", `/api/admin/customers/${ids.staff}/status`, t.owner, { isActive: false })).status, 404, "an administrator is not a customer");
+  assert.equal((await call("PATCH", `/api/admin/customers/${ids.bob}/status`, t.owner, { isActive: "no" })).status, 400);
 
-  assert.equal((await call("PATCH", `/api/admin/users/${ids.alice}/status`, t.owner, { isActive: true })).status, 200);
-  assert.ok(await prisma.adminAuditLog.findFirst({ where: { action: "user.reactivate", entityId: ids.alice } }));
+  assert.equal((await call("PATCH", `/api/admin/customers/${ids.alice}/status`, t.owner, { isActive: true })).status, 200);
+  assert.ok(await prisma.adminAuditLog.findFirst({ where: { action: "customer.reactivate", entityId: ids.alice } }));
 });
 
 test("content: validation, CRUD, publish workflow, schedule, and public visibility", { skip }, async () => {
@@ -319,7 +321,7 @@ test("profile edits only touch the caller and only safe fields", { skip }, async
 
 test("clearing activity deletes only the caller's history", { skip }, async () => {
   const del = await call("DELETE", "/api/me/activity", t.alice);
-  assert.equal(del.data.data.deleted, 3, "two feature requests plus the profile.updated event from the profile test");
+  assert.equal(del.data.data.deleted, 4, "two feature requests plus the profile.updated usage event, plus its entry in the personal timeline");
   assert.equal(await prisma.usageEvent.count({ where: { userId: ids.alice } }), 0);
   assert.equal(await prisma.usageEvent.count({ where: { userId: ids.bob } }), 2);
   assert.equal((await call("DELETE", "/api/me/activity")).status, 401);
@@ -416,7 +418,7 @@ test("deactivation: old access token, refresh token and login all stop working i
   assert.equal((await call("GET", "/api/probe", accessToken)).status, 200);
 
   // The status lookup is cached for a few seconds, so this also proves the admin action invalidates it.
-  assert.equal((await call("PATCH", `/api/admin/users/${ids.deact}/status`, t.owner, { isActive: false })).status, 200);
+  assert.equal((await call("PATCH", `/api/admin/customers/${ids.deact}/status`, t.owner, { isActive: false })).status, 200);
 
   assert.equal((await call("GET", "/api/me/dashboard", accessToken)).status, 401, "protected user route with the still-valid token");
   assert.equal((await call("GET", "/api/probe", accessToken)).status, 401, "any other protected route");
@@ -432,7 +434,7 @@ test("deactivation: old access token, refresh token and login all stop working i
   assert.ok(relogin.status === 401 || relogin.status === 403, `login refused (${relogin.status})`);
   assert.ok(!relogin.data?.data?.accessToken);
 
-  assert.equal((await call("PATCH", `/api/admin/users/${ids.deact}/status`, t.owner, { isActive: true })).status, 200);
+  assert.equal((await call("PATCH", `/api/admin/customers/${ids.deact}/status`, t.owner, { isActive: true })).status, 200);
   const again = await call("POST", "/api/auth/login", undefined, { email: "deact@admintestmail.com", password: "Test#12345" });
   assert.equal(again.status, 200);
   assert.equal((await call("GET", "/api/me/dashboard", again.data.data.accessToken)).status, 200, "works again after reactivation");
@@ -502,7 +504,7 @@ test("audit is atomic: if the audit row cannot be written, the sensitive change 
   const origErr = console.error; console.error = () => {};
   try {
     const beforeActive = (await reread(() => prisma.user.findUnique({ where: { id: ids.bob } }))).isActive;
-    const r1 = await call("PATCH", `/api/admin/users/${ids.bob}/status`, t.owner, { isActive: false });
+    const r1 = await call("PATCH", `/api/admin/customers/${ids.bob}/status`, t.owner, { isActive: false });
     assert.equal(r1.status, 500);
     assert.ok(!/audit blocked|prisma|Invalid/i.test(r1.text), "no internals leaked");
     assert.equal((await reread(() => prisma.user.findUnique({ where: { id: ids.bob } }))).isActive, beforeActive, "user status unchanged");
@@ -551,7 +553,7 @@ test("overview exposes recent admin actions, content status counts and inactive 
   const o = (await call("GET", "/api/admin/overview", t.owner)).data.data;
   assert.ok(Array.isArray(o.recentAudit) && o.recentAudit.length > 0 && o.recentAudit.length <= 6);
   assert.deepEqual(Object.keys(o.recentAudit[0]).sort(), ["action", "actorEmail", "createdAt", "id", "summary"]);
-  assert.equal(o.users.inactive, await prisma.user.count({ where: { isDeleted: false, isActive: false } }));
+  assert.equal(o.users.inactive, await prisma.user.count({ where: { isDeleted: false, isActive: false, userRoleMappings: { none: { role: { name: { in: ["ADMIN", "SUPERADMIN", "SUPER_ADMIN"] } } } } } }));
   const published = await prisma.contentItem.count({ where: { status: "PUBLISHED" } });
   assert.equal(o.content.filter((c: any) => c.status === "PUBLISHED").reduce((s: number, c: any) => s + c.count, 0), published);
 });
@@ -632,7 +634,7 @@ test("Google sign-in persists ONE user, assigns USER, links by email, never dupl
   assert.deepEqual(mine.map((e: any) => `${e.eventType}:${e.metadata.method}`).sort(), ["auth.login:google", "auth.login:google", "auth.register:google"]);
 
   // admin sees it, with consistent counts
-  const list = await call("GET", "/api/admin/users?provider=GOOGLE&search=g.new@admintestmail.com", t.owner);
+  const list = await call("GET", "/api/admin/customers?provider=GOOGLE&search=g.new@admintestmail.com", t.owner);
   assert.equal(list.data.data.total, 1);
   assert.equal(list.data.data.items[0].authProvider, "GOOGLE");
   assert.equal(list.data.data.items[0].role, "USER");
@@ -641,27 +643,29 @@ test("Google sign-in persists ONE user, assigns USER, links by email, never dupl
 });
 
 test("Users API: filters, pagination, and counts that agree with the Overview", { skip }, async () => {
-  const all = (await call("GET", "/api/admin/users?pageSize=50", t.owner)).data.data;
+  const all = (await call("GET", "/api/admin/customers?pageSize=50", t.owner)).data.data;
   const ov = (await call("GET", "/api/admin/overview", t.owner)).data.data;
   assert.equal(all.total, ov.users.total, "the list total equals the Overview KPI");
-  const active = (await call("GET", "/api/admin/users?status=active", t.owner)).data.data.total;
-  const inactive = (await call("GET", "/api/admin/users?status=inactive", t.owner)).data.data.total;
+  const active = (await call("GET", "/api/admin/customers?status=active", t.owner)).data.data.total;
+  const inactive = (await call("GET", "/api/admin/customers?status=inactive", t.owner)).data.data.total;
   assert.equal(active + inactive, all.total);
   assert.equal(active, ov.users.active);
   assert.equal(inactive, ov.users.inactive);
-  assert.equal((await call("GET", "/api/admin/users?role=ADMIN", t.owner)).data.data.items.map((u: any) => u.email).join(), "staff@admin-test.example");
-  const verified = (await call("GET", "/api/admin/users?emailVerified=true", t.owner)).data.data;
+  const adminsOnly = (await call("GET", "/api/admin/admins?role=ADMIN", t.owner)).data.data.items;
+  assert.ok(adminsOnly.every((u: any) => u.role === "ADMIN") && adminsOnly.some((u: any) => u.email === "staff@admin-test.example"));
+  assert.ok((await call("GET", "/api/admin/customers?role=ADMIN", t.owner)).data.data.items.every((u: any) => u.role === "USER"), "the customer list never contains administrators");
+  const verified = (await call("GET", "/api/admin/customers?emailVerified=true", t.owner)).data.data;
   assert.ok(verified.items.every((u: any) => u.isEmailVerified === true) && verified.total >= 1);
-  assert.ok((await call("GET", "/api/admin/users?emailVerified=false", t.owner)).data.data.items.every((u: any) => u.isEmailVerified === false));
+  assert.ok((await call("GET", "/api/admin/customers?emailVerified=false", t.owner)).data.data.items.every((u: any) => u.isEmailVerified === false));
   const tomorrow = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
-  assert.equal((await call("GET", `/api/admin/users?registeredFrom=${tomorrow}`, t.owner)).data.data.total, 0);
+  assert.equal((await call("GET", `/api/admin/customers?registeredFrom=${tomorrow}`, t.owner)).data.data.total, 0);
   const today = new Date().toISOString().slice(0, 10);
-  assert.equal((await call("GET", `/api/admin/users?registeredFrom=${today}&registeredTo=${today}`, t.owner)).data.data.total, all.total);
-  const p1 = (await call("GET", "/api/admin/users?pageSize=2&page=1", t.owner)).data.data;
-  const p2 = (await call("GET", "/api/admin/users?pageSize=2&page=2", t.owner)).data.data;
+  assert.equal((await call("GET", `/api/admin/customers?registeredFrom=${today}&registeredTo=${today}`, t.owner)).data.data.total, all.total);
+  const p1 = (await call("GET", "/api/admin/customers?pageSize=2&page=1", t.owner)).data.data;
+  const p2 = (await call("GET", "/api/admin/customers?pageSize=2&page=2", t.owner)).data.data;
   assert.equal(p1.items.length, 2);
   assert.ok(p1.items.every((a: any) => !p2.items.some((b: any) => b.id === a.id)), "pages do not overlap");
-  assert.equal((await call("GET", "/api/admin/users?search=zzzz-nobody", t.owner)).data.data.items.length, 0);
+  assert.equal((await call("GET", "/api/admin/customers?search=zzzz-nobody", t.owner)).data.data.items.length, 0);
 });
 
 test("feature-opened events are recorded as 'opened' (not 'used'), per caller, and stay out of request metrics", { skip }, async () => {
@@ -696,21 +700,21 @@ test("Customer 360: real data only, explicit about what is not stored, 404 for u
   await call("GET", "/api/probe-fail", t.alice);
   await call("POST", "/api/me/activity", t.alice, { feature: "zodiac", event: "opened" });
   await settle();
-  const d = (await call("GET", `/api/admin/users/${ids.alice}`, t.owner)).data.data;
+  const d = (await call("GET", `/api/admin/customers/${ids.alice}`, t.owner)).data.data;
   assert.equal(d.email, "alice@admin-test.example");
   assert.ok(d.lastActiveAt);
   assert.equal(d.recentActivity.length, 3);
   assert.deepEqual(d.featureUsage.map((f: any) => [f.feature, f.total, f.success, f.failed]), [["tarot", 2, 1, 1]]);
-  assert.ok(d.notStored.length >= 3);
+  assert.ok(d.notStored.length >= 1);
   assert.ok(!/password|googleId|refresh/i.test(JSON.stringify(d)));
   // a customer with no events: empty, never invented
-  const quiet = (await call("GET", `/api/admin/users/${ids.staff}`, t.owner)).data.data;
+  const quiet = (await call("GET", `/api/admin/customers/${ids.bob}`, t.owner)).data.data;
   assert.equal(quiet.lastActiveAt, null);
   assert.equal(quiet.lastLoginAt, null);
   assert.deepEqual(quiet.recentActivity, []);
   assert.deepEqual(quiet.featureUsage, []);
-  assert.equal((await call("GET", "/api/admin/users/not-a-user", t.owner)).status, 404);
-  assert.equal((await call("GET", `/api/admin/users/${ids.alice}`, t.alice)).status, 403, "a customer cannot open admin profiles");
+  assert.equal((await call("GET", "/api/admin/customers/not-a-user", t.owner)).status, 404);
+  assert.equal((await call("GET", `/api/admin/customers/${ids.alice}`, t.alice)).status, 403, "a customer cannot open admin profiles");
 });
 
 test("Activity API: server-side filters, pagination, customer join, and access control", { skip }, async () => {
@@ -752,7 +756,7 @@ test("Report analytics: real numbers that agree with the other endpoints", { ski
   const today = new Date().toISOString().slice(0, 10);
   const a = (await call("GET", `/api/admin/reports/analytics?from=${today}&to=${today}`, t.owner)).data.data;
   const ov = (await call("GET", "/api/admin/overview", t.owner)).data.data;
-  const users = (await call("GET", "/api/admin/users", t.owner)).data.data;
+  const users = (await call("GET", "/api/admin/customers", t.owner)).data.data;
   assert.equal(a.kpis.totalUsers, users.total);
   assert.equal(a.kpis.totalUsers, ov.users.total);
   assert.equal(a.kpis.totalRequests, 5, "tarot: 3 + 1 by alice (one failing) and 1 by bob");
@@ -821,7 +825,7 @@ test("every route and sub-router on the admin router is registered AFTER the aut
   assert.ok(reachable >= 4, `routes/sub-routers behind the guard: ${reachable}`);
 
   // and the live behaviour for a sample of the NEW endpoints, per identity
-  const newOnes = ["/activity", "/reports/analytics?from=2026-01-01&to=2026-01-02", "/users?provider=GOOGLE", "/integrations", "/overview"];
+  const newOnes = ["/activity", "/reports/analytics?from=2026-01-01&to=2026-01-02", "/customers?provider=GOOGLE", "/integrations", "/overview"];
   for (const p of newOnes) {
     assert.equal((await call("GET", `/api/admin${p}`)).status, 401, `anonymous ${p}`);
     assert.equal((await call("GET", `/api/admin${p}`, t.alice)).status, 403, `user ${p}`);
