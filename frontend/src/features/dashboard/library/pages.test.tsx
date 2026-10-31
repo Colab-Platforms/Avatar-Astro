@@ -54,7 +54,7 @@ describe("Overview", () => {
     authRequest.mockResolvedValue(overview({ stats: { readings: 0, savedReadings: 0, featuresExplored: 0, conversations: 0, lastActiveAt: null }, continue: { reading: null, conversation: null, lastFeature: null }, recentReadings: [], recentActivity: [] }));
     mount(<Overview />);
     await screen.findByText("Your journey begins here");
-    expect(screen.getByRole("link", { name: "Tarot reading" })).toHaveAttribute("href", "/tarot");
+    expect(screen.getByRole("link", { name: /Tarot Reading/ })).toHaveAttribute("href", "/tarot");
     expect(screen.queryByText("Continue where you left off")).toBeNull();
   });
   it("shows an error with retry", async () => {

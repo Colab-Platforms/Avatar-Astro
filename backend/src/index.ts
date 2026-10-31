@@ -37,6 +37,7 @@ const app = express();
   const critical = ["DATABASE_URL", "JWT_SECRET"].filter((k) => !process.env[k]);
   if (critical.length) console.error(`✗ MISSING REQUIRED ENV: ${critical.join(", ")} — sign-in and most features will fail`);
   if (process.env.JWT_SECRET && process.env.JWT_SECRET.length < 32) console.warn("! JWT_SECRET is shorter than 32 characters");
+  if ((process.env.OTP_HMAC_SECRET ?? "").trim().length < 32) console.error("✗ OTP_HMAC_SECRET is missing or shorter than 32 characters — e-mail OTPs cannot be issued or verified (registration / unverified login will fail closed)");
   const optional = ["OPENROUTER_API_KEY", "GROQ_API_KEY", "RESEND_API_KEY", "SMTP_FROM_EMAIL", "SUPPORT_EMAIL", "YOUTUBE_API_KEY", "CORS_ORIGIN"].filter((k) => !process.env[k]);
   if (optional.length) console.warn(`! Optional env not set (related features disabled or degraded): ${optional.join(", ")}`);
 }
