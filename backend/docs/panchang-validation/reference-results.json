@@ -1,0 +1,2184 @@
+{
+  "source": "Drik Panchang daily pages, read 2026-10-31",
+  "cases": [
+    {
+      "id": "delhi-2025-10-25",
+      "covers": "tithi change after midnight (03:48 next day)",
+      "city": "New Delhi",
+      "latitude": 28.6356,
+      "longitude": 77.2244,
+      "timezone": "Asia/Kolkata",
+      "date": "2025-10-25",
+      "url": "https://www.drikpanchang.com/panchang/day-panchang.html?date=25/10/2025",
+      "sunrise": "06:28",
+      "sunset": "17:42",
+      "amanta": {
+        "month": "Kartika",
+        "adhika": false
+      },
+      "purnimanta": {
+        "month": "Kartika",
+        "adhika": false
+      },
+      "paksha": "shukla",
+      "vikramSamvat": 2082
+    },
+    {
+      "id": "delhi-2025-03-29",
+      "covers": "last day of Vikram Samvat 2081; Amanta Phalguna vs Purnimanta Chaitra; nakshatra and yoga in the evening; karana after midnight",
+      "city": "New Delhi",
+      "latitude": 28.6356,
+      "longitude": 77.2244,
+      "timezone": "Asia/Kolkata",
+      "date": "2025-03-29",
+      "url": "https://www.drikpanchang.com/panchang/day-panchang.html?date=29/03/2025",
+      "sunrise": "06:15",
+      "sunset": "18:37",
+      "amanta": {
+        "month": "Phalguna",
+        "adhika": false
+      },
+      "purnimanta": {
+        "month": "Chaitra",
+        "adhika": false
+      },
+      "paksha": "krishna",
+      "vikramSamvat": 2081
+    },
+    {
+      "id": "delhi-2025-03-30",
+      "covers": "Vikram Samvat transition: Chaitra Shukla Pratipada, VS 2082",
+      "city": "New Delhi",
+      "latitude": 28.6356,
+      "longitude": 77.2244,
+      "timezone": "Asia/Kolkata",
+      "date": "2025-03-30",
+      "url": "https://www.drikpanchang.com/panchang/day-panchang.html?date=30/03/2025",
+      "sunrise": "06:13",
+      "sunset": "18:38",
+      "amanta": {
+        "month": "Chaitra",
+        "adhika": false
+      },
+      "purnimanta": {
+        "month": "Chaitra",
+        "adhika": false
+      },
+      "paksha": "shukla",
+      "vikramSamvat": 2082
+    },
+    {
+      "id": "delhi-2025-04-13",
+      "covers": "Sankranti eve; Purnimanta month already Vaishakha while Amanta is Chaitra",
+      "city": "New Delhi",
+      "latitude": 28.6356,
+      "longitude": 77.2244,
+      "timezone": "Asia/Kolkata",
+      "date": "2025-04-13",
+      "url": "https://www.drikpanchang.com/panchang/day-panchang.html?date=13/04/2025",
+      "sunrise": "05:58",
+      "sunset": "18:46",
+      "amanta": {
+        "month": "Chaitra",
+        "adhika": false
+      },
+      "purnimanta": {
+        "month": "Vaishakha",
+        "adhika": false
+      },
+      "paksha": "krishna",
+      "vikramSamvat": 2082
+    },
+    {
+      "id": "delhi-2025-04-14",
+      "covers": "Mesha Sankranti day; nakshatra change just after midnight (00:13)",
+      "city": "New Delhi",
+      "latitude": 28.6356,
+      "longitude": 77.2244,
+      "timezone": "Asia/Kolkata",
+      "date": "2025-04-14",
+      "url": "https://www.drikpanchang.com/panchang/day-panchang.html?date=14/04/2025",
+      "sunrise": "05:57",
+      "sunset": "18:46",
+      "amanta": {
+        "month": "Chaitra",
+        "adhika": false
+      },
+      "purnimanta": {
+        "month": "Vaishakha",
+        "adhika": false
+      },
+      "paksha": "krishna",
+      "vikramSamvat": 2082
+    },
+    {
+      "id": "delhi-2023-07-18",
+      "covers": "Adhika month: Adhika Shravana, VS 2080",
+      "city": "New Delhi",
+      "latitude": 28.6356,
+      "longitude": 77.2244,
+      "timezone": "Asia/Kolkata",
+      "date": "2023-07-18",
+      "url": "https://www.drikpanchang.com/panchang/day-panchang.html?date=18/07/2023",
+      "sunrise": "05:35",
+      "sunset": "19:20",
+      "amanta": {
+        "month": "Shravana",
+        "adhika": true
+      },
+      "purnimanta": {
+        "month": "Shravana",
+        "adhika": true
+      },
+      "paksha": "shukla",
+      "vikramSamvat": 2080
+    },
+    {
+      "id": "delhi-2023-08-17",
+      "covers": "end of the Adhika period: Nija Shravana begins",
+      "city": "New Delhi",
+      "latitude": 28.6356,
+      "longitude": 77.2244,
+      "timezone": "Asia/Kolkata",
+      "date": "2023-08-17",
+      "url": "https://www.drikpanchang.com/panchang/day-panchang.html?date=17/08/2023",
+      "sunrise": "05:51",
+      "sunset": "18:59",
+      "amanta": {
+        "month": "Shravana",
+        "adhika": false
+      },
+      "purnimanta": {
+        "month": "Shravana",
+        "adhika": false
+      },
+      "paksha": "shukla",
+      "vikramSamvat": 2080
+    },
+    {
+      "id": "delhi-2026-05-17",
+      "covers": "Adhika month: Adhika Jyeshtha, VS 2083",
+      "city": "New Delhi",
+      "latitude": 28.6356,
+      "longitude": 77.2244,
+      "timezone": "Asia/Kolkata",
+      "date": "2026-05-17",
+      "url": "https://www.drikpanchang.com/panchang/day-panchang.html?date=17/05/2026",
+      "sunrise": "05:29",
+      "sunset": "19:06",
+      "amanta": {
+        "month": "Jyeshtha",
+        "adhika": true
+      },
+      "purnimanta": {
+        "month": "Jyeshtha",
+        "adhika": true
+      },
+      "paksha": "shukla",
+      "vikramSamvat": 2083
+    },
+    {
+      "id": "delhi-2024-03-08",
+      "covers": "night festival (Maha Shivaratri); yoga ends after midnight",
+      "city": "New Delhi",
+      "latitude": 28.6356,
+      "longitude": 77.2244,
+      "timezone": "Asia/Kolkata",
+      "date": "2024-03-08",
+      "url": "https://www.drikpanchang.com/panchang/day-panchang.html?date=08/03/2024",
+      "sunrise": "06:38",
+      "sunset": "18:25",
+      "amanta": {
+        "month": "Magha",
+        "adhika": false
+      },
+      "purnimanta": {
+        "month": "Phalguna",
+        "adhika": false
+      },
+      "paksha": "krishna",
+      "vikramSamvat": 2080
+    },
+    {
+      "id": "mumbai-2025-08-27",
+      "covers": "Mumbai: Ganesh Chaturthi",
+      "city": "Mumbai",
+      "latitude": 19.076,
+      "longitude": 72.8777,
+      "timezone": "Asia/Kolkata",
+      "date": "2025-08-27",
+      "url": "https://www.drikpanchang.com/panchang/day-panchang.html?geoname-id=1275339&date=27/08/2025",
+      "sunrise": "06:22",
+      "sunset": "18:57",
+      "amanta": {
+        "month": "Bhadrapada",
+        "adhika": false
+      },
+      "purnimanta": {
+        "month": "Bhadrapada",
+        "adhika": false
+      },
+      "paksha": "shukla",
+      "vikramSamvat": 2082
+    },
+    {
+      "id": "mumbai-2025-01-14",
+      "covers": "Mumbai: Makar Sankranti day; tithi and yoga change after midnight",
+      "city": "Mumbai",
+      "latitude": 19.076,
+      "longitude": 72.8777,
+      "timezone": "Asia/Kolkata",
+      "date": "2025-01-14",
+      "url": "https://www.drikpanchang.com/panchang/day-panchang.html?geoname-id=1275339&date=14/01/2025",
+      "sunrise": "07:15",
+      "sunset": "18:21",
+      "amanta": {
+        "month": "Pausha",
+        "adhika": false
+      },
+      "purnimanta": {
+        "month": "Magha",
+        "adhika": false
+      },
+      "paksha": "krishna",
+      "vikramSamvat": 2081
+    },
+    {
+      "id": "mumbai-2026-03-19",
+      "covers": "Mumbai: day before Gudi Padwa; Vikram Samvat 2083 begins as Pratipada starts at 06:52, minutes after sunrise (06:44)",
+      "city": "Mumbai",
+      "latitude": 19.076,
+      "longitude": 72.8777,
+      "timezone": "Asia/Kolkata",
+      "date": "2026-03-19",
+      "url": "https://www.drikpanchang.com/panchang/day-panchang.html?geoname-id=1275339&date=19/03/2026",
+      "sunrise": "06:44",
+      "sunset": "18:49",
+      "amanta": {
+        "month": "Phalguna",
+        "adhika": false
+      },
+      "purnimanta": {
+        "month": "Chaitra",
+        "adhika": false
+      },
+      "paksha": "krishna",
+      "vikramSamvat": 2083
+    },
+    {
+      "id": "chennai-2025-10-21",
+      "covers": "Chennai: Diwali Amavasya",
+      "city": "Chennai",
+      "latitude": 13.0827,
+      "longitude": 80.2707,
+      "timezone": "Asia/Kolkata",
+      "date": "2025-10-21",
+      "url": "https://www.drikpanchang.com/panchang/day-panchang.html?geoname-id=1264527&date=21/10/2025",
+      "sunrise": "06:00",
+      "sunset": "17:47",
+      "amanta": {
+        "month": "Ashvina",
+        "adhika": false
+      },
+      "purnimanta": {
+        "month": "Kartika",
+        "adhika": false
+      },
+      "paksha": "krishna",
+      "vikramSamvat": 2082
+    },
+    {
+      "id": "chennai-2025-07-17",
+      "covers": "Chennai: around Karka Sankranti (16 July); nakshatra ends after midnight",
+      "city": "Chennai",
+      "latitude": 13.0827,
+      "longitude": 80.2707,
+      "timezone": "Asia/Kolkata",
+      "date": "2025-07-17",
+      "url": "https://www.drikpanchang.com/panchang/day-panchang.html?geoname-id=1264527&date=17/07/2025",
+      "sunrise": "05:51",
+      "sunset": "18:39",
+      "amanta": {
+        "month": "Ashadha",
+        "adhika": false
+      },
+      "purnimanta": {
+        "month": "Shravana",
+        "adhika": false
+      },
+      "paksha": "krishna",
+      "vikramSamvat": 2082
+    },
+    {
+      "id": "kolkata-2025-10-20",
+      "covers": "Kolkata: day before Amavasya; yoga and karana change after midnight",
+      "city": "Kolkata",
+      "latitude": 22.5726,
+      "longitude": 88.3639,
+      "timezone": "Asia/Kolkata",
+      "date": "2025-10-20",
+      "url": "https://www.drikpanchang.com/panchang/day-panchang.html?geoname-id=1275004&date=20/10/2025",
+      "sunrise": "05:35",
+      "sunset": "17:07",
+      "amanta": {
+        "month": "Ashvina",
+        "adhika": false
+      },
+      "purnimanta": {
+        "month": "Kartika",
+        "adhika": false
+      },
+      "paksha": "krishna",
+      "vikramSamvat": 2082
+    },
+    {
+      "id": "kolkata-2025-11-05",
+      "covers": "Kolkata: Kartik Purnima; Purnima ends 18:48",
+      "city": "Kolkata",
+      "latitude": 22.5726,
+      "longitude": 88.3639,
+      "timezone": "Asia/Kolkata",
+      "date": "2025-11-05",
+      "url": "https://www.drikpanchang.com/panchang/day-panchang.html?geoname-id=1275004&date=05/11/2025",
+      "sunrise": "05:43",
+      "sunset": "16:57",
+      "amanta": {
+        "month": "Kartika",
+        "adhika": false
+      },
+      "purnimanta": {
+        "month": "Kartika",
+        "adhika": false
+      },
+      "paksha": "shukla",
+      "vikramSamvat": 2082
+    },
+    {
+      "id": "bengaluru-2025-04-06",
+      "covers": "Bengaluru: Ram Navami",
+      "city": "Bengaluru",
+      "latitude": 12.9716,
+      "longitude": 77.5946,
+      "timezone": "Asia/Kolkata",
+      "date": "2025-04-06",
+      "url": "https://www.drikpanchang.com/panchang/day-panchang.html?geoname-id=1277333&date=06/04/2025",
+      "sunrise": "06:13",
+      "sunset": "18:31",
+      "amanta": {
+        "month": "Chaitra",
+        "adhika": false
+      },
+      "purnimanta": {
+        "month": "Chaitra",
+        "adhika": false
+      },
+      "paksha": "shukla",
+      "vikramSamvat": 2082
+    }
+  ],
+  "endTimeComparisons": [
+    {
+      "caseId": "delhi-2025-10-25",
+      "city": "New Delhi",
+      "date": "2025-10-25",
+      "element": "tithi",
+      "refName": "Chaturthi",
+      "engineName": "Chaturthi",
+      "nameMatches": true,
+      "refEnd": "2025-10-26 03:48",
+      "engineEnd": "2025-10-26 03:48",
+      "diffMinutes": 0.7,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2025-10-25",
+      "city": "New Delhi",
+      "date": "2025-10-25",
+      "element": "nakshatra",
+      "refName": "Anuradha",
+      "engineName": "Anuradha",
+      "nameMatches": true,
+      "refEnd": "2025-10-25 07:51",
+      "engineEnd": "2025-10-25 07:51",
+      "diffMinutes": 0.2,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2025-10-25",
+      "city": "New Delhi",
+      "date": "2025-10-25",
+      "element": "karana",
+      "refName": "Vanija",
+      "engineName": "Vanija",
+      "nameMatches": true,
+      "refEnd": "2025-10-25 14:34",
+      "engineEnd": "2025-10-25 14:35",
+      "diffMinutes": 1.3,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2025-10-25",
+      "city": "New Delhi",
+      "date": "2025-10-25",
+      "element": "karana",
+      "refName": "Vishti",
+      "engineName": "Vishti (Bhadra)",
+      "nameMatches": true,
+      "refEnd": "2025-10-26 03:48",
+      "engineEnd": "2025-10-26 03:48",
+      "diffMinutes": 0.7,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2025-03-29",
+      "city": "New Delhi",
+      "date": "2025-03-29",
+      "element": "tithi",
+      "refName": "Amavasya",
+      "engineName": "Amavasya",
+      "nameMatches": true,
+      "refEnd": "2025-03-29 16:27",
+      "engineEnd": "2025-03-29 16:27",
+      "diffMinutes": 0.8,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2025-03-29",
+      "city": "New Delhi",
+      "date": "2025-03-29",
+      "element": "nakshatra",
+      "refName": "Uttara Bhadrapada",
+      "engineName": "Uttara Bhadrapada",
+      "nameMatches": true,
+      "refEnd": "2025-03-29 19:26",
+      "engineEnd": "2025-03-29 19:26",
+      "diffMinutes": 0.2,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2025-03-29",
+      "city": "New Delhi",
+      "date": "2025-03-29",
+      "element": "yoga",
+      "refName": "Brahma",
+      "engineName": "Brahma",
+      "nameMatches": true,
+      "refEnd": "2025-03-29 22:04",
+      "engineEnd": "2025-03-29 22:02",
+      "diffMinutes": -1.4,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2025-03-29",
+      "city": "New Delhi",
+      "date": "2025-03-29",
+      "element": "karana",
+      "refName": "Nagava",
+      "engineName": "Naga",
+      "nameMatches": true,
+      "refEnd": "2025-03-29 16:27",
+      "engineEnd": "2025-03-29 16:27",
+      "diffMinutes": 0.8,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2025-03-29",
+      "city": "New Delhi",
+      "date": "2025-03-29",
+      "element": "karana",
+      "refName": "Kinstughna",
+      "engineName": "Kimstughna",
+      "nameMatches": true,
+      "refEnd": "2025-03-30 02:39",
+      "engineEnd": "2025-03-30 02:39",
+      "diffMinutes": 0.5,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2025-03-30",
+      "city": "New Delhi",
+      "date": "2025-03-30",
+      "element": "tithi",
+      "refName": "Pratipada",
+      "engineName": "Pratipada",
+      "nameMatches": true,
+      "refEnd": "2025-03-30 12:49",
+      "engineEnd": "2025-03-30 12:49",
+      "diffMinutes": 0.8,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2025-03-30",
+      "city": "New Delhi",
+      "date": "2025-03-30",
+      "element": "nakshatra",
+      "refName": "Revati",
+      "engineName": "Revati",
+      "nameMatches": true,
+      "refEnd": "2025-03-30 16:35",
+      "engineEnd": "2025-03-30 16:34",
+      "diffMinutes": -0.4,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2025-03-30",
+      "city": "New Delhi",
+      "date": "2025-03-30",
+      "element": "yoga",
+      "refName": "Indra",
+      "engineName": "Indra",
+      "nameMatches": true,
+      "refEnd": "2025-03-30 17:54",
+      "engineEnd": "2025-03-30 17:52",
+      "diffMinutes": -1.1,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2025-03-30",
+      "city": "New Delhi",
+      "date": "2025-03-30",
+      "element": "karana",
+      "refName": "Bava",
+      "engineName": "Bava",
+      "nameMatches": true,
+      "refEnd": "2025-03-30 12:49",
+      "engineEnd": "2025-03-30 12:49",
+      "diffMinutes": 0.8,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2025-03-30",
+      "city": "New Delhi",
+      "date": "2025-03-30",
+      "element": "karana",
+      "refName": "Balava",
+      "engineName": "Balava",
+      "nameMatches": true,
+      "refEnd": "2025-03-30 22:59",
+      "engineEnd": "2025-03-30 23:00",
+      "diffMinutes": 1.1,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2025-04-13",
+      "city": "New Delhi",
+      "date": "2025-04-13",
+      "element": "nakshatra",
+      "refName": "Chitra",
+      "engineName": "Chitra",
+      "nameMatches": true,
+      "refEnd": "2025-04-13 21:11",
+      "engineEnd": "2025-04-13 21:10",
+      "diffMinutes": -0.7,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2025-04-13",
+      "city": "New Delhi",
+      "date": "2025-04-13",
+      "element": "yoga",
+      "refName": "Harshana",
+      "engineName": "Harshana",
+      "nameMatches": true,
+      "refEnd": "2025-04-13 21:40",
+      "engineEnd": "2025-04-13 21:38",
+      "diffMinutes": -1.8,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2025-04-13",
+      "city": "New Delhi",
+      "date": "2025-04-13",
+      "element": "karana",
+      "refName": "Balava",
+      "engineName": "Balava",
+      "nameMatches": true,
+      "refEnd": "2025-04-13 19:08",
+      "engineEnd": "2025-04-13 19:08",
+      "diffMinutes": 0.8,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2025-04-14",
+      "city": "New Delhi",
+      "date": "2025-04-14",
+      "element": "tithi",
+      "refName": "Pratipada",
+      "engineName": "Pratipada",
+      "nameMatches": true,
+      "refEnd": "2025-04-14 08:25",
+      "engineEnd": "2025-04-14 08:25",
+      "diffMinutes": 0.4,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2025-04-14",
+      "city": "New Delhi",
+      "date": "2025-04-14",
+      "element": "nakshatra",
+      "refName": "Swati",
+      "engineName": "Swati",
+      "nameMatches": true,
+      "refEnd": "2025-04-15 00:13",
+      "engineEnd": "2025-04-15 00:13",
+      "diffMinutes": 0.1,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2025-04-14",
+      "city": "New Delhi",
+      "date": "2025-04-14",
+      "element": "yoga",
+      "refName": "Vajra",
+      "engineName": "Vajra",
+      "nameMatches": true,
+      "refEnd": "2025-04-14 22:39",
+      "engineEnd": "2025-04-14 22:37",
+      "diffMinutes": -1.9,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2025-04-14",
+      "city": "New Delhi",
+      "date": "2025-04-14",
+      "element": "karana",
+      "refName": "Kaulava",
+      "engineName": "Kaulava",
+      "nameMatches": true,
+      "refEnd": "2025-04-14 08:25",
+      "engineEnd": "2025-04-14 08:25",
+      "diffMinutes": 0.4,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2025-04-14",
+      "city": "New Delhi",
+      "date": "2025-04-14",
+      "element": "karana",
+      "refName": "Taitila",
+      "engineName": "Taitila",
+      "nameMatches": true,
+      "refEnd": "2025-04-14 21:40",
+      "engineEnd": "2025-04-14 21:41",
+      "diffMinutes": 1.4,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2023-07-18",
+      "city": "New Delhi",
+      "date": "2023-07-18",
+      "element": "tithi",
+      "refName": "Pratipada",
+      "engineName": "Pratipada",
+      "nameMatches": true,
+      "refEnd": "2023-07-19 02:09",
+      "engineEnd": "2023-07-19 02:10",
+      "diffMinutes": 1.4,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2023-07-18",
+      "city": "New Delhi",
+      "date": "2023-07-18",
+      "element": "yoga",
+      "refName": "Harshana",
+      "engineName": "Harshana",
+      "nameMatches": true,
+      "refEnd": "2023-07-18 09:37",
+      "engineEnd": "2023-07-18 09:35",
+      "diffMinutes": -1.9,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2023-07-18",
+      "city": "New Delhi",
+      "date": "2023-07-18",
+      "element": "karana",
+      "refName": "Kinstughna",
+      "engineName": "Kimstughna",
+      "nameMatches": true,
+      "refEnd": "2023-07-18 13:03",
+      "engineEnd": "2023-07-18 13:04",
+      "diffMinutes": 1.3,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2023-07-18",
+      "city": "New Delhi",
+      "date": "2023-07-18",
+      "element": "karana",
+      "refName": "Bava",
+      "engineName": "Bava",
+      "nameMatches": true,
+      "refEnd": "2023-07-19 02:09",
+      "engineEnd": "2023-07-19 02:10",
+      "diffMinutes": 1.4,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2023-08-17",
+      "city": "New Delhi",
+      "date": "2023-08-17",
+      "element": "tithi",
+      "refName": "Pratipada",
+      "engineName": "Pratipada",
+      "nameMatches": true,
+      "refEnd": "2023-08-17 17:35",
+      "engineEnd": "2023-08-17 17:36",
+      "diffMinutes": 1,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2023-08-17",
+      "city": "New Delhi",
+      "date": "2023-08-17",
+      "element": "nakshatra",
+      "refName": "Magha",
+      "engineName": "Magha",
+      "nameMatches": true,
+      "refEnd": "2023-08-17 19:58",
+      "engineEnd": "2023-08-17 19:58",
+      "diffMinutes": 0.1,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2023-08-17",
+      "city": "New Delhi",
+      "date": "2023-08-17",
+      "element": "yoga",
+      "refName": "Parigha",
+      "engineName": "Parigha",
+      "nameMatches": true,
+      "refEnd": "2023-08-17 19:30",
+      "engineEnd": "2023-08-17 19:28",
+      "diffMinutes": -1.1,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2023-08-17",
+      "city": "New Delhi",
+      "date": "2023-08-17",
+      "element": "karana",
+      "refName": "Bava",
+      "engineName": "Bava",
+      "nameMatches": true,
+      "refEnd": "2023-08-17 17:35",
+      "engineEnd": "2023-08-17 17:36",
+      "diffMinutes": 1,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2026-05-17",
+      "city": "New Delhi",
+      "date": "2026-05-17",
+      "element": "tithi",
+      "refName": "Pratipada",
+      "engineName": "Pratipada",
+      "nameMatches": true,
+      "refEnd": "2026-05-17 21:40",
+      "engineEnd": "2026-05-17 21:41",
+      "diffMinutes": 1.2,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2026-05-17",
+      "city": "New Delhi",
+      "date": "2026-05-17",
+      "element": "nakshatra",
+      "refName": "Krittika",
+      "engineName": "Krittika",
+      "nameMatches": true,
+      "refEnd": "2026-05-17 14:32",
+      "engineEnd": "2026-05-17 14:31",
+      "diffMinutes": -0.3,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2026-05-17",
+      "city": "New Delhi",
+      "date": "2026-05-17",
+      "element": "yoga",
+      "refName": "Shobhana",
+      "engineName": "Shobhana",
+      "nameMatches": true,
+      "refEnd": "2026-05-17 06:15",
+      "engineEnd": "2026-05-17 06:14",
+      "diffMinutes": -0.5,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2026-05-17",
+      "city": "New Delhi",
+      "date": "2026-05-17",
+      "element": "yoga",
+      "refName": "Atiganda",
+      "engineName": "Atiganda",
+      "nameMatches": true,
+      "refEnd": "2026-05-18 02:00",
+      "engineEnd": "2026-05-18 01:58",
+      "diffMinutes": -1.2,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2026-05-17",
+      "city": "New Delhi",
+      "date": "2026-05-17",
+      "element": "karana",
+      "refName": "Kinstughna",
+      "engineName": "Kimstughna",
+      "nameMatches": true,
+      "refEnd": "2026-05-17 11:36",
+      "engineEnd": "2026-05-17 11:36",
+      "diffMinutes": 0.5,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2026-05-17",
+      "city": "New Delhi",
+      "date": "2026-05-17",
+      "element": "karana",
+      "refName": "Bava",
+      "engineName": "Bava",
+      "nameMatches": true,
+      "refEnd": "2026-05-17 21:40",
+      "engineEnd": "2026-05-17 21:41",
+      "diffMinutes": 1.2,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2024-03-08",
+      "city": "New Delhi",
+      "date": "2024-03-08",
+      "element": "tithi",
+      "refName": "Trayodashi",
+      "engineName": "Trayodashi",
+      "nameMatches": true,
+      "refEnd": "2024-03-08 21:57",
+      "engineEnd": "2024-03-08 21:58",
+      "diffMinutes": 1.3,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2024-03-08",
+      "city": "New Delhi",
+      "date": "2024-03-08",
+      "element": "nakshatra",
+      "refName": "Shravana",
+      "engineName": "Shravana",
+      "nameMatches": true,
+      "refEnd": "2024-03-08 10:41",
+      "engineEnd": "2024-03-08 10:40",
+      "diffMinutes": -0.4,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2024-03-08",
+      "city": "New Delhi",
+      "date": "2024-03-08",
+      "element": "yoga",
+      "refName": "Shiva",
+      "engineName": "Shiva",
+      "nameMatches": true,
+      "refEnd": "2024-03-09 00:46",
+      "engineEnd": "2024-03-09 00:45",
+      "diffMinutes": -0.8,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2024-03-08",
+      "city": "New Delhi",
+      "date": "2024-03-08",
+      "element": "karana",
+      "refName": "Garaja",
+      "engineName": "Gara",
+      "nameMatches": true,
+      "refEnd": "2024-03-08 11:41",
+      "engineEnd": "2024-03-08 11:42",
+      "diffMinutes": 1.1,
+      "pass": true
+    },
+    {
+      "caseId": "delhi-2024-03-08",
+      "city": "New Delhi",
+      "date": "2024-03-08",
+      "element": "karana",
+      "refName": "Vanija",
+      "engineName": "Vanija",
+      "nameMatches": true,
+      "refEnd": "2024-03-08 21:57",
+      "engineEnd": "2024-03-08 21:58",
+      "diffMinutes": 1.3,
+      "pass": true
+    },
+    {
+      "caseId": "mumbai-2025-08-27",
+      "city": "Mumbai",
+      "date": "2025-08-27",
+      "element": "tithi",
+      "refName": "Chaturthi",
+      "engineName": "Chaturthi",
+      "nameMatches": true,
+      "refEnd": "2025-08-27 15:44",
+      "engineEnd": "2025-08-27 15:44",
+      "diffMinutes": 0.9,
+      "pass": true
+    },
+    {
+      "caseId": "mumbai-2025-08-27",
+      "city": "Mumbai",
+      "date": "2025-08-27",
+      "element": "yoga",
+      "refName": "Shubha",
+      "engineName": "Shubha",
+      "nameMatches": true,
+      "refEnd": "2025-08-27 12:35",
+      "engineEnd": "2025-08-27 12:33",
+      "diffMinutes": -1.7,
+      "pass": true
+    },
+    {
+      "caseId": "mumbai-2025-08-27",
+      "city": "Mumbai",
+      "date": "2025-08-27",
+      "element": "karana",
+      "refName": "Vishti",
+      "engineName": "Vishti (Bhadra)",
+      "nameMatches": true,
+      "refEnd": "2025-08-27 15:44",
+      "engineEnd": "2025-08-27 15:44",
+      "diffMinutes": 0.9,
+      "pass": true
+    },
+    {
+      "caseId": "mumbai-2025-08-27",
+      "city": "Mumbai",
+      "date": "2025-08-27",
+      "element": "karana",
+      "refName": "Bava",
+      "engineName": "Bava",
+      "nameMatches": true,
+      "refEnd": "2025-08-28 04:48",
+      "engineEnd": "2025-08-28 04:48",
+      "diffMinutes": 0.9,
+      "pass": true
+    },
+    {
+      "caseId": "mumbai-2025-01-14",
+      "city": "Mumbai",
+      "date": "2025-01-14",
+      "element": "tithi",
+      "refName": "Pratipada",
+      "engineName": "Pratipada",
+      "nameMatches": true,
+      "refEnd": "2025-01-15 03:21",
+      "engineEnd": "2025-01-15 03:21",
+      "diffMinutes": 0.6,
+      "pass": true
+    },
+    {
+      "caseId": "mumbai-2025-01-14",
+      "city": "Mumbai",
+      "date": "2025-01-14",
+      "element": "nakshatra",
+      "refName": "Punarvasu",
+      "engineName": "Punarvasu",
+      "nameMatches": true,
+      "refEnd": "2025-01-14 10:17",
+      "engineEnd": "2025-01-14 10:16",
+      "diffMinutes": -0.5,
+      "pass": true
+    },
+    {
+      "caseId": "mumbai-2025-01-14",
+      "city": "Mumbai",
+      "date": "2025-01-14",
+      "element": "yoga",
+      "refName": "Vishkambha",
+      "engineName": "Vishkambha",
+      "nameMatches": true,
+      "refEnd": "2025-01-15 02:59",
+      "engineEnd": "2025-01-15 02:57",
+      "diffMinutes": -1.7,
+      "pass": true
+    },
+    {
+      "caseId": "mumbai-2025-01-14",
+      "city": "Mumbai",
+      "date": "2025-01-14",
+      "element": "karana",
+      "refName": "Balava",
+      "engineName": "Balava",
+      "nameMatches": true,
+      "refEnd": "2025-01-14 15:34",
+      "engineEnd": "2025-01-14 15:34",
+      "diffMinutes": 0.9,
+      "pass": true
+    },
+    {
+      "caseId": "mumbai-2025-01-14",
+      "city": "Mumbai",
+      "date": "2025-01-14",
+      "element": "karana",
+      "refName": "Kaulava",
+      "engineName": "Kaulava",
+      "nameMatches": true,
+      "refEnd": "2025-01-15 03:21",
+      "engineEnd": "2025-01-15 03:21",
+      "diffMinutes": 0.6,
+      "pass": true
+    },
+    {
+      "caseId": "mumbai-2026-03-19",
+      "city": "Mumbai",
+      "date": "2026-03-19",
+      "element": "tithi",
+      "refName": "Amavasya",
+      "engineName": "Amavasya",
+      "nameMatches": true,
+      "refEnd": "2026-03-19 06:52",
+      "engineEnd": "2026-03-19 06:53",
+      "diffMinutes": 1.5,
+      "pass": true
+    },
+    {
+      "caseId": "mumbai-2026-03-19",
+      "city": "Mumbai",
+      "date": "2026-03-19",
+      "element": "tithi",
+      "refName": "Pratipada",
+      "engineName": "Pratipada",
+      "nameMatches": true,
+      "refEnd": "2026-03-20 04:52",
+      "engineEnd": "2026-03-20 04:52",
+      "diffMinutes": 0.8,
+      "pass": true
+    },
+    {
+      "caseId": "mumbai-2026-03-19",
+      "city": "Mumbai",
+      "date": "2026-03-19",
+      "element": "nakshatra",
+      "refName": "Uttara Bhadrapada",
+      "engineName": "Uttara Bhadrapada",
+      "nameMatches": true,
+      "refEnd": "2026-03-20 04:05",
+      "engineEnd": "2026-03-20 04:04",
+      "diffMinutes": -0.6,
+      "pass": true
+    },
+    {
+      "caseId": "mumbai-2026-03-19",
+      "city": "Mumbai",
+      "date": "2026-03-19",
+      "element": "yoga",
+      "refName": "Shukla",
+      "engineName": "Shukla",
+      "nameMatches": true,
+      "refEnd": "2026-03-20 01:17",
+      "engineEnd": "2026-03-20 01:15",
+      "diffMinutes": -1.1,
+      "pass": true
+    },
+    {
+      "caseId": "mumbai-2026-03-19",
+      "city": "Mumbai",
+      "date": "2026-03-19",
+      "element": "karana",
+      "refName": "Nagava",
+      "engineName": "Naga",
+      "nameMatches": true,
+      "refEnd": "2026-03-19 06:52",
+      "engineEnd": "2026-03-19 06:53",
+      "diffMinutes": 1.5,
+      "pass": true
+    },
+    {
+      "caseId": "mumbai-2026-03-19",
+      "city": "Mumbai",
+      "date": "2026-03-19",
+      "element": "karana",
+      "refName": "Kinstughna",
+      "engineName": "Kimstughna",
+      "nameMatches": true,
+      "refEnd": "2026-03-19 17:55",
+      "engineEnd": "2026-03-19 17:56",
+      "diffMinutes": 1.2,
+      "pass": true
+    },
+    {
+      "caseId": "mumbai-2026-03-19",
+      "city": "Mumbai",
+      "date": "2026-03-19",
+      "element": "karana",
+      "refName": "Bava",
+      "engineName": "Bava",
+      "nameMatches": true,
+      "refEnd": "2026-03-20 04:52",
+      "engineEnd": "2026-03-20 04:52",
+      "diffMinutes": 0.8,
+      "pass": true
+    },
+    {
+      "caseId": "chennai-2025-10-21",
+      "city": "Chennai",
+      "date": "2025-10-21",
+      "element": "tithi",
+      "refName": "Amavasya",
+      "engineName": "Amavasya",
+      "nameMatches": true,
+      "refEnd": "2025-10-21 17:54",
+      "engineEnd": "2025-10-21 17:55",
+      "diffMinutes": 1.1,
+      "pass": true
+    },
+    {
+      "caseId": "chennai-2025-10-21",
+      "city": "Chennai",
+      "date": "2025-10-21",
+      "element": "nakshatra",
+      "refName": "Chitra",
+      "engineName": "Chitra",
+      "nameMatches": true,
+      "refEnd": "2025-10-21 22:59",
+      "engineEnd": "2025-10-21 22:58",
+      "diffMinutes": -0.7,
+      "pass": true
+    },
+    {
+      "caseId": "chennai-2025-10-21",
+      "city": "Chennai",
+      "date": "2025-10-21",
+      "element": "yoga",
+      "refName": "Vishkambha",
+      "engineName": "Vishkambha",
+      "nameMatches": true,
+      "refEnd": "2025-10-22 03:17",
+      "engineEnd": "2025-10-22 03:15",
+      "diffMinutes": -1.8,
+      "pass": true
+    },
+    {
+      "caseId": "chennai-2025-10-21",
+      "city": "Chennai",
+      "date": "2025-10-21",
+      "element": "karana",
+      "refName": "Nagava",
+      "engineName": "Naga",
+      "nameMatches": true,
+      "refEnd": "2025-10-21 17:54",
+      "engineEnd": "2025-10-21 17:55",
+      "diffMinutes": 1.1,
+      "pass": true
+    },
+    {
+      "caseId": "chennai-2025-07-17",
+      "city": "Chennai",
+      "date": "2025-07-17",
+      "element": "tithi",
+      "refName": "Saptami",
+      "engineName": "Saptami",
+      "nameMatches": true,
+      "refEnd": "2025-07-17 19:08",
+      "engineEnd": "2025-07-17 19:09",
+      "diffMinutes": 1.5,
+      "pass": true
+    },
+    {
+      "caseId": "chennai-2025-07-17",
+      "city": "Chennai",
+      "date": "2025-07-17",
+      "element": "nakshatra",
+      "refName": "Revati",
+      "engineName": "Revati",
+      "nameMatches": true,
+      "refEnd": "2025-07-18 03:39",
+      "engineEnd": "2025-07-18 03:38",
+      "diffMinutes": -0.4,
+      "pass": true
+    },
+    {
+      "caseId": "chennai-2025-07-17",
+      "city": "Chennai",
+      "date": "2025-07-17",
+      "element": "yoga",
+      "refName": "Atiganda",
+      "engineName": "Atiganda",
+      "nameMatches": true,
+      "refEnd": "2025-07-17 09:29",
+      "engineEnd": "2025-07-17 09:27",
+      "diffMinutes": -1.2,
+      "pass": true
+    },
+    {
+      "caseId": "chennai-2025-07-17",
+      "city": "Chennai",
+      "date": "2025-07-17",
+      "element": "karana",
+      "refName": "Vishti",
+      "engineName": "Vishti (Bhadra)",
+      "nameMatches": true,
+      "refEnd": "2025-07-17 08:07",
+      "engineEnd": "2025-07-17 08:07",
+      "diffMinutes": 0.8,
+      "pass": true
+    },
+    {
+      "caseId": "chennai-2025-07-17",
+      "city": "Chennai",
+      "date": "2025-07-17",
+      "element": "karana",
+      "refName": "Bava",
+      "engineName": "Bava",
+      "nameMatches": true,
+      "refEnd": "2025-07-17 19:08",
+      "engineEnd": "2025-07-17 19:09",
+      "diffMinutes": 1.5,
+      "pass": true
+    },
+    {
+      "caseId": "kolkata-2025-10-20",
+      "city": "Kolkata",
+      "date": "2025-10-20",
+      "element": "tithi",
+      "refName": "Chaturdashi",
+      "engineName": "Chaturdashi",
+      "nameMatches": true,
+      "refEnd": "2025-10-20 15:44",
+      "engineEnd": "2025-10-20 15:45",
+      "diffMinutes": 1.3,
+      "pass": true
+    },
+    {
+      "caseId": "kolkata-2025-10-20",
+      "city": "Kolkata",
+      "date": "2025-10-20",
+      "element": "nakshatra",
+      "refName": "Hasta",
+      "engineName": "Hasta",
+      "nameMatches": true,
+      "refEnd": "2025-10-20 20:17",
+      "engineEnd": "2025-10-20 20:16",
+      "diffMinutes": -0.7,
+      "pass": true
+    },
+    {
+      "caseId": "kolkata-2025-10-20",
+      "city": "Kolkata",
+      "date": "2025-10-20",
+      "element": "yoga",
+      "refName": "Vaidhriti",
+      "engineName": "Vaidhriti",
+      "nameMatches": true,
+      "refEnd": "2025-10-21 02:35",
+      "engineEnd": "2025-10-21 02:33",
+      "diffMinutes": -1.2,
+      "pass": true
+    },
+    {
+      "caseId": "kolkata-2025-10-20",
+      "city": "Kolkata",
+      "date": "2025-10-20",
+      "element": "karana",
+      "refName": "Shakuni",
+      "engineName": "Shakuni",
+      "nameMatches": true,
+      "refEnd": "2025-10-20 15:44",
+      "engineEnd": "2025-10-20 15:45",
+      "diffMinutes": 1.3,
+      "pass": true
+    },
+    {
+      "caseId": "kolkata-2025-10-20",
+      "city": "Kolkata",
+      "date": "2025-10-20",
+      "element": "karana",
+      "refName": "Chatushpada",
+      "engineName": "Chatushpada",
+      "nameMatches": true,
+      "refEnd": "2025-10-21 04:47",
+      "engineEnd": "2025-10-21 04:48",
+      "diffMinutes": 1.4,
+      "pass": true
+    },
+    {
+      "caseId": "kolkata-2025-11-05",
+      "city": "Kolkata",
+      "date": "2025-11-05",
+      "element": "tithi",
+      "refName": "Purnima",
+      "engineName": "Purnima",
+      "nameMatches": true,
+      "refEnd": "2025-11-05 18:48",
+      "engineEnd": "2025-11-05 18:49",
+      "diffMinutes": 1.2,
+      "pass": true
+    },
+    {
+      "caseId": "kolkata-2025-11-05",
+      "city": "Kolkata",
+      "date": "2025-11-05",
+      "element": "nakshatra",
+      "refName": "Ashwini",
+      "engineName": "Ashwini",
+      "nameMatches": true,
+      "refEnd": "2025-11-05 09:40",
+      "engineEnd": "2025-11-05 09:39",
+      "diffMinutes": -0.1,
+      "pass": true
+    },
+    {
+      "caseId": "kolkata-2025-11-05",
+      "city": "Kolkata",
+      "date": "2025-11-05",
+      "element": "yoga",
+      "refName": "Siddhi",
+      "engineName": "Siddhi",
+      "nameMatches": true,
+      "refEnd": "2025-11-05 11:28",
+      "engineEnd": "2025-11-05 11:27",
+      "diffMinutes": -0.6,
+      "pass": true
+    },
+    {
+      "caseId": "kolkata-2025-11-05",
+      "city": "Kolkata",
+      "date": "2025-11-05",
+      "element": "karana",
+      "refName": "Vishti",
+      "engineName": "Vishti (Bhadra)",
+      "nameMatches": true,
+      "refEnd": "2025-11-05 08:44",
+      "engineEnd": "2025-11-05 08:44",
+      "diffMinutes": 0.5,
+      "pass": true
+    },
+    {
+      "caseId": "kolkata-2025-11-05",
+      "city": "Kolkata",
+      "date": "2025-11-05",
+      "element": "karana",
+      "refName": "Bava",
+      "engineName": "Bava",
+      "nameMatches": true,
+      "refEnd": "2025-11-05 18:48",
+      "engineEnd": "2025-11-05 18:49",
+      "diffMinutes": 1.2,
+      "pass": true
+    },
+    {
+      "caseId": "kolkata-2025-11-05",
+      "city": "Kolkata",
+      "date": "2025-11-05",
+      "element": "karana",
+      "refName": "Balava",
+      "engineName": "Balava",
+      "nameMatches": true,
+      "refEnd": "2025-11-06 04:51",
+      "engineEnd": "2025-11-06 04:52",
+      "diffMinutes": 1.3,
+      "pass": true
+    },
+    {
+      "caseId": "bengaluru-2025-04-06",
+      "city": "Bengaluru",
+      "date": "2025-04-06",
+      "element": "tithi",
+      "refName": "Navami",
+      "engineName": "Navami",
+      "nameMatches": true,
+      "refEnd": "2025-04-06 19:23",
+      "engineEnd": "2025-04-06 19:23",
+      "diffMinutes": 0.5,
+      "pass": true
+    },
+    {
+      "caseId": "bengaluru-2025-04-06",
+      "city": "Bengaluru",
+      "date": "2025-04-06",
+      "element": "yoga",
+      "refName": "Sukarma",
+      "engineName": "Sukarma",
+      "nameMatches": true,
+      "refEnd": "2025-04-06 18:55",
+      "engineEnd": "2025-04-06 18:54",
+      "diffMinutes": -0.8,
+      "pass": true
+    },
+    {
+      "caseId": "bengaluru-2025-04-06",
+      "city": "Bengaluru",
+      "date": "2025-04-06",
+      "element": "karana",
+      "refName": "Balava",
+      "engineName": "Balava",
+      "nameMatches": true,
+      "refEnd": "2025-04-06 07:19",
+      "engineEnd": "2025-04-06 07:19",
+      "diffMinutes": 1,
+      "pass": true
+    },
+    {
+      "caseId": "bengaluru-2025-04-06",
+      "city": "Bengaluru",
+      "date": "2025-04-06",
+      "element": "karana",
+      "refName": "Kaulava",
+      "engineName": "Kaulava",
+      "nameMatches": true,
+      "refEnd": "2025-04-06 19:22",
+      "engineEnd": "2025-04-06 19:23",
+      "diffMinutes": 1.5,
+      "pass": true
+    }
+  ],
+  "dayFieldComparisons": [
+    {
+      "caseId": "delhi-2025-10-25",
+      "city": "New Delhi",
+      "date": "2025-10-25",
+      "covers": "tithi change after midnight (03:48 next day)",
+      "checks": [
+        {
+          "field": "Amanta month",
+          "reference": "Kartika",
+          "engine": "Kartika",
+          "pass": true
+        },
+        {
+          "field": "Purnimanta month",
+          "reference": "Kartika",
+          "engine": "Kartika",
+          "pass": true
+        },
+        {
+          "field": "Paksha",
+          "reference": "shukla",
+          "engine": "shukla",
+          "pass": true
+        },
+        {
+          "field": "Vikram Samvat",
+          "reference": "2082",
+          "engine": "2082",
+          "pass": true
+        },
+        {
+          "field": "Sunrise",
+          "reference": "06:28",
+          "engine": "06:28",
+          "pass": true
+        },
+        {
+          "field": "Sunset",
+          "reference": "17:42",
+          "engine": "17:41",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "caseId": "delhi-2025-03-29",
+      "city": "New Delhi",
+      "date": "2025-03-29",
+      "covers": "last day of Vikram Samvat 2081; Amanta Phalguna vs Purnimanta Chaitra; nakshatra and yoga in the evening; karana after midnight",
+      "checks": [
+        {
+          "field": "Amanta month",
+          "reference": "Phalguna",
+          "engine": "Phalguna",
+          "pass": true
+        },
+        {
+          "field": "Purnimanta month",
+          "reference": "Chaitra",
+          "engine": "Chaitra",
+          "pass": true
+        },
+        {
+          "field": "Paksha",
+          "reference": "krishna",
+          "engine": "krishna",
+          "pass": true
+        },
+        {
+          "field": "Vikram Samvat",
+          "reference": "2081",
+          "engine": "2081",
+          "pass": true
+        },
+        {
+          "field": "Sunrise",
+          "reference": "06:15",
+          "engine": "06:14",
+          "pass": true
+        },
+        {
+          "field": "Sunset",
+          "reference": "18:37",
+          "engine": "18:37",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "caseId": "delhi-2025-03-30",
+      "city": "New Delhi",
+      "date": "2025-03-30",
+      "covers": "Vikram Samvat transition: Chaitra Shukla Pratipada, VS 2082",
+      "checks": [
+        {
+          "field": "Amanta month",
+          "reference": "Chaitra",
+          "engine": "Chaitra",
+          "pass": true
+        },
+        {
+          "field": "Purnimanta month",
+          "reference": "Chaitra",
+          "engine": "Chaitra",
+          "pass": true
+        },
+        {
+          "field": "Paksha",
+          "reference": "shukla",
+          "engine": "shukla",
+          "pass": true
+        },
+        {
+          "field": "Vikram Samvat",
+          "reference": "2082",
+          "engine": "2082",
+          "pass": true
+        },
+        {
+          "field": "Sunrise",
+          "reference": "06:13",
+          "engine": "06:13",
+          "pass": true
+        },
+        {
+          "field": "Sunset",
+          "reference": "18:38",
+          "engine": "18:37",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "caseId": "delhi-2025-04-13",
+      "city": "New Delhi",
+      "date": "2025-04-13",
+      "covers": "Sankranti eve; Purnimanta month already Vaishakha while Amanta is Chaitra",
+      "checks": [
+        {
+          "field": "Amanta month",
+          "reference": "Chaitra",
+          "engine": "Chaitra",
+          "pass": true
+        },
+        {
+          "field": "Purnimanta month",
+          "reference": "Vaishakha",
+          "engine": "Vaishakha",
+          "pass": true
+        },
+        {
+          "field": "Paksha",
+          "reference": "krishna",
+          "engine": "krishna",
+          "pass": true
+        },
+        {
+          "field": "Vikram Samvat",
+          "reference": "2082",
+          "engine": "2082",
+          "pass": true
+        },
+        {
+          "field": "Sunrise",
+          "reference": "05:58",
+          "engine": "05:57",
+          "pass": true
+        },
+        {
+          "field": "Sunset",
+          "reference": "18:46",
+          "engine": "18:45",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "caseId": "delhi-2025-04-14",
+      "city": "New Delhi",
+      "date": "2025-04-14",
+      "covers": "Mesha Sankranti day; nakshatra change just after midnight (00:13)",
+      "checks": [
+        {
+          "field": "Amanta month",
+          "reference": "Chaitra",
+          "engine": "Chaitra",
+          "pass": true
+        },
+        {
+          "field": "Purnimanta month",
+          "reference": "Vaishakha",
+          "engine": "Vaishakha",
+          "pass": true
+        },
+        {
+          "field": "Paksha",
+          "reference": "krishna",
+          "engine": "krishna",
+          "pass": true
+        },
+        {
+          "field": "Vikram Samvat",
+          "reference": "2082",
+          "engine": "2082",
+          "pass": true
+        },
+        {
+          "field": "Sunrise",
+          "reference": "05:57",
+          "engine": "05:56",
+          "pass": true
+        },
+        {
+          "field": "Sunset",
+          "reference": "18:46",
+          "engine": "18:46",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "caseId": "delhi-2023-07-18",
+      "city": "New Delhi",
+      "date": "2023-07-18",
+      "covers": "Adhika month: Adhika Shravana, VS 2080",
+      "checks": [
+        {
+          "field": "Amanta month",
+          "reference": "Adhika Shravana",
+          "engine": "Adhika Shravana",
+          "pass": true
+        },
+        {
+          "field": "Purnimanta month",
+          "reference": "Adhika Shravana",
+          "engine": "Adhika Shravana",
+          "pass": true
+        },
+        {
+          "field": "Paksha",
+          "reference": "shukla",
+          "engine": "shukla",
+          "pass": true
+        },
+        {
+          "field": "Vikram Samvat",
+          "reference": "2080",
+          "engine": "2080",
+          "pass": true
+        },
+        {
+          "field": "Sunrise",
+          "reference": "05:35",
+          "engine": "05:34",
+          "pass": true
+        },
+        {
+          "field": "Sunset",
+          "reference": "19:20",
+          "engine": "19:19",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "caseId": "delhi-2023-08-17",
+      "city": "New Delhi",
+      "date": "2023-08-17",
+      "covers": "end of the Adhika period: Nija Shravana begins",
+      "checks": [
+        {
+          "field": "Amanta month",
+          "reference": "Shravana",
+          "engine": "Shravana",
+          "pass": true
+        },
+        {
+          "field": "Purnimanta month",
+          "reference": "Shravana",
+          "engine": "Shravana",
+          "pass": true
+        },
+        {
+          "field": "Paksha",
+          "reference": "shukla",
+          "engine": "shukla",
+          "pass": true
+        },
+        {
+          "field": "Vikram Samvat",
+          "reference": "2080",
+          "engine": "2080",
+          "pass": true
+        },
+        {
+          "field": "Sunrise",
+          "reference": "05:51",
+          "engine": "05:51",
+          "pass": true
+        },
+        {
+          "field": "Sunset",
+          "reference": "18:59",
+          "engine": "18:59",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "caseId": "delhi-2026-05-17",
+      "city": "New Delhi",
+      "date": "2026-05-17",
+      "covers": "Adhika month: Adhika Jyeshtha, VS 2083",
+      "checks": [
+        {
+          "field": "Amanta month",
+          "reference": "Adhika Jyeshtha",
+          "engine": "Adhika Jyeshtha",
+          "pass": true
+        },
+        {
+          "field": "Purnimanta month",
+          "reference": "Adhika Jyeshtha",
+          "engine": "Adhika Jyeshtha",
+          "pass": true
+        },
+        {
+          "field": "Paksha",
+          "reference": "shukla",
+          "engine": "shukla",
+          "pass": true
+        },
+        {
+          "field": "Vikram Samvat",
+          "reference": "2083",
+          "engine": "2083",
+          "pass": true
+        },
+        {
+          "field": "Sunrise",
+          "reference": "05:29",
+          "engine": "05:29",
+          "pass": true
+        },
+        {
+          "field": "Sunset",
+          "reference": "19:06",
+          "engine": "19:05",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "caseId": "delhi-2024-03-08",
+      "city": "New Delhi",
+      "date": "2024-03-08",
+      "covers": "night festival (Maha Shivaratri); yoga ends after midnight",
+      "checks": [
+        {
+          "field": "Amanta month",
+          "reference": "Magha",
+          "engine": "Magha",
+          "pass": true
+        },
+        {
+          "field": "Purnimanta month",
+          "reference": "Phalguna",
+          "engine": "Phalguna",
+          "pass": true
+        },
+        {
+          "field": "Paksha",
+          "reference": "krishna",
+          "engine": "krishna",
+          "pass": true
+        },
+        {
+          "field": "Vikram Samvat",
+          "reference": "2080",
+          "engine": "2080",
+          "pass": true
+        },
+        {
+          "field": "Sunrise",
+          "reference": "06:38",
+          "engine": "06:38",
+          "pass": true
+        },
+        {
+          "field": "Sunset",
+          "reference": "18:25",
+          "engine": "18:25",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "caseId": "mumbai-2025-08-27",
+      "city": "Mumbai",
+      "date": "2025-08-27",
+      "covers": "Mumbai: Ganesh Chaturthi",
+      "checks": [
+        {
+          "field": "Amanta month",
+          "reference": "Bhadrapada",
+          "engine": "Bhadrapada",
+          "pass": true
+        },
+        {
+          "field": "Purnimanta month",
+          "reference": "Bhadrapada",
+          "engine": "Bhadrapada",
+          "pass": true
+        },
+        {
+          "field": "Paksha",
+          "reference": "shukla",
+          "engine": "shukla",
+          "pass": true
+        },
+        {
+          "field": "Vikram Samvat",
+          "reference": "2082",
+          "engine": "2082",
+          "pass": true
+        },
+        {
+          "field": "Sunrise",
+          "reference": "06:22",
+          "engine": "06:22",
+          "pass": true
+        },
+        {
+          "field": "Sunset",
+          "reference": "18:57",
+          "engine": "18:57",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "caseId": "mumbai-2025-01-14",
+      "city": "Mumbai",
+      "date": "2025-01-14",
+      "covers": "Mumbai: Makar Sankranti day; tithi and yoga change after midnight",
+      "checks": [
+        {
+          "field": "Amanta month",
+          "reference": "Pausha",
+          "engine": "Pausha",
+          "pass": true
+        },
+        {
+          "field": "Purnimanta month",
+          "reference": "Magha",
+          "engine": "Magha",
+          "pass": true
+        },
+        {
+          "field": "Paksha",
+          "reference": "krishna",
+          "engine": "krishna",
+          "pass": true
+        },
+        {
+          "field": "Vikram Samvat",
+          "reference": "2081",
+          "engine": "2081",
+          "pass": true
+        },
+        {
+          "field": "Sunrise",
+          "reference": "07:15",
+          "engine": "07:14",
+          "pass": true
+        },
+        {
+          "field": "Sunset",
+          "reference": "18:21",
+          "engine": "18:20",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "caseId": "mumbai-2026-03-19",
+      "city": "Mumbai",
+      "date": "2026-03-19",
+      "covers": "Mumbai: day before Gudi Padwa; Vikram Samvat 2083 begins as Pratipada starts at 06:52, minutes after sunrise (06:44)",
+      "checks": [
+        {
+          "field": "Amanta month",
+          "reference": "Phalguna",
+          "engine": "Phalguna",
+          "pass": true
+        },
+        {
+          "field": "Purnimanta month",
+          "reference": "Chaitra",
+          "engine": "Chaitra",
+          "pass": true
+        },
+        {
+          "field": "Paksha",
+          "reference": "krishna",
+          "engine": "krishna",
+          "pass": true
+        },
+        {
+          "field": "Vikram Samvat",
+          "reference": "2083",
+          "engine": "2082",
+          "pass": false
+        },
+        {
+          "field": "Sunrise",
+          "reference": "06:44",
+          "engine": "06:43",
+          "pass": true
+        },
+        {
+          "field": "Sunset",
+          "reference": "18:49",
+          "engine": "18:49",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "caseId": "chennai-2025-10-21",
+      "city": "Chennai",
+      "date": "2025-10-21",
+      "covers": "Chennai: Diwali Amavasya",
+      "checks": [
+        {
+          "field": "Amanta month",
+          "reference": "Ashvina",
+          "engine": "Ashvina",
+          "pass": true
+        },
+        {
+          "field": "Purnimanta month",
+          "reference": "Kartika",
+          "engine": "Kartika",
+          "pass": true
+        },
+        {
+          "field": "Paksha",
+          "reference": "krishna",
+          "engine": "krishna",
+          "pass": true
+        },
+        {
+          "field": "Vikram Samvat",
+          "reference": "2082",
+          "engine": "2082",
+          "pass": true
+        },
+        {
+          "field": "Sunrise",
+          "reference": "06:00",
+          "engine": "06:00",
+          "pass": true
+        },
+        {
+          "field": "Sunset",
+          "reference": "17:47",
+          "engine": "17:46",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "caseId": "chennai-2025-07-17",
+      "city": "Chennai",
+      "date": "2025-07-17",
+      "covers": "Chennai: around Karka Sankranti (16 July); nakshatra ends after midnight",
+      "checks": [
+        {
+          "field": "Amanta month",
+          "reference": "Ashadha",
+          "engine": "Ashadha",
+          "pass": true
+        },
+        {
+          "field": "Purnimanta month",
+          "reference": "Shravana",
+          "engine": "Shravana",
+          "pass": true
+        },
+        {
+          "field": "Paksha",
+          "reference": "krishna",
+          "engine": "krishna",
+          "pass": true
+        },
+        {
+          "field": "Vikram Samvat",
+          "reference": "2082",
+          "engine": "2082",
+          "pass": true
+        },
+        {
+          "field": "Sunrise",
+          "reference": "05:51",
+          "engine": "05:50",
+          "pass": true
+        },
+        {
+          "field": "Sunset",
+          "reference": "18:39",
+          "engine": "18:39",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "caseId": "kolkata-2025-10-20",
+      "city": "Kolkata",
+      "date": "2025-10-20",
+      "covers": "Kolkata: day before Amavasya; yoga and karana change after midnight",
+      "checks": [
+        {
+          "field": "Amanta month",
+          "reference": "Ashvina",
+          "engine": "Ashvina",
+          "pass": true
+        },
+        {
+          "field": "Purnimanta month",
+          "reference": "Kartika",
+          "engine": "Kartika",
+          "pass": true
+        },
+        {
+          "field": "Paksha",
+          "reference": "krishna",
+          "engine": "krishna",
+          "pass": true
+        },
+        {
+          "field": "Vikram Samvat",
+          "reference": "2082",
+          "engine": "2082",
+          "pass": true
+        },
+        {
+          "field": "Sunrise",
+          "reference": "05:35",
+          "engine": "05:35",
+          "pass": true
+        },
+        {
+          "field": "Sunset",
+          "reference": "17:07",
+          "engine": "17:07",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "caseId": "kolkata-2025-11-05",
+      "city": "Kolkata",
+      "date": "2025-11-05",
+      "covers": "Kolkata: Kartik Purnima; Purnima ends 18:48",
+      "checks": [
+        {
+          "field": "Amanta month",
+          "reference": "Kartika",
+          "engine": "Kartika",
+          "pass": true
+        },
+        {
+          "field": "Purnimanta month",
+          "reference": "Kartika",
+          "engine": "Kartika",
+          "pass": true
+        },
+        {
+          "field": "Paksha",
+          "reference": "shukla",
+          "engine": "shukla",
+          "pass": true
+        },
+        {
+          "field": "Vikram Samvat",
+          "reference": "2082",
+          "engine": "2082",
+          "pass": true
+        },
+        {
+          "field": "Sunrise",
+          "reference": "05:43",
+          "engine": "05:43",
+          "pass": true
+        },
+        {
+          "field": "Sunset",
+          "reference": "16:57",
+          "engine": "16:56",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "caseId": "bengaluru-2025-04-06",
+      "city": "Bengaluru",
+      "date": "2025-04-06",
+      "covers": "Bengaluru: Ram Navami",
+      "checks": [
+        {
+          "field": "Amanta month",
+          "reference": "Chaitra",
+          "engine": "Chaitra",
+          "pass": true
+        },
+        {
+          "field": "Purnimanta month",
+          "reference": "Chaitra",
+          "engine": "Chaitra",
+          "pass": true
+        },
+        {
+          "field": "Paksha",
+          "reference": "shukla",
+          "engine": "shukla",
+          "pass": true
+        },
+        {
+          "field": "Vikram Samvat",
+          "reference": "2082",
+          "engine": "2082",
+          "pass": true
+        },
+        {
+          "field": "Sunrise",
+          "reference": "06:13",
+          "engine": "06:12",
+          "pass": true
+        },
+        {
+          "field": "Sunset",
+          "reference": "18:31",
+          "engine": "18:31",
+          "pass": true
+        }
+      ]
+    }
+  ]
+}

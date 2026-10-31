@@ -1,4 +1,7 @@
 import { useState, useEffect, useRef } from "react";
+import AskDivyaSection from "@/features/guru/AskDivyaSection";
+import FeatureFaq from "@/components/FeatureFaq";
+import { requireSignIn } from "@/lib/authedFetch";
 import FullScreenLoader from "@/components/Loader/FullScreenLoader";
 import { FEATURES } from "@/data/featureCatalog";
 import { useFeatureTitle } from "@/hooks/useFeatureTitle";
@@ -436,8 +439,9 @@ export default function InnerVoice() {
     rec.start(); recognitionRef.current = rec; setListening(true);
   };
 
-  const diagnose = async () => {
+  const diagnose = async (): Promise<void> => {
     if (loading || text.trim().length < MIN_SITUATION_CHARS) return;
+    if (!requireSignIn(() => { void diagnose(); })) return; // signed out: ask first, keep what was typed
     setLoading(true); setError(""); setResult(null);
     try {
       setResult(await fetchKarmaReading(text));
@@ -550,9 +554,11 @@ export default function InnerVoice() {
           <div className="iv-report-wrap">
             <div className="iv-container">
               <ReportView result={result} onReset={() => { setResult(null); setText(""); setError(""); }} />
+              <AskDivyaSection feature="karma" context={`Area of life: ${result.lifeDomain}. Reading: ${result.overview} Soul lesson: ${result.soulLesson} Suggested practice: ${result.practice}`} />
             </div>
           </div>
         )}
+        <FeatureFaq feature="karma" />
       </div>
     </div>
   );

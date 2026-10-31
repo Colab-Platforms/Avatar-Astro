@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import AskDivyaSection from "@/features/guru/AskDivyaSection";
+import { ratnaContext } from "@/features/guru/contexts";
 import Accordion from "./Accordion";
 import ProfilePanels from "./ProfilePanels";
 import GemStage, { GemIllustration } from "./GemStage";
@@ -473,6 +475,7 @@ export const ResultView = ({ result }: { result: RatnaResult }) => (
       stoneLabel={stoneLabel(result.primary.stone)}
       planet={result.primary.planet}
     />
+    <AskDivyaSection feature="ratna" context={ratnaContext(result)} />
     <div className="ratna-reveal space-y-3" style={step(6)}>
       <MethodDisclosure result={result} />
       <p

@@ -2,6 +2,7 @@ import { MotionConfig } from "framer-motion";
 import ZodiacWheelSection from "@/components/ZodiacWheelSection";
 import Hero from "@/components/hero/Hero";
 import AstrologyToolsSection from "@/components/AstrologyToolsSection";
+import HomeAstrologersSection from "@/components/HomeAstrologersSection";
 import FeatureShowcase from "@/components/FeatureShowcase";
 import HomeBlogSection from "@/components/HomeBlogSection";
 import WhyAstrologySection from "@/components/WhyAstrologySection";
@@ -25,6 +26,9 @@ const Index = () => {
 
           {/* ── ASTROLOGY TOOLS ──────────────────────────────────────── */}
           <AstrologyToolsSection />
+
+          {/* ── CONSULT ASTROLOGERS ───────────────────────────────────── */}
+          <HomeAstrologersSection />
 
           {/* ── FEATURE SHOWCASE ──────────────────────────────────────── */}
           <FeatureShowcase />

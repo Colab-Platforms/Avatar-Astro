@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import FeatureFaq from "@/components/FeatureFaq";
 import FullScreenLoader from "@/components/Loader/FullScreenLoader";
 import { FEATURES } from "@/data/featureCatalog";
 import { useFeatureTitle } from "@/hooks/useFeatureTitle";
@@ -195,10 +196,11 @@ export default function InnerVoiceWisdom() {
     return () => { document.head.removeChild(s); };
   }, []);
 
-  const fetchWisdom = async (sit?: string) => {
+  const fetchWisdom = async (sit?: string): Promise<void> => {
     const q = (sit || situation).trim();
     if (!q) return;
     if (sit) setSituation(sit);
+    if (!requireSignIn(() => { void fetchWisdom(sit); })) return; // signed out: ask first, keep what was typed
     setLoading(true); setError(""); setResult(null); setViewingSaved(null);
     try {
       setResult(await requestWisdom(q, scripture));
@@ -394,6 +396,7 @@ export default function InnerVoiceWisdom() {
 
           </div>
         )}
+        <FeatureFaq feature="shloka" />
       </div>
     </div>
   );

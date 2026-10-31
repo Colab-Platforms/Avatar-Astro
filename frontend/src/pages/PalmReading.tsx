@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import AskDivyaSection from "@/features/guru/AskDivyaSection";
 import { FEATURES } from "@/data/featureCatalog";
 import { useFeatureTitle } from "@/hooks/useFeatureTitle";
 import { useBackOverride } from "../context/NavigationContext";
@@ -359,7 +360,8 @@ export default function PalmReading() {
     const file = e.target.files?.[0];
     e.target.value = ""; // allow re-selecting the same file after a retake
     if (!file) return;
-    if (!requireSignIn()) return; // account required to analyse a palm photo
+    // Signed out: ask first. The chosen photo stays in memory and is analysed once after sign-in.
+    if (!requireSignIn(() => handleFile({ target: { files: [file], value: "" } } as unknown as React.ChangeEvent<HTMLInputElement>))) return;
     if (!ACCEPTED_TYPES.includes(file.type)) {
       setRetakeMessage("That file type isn't supported. Please upload a JPG, PNG or WebP photo of your palm.");
       setStage("retake");
@@ -741,6 +743,7 @@ export default function PalmReading() {
           <button style={goldBtn} onClick={resetToLanding}>🔄 New Hasta Rekha Reading</button>
         </div>
       </div>
+      <AskDivyaSection feature="palm" context={`Hand shape: ${shape.label}. ${meaning}`} />
       <PalmEducation />
     </div>
   );

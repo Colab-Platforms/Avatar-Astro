@@ -73,7 +73,7 @@ describe("homepage content and structure", () => {
     expect(screen.getByRole("link", { name: "Book a Consultation" })).toHaveAttribute("href", "/inner-voice/chat");
     for (const [v, l] of [["50,000+", "Happy Users"], ["Verified", "Astrologers"], ["13+", "Languages"], ["60+", "Countries"]]) {
       expect(screen.getByText(v)).toBeInTheDocument();
-      expect(screen.getByText(l)).toBeInTheDocument();
+      expect(within(document.querySelector("main")!).getByText(l)).toBeInTheDocument();
     }
     expect(screen.queryByText(/Scroll to explore/)).toBeNull();
     const hero = h1.closest("section")!;

@@ -24,6 +24,7 @@ const PARENT_ROUTES: Record<string, string> = {
   '/puja':                  '/',
   '/chadhawa':              '/',
   '/shop':                  '/',
+  '/astrologers':           '/',
   '/ratna-jyotish':         '/',
   '/avatar-live':           '/',
   '/avatar-live/darshan':   '/avatar-live',
@@ -38,6 +39,7 @@ const NESTED_PARENTS: [string, string][] = [
   ['/puja/', '/puja'],
   ['/chadhawa/', '/chadhawa'],
   ['/shop/', '/shop'],
+  ['/astrologers/', '/astrologers'],
 ];
 
 export const getFallback = (pathname: string): string => {

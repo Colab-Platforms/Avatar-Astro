@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import RatnaJyotish from "@/pages/RatnaJyotish";
 import RatnaJyotishResult from "@/pages/RatnaJyotishResult";
 import { ratnaApi } from "../api";
-import { complete, delhi, emptyShop, fillPersonalAndPanchang } from "./fixtures";
+import { complete, delhi, emptyShop, fillPersonalAndPanchang, signInForTests } from "./fixtures";
 
 vi.mock("../api", () => ({
   ratnaApi: { searchLocations: vi.fn(), calculate: vi.fn(), products: vi.fn() },
@@ -49,6 +49,7 @@ const apiAfter = (ms: number, outcome: "ok" | Error = "ok") =>
 beforeEach(() => {
   vi.clearAllMocks();
   sessionStorage.clear();
+  signInForTests();
   api.searchLocations.mockResolvedValue([delhi]);
   api.products.mockResolvedValue(emptyShop);
 });

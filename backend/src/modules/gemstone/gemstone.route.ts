@@ -8,8 +8,10 @@ import { getGemstone } from "./gemstone.catalogue.js";
 import { calculateRatna, parseInput, ValidationError } from "./gemstone.service.js";
 import { matchShop } from "./shop.match.js";
 import { buildKundali, parseKundaliInput } from "./kundali.js";
+import { auth } from "../../middleware/authMiddleware.js";
 
-// Mounted at /api/gemstone-calculator. Stateless: nothing is stored.
+// Mounted at /api/gemstone-calculator. Stateless: nothing is stored. Generating a result (/calculate, /kundali)
+// needs a signed-in user; the birthplace search and shop matches stay public.
 const router = Router();
 const shopService = new ShopService();
 
@@ -62,7 +64,7 @@ router.get("/locations", limiter(60), async (req, res) => {
   }
 });
 
-router.post("/calculate", limiter(20), async (req, res) => {
+router.post("/calculate", auth("USER"), limiter(20), async (req, res) => {
   try {
     const result = await calculateRatna(parseInput(req.body));
     sendResponse(res, true, result, "Calculated");
@@ -87,7 +89,7 @@ router.post("/calculate", limiter(20), async (req, res) => {
 });
 
 /** Vedic (sidereal, Lahiri) Janma Kundali profile: Surya/Chandra Rashi, Nakshatra, Lagna and Panchang. */
-router.post("/kundali", limiter(20), (req, res) => {
+router.post("/kundali", auth("USER"), limiter(20), (req, res) => {
   try {
     sendResponse(res, true, buildKundali(parseKundaliInput(req.body)), "Calculated");
   } catch (e) {

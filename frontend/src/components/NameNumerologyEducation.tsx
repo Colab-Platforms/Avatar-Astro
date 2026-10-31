@@ -1,4 +1,5 @@
-import EducationSection, { EducationBlock, EducationFaq } from "@/components/EducationSection";
+import EducationSection, { EducationBlock } from "@/components/EducationSection";
+import { FEATURE_FAQS } from "@/data/featureFaqs";
 import { CHALDEAN_MAP, PYTHAGOREAN_MAP, buildProfile } from "@/lib/numerology";
 import { chainText } from "@/components/NameDestinyReport/lib/pdfExport";
 
@@ -99,31 +100,7 @@ const blocks: EducationBlock[] = [
   },
 ];
 
-const faqs: EducationFaq[] = [
-  {
-    question: "Which spelling of my name should I enter?",
-    answer:
-      "Use the name you want to explore, for example the one on your birth certificate or the one you use every day. You can try other spellings in the spelling lab after you see your result.",
-  },
-  {
-    question: "Why are some of my numbers 11, 22 or 33?",
-    answer:
-      "Those are master numbers. When a total reaches 11, 22 or 33, the Seva keeps it instead of reducing it further, except for the Chaldean number, which is always reduced to 1–9.",
-  },
-  {
-    question: "Why can't I enter my name in my own language?",
-    answer:
-      "The letter tables only cover the English letters A to Z. Enter the common English spelling of your name. Accented letters are accepted and treated as their plain letter.",
-  },
-  {
-    question: "Does the PDF match what I see on screen?",
-    answer: "Yes. The PDF lists the same six numbers with the same working and traditional themes.",
-  },
-  {
-    question: "Can I use Naamank Jyotish for free?",
-    answer: "Yes. Naamank Jyotish is one of MyBhagya Astro's free Seva. It needs no sign-in and no payment.",
-  },
-];
+const faqs = FEATURE_FAQS.numerology;
 
 const DISCLAIMER =
   "Numerology is offered for personal interest, cultural exploration and reflection. It is a traditional belief system that is not scientifically proven. Results are not predictions, and they are not professional advice.";

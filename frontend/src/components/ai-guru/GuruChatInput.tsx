@@ -34,8 +34,8 @@ const GuruChatInput = forwardRef<HTMLTextAreaElement, GuruChatInputProps>(
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={onKeyDown}
-          placeholder={listening ? "Listening… speak now" : "Ask Pandit Ji anything…"}
-          aria-label="Message Pandit Ji"
+          placeholder={listening ? "Listening… speak now" : "Ask Divya Margdarshak anything…"}
+          aria-label="Message Divya Margdarshak"
           className="min-h-[24px] max-h-[140px] flex-1 resize-none bg-transparent p-0 text-[15px] leading-6 text-foreground placeholder:text-muted-foreground focus:outline-none"
         />
         <div className="flex shrink-0 items-center gap-1.5">

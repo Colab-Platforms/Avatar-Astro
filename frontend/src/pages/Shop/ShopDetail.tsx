@@ -132,34 +132,6 @@ const ShopDetail = () => {
               </div>
             </div>
 
-            {/* Quantity + cart */}
-            <div className="flex items-center gap-3 mb-4">
-              <div className="flex items-center border border-border/30 rounded-xl overflow-hidden">
-                <button
-                  onClick={() => setQty(q => Math.max(1, q - 1))}
-                  className="px-4 py-3 text-foreground/70 hover:text-primary hover:bg-primary/10 transition-colors text-lg leading-none"
-                  aria-label="Decrease quantity"
-                >
-                  −
-                </button>
-                <span className="px-5 font-display text-foreground">{qty}</span>
-                <button
-                  onClick={() => setQty(q => q + 1)}
-                  className="px-4 py-3 text-foreground/70 hover:text-primary hover:bg-primary/10 transition-colors text-lg leading-none"
-                  aria-label="Increase quantity"
-                >
-                  +
-                </button>
-              </div>
-              <button type="button" disabled aria-disabled="true" title="Online ordering is not available yet" className="btn-outline-cosmic flex-1 py-3 rounded-xl text-sm tracking-wider inline-flex items-center justify-center gap-2 cursor-not-allowed opacity-60">
-                <ShoppingCart className="w-4 h-4" /> Add to Cart
-              </button>
-            </div>
-
-            <button type="button" disabled aria-disabled="true" title="Online ordering is not available yet" className="btn-cosmic w-full py-4 rounded-xl text-sm tracking-wider inline-flex items-center justify-center gap-2 cursor-not-allowed opacity-60">
-              <Zap className="w-4 h-4" /> Buy Now
-            </button>
-            <p className="text-center text-xs" style={{ color: '#9C7B62' }}>Online ordering is not available yet. Please check back soon.</p>
           </div>
         </div>
       </div>
