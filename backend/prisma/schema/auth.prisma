@@ -45,6 +45,7 @@ model User {
   sessions         Session[]
   otpVerifications OtpVerification[]
   passwordResets   PasswordResetToken[]
+  dailyChatUsages  DailyChatUsage[]
 
   @@index([email])
   @@index([isActive])

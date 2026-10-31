@@ -12,10 +12,12 @@ interface GuruChatInputProps {
   loading: boolean;
   /** Briefly true right after a suggested question is inserted, to pulse the glow. */
   glowPulse?: boolean;
+  /** True once the daily chat limit is reached: locks the composer without clearing it. */
+  disabled?: boolean;
 }
 
 const GuruChatInput = forwardRef<HTMLTextAreaElement, GuruChatInputProps>(
-  ({ value, onChange, onSend, onKeyDown, listening, onToggleVoice, loading, glowPulse }, ref) => (
+  ({ value, onChange, onSend, onKeyDown, listening, onToggleVoice, loading, glowPulse, disabled }, ref) => (
     <>
       <motion.div
         animate={
@@ -24,7 +26,7 @@ const GuruChatInput = forwardRef<HTMLTextAreaElement, GuruChatInputProps>(
             : { boxShadow: "0 0 0 0px rgba(89,34,9,0)", borderColor: "rgba(89,34,9,0.2)" }
         }
         transition={{ duration: 0.28, ease: "easeInOut" }}
-        className="flex w-full items-center gap-3 rounded-2xl border bg-[#FBF5EC] px-4 py-2.5 focus-within:border-[#592209]/40 focus-within:shadow-[0_0_0_3px_rgba(255,157,77,0.12)]"
+        className={`flex w-full items-center gap-3 rounded-2xl border bg-[#FBF5EC] px-4 py-2.5 focus-within:border-[#592209]/40 focus-within:shadow-[0_0_0_3px_rgba(255,157,77,0.12)] ${disabled ? "opacity-60" : ""}`}
       >
         <Sparkles className="h-4 w-4 shrink-0 text-[#592209]" />
         <textarea
@@ -34,9 +36,10 @@ const GuruChatInput = forwardRef<HTMLTextAreaElement, GuruChatInputProps>(
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={onKeyDown}
-          placeholder={listening ? "Listening… speak now" : "Ask Pandit Ji anything…"}
+          disabled={disabled}
+          placeholder={disabled ? "Your daily session has ended" : listening ? "Listening… speak now" : "Ask Pandit Ji anything…"}
           aria-label="Message Pandit Ji"
-          className="min-h-[24px] max-h-[140px] flex-1 resize-none bg-transparent p-0 text-[15px] leading-6 text-foreground placeholder:text-muted-foreground focus:outline-none"
+          className="min-h-[24px] max-h-[140px] flex-1 resize-none bg-transparent p-0 text-[15px] leading-6 text-foreground placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed"
         />
         <div className="flex shrink-0 items-center gap-1.5">
           <button
@@ -77,9 +80,9 @@ const GuruChatInput = forwardRef<HTMLTextAreaElement, GuruChatInputProps>(
           <motion.button
             type="button"
             onClick={onSend}
-            disabled={!value.trim() || loading}
-            whileHover={value.trim() && !loading ? { scale: 1.08 } : undefined}
-            whileTap={value.trim() && !loading ? { scale: 0.94 } : undefined}
+            disabled={!value.trim() || loading || disabled}
+            whileHover={value.trim() && !loading && !disabled ? { scale: 1.08 } : undefined}
+            whileTap={value.trim() && !loading && !disabled ? { scale: 0.94 } : undefined}
             aria-label="Send message"
             className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#592209] to-[#592209] text-[#F5E9D6] shadow-[0_0_16px_rgba(255,157,77,0.4)] transition-opacity disabled:opacity-30 disabled:shadow-none"
           >

@@ -22,6 +22,8 @@ import { detectLanguage, buildLanguageDirective, type InputLanguageChoice, type 
 import { aiChat } from "@/lib/aiClient";
 import { askGuru, GuruChatError, MAX_GURU_INPUT_CHARS } from "@/lib/guruChat";
 import { authedFetch } from "@/lib/authedFetch";
+import { fetchDailyChatStatus, consumeDailyChatSession, DailyChatLimitError } from "@/lib/dailyChatLimit";
+import { useDailyChatLimitStore, useDailyChatCountdownTicker, formatRemaining } from "@/store/dailyChatLimitStore";
 
 
 // Configurable so a deprecated/renamed model doesn't require a code change —
