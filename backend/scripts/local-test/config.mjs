@@ -36,6 +36,7 @@ export const LOCAL_BACKEND_ENV = {
   PORT: String(BACKEND_PORT),
   NODE_ENV: "development",
   JWT_SECRET: "local-test-only-jwt-secret-0123456789abcdef",
+  OTP_HMAC_SECRET: "local-test-only-otp-hmac-secret-0123456789abcdef", // local throwaway DB only; never a real secret
   // Every external service is switched OFF so local testing can never email, SMS, upload or call a provider.
   OPENROUTER_API_KEY: "", GROQ_API_KEY: "", SARVAM_API_KEY: "", RESEND_API_KEY: "", SMTP_FROM_EMAIL: "", SUPPORT_EMAIL: "",
   YOUTUBE_API_KEY: "", BACKEND_PUBLIC_URL: "", DARSHAN_WEBSUB_SECRET: "",

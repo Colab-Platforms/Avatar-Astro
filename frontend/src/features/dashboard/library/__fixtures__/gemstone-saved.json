@@ -1,0 +1,283 @@
+{
+ "profile": {
+  "fullName": "Asha Rao",
+  "gender": "Female",
+  "weightKg": 58
+ },
+ "panchang": {
+  "convention": {
+   "id": "amanta-chaitradi",
+   "label": "Amanta months · Vikram Samvat (Chaitradi) · Lahiri sidereal",
+   "note": "Months run new moon to new moon and the year begins at Chaitra Shukla Pratipada (the Drik / Maharashtra-South convention). The Purnimanta month name is shown beside it."
+  },
+  "basis": "sunrise",
+  "reckonedAtUtc": "1990-06-15T00:27:50.425Z",
+  "vikramSamvat": 2047,
+  "masa": {
+   "name": "Jyeshtha",
+   "hindi": "ज्येष्ठ",
+   "adhika": false
+  },
+  "purnimantaMasa": {
+   "name": "Ashadha",
+   "hindi": "आषाढ़",
+   "adhika": false
+  },
+  "paksha": "krishna",
+  "tithi": {
+   "number": 22,
+   "numberInPaksha": 7,
+   "name": "Saptami",
+   "hindi": "सप्तमी",
+   "startLocal": "Thu, 14 Jun 1990, 23:28",
+   "endLocal": "Fri, 15 Jun 1990, 22:51",
+   "startUtc": "1990-06-14T17:58:08.498Z",
+   "endUtc": "1990-06-15T17:21:14.706Z"
+  },
+  "nakshatra": {
+   "name": "Shatabhisha",
+   "pada": 3,
+   "lord": "Rahu"
+  },
+  "moonRashi": "Aquarius",
+  "yoga": "Priti",
+  "karana": "Vishti (Bhadra)",
+  "vara": {
+   "name": "Friday",
+   "note": "Reckoned from sunrise on the birth date. A birth before sunrise would belong to the previous weekday."
+  },
+  "sunrise": "05:57",
+  "sunset": "19:12",
+  "uncertain": true,
+  "uncertainties": [
+   "Tithi changes during this date (krishna 22 to krishna 23); the exact value needs your birth time.",
+   "Nakshatra changes during this date (Shatabhisha to Purva Bhadrapada); the exact value needs your birth time.",
+   "Yoga changes during this date (Vishkambha to Priti); the exact value needs your birth time.",
+   "Karana changes during this date (Vishti (Bhadra) to Balava); the exact value needs your birth time."
+  ],
+  "notes": [
+   "Birth time is unknown, so the Panchang is reckoned at local sunrise on your birth date (the traditional udaya reckoning)."
+  ]
+ },
+ "audit": {
+  "localDate": "1990-06-15",
+  "resolvedInstantUtc": null,
+  "utcOffsetMinutes": null,
+  "timeZone": "Asia/Kolkata",
+  "latitude": 18.5204,
+  "longitude": 73.8567,
+  "ayanamsa": "Lahiri (Chitrapaksha), mean",
+  "ayanamsaDegrees": null
+ },
+ "status": "date_based",
+ "method": {
+  "id": "birth-date-place",
+  "name": "Birth-Date & Place Ratna Method",
+  "zodiac": "Sidereal (used only for the planetary context shown)",
+  "ayanamsa": "Lahiri (Chitrapaksha)",
+  "houses": "Not calculated: the Ascendant and houses need an exact birth time",
+  "nodes": "Mean lunar node (context only)",
+  "engine": "astronomy-engine ephemeris, sampled across the whole local birth date at your birthplace",
+  "summary": "Without a birth time the Ascendant cannot be found, so this method uses the traditional weekday-ruler convention instead. The local calendar weekday at your birthplace is taken from your birth date; the planet that rules that weekday gives the Ratna traditionally associated with it (Sunday: Sun, Ruby; Monday: Moon, Pearl; Tuesday: Mars, Red Coral; Wednesday: Mercury, Emerald; Thursday: Jupiter, Yellow Sapphire; Friday: Venus, Diamond or White Sapphire; Saturday: Saturn, Blue Sapphire). Real planetary positions across that date are checked, and any planet that stays in one sign all day is noted as context. No Ascendant, houses or Lagna lord are claimed.",
+  "limitations": [
+   "This is a date-based interpretation. It is less specific than a full birth-chart reading, which needs your exact birth time.",
+   "The local calendar weekday is used. Classical reckoning starts a weekday at sunrise, so a birth shortly after midnight but before sunrise can belong to the previous weekday.",
+   "The weekday-ruler Ratna is one traditional convention; other methods (Lagna-lord, Moon-sign, dasha-based) can suggest a different stone.",
+   "Ratna associations are traditional beliefs. There is no scientific evidence that a Ratna changes life outcomes."
+  ]
+ },
+ "birth": {
+  "dateOfBirth": "1990-06-15",
+  "timeOfBirth": null,
+  "place": "Pune, Maharashtra, India",
+  "timeZone": "Asia/Kolkata",
+  "utcOffsetMinutes": null,
+  "ambiguousLocalTime": false
+ },
+ "chart": null,
+ "stableSigns": [
+  {
+   "planet": "Moon",
+   "sign": "Aquarius"
+  },
+  {
+   "planet": "Mars",
+   "sign": "Pisces"
+  },
+  {
+   "planet": "Mercury",
+   "sign": "Taurus"
+  },
+  {
+   "planet": "Jupiter",
+   "sign": "Gemini"
+  },
+  {
+   "planet": "Venus",
+   "sign": "Aries"
+  },
+  {
+   "planet": "Saturn",
+   "sign": "Capricorn"
+  },
+  {
+   "planet": "Rahu",
+   "sign": "Capricorn"
+  },
+  {
+   "planet": "Ketu",
+   "sign": "Cancer"
+  }
+ ],
+ "primary": {
+  "stone": {
+   "key": "diamond",
+   "planet": "Venus",
+   "name": "Diamond or White Sapphire",
+   "sanskrit": "Heera / Safed Pukhraj",
+   "hindi": "हीरा",
+   "aliases": [
+    "diamond",
+    "heera",
+    "hira",
+    "white sapphire",
+    "zircon"
+   ],
+   "colour": "#dfe9f5",
+   "weekday": "Friday",
+   "weekdayIndex": 5,
+   "customs": {
+    "metal": "Platinum or silver",
+    "finger": "Middle or ring finger"
+   },
+   "significance": [
+    "Traditionally associated with Venus, linked with harmony, aesthetics and relationships.",
+    "Often worn in the belief that it supports appreciation of beauty and balance. White sapphire is the customary, more accessible alternative."
+   ],
+   "themes": [
+    {
+     "label": "Harmony and relationships",
+     "note": "Venus is linked with affection, partnership and getting along with others."
+    },
+    {
+     "label": "Beauty, art and refinement",
+     "note": "Associated with the arts, aesthetics and a cultivated taste."
+    },
+    {
+     "label": "Comfort and enjoyment",
+     "note": "Traditionally linked with pleasure, comfort and life's finer things."
+    },
+    {
+     "label": "Prosperity and luxury",
+     "note": "Connected in the texts with material well-being, as a symbol only."
+    }
+   ],
+   "rudrakshaMukhi": 6
+  },
+  "planet": "Venus",
+  "basis": "birth-weekday",
+  "summary": "Using your local birth date (a Friday) and birthplace, the Birth-Date & Place Ratna Method identifies Diamond or White Sapphire, traditionally associated with Venus, as your Ratna association.",
+  "factors": [
+   {
+    "label": "Local birth date",
+    "value": "Friday, 15 Jun 1990"
+   },
+   {
+    "label": "Birthplace and time zone",
+    "value": "Pune, Maharashtra, India (Asia/Kolkata)"
+   },
+   {
+    "label": "Weekday ruler",
+    "value": "Friday: Venus"
+   },
+   {
+    "label": "Traditional Ratna",
+    "value": "Diamond or White Sapphire"
+   },
+   {
+    "label": "Venus on that date",
+    "value": "In Aries all day (sidereal)"
+   },
+   {
+    "label": "Birth time",
+    "value": "Not used (unknown)"
+   }
+  ]
+ },
+ "dateBased": {
+  "localDate": "Friday, 15 Jun 1990",
+  "weekday": "Friday",
+  "weekdayLord": "Venus",
+  "rule": "Weekday-ruler rule: the planet ruling the local weekday of birth gives the Ratna traditionally associated with that planet. Friday is ruled by Venus, whose traditional Ratna is Diamond or White Sapphire.",
+  "weekdayLordSign": "Aries",
+  "sunrise": {
+   "local": "05:57",
+   "timeZone": "Asia/Kolkata"
+  },
+  "classicalNote": "Classical Vedic reckoning begins each weekday at local sunrise, which was 05:57 at your birthplace on that date. If you were born before then, strict reckoning would count the previous weekday, Thursday (Jupiter). Because your birth time is unknown, this method uses the local calendar weekday.",
+  "table": [
+   {
+    "weekday": "Sunday",
+    "planet": "Sun",
+    "stone": "Ruby"
+   },
+   {
+    "weekday": "Monday",
+    "planet": "Moon",
+    "stone": "Pearl"
+   },
+   {
+    "weekday": "Tuesday",
+    "planet": "Mars",
+    "stone": "Red Coral"
+   },
+   {
+    "weekday": "Wednesday",
+    "planet": "Mercury",
+    "stone": "Emerald"
+   },
+   {
+    "weekday": "Thursday",
+    "planet": "Jupiter",
+    "stone": "Yellow Sapphire"
+   },
+   {
+    "weekday": "Friday",
+    "planet": "Venus",
+    "stone": "Diamond or White Sapphire"
+   },
+   {
+    "weekday": "Saturday",
+    "planet": "Saturn",
+    "stone": "Blue Sapphire"
+   }
+  ]
+ },
+ "recommendation": null,
+ "wearing": {
+  "weekday": "Friday",
+  "metal": "Platinum or silver",
+  "finger": "Middle or ring finger",
+  "customNote": "Metal, finger and weekday are customs commonly cited in the Vedic tradition; they differ between lineages and are not scientifically established.",
+  "sunrise": {
+   "iso": "2026-11-06T01:06:27.262Z",
+   "local": "Friday, 6 Nov 2026, 06:36",
+   "timeZone": "Asia/Kolkata",
+   "locationLabel": "Pune, Maharashtra, India (your birthplace)"
+  },
+  "sunriseNote": "Sunrise on the next Friday at your birthplace, calculated astronomically. Morning is customarily preferred, but this is a convention, not a guarantee of any outcome. It may differ from sunrise where you live now.",
+  "weight": {
+   "weightKg": 58,
+   "rattiApprox": 5.8,
+   "caratApprox": 5.3,
+   "text": "A commonly quoted traditional rule of thumb is about one ratti (roughly 0.9 carat) for every 10 kg of body weight. For 58 kg that is about 5.8 ratti (roughly 5.3 carat) of Diamond or White Sapphire. Practitioners and lineages differ, and many prefer a fixed minimum weight instead.",
+   "disclaimer": "This is traditional guidance only. It is not a scientific formula, was not used to choose your Ratna, and makes no claim about health or any life outcome. Please consult a qualified gemologist and astrologer before buying."
+  }
+ },
+ "explanation": {
+  "text": "Using your local birth date and birthplace, you were born on a Friday (Friday, 15 Jun 1990) in Pune, Maharashtra, India. In the traditional weekday-ruler convention, Friday belongs to Venus, and the Ratna traditionally associated with Venus is Diamond or White Sapphire. Across that whole date Venus stayed in Aries (sidereal zodiac), which is noted as background context only. Because your exact birth time is unknown, no Ascendant or houses were used, so this reading is less specific than a full birth-chart reading. It is a traditional association, not a prediction or a guarantee, and other schools of Vedic astrology may choose a different Ratna.",
+  "source": "rules",
+  "fallbackReason": "AI explanation not configured"
+ },
+ "notice": null
+}

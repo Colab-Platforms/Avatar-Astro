@@ -4,7 +4,7 @@ import { Request, Response, NextFunction } from "express";
  * Minimal in-memory fixed-window rate limiter keyed by client IP.
  * Per-process only: with multiple instances each keeps its own counters.
  */
-export function createRateLimiter(opts: { windowMs: number; max: number; message?: string }) {
+export function createRateLimiter(opts: { windowMs: number; max: number; message?: string; envelope?: boolean }) {
   const hits = new Map<string, { count: number; resetAt: number }>();
 
   const timer = setInterval(() => {
@@ -24,9 +24,9 @@ export function createRateLimiter(opts: { windowMs: number; max: number; message
     entry.count += 1;
     if (entry.count > opts.max) {
       res.setHeader("Retry-After", Math.ceil((entry.resetAt - now) / 1000));
-      return res
-        .status(429)
-        .json({ error: { message: opts.message ?? "Too many requests. Please try again shortly." } });
+      const message = opts.message ?? "Too many requests. Please try again shortly.";
+      // `envelope` matches the { status, data, message } shape auth clients read; the default keeps the legacy shape.
+      return res.status(429).json(opts.envelope ? { status: false, data: null, message } : { error: { message } });
     }
     next();
   };

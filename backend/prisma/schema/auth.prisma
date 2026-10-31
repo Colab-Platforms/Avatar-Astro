@@ -64,6 +64,8 @@ model OtpVerification {
   otpCode String  @map("otp_code")
   type    OtpType
   used    Boolean @default(false)
+  /// Verification attempts spent against this OTP; it is burned once the limit is reached.
+  attempts Int @default(0)
 
   userId String? @map("user_id")
   user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)

@@ -27,7 +27,7 @@ function getErrorMessage(err: unknown, fallback: string) {
   return fallback;
 }
 
-function useApplySession() {
+export function useApplySession() {
   const setSession = useAuthStore((s) => s.setSession);
   const queryClient = useQueryClient();
 
@@ -78,12 +78,20 @@ export function useGoogleLoginMutation() {
   });
 }
 
-export function useVerifyOtpMutation() {
+/**
+ * With `deferSession`, a successful verification does not touch the auth store;
+ * the caller applies the returned session (via `useApplySession`) once its own
+ * success UI has finished — PublicRoute redirects signed-in users immediately.
+ */
+export function useVerifyOtpMutation({
+  deferSession = false,
+}: { deferSession?: boolean } = {}) {
   const applySession = useApplySession();
 
   return useMutation({
     mutationFn: (payload: VerifyOtpPayload) => authApi.verifyOtp(payload),
     onSuccess: (session) => {
+      if (deferSession) return;
       applySession(session);
       toast.success("Verified successfully.");
     },

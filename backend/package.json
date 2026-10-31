@@ -28,6 +28,7 @@
     "test:capture": "tsx --test src/__tests__/utils/aiUsageCapture.node-test.ts",
     "test:pipeline": "tsx --test --test-timeout=240000 src/__tests__/routes/aiPipeline.node-test.ts",
     "test:cost": "tsx --test src/__tests__/routes/aiCost.node-test.ts",
+    "test:otp": "tsx --test --test-timeout=240000 src/__tests__/routes/otpSecurity.node-test.ts",
     "test:accounts": "tsx --test --test-timeout=240000 src/__tests__/routes/accountManagement.node-test.ts",
     "test:admin": "tsx --test src/__tests__/routes/adminPanel.node-test.ts",
     "test:inquiry": "tsx --test src/__tests__/routes/inquiryRoutes.node-test.ts",
