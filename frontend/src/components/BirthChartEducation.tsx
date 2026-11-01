@@ -1,4 +1,5 @@
 import EducationSection, { EducationBlock } from "@/components/EducationSection";
+import { FEATURES } from "@/data/featureCatalog";
 import { FEATURE_FAQS } from "@/data/featureFaqs";
 
 const blocks: EducationBlock[] = [
@@ -59,5 +60,5 @@ const DISCLAIMER =
   "This profile is offered for personal interest, cultural exploration and reflection. Astrology and numerology are traditional belief systems that are not scientifically proven, and the profile is not a prediction or professional advice.";
 
 export default function BirthChartEducation() {
-  return <EducationSection idPrefix="birthchart" title="About Janma Kundali" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
+  return <EducationSection audioToolSlug={FEATURES.birthChart.id} idPrefix="birthchart" title="About Janma Kundali" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
 }

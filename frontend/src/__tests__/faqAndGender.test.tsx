@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { FEATURE_FAQS } from "@/data/featureFaqs";
@@ -51,7 +52,7 @@ describe("FAQs", () => {
       [<TarotEducation />, "What can I ask during a tarot reading?"],
     ];
     for (const [el, q] of cases) {
-      const { unmount } = render(<MemoryRouter>{el}</MemoryRouter>);
+      const { unmount } = render(<QueryClientProvider client={new QueryClient()}><MemoryRouter>{el}</MemoryRouter></QueryClientProvider>);
       expect(screen.getByText(q)).toBeInTheDocument();
       expect(document.body.textContent).not.toMatch(/same text|Can I use it for free|Which ayanamsa|Why is my Vedic sign different/);
       unmount();
@@ -67,9 +68,11 @@ describe("FAQs", () => {
 describe("Jodi Jyotish gender", () => {
   it("each partner has their own optional gender field and the two do not affect each other", () => {
     render(
-      <MemoryRouter>
-        <CompatibilityChecker />
-      </MemoryRouter>,
+      <QueryClientProvider client={new QueryClient()}>
+        <MemoryRouter>
+          <CompatibilityChecker />
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
     const g1 = screen.getByLabelText(/Gender/, { selector: "#cc1-gender" }) as HTMLSelectElement;
     const g2 = screen.getByLabelText(/Gender/, { selector: "#cc2-gender" }) as HTMLSelectElement;
