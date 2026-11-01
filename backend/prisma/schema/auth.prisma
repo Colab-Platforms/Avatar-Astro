@@ -51,6 +51,7 @@ model User {
   activityEvents   UserActivityEvent[]
   otpVerifications OtpVerification[]
   passwordResets   PasswordResetToken[]
+  dailyChatUsages  DailyChatUsage[]
 
   @@index([email])
   @@index([isActive])

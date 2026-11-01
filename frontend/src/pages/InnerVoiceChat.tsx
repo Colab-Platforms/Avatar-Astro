@@ -21,6 +21,8 @@ import { detectLanguage, buildLanguageDirective, type InputLanguageChoice, type 
 import { aiChat } from "@/lib/aiClient";
 import { authRequest } from "@/lib/authClient";
 import { askGuru, GuruChatError, MAX_GURU_INPUT_CHARS } from "@/lib/guruChat";
+import { fetchDailyChatStatus, consumeDailyChatSession, DailyChatLimitError } from "@/lib/dailyChatLimit";
+import { useDailyChatLimitStore, useDailyChatCountdownTicker, formatRemaining } from "@/store/dailyChatLimitStore";
 import { authedFetch, requireSignIn } from "@/lib/authedFetch";
 import { ASTROLOGERS } from "@/data/astrologers";
 import FeatureFaq from "@/components/FeatureFaq";
@@ -1144,6 +1146,24 @@ export default function InnerVoiceChat(){
   const bottomRef=useRef(null),textareaRef=useRef(null),recognitionRef=useRef(null),mainScrollRef=useRef(null);
   const profile=(()=>{try{return JSON.parse(localStorage.getItem("iv_profile")||"null");}catch{return null;}})();
 
+  // Daily free-tier timer: backend is the source of truth; we only mirror it.
+  // One read on mount and one on tab re-focus (no polling); the 1s ticker is a
+  // local countdown that flips to EXPIRED at expiresAt.
+  const chatLimit=useDailyChatLimitStore();
+  useDailyChatCountdownTicker();
+  const limitReached=chatLimit.status==="EXPIRED";
+  useEffect(()=>{
+    const load=()=>{fetchDailyChatStatus().then(s=>useDailyChatLimitStore.getState().setSession(s)).catch(()=>{
+      // Status is advisory; the consume call is the real gate. Don't lock the UI on a read failure.
+      if(useDailyChatLimitStore.getState().status==="LOADING")useDailyChatLimitStore.getState().setSession({status:"NOT_STARTED",allowed:true,remainingSeconds:0,startedAt:null,expiresAt:null,nextAvailableAt:null});
+    });};
+    load();
+    const onVis=()=>{if(document.visibilityState==="visible")load();};
+    document.addEventListener("visibilitychange",onVis);
+    return()=>document.removeEventListener("visibilitychange",onVis);
+  },[]);
+
+  // useEffect(()=>{const s=document.createElement("style");s.textContent=CSS;document.head.appendChild(s);return()=>document.head.removeChild(s);},[]);
   useEffect(()=>{const s=document.createElement("style");s.textContent=CSS;document.head.appendChild(s);return()=>{document.head.removeChild(s);};},[]);
   useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth",block:"end"});},[messages,loading]);
 
@@ -1174,12 +1194,23 @@ export default function InnerVoiceChat(){
   const buildHistory=()=>messages.filter(m=>!m.error).map(m=>({role:(m.role==="user"?"user":"assistant") as "user"|"assistant",content:typeof m.content==="string"?m.content:(m.content?.message||"[response]")}));
 
   const send=async(text,{retry=false}={})=>{
-    const msg=text.trim().slice(0,MAX_GURU_INPUT_CHARS);if(!msg||loading||searching)return;
+    const msg=text.trim().slice(0,MAX_GURU_INPUT_CHARS);if(!msg||loading||searching||limitReached)return;
     if(!requireSignIn(()=>{void send(text,{retry});}))return; // signed out: ask first, the typed message stays in the box
+    setLoading(true);
+    // Server-side gate: starts today's 5-minute window on the first message,
+    // rejects once it has run out. Nothing is added to the thread if rejected.
+    try{
+      const session=await consumeDailyChatSession();
+      useDailyChatLimitStore.getState().setSession(session);
+    }catch(e){
+      setLoading(false);
+      if(e instanceof DailyChatLimitError&&e.session)useDailyChatLimitStore.getState().setSession(e.session);
+      else alert(e instanceof Error?e.message:"Could not start the chat session. Please try again.");
+      return;
+    }
     setInput("");if(textareaRef.current)textareaRef.current.style.height="24px";
     // On retry the user's message is already shown; only drop the failed reply.
     if(!retry)setMessages(prev=>[...prev,{role:"user",content:msg}]);
-    setLoading(true);
     try{
       // First message of a conversation: choose a guidance profile. Follow-ups keep it, with no new search.
       let choice=personaRef.current;
@@ -1409,8 +1440,20 @@ export default function InnerVoiceChat(){
                     replyLanguage={replyLanguage}
                     onReplyLanguageChange={setReplyLanguage}
                   />
+                  {chatLimit.status==="ACTIVE"&&(
+                    <div className="mb-2 text-right text-xs font-medium text-[#592209]" aria-live="off">
+                      Free session time left: {formatRemaining(chatLimit.remainingSeconds)}
+                    </div>
+                  )}
+                  {limitReached&&(
+                    <div className="mb-2 rounded-xl border border-[#592209]/20 bg-[#592209]/5 px-4 py-2.5 text-sm text-[#592209]" role="status">
+                      Your free 5-minute chat for today has ended.
+                      {chatLimit.nextAvailableAt&&<> You can chat again after {new Date(chatLimit.nextAvailableAt).toLocaleString("en-IN",{timeZone:"Asia/Kolkata",dateStyle:"medium",timeStyle:"short"})} IST.</>}
+                    </div>
+                  )}
                   <GuruChatInput
                     ref={textareaRef}
+                    disabled={limitReached}
                     value={input}
                     onChange={(v)=>{setInput(v);autoResize();}}
                     onSend={()=>send(input)}

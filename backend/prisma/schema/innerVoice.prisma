@@ -1,0 +1,23 @@
+// Free-tier limiter for the Inner Voice chat (/inner-voice/chat): each user gets
+// DAILY_CHAT_DURATION_SECONDS of chat per Asia/Kolkata calendar day, starting from
+// their first message of the day. One row per (user, day) — the backend is the
+// only writer of startedAt/expiresAt, so the frontend clock can never extend it.
+model DailyChatUsage {
+  id String @id @default(cuid())
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Calendar date in Asia/Kolkata, stored as a date (no time component).
+  usageDate DateTime @map("usage_date") @db.Date
+
+  startedAt DateTime @map("started_at")
+  expiresAt DateTime @map("expires_at")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  @@unique([userId, usageDate])
+  @@index([userId])
+  @@map("daily_chat_usages")
+}
