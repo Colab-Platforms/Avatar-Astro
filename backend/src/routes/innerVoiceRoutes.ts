@@ -2,6 +2,8 @@ import { Router, Request, Response } from "express";
 import { createRateLimiter } from "../utils/rateLimit.js";
 import { auth } from "../middleware/authMiddleware.js";
 import { getDailyChatStatus, consumeDailyChatSession } from "../utils/dailyChatSession.js";
+import { screenMessage, ESCALATION_REPLY, OFF_TOPIC_REPLY } from "../utils/chatScreening.js";
+import prisma from "@root/prisma.js";
 
 const router = Router();
 // Life path readings and TTS are generated per user and spend provider credits.
@@ -39,6 +41,38 @@ router.post("/chat/consume", createRateLimiter({ windowMs: 60_000, max: 60 }), a
   } catch (err: any) {
     console.error("Daily chat consume error:", err?.message);
     return res.status(500).json({ success: false, error: "Failed to start chat session" });
+  }
+});
+
+// ── Message screening (queue instead of AI reply) ───────────────────────────
+// The frontend calls this BEFORE /chat/consume and the AI proxy. Personal-contact requests and
+// "are you human?" probes are stored in chat_escalations for the super admin and get a fixed reply;
+// off-topic messages get a fixed refusal. Neither spends AI credits or the daily timer.
+const MAX_PENDING_PER_USER = 5;
+
+router.post("/chat/screen", createRateLimiter({ windowMs: 60_000, max: 40 }), async (req: Request, res: Response) => {
+  try {
+    const message = typeof req.body?.message === "string" ? req.body.message.trim().slice(0, 1000) : "";
+    if (!message) return res.status(400).json({ success: false, error: "message is required" });
+    const last = typeof req.body?.lastGuruReply === "string" ? req.body.lastGuruReply : undefined;
+
+    const result = await screenMessage(message, last);
+    if (result.action === "ALLOW") return res.json({ success: true, data: { action: "ALLOW" } });
+
+    if (result.action === "OFF_TOPIC") {
+      return res.json({ success: true, data: { action: "OFF_TOPIC", reply: result.reply || OFF_TOPIC_REPLY } });
+    }
+
+    const userId = req.user!.id;
+    const pending = await prisma.chatEscalation.count({ where: { userId, status: "PENDING" } });
+    if (pending < MAX_PENDING_PER_USER) {
+      await prisma.chatEscalation.create({ data: { userId, message, reason: result.reason } });
+    }
+    return res.json({ success: true, data: { action: "ESCALATED", reply: result.reply || ESCALATION_REPLY } });
+  } catch (err: any) {
+    console.error("Chat screen error:", err?.message);
+    // Never fall through to the AI on a failure: for a personal-contact request that would be the wrong outcome.
+    return res.status(500).json({ success: false, error: "Could not process your message. Please try again." });
   }
 });
 

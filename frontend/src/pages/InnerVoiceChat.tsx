@@ -19,6 +19,8 @@ import GuruChatInput from "@/components/ai-guru/GuruChatInput";
 import LanguageControls from "@/components/ai-guru/LanguageControls";
 import { detectLanguage, buildLanguageDirective, type InputLanguageChoice, type ReplyLanguageChoice } from "@/components/ai-guru/languages";
 import { aiChat } from "@/lib/aiClient";
+import { screenChatMessage } from "@/lib/chatScreen";
+import { SignInRequiredError } from "@/lib/authedFetch";
 import { authRequest } from "@/lib/authClient";
 import { askGuru, GuruChatError, MAX_GURU_INPUT_CHARS } from "@/lib/guruChat";
 import { fetchDailyChatStatus, consumeDailyChatSession, DailyChatLimitError } from "@/lib/dailyChatLimit";
@@ -1191,12 +1193,32 @@ export default function InnerVoiceChat(){
   };
 
   const autoResize=()=>{const ta=textareaRef.current;if(!ta)return;ta.style.height="auto";ta.style.height=Math.min(ta.scrollHeight,140)+"px";};
-  const buildHistory=()=>messages.filter(m=>!m.error).map(m=>({role:(m.role==="user"?"user":"assistant") as "user"|"assistant",content:typeof m.content==="string"?m.content:(m.content?.message||"[response]")}));
+  const lastGuruText=()=>{const g=[...messages].reverse().find(m=>m.role==="guru"&&!m.error&&!m.local);return typeof g?.content==="string"?g.content:g?.content?.message;};
+  const buildHistory=()=>messages.filter(m=>!m.error&&!m.local).map(m=>({role:(m.role==="user"?"user":"assistant") as "user"|"assistant",content:typeof m.content==="string"?m.content:(m.content?.message||"[response]")}));
 
   const send=async(text,{retry=false}={})=>{
     const msg=text.trim().slice(0,MAX_GURU_INPUT_CHARS);if(!msg||loading||searching||limitReached)return;
     if(!requireSignIn(()=>{void send(text,{retry});}))return; // signed out: ask first, the typed message stays in the box
     setLoading(true);
+    // Screen first: personal-contact / "are you human?" messages go to the admin queue and off-topic
+    // ones are refused. Neither reaches the AI nor uses the daily timer. Retries were already screened.
+    if(!retry){
+      try{
+        const outcome=await screenChatMessage(msg,lastGuruText());
+        if(outcome.action!=="ALLOW"){
+          setInput("");if(textareaRef.current)textareaRef.current.style.height="24px";
+          setMessages(prev=>[...prev.filter(m=>!m.error),
+            {role:"user",content:msg,local:true},
+            {role:"guru",local:true,escalated:outcome.action==="ESCALATED",content:{type:"gathering",message:outcome.reply||"Thank you. We will contact you shortly."}}]);
+          setLoading(false);
+          return;
+        }
+      }catch(e){
+        setLoading(false);
+        if(!(e instanceof SignInRequiredError))alert(e instanceof Error?e.message:"Could not process your message. Please try again.");
+        return;
+      }
+    }
     // Server-side gate: starts today's 5-minute window on the first message,
     // rejects once it has run out. Nothing is added to the thread if rejected.
     try{

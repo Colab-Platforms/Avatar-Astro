@@ -15,6 +15,7 @@ import { EVENT_TYPES, EVENT_LABELS, ALL_EVENT_TYPES } from "@/config/events.js";
 import { createAnalyticsRouter } from "./adminAnalytics.js";
 import { createCostsRouter, aiCostCsv } from "./adminCosts.js";
 import { createAccountsRouter, kindWhere } from "./adminAccounts.js";
+import { createChatEscalationsRouter } from "./adminChatEscalations.js";
 
 const DAY_MS = 86_400_000;
 /** Known ApiErrors pass through; anything else (e.g. Prisma, with file paths and SQL) is logged and replaced. */
@@ -482,6 +483,7 @@ export function createAdminPanelRouter(): Router {
   router.use(createAccountsRouter());
   router.use(createAnalyticsRouter());
   router.use(createCostsRouter());
+  router.use(createChatEscalationsRouter());
 
   return router;
 }

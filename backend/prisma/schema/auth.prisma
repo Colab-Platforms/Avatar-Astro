@@ -44,6 +44,7 @@ model User {
   updatedAt DateTime? @updatedAt @map("updated_at")
 
   userRoleMappings UserRoleMapping[]
+  chatEscalations  ChatEscalation[]
 
   sessions         Session[]
   readings         GeneratedReading[]
