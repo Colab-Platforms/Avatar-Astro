@@ -26,5 +26,3 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Claude memory (local only)
-.claude/

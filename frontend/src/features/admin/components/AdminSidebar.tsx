@@ -1,6 +1,6 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard, Users, Activity, Sparkles, MessageCircleHeart, Flame, Store, FileText, CreditCard,
+  LayoutDashboard, Users, Activity, Sparkles, MessageCircleHeart, MessageCircleWarning, Flame, Store, FileText, CreditCard,
   Plug, BarChart3, ScrollText, LogOut, X, Lock, ShieldCheck, Library, History,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -32,6 +32,7 @@ const NAV: NavDef[] = [
   { to: "/admin/reports", label: "Reports", icon: BarChart3, mainOnly: true },
   { to: "/admin/tools", label: "Astrology tools", icon: Sparkles, mainOnly: true },
   { to: "/admin/inner-voice", label: "Inner Voice", icon: MessageCircleHeart, mainOnly: true },
+  { to: "/admin/chat-escalations", label: "Chat escalations", icon: MessageCircleWarning, mainOnly: true },
   { to: "/admin/devotion", label: "Devotion & Live", icon: Flame, mainOnly: true },
   { to: "/admin/shop-orders", label: "Shop & Orders", icon: Store, mainOnly: true },
   { to: "/admin/content", label: "Content & banners", icon: FileText, mainOnly: true },

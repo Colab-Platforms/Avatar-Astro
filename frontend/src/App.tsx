@@ -61,6 +61,7 @@ const AdminAdminsPage = lazy(() => import("./features/admin/panel/pages/AdminsPa
 const AdminCustomerLibraryPage = lazy(() => import("./features/admin/panel/pages/CustomerLibraryPage"));
 const AdminToolsPage = lazy(() => import("./features/admin/panel/pages/ToolsPage"));
 const AdminActivityPage = lazy(() => import("./features/admin/panel/pages/ActivityPage"));
+const AdminChatEscalationsPage = lazy(() => import("./features/admin/panel/pages/ChatEscalationsPage"));
 const AdminInnerVoicePage = lazy(() => import("./features/admin/panel/pages/InnerVoiceAdminPage"));
 const AdminDevotionPage = lazy(() => import("./features/admin/panel/pages/CatalogPages").then((m) => ({ default: m.DevotionAdminPage })));
 const AdminShopOrdersPage = lazy(() => import("./features/admin/panel/pages/CatalogPages").then((m) => ({ default: m.ShopAdminPage })));
@@ -604,6 +605,14 @@ const App = () => {
                 element={
                   <Suspense fallback={<AdminLazyFallback />}>
                     <MainOnly><AdminInnerVoicePage /></MainOnly>
+                  </Suspense>
+                }
+              />
+              <Route
+                path="chat-escalations"
+                element={
+                  <Suspense fallback={<AdminLazyFallback />}>
+                    <MainOnly><AdminChatEscalationsPage /></MainOnly>
                   </Suspense>
                 }
               />
