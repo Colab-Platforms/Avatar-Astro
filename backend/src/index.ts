@@ -20,6 +20,7 @@ import { createPublicContentRouter } from "./routes/publicContentRoutes.js";
 import darshanRoutes from "./modules/darshan/darshan.public.route.js";
 import authRoutes from "./modules/auth/auth.route.js";
 import adminRoutes from "./modules/admin/admin.route.js";
+import { createAstrologyAudioPublicRouter } from "./modules/astrologyAudio/astrologyAudio.route.js";
 import publicTempleRoutes from "./modules/puja/puja.public.route.js";
 import publicChadhawaRoutes from "./modules/chadhawa/chadhawa.public.route.js";
 import publicShopRoutes from "./modules/shop/shop.public.route.js";
@@ -314,6 +315,9 @@ app.use("/api/inner-voice", ...feature("inner-voice"), innerVoiceRoutes);
 app.use("/api/me", createMeRouter());
 app.use("/api/public", createPublicContentRouter());
 app.use("/api/darshan", darshanRoutes);
+
+// Published astrology About-section audio (public, read-only; never calls ElevenLabs)
+app.use("/api/astrology", createAstrologyAudioPublicRouter());
 
 // TTS proxy — matches the /api/tts path used by VoiceConsultation.tsx
 app.post("/api/tts", ...feature("tts"), auth("USER"), async (req: Request, res: Response) => {

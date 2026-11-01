@@ -1,4 +1,5 @@
 import EducationSection, { EducationBlock } from "@/components/EducationSection";
+import { FEATURES } from "@/data/featureCatalog";
 import { FEATURE_FAQS } from "@/data/featureFaqs";
 import { zodiacSigns } from "@/data/zodiacData";
 
@@ -63,5 +64,5 @@ const DISCLAIMER =
   "Zodiac sign profiles are offered for personal interest, cultural exploration and reflection. They describe traditional symbolism, are not scientifically proven, and are not predictions or professional advice.";
 
 export default function ZodiacEducation() {
-  return <EducationSection idPrefix="zodiac" title="About Rashi Chakra" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
+  return <EducationSection audioToolSlug={FEATURES.zodiac.id} idPrefix="zodiac" title="About Rashi Chakra" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
 }

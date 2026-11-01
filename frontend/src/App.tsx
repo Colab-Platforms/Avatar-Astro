@@ -60,6 +60,7 @@ const AdminUsersPage = lazy(() => import("./features/admin/panel/pages/UsersPage
 const AdminAdminsPage = lazy(() => import("./features/admin/panel/pages/AdminsPage"));
 const AdminCustomerLibraryPage = lazy(() => import("./features/admin/panel/pages/CustomerLibraryPage"));
 const AdminToolsPage = lazy(() => import("./features/admin/panel/pages/ToolsPage"));
+const AdminAstrologyAudioPage = lazy(() => import("./features/admin/panel/pages/AstrologyAudioPage"));
 const AdminActivityPage = lazy(() => import("./features/admin/panel/pages/ActivityPage"));
 const AdminChatEscalationsPage = lazy(() => import("./features/admin/panel/pages/ChatEscalationsPage"));
 const AdminInnerVoicePage = lazy(() => import("./features/admin/panel/pages/InnerVoiceAdminPage"));
@@ -597,6 +598,14 @@ const App = () => {
                 element={
                   <Suspense fallback={<AdminLazyFallback />}>
                     <MainOnly><AdminToolsPage /></MainOnly>
+                  </Suspense>
+                }
+              />
+              <Route
+                path="astrology-audio"
+                element={
+                  <Suspense fallback={<AdminLazyFallback />}>
+                    <MainOnly><AdminAstrologyAudioPage /></MainOnly>
                   </Suspense>
                 }
               />

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import AboutAudioPlayer from "@/components/astrology/AboutAudioPlayer";
 
 export interface EducationBlock {
   heading: string;
@@ -26,6 +27,8 @@ interface EducationSectionProps {
   disclaimer: string;
   /** Prefix for generated element ids; must be unique per page. */
   idPrefix: string;
+  /** Tool slug (a featureCatalog id). When set, a "Listen to this section" audio player is shown. */
+  audioToolSlug?: string;
 }
 
 /**
@@ -34,7 +37,7 @@ interface EducationSectionProps {
  * read them. Content is supplied by each tool so it can describe that tool's
  * real method.
  */
-export default function EducationSection({ title, blocks, faqs, disclaimer, idPrefix }: EducationSectionProps) {
+export default function EducationSection({ title, blocks, faqs, disclaimer, idPrefix, audioToolSlug }: EducationSectionProps) {
   return (
     <section
       aria-labelledby={`${idPrefix}-edu-title`}
@@ -51,6 +54,8 @@ export default function EducationSection({ title, blocks, faqs, disclaimer, idPr
         </p>
         <div className="mx-auto mt-4 h-px w-24 bg-gradient-to-r from-transparent via-[#592209] to-transparent" />
       </div>
+
+      {audioToolSlug && <AboutAudioPlayer toolSlug={audioToolSlug} />}
 
       <div className="space-y-4">
         {blocks.map((b, i) => (

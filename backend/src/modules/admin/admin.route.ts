@@ -7,6 +7,7 @@ import shopRoutes from "@/modules/shop/shop.route.js";
 import { requireMainAdmin } from "@/middleware/mainAdmin.js";
 import { noStore } from "@/middleware/noStore.js";
 import { createAdminPanelRouter } from "./adminPanel.route.js";
+import { createAstrologyAudioAdminRouter } from "@/modules/astrologyAudio/astrologyAudio.route.js";
 
 const router = Router();
 
@@ -26,6 +27,9 @@ router.use("/chadhawa", chadhawaRoutes);
 
 // Shop categories / products management
 router.use("/shop", shopRoutes);
+
+// Astrology Audio Manager (ElevenLabs narration + Cloudinary storage)
+router.use("/astrology/audio", createAstrologyAudioAdminRouter());
 
 // Admin panel modules (overview, users, tools, content, reports, audit...).
 router.use(createAdminPanelRouter());
