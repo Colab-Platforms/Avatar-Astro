@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import AskDivyaSection from "@/features/guru/AskDivyaSection";
+import FeatureFaq from "@/components/FeatureFaq";
 import { FEATURES } from "@/data/featureCatalog";
 import { useFeatureTitle } from "@/hooks/useFeatureTitle";
 import { Link } from "react-router-dom";
@@ -288,6 +290,8 @@ export default function InnerVoiceDashboard() {
               </div>
             ))}
         </div>
+      <AskDivyaSection feature="karmaScore" context={`Today's Karma Sankhya: ${composite}/100 from ${done.length} of ${ACTIONS.length} practices (${behaviorPts} of ${MAX_POINTS} points).`} />
+      <FeatureFaq feature="karmaScore" />
       </div>
     </div>
   );

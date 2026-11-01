@@ -11,7 +11,6 @@ import GuruTopHeader from "@/components/ai-guru/GuruTopHeader";
 import GuruTabs from "@/components/ai-guru/GuruTabs";
 import GuruProgressBar from "@/components/ai-guru/GuruProgressBar";
 import HeroWelcome from "@/components/ai-guru/HeroWelcome";
-import TrustStats from "@/components/ai-guru/TrustStats";
 import CategoryCards from "@/components/ai-guru/CategoryCards";
 import AnalysisTimeline from "@/components/ai-guru/AnalysisTimeline";
 import SuggestedQuestions from "@/components/ai-guru/SuggestedQuestions";
@@ -20,17 +19,23 @@ import GuruChatInput from "@/components/ai-guru/GuruChatInput";
 import LanguageControls from "@/components/ai-guru/LanguageControls";
 import { detectLanguage, buildLanguageDirective, type InputLanguageChoice, type ReplyLanguageChoice } from "@/components/ai-guru/languages";
 import { aiChat } from "@/lib/aiClient";
+import { authRequest } from "@/lib/authClient";
 import { askGuru, GuruChatError, MAX_GURU_INPUT_CHARS } from "@/lib/guruChat";
-import { authedFetch } from "@/lib/authedFetch";
 import { fetchDailyChatStatus, consumeDailyChatSession, DailyChatLimitError } from "@/lib/dailyChatLimit";
 import { useDailyChatLimitStore, useDailyChatCountdownTicker, formatRemaining } from "@/store/dailyChatLimitStore";
+import { authedFetch, requireSignIn } from "@/lib/authedFetch";
+import { ASTROLOGERS } from "@/data/astrologers";
+import FeatureFaq from "@/components/FeatureFaq";
+import { assignPersona, lastPersonaId, personaInstruction, rememberPersona, type PersonaChoice } from "@/lib/guruPersona";
+import { takeHandoff } from "@/lib/guruHandoff";
+import { SearchingGuru } from "@/components/ai-guru/PersonaCard";
 
 
 // Configurable so a deprecated/renamed model doesn't require a code change —
 // set GROQ_MODEL on the backend to override. "llama-3.3-70b-versatile" was retired by
 // Groq; openai/gpt-oss-120b is the current large json_mode-capable model.
 
-const PANDIT_DIAGNOSIS_SYSTEM = `You are AI Guru, an AI guide offering reflective guidance inspired by Vedic traditions (you are not a human astrologer and you have no birth chart). Generate a spiritual reflection report from the consultation. Base it only on what the seeker actually said; any planetary, dasha, score or date content is a general illustrative perspective, not a calculation, and must not be presented as certain. Avoid fear-based language and guaranteed predictions. Return ONLY valid JSON with this exact structure:
+const PANDIT_DIAGNOSIS_SYSTEM = `Write all text in Hinglish (Roman-script Hindi mixed with English), keeping the JSON keys unchanged. `+`You are AI Guru, an AI guide offering reflective guidance inspired by Vedic traditions (you are not a human astrologer and you have no birth chart). Generate a spiritual reflection report from the consultation. Base it only on what the seeker actually said; any planetary, dasha, score or date content is a general illustrative perspective, not a calculation, and must not be presented as certain. Avoid fear-based language and guaranteed predictions. Return ONLY valid JSON with this exact structure:
 {
   "diagnosis": {
     "rootCause": "1-2 sentence astrological root cause",
@@ -140,6 +145,7 @@ async function callDiagnosis(conversationHistory) {
   const res = await aiChat({
       temperature: 0.6, max_tokens: 4000,
       json: true,
+      library: { feature: "guru-report" },
       messages: [
         { role: "system", content: PANDIT_DIAGNOSIS_SYSTEM },
         { role: "user", content: `Based on this consultation, generate the complete diagnosis report:\n\n${summary}` },
@@ -151,12 +157,16 @@ async function callDiagnosis(conversationHistory) {
   catch { return null; }
 }
 
-function loadJsPDF() {
+type JsPdfModule = { jsPDF: new (opts: { orientation: string; unit: string; format: string }) => any }; // eslint-disable-line @typescript-eslint/no-explicit-any
+const jspdfOnWindow = () => (window as unknown as { jspdf?: JsPdfModule }).jspdf;
+
+function loadJsPDF(): Promise<JsPdfModule> {
   return new Promise((resolve, reject) => {
-    if (window.jspdf) { resolve(window.jspdf); return; }
+    const existing = jspdfOnWindow();
+    if (existing) { resolve(existing); return; }
     const s = document.createElement("script");
     s.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
-    s.onload = () => resolve(window.jspdf);
+    s.onload = () => { const m = jspdfOnWindow(); if (m) resolve(m); else reject(new Error("jsPDF did not load")); };
     s.onerror = reject;
     document.head.appendChild(s);
   });
@@ -230,7 +240,7 @@ async function downloadReportPDF(report, userName) {
   if (report.diagnosis?.saturnScore!==undefined) progressBar("Saturn Influence",(report.diagnosis.saturnScore||0),[239,68,68]);
   if (report.diagnosis?.areaScores) {
     label("Impact by Life Area");
-    Object.entries(report.diagnosis.areaScores).forEach(([area,score]) => progressBar(area,(score/10)*100,score>=7?[239,68,68]:score>=5?[188,106,77]:[34,197,94]));
+    Object.entries(report.diagnosis.areaScores).forEach(([area,rawScore]) => { const score=Number(rawScore); progressBar(area,(score/10)*100,score>=7?[239,68,68]:score>=5?[188,106,77]:[34,197,94]); });
   }
   if (report.diagnosis?.whyThisDiagnosis?.length) {
     sectionHeader("🔍","Why This Diagnosis?",[188,106,77]);
@@ -868,7 +878,7 @@ function ProgressCalendar(){
   );
 }
 
-function DiagnosisReport({report,onSaveMantra,onBookPuja,userName,onAskFollowUp,onDownload,downloading}){
+function DiagnosisReport({report,onSaveMantra,userName,onAskFollowUp,onDownload,downloading}){
   const [actions,setActions]=useState({});
   const [habits,setHabits]=useState({});
   if(!report) return null;
@@ -897,9 +907,9 @@ function DiagnosisReport({report,onSaveMantra,onBookPuja,userName,onAskFollowUp,
           {report.diagnosis.areaScores&&(
             <div style={{marginBottom:18}}>
               <div style={{fontSize:10,letterSpacing:2,textTransform:"uppercase",fontFamily:"'DM Sans', system-ui, sans-serif",color:"#592209",marginBottom:12}}>Severity by Life Area</div>
-              <div className="ivc-area-scores">{Object.entries(report.diagnosis.areaScores).map(([area,score])=>(
+              <div className="ivc-area-scores">{Object.entries(report.diagnosis.areaScores).map(([area,rawScore])=>{ const score=Number(rawScore); return (
                 <div key={area} className="ivc-area-row"><span className="ivc-area-name">{area}</span><div className="ivc-area-track"><div className="ivc-area-fill" style={{width:`${(score/10)*100}%`,background:areaColor(score)}}/></div><span className="ivc-area-score">{score}/10</span></div>
-              ))}</div>
+              );})}</div>
             </div>
           )}
           <div className="ivc-diag-grid">
@@ -918,7 +928,7 @@ function DiagnosisReport({report,onSaveMantra,onBookPuja,userName,onAskFollowUp,
           {report.diagnosis.confidenceLevels&&(
             <div style={{marginTop:16}}>
               <div style={{fontSize:10,letterSpacing:2,textTransform:"uppercase",fontFamily:"'DM Sans', system-ui, sans-serif",color:"#592209",marginBottom:10}}>Prediction Confidence</div>
-              <div className="ivc-confidence-row">{Object.entries(report.diagnosis.confidenceLevels).map(([area,level])=><span key={area} className={`ivc-conf-badge conf-${level}`}>{area}: {level}</span>)}</div>
+              <div className="ivc-confidence-row">{Object.entries(report.diagnosis.confidenceLevels).map(([area,level])=><span key={area} className={`ivc-conf-badge conf-${String(level)}`}>{area}: {String(level)}</span>)}</div>
             </div>
           )}
         </ReportCard>
@@ -1001,7 +1011,6 @@ function DiagnosisReport({report,onSaveMantra,onBookPuja,userName,onAskFollowUp,
           {report.puja.materials?.length>0&&<div className="ivc-puja-materials">{report.puja.materials.map((m,i)=><span key={i} className="ivc-mat-tag">🌸 {m}</span>)}</div>}
           {report.puja.procedure&&<div className="ivc-puja-procedure">{report.puja.procedure}</div>}
           {report.puja.benefits&&<div className="ivc-puja-benefit">✨ {report.puja.benefits}</div>}
-          <button className="ivc-book-puja-btn" onClick={onBookPuja}>🙏 Book This Puja</button>
         </ReportCard>
       )}
 
@@ -1097,6 +1106,14 @@ function DiagnosisReport({report,onSaveMantra,onBookPuja,userName,onAskFollowUp,
 export default function InnerVoiceChat(){
   useFeatureTitle(FEATURES.guru);
   const [activeTab,setActiveTab]=useState("consultation");
+  // Guidance profile for this conversation (from the astrologer data) and the result the user came from, if any.
+  const [persona,setPersona]=useState<PersonaChoice|null>(null);
+  const [searching,setSearching]=useState(false);
+  const [resultName,setResultName]=useState("");
+  const personaChosen=useRef(false);
+  const personaRef=useRef<PersonaChoice|null>(null);
+  const ctxRef=useRef<{feature:string;featureName:string;context:string}|null>(null);
+  const handoffTaken=useRef(false);
   const [messages,setMessages]=useState([]);
   const [input,setInput]=useState("");
   const [loading,setLoading]=useState(false);
@@ -1110,9 +1127,22 @@ export default function InnerVoiceChat(){
   const [sidebarOpen,setSidebarOpen]=useState(false);
   const [suggestionPulse,setSuggestionPulse]=useState(false);
   const [inputLanguage,setInputLanguage]=useState<InputLanguageChoice>("auto");
-  const [replyLanguage,setReplyLanguage]=useState<ReplyLanguageChoice>("same");
+  const [replyLanguage,setReplyLanguage]=useState<ReplyLanguageChoice>("hinglish"); // Hinglish by default; the user can change it
   const [savedMantras,setSavedMantras]=useState(()=>{try{return JSON.parse(localStorage.getItem("iv_saved_mantras")||"[]");}catch{return [];}});
   const [chatSessions,setChatSessions]=useState(()=>{try{return JSON.parse(localStorage.getItem("iv_chat_sessions")||"[]");}catch{return [];}});
+  const conversationIdRef=useRef(null); // the saved conversation this chat belongs to (set by the server)
+  // "Continue this conversation" from the dashboard opens /inner-voice/chat?conversation=<id>: load the saved messages (the server only returns the signed-in user's own).
+  useEffect(()=>{
+    const id=new URLSearchParams(window.location.search).get("conversation");
+    if(!id)return;
+    let cancelled=false;
+    authRequest<any>(`/me/conversations/${encodeURIComponent(id)}`).then((c:any)=>{
+      if(cancelled||c?.feature!=="ai-guru"||!Array.isArray(c.messages))return;
+      conversationIdRef.current=c.id;
+      setMessages(c.messages.map((m:any)=>m.role==="user"?{role:"user",content:m.content}:{role:"guru",content:{type:"gathering",message:m.content}}));
+    }).catch(()=>{/* not found or not yours: start a normal new chat */});
+    return()=>{cancelled=true;};
+  },[]);
   const bottomRef=useRef(null),textareaRef=useRef(null),recognitionRef=useRef(null),mainScrollRef=useRef(null);
   const profile=(()=>{try{return JSON.parse(localStorage.getItem("iv_profile")||"null");}catch{return null;}})();
 
@@ -1133,7 +1163,8 @@ export default function InnerVoiceChat(){
     return()=>document.removeEventListener("visibilitychange",onVis);
   },[]);
 
-  useEffect(()=>{const s=document.createElement("style");s.textContent=CSS;document.head.appendChild(s);return()=>document.head.removeChild(s);},[]);
+  // useEffect(()=>{const s=document.createElement("style");s.textContent=CSS;document.head.appendChild(s);return()=>document.head.removeChild(s);},[]);
+  useEffect(()=>{const s=document.createElement("style");s.textContent=CSS;document.head.appendChild(s);return()=>{document.head.removeChild(s);};},[]);
   useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth",block:"end"});},[messages,loading]);
 
   useEffect(()=>{
@@ -1163,7 +1194,8 @@ export default function InnerVoiceChat(){
   const buildHistory=()=>messages.filter(m=>!m.error).map(m=>({role:(m.role==="user"?"user":"assistant") as "user"|"assistant",content:typeof m.content==="string"?m.content:(m.content?.message||"[response]")}));
 
   const send=async(text,{retry=false}={})=>{
-    const msg=text.trim().slice(0,MAX_GURU_INPUT_CHARS);if(!msg||loading||limitReached)return;
+    const msg=text.trim().slice(0,MAX_GURU_INPUT_CHARS);if(!msg||loading||searching||limitReached)return;
+    if(!requireSignIn(()=>{void send(text,{retry});}))return; // signed out: ask first, the typed message stays in the box
     setLoading(true);
     // Server-side gate: starts today's 5-minute window on the first message,
     // rejects once it has run out. Nothing is added to the thread if rejected.
@@ -1180,12 +1212,31 @@ export default function InnerVoiceChat(){
     // On retry the user's message is already shown; only drop the failed reply.
     if(!retry)setMessages(prev=>[...prev,{role:"user",content:msg}]);
     try{
+      // First message of a conversation: choose a guidance profile. Follow-ups keep it, with no new search.
+      let choice=personaRef.current;
+      let revealPersona=Promise.resolve();
+      if(!personaChosen.current){
+        personaChosen.current=true;
+        choice=assignPersona(ASTROLOGERS,msg,ctxRef.current?.feature,lastPersonaId());
+        personaRef.current=choice;
+        if(choice){
+          rememberPersona(choice.profile.id);
+          setSearching(true);
+          revealPersona=new Promise<void>(r=>setTimeout(r,1600)).then(()=>{setPersona(choice);setSearching(false);});
+        }
+      }
+      const ctx=ctxRef.current;
+      const extraSystem=[
+        personaInstruction(choice),
+        ctx&&ctx.context?`The user is asking about their own "${ctx.featureName}" result. Use these facts about it and do not invent others: ${ctx.context}`:"",
+      ].filter(Boolean).join("\n\n");
       // History excludes the failed-reply bubbles and the message being sent now.
       const history=buildHistory().filter(h=>h.content);
       const baseHistory=retry?history.slice(0,-1):history;
       const detected=detectLanguage(msg);
       const languageDirective=buildLanguageDirective(inputLanguage,replyLanguage,detected);
-      const data=await askGuru(baseHistory,msg,languageDirective);
+      const [data]=await Promise.all([askGuru(baseHistory,msg,languageDirective,conversationIdRef.current||undefined,extraSystem),revealPersona]);
+      if(data.conversationId)conversationIdRef.current=data.conversationId;
       setMessages(prev=>[...prev.filter(m=>!m.error),{role:"guru",content:data}]);
       if(data.progress)setProgress(data.progress);
       if(data.readyForDiagnosis)setReadyForDiagnosis(true);
@@ -1193,8 +1244,20 @@ export default function InnerVoiceChat(){
       console.error("[AI Guru] Consultation request failed:",e);
       const errMsg=e instanceof GuruChatError?e.message:"Something went wrong. Please try again.";
       setMessages(prev=>[...prev.filter(m=>!m.error),{role:"guru",error:true,retryText:msg,content:{type:"gathering",message:errMsg}}]);
-    }finally{setLoading(false);}
+    }finally{setLoading(false);setSearching(false);setPersona(personaRef.current);}
   };
+
+  // Arriving from "Need More Guidance?" on a result page: take the question and result summary once and send it.
+  useEffect(()=>{
+    if(handoffTaken.current)return;
+    handoffTaken.current=true;
+    const h=takeHandoff();
+    if(!h)return;
+    ctxRef.current={feature:h.feature,featureName:h.featureName,context:h.context};
+    setResultName(h.featureName);
+    void send(h.question);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]);
 
   const generateReport=async()=>{
     setGeneratingReport(true);setActiveTab("report");
@@ -1232,7 +1295,8 @@ export default function InnerVoiceChat(){
   };
 
   const toggleVoice=()=>{
-    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    const speechWindow=window as unknown as {SpeechRecognition?:unknown;webkitSpeechRecognition?:unknown};
+    const SR=(speechWindow.SpeechRecognition||speechWindow.webkitSpeechRecognition) as (new()=>any)|undefined; // eslint-disable-line @typescript-eslint/no-explicit-any
     if(!SR){alert("Voice input requires Chrome or Edge browser.");return;}
     if(listening){recognitionRef.current?.stop();setListening(false);return;}
     const rec=new SR();
@@ -1251,6 +1315,10 @@ export default function InnerVoiceChat(){
   // triggers this from the sidebar while on Voice/Report, we don't yank
   // them into Consultation Mode.
   const newConversation=()=>{
+    // A new conversation gets a new guidance profile, no result context and a new saved-conversation id.
+    personaChosen.current=false;personaRef.current=null;ctxRef.current=null;
+    setPersona(null);setSearching(false);setResultName("");
+    conversationIdRef.current=null;
     setMessages([]);
     setInput("");
     setProgress(0);
@@ -1259,7 +1327,7 @@ export default function InnerVoiceChat(){
     setSuggestionPulse(false);
     setSidebarOpen(false);
     setInputLanguage("auto");
-    setReplyLanguage("same");
+    setReplyLanguage("hinglish");
     if(textareaRef.current)textareaRef.current.style.height="24px";
     requestAnimationFrame(()=>{
       mainScrollRef.current?.scrollTo({top:0,behavior:"smooth"});
@@ -1292,12 +1360,13 @@ export default function InnerVoiceChat(){
         activePanel={activePanel}
         onTogglePanel={togglePanel}
         profile={profile}
+        persona={persona?.profile??null}
         open={sidebarOpen}
         onClose={()=>setSidebarOpen(false)}
       />
 
       <main className="relative z-10 flex min-w-0 flex-1 flex-col">
-        <GuruTopHeader onOpenSidebar={()=>setSidebarOpen(true)} />
+        <GuruTopHeader onOpenSidebar={()=>setSidebarOpen(true)} persona={persona?.profile??null} />
         <GuruTabs
           activeTab={activeTab as GuruTab}
           onChange={handleTabChange}
@@ -1326,7 +1395,6 @@ export default function InnerVoiceChat(){
                           exit={{opacity:0,y:-20,scale:0.98}}
                           transition={{duration:0.3,ease:"easeInOut"}}
                         >
-                          <TrustStats/>
                           <HeroWelcome name={profile?.name||"Seeker"} />
                         </motion.div>
                         <CategoryCards suggestions={SUGGESTIONS} onSelect={handleSuggestionSelect} />
@@ -1346,6 +1414,7 @@ export default function InnerVoiceChat(){
                         >
                           <SuggestedQuestions onSelectSuggestion={handleSuggestionSelect} />
                         </motion.div>
+                        <FeatureFaq feature="guru" className="px-0 pb-4 pt-0" />
                       </motion.div>
                     ) : (
                       <motion.div
@@ -1355,7 +1424,9 @@ export default function InnerVoiceChat(){
                         exit={{opacity:0}}
                         transition={{duration:0.3,ease:"easeInOut"}}
                       >
-                        <GuruConversation ref={bottomRef} messages={messages} loading={loading} onRetry={(t)=>send(t,{retry:true})} />
+                        {resultName&&<p className="mb-3 text-center text-xs text-muted-foreground" data-testid="result-context-note">Using your {resultName} result for this conversation.</p>}
+                        <GuruConversation ref={bottomRef} messages={messages} loading={loading&&!searching} onRetry={(t)=>send(t,{retry:true})} />
+                        {searching&&<div className="mt-4"><SearchingGuru/></div>}
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -1409,7 +1480,7 @@ export default function InnerVoiceChat(){
             {generatingReport?(
               <FullScreenLoader title="Preparing Your Diagnosis" description="Reviewing your conversation and preparing remedies…" steps={["Reviewing your conversation", "Finding the karmic pattern", "Preparing your report"]} testId="guru-loader" />
             ):report?(
-              <DiagnosisReport report={report} onSaveMantra={saveMantra} onBookPuja={()=>alert("Puja booking coming soon!")} userName={profile?.name} onAskFollowUp={handleFollowUp} onDownload={handleDownloadPDF} downloading={downloading}/>
+              <DiagnosisReport report={report} onSaveMantra={saveMantra} userName={profile?.name} onAskFollowUp={handleFollowUp} onDownload={handleDownloadPDF} downloading={downloading}/>
             ):(
               <div className="ivc-report-empty">
                 <div className="ivc-report-empty-icon" style={{fontSize:72,marginBottom:20,filter:"drop-shadow(0 0 30px rgba(89,34,9,.4))"}}>🕉</div>

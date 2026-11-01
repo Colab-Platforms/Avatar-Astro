@@ -1,4 +1,5 @@
-import EducationSection, { EducationBlock, EducationFaq } from "@/components/EducationSection";
+import EducationSection, { EducationBlock } from "@/components/EducationSection";
+import { FEATURE_FAQS } from "@/data/featureFaqs";
 
 const blocks: EducationBlock[] = [
   {
@@ -66,31 +67,7 @@ const blocks: EducationBlock[] = [
   },
 ];
 
-const faqs: EducationFaq[] = [
-  {
-    question: "Why is there no compatibility percentage?",
-    answer:
-      "Because no accepted method produces a meaningful percentage from two Sun signs. Showing a number would suggest a precision the method does not have.",
-  },
-  {
-    question: "Is this the Vedic Guna Milan (Ashtakoota) match?",
-    answer:
-      "No. Guna Milan uses the Moon sign and nakshatra from a calculated chart and gives a score out of 36. This Seva compares Western Sun signs only and does not calculate either.",
-  },
-  {
-    question: "Do the names I enter matter?",
-    answer: "No. Names are only displayed. The result depends only on the two dates of birth.",
-  },
-  {
-    question: "Can two people with a \"contrasting\" pairing be happy together?",
-    answer:
-      "Of course. The wording describes traditional symbolism, not what will happen. Many people value the differences between them.",
-  },
-  {
-    question: "Can I use it for free?",
-    answer: "Yes. Jodi Jyotish is one of MyBhagya Astro's free Seva and needs no sign-in.",
-  },
-];
+const faqs = FEATURE_FAQS.compatibility;
 
 const DISCLAIMER =
   "Compatibility readings are offered for personal interest, cultural exploration and reflection. They describe traditional symbolism, are not scientifically proven, and are not predictions or relationship advice.";

@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react';
+import AskDivyaSection from "@/features/guru/AskDivyaSection";
 import FullScreenLoader from "@/components/Loader/FullScreenLoader";
 import { FEATURES } from "@/data/featureCatalog";
 import { useFeatureTitle } from "@/hooks/useFeatureTitle";
 import { motion, AnimatePresence } from 'framer-motion';
-import { authedFetch, SignInRequiredError } from '@/lib/authedFetch';
+import { authedFetch, requireSignIn, SignInRequiredError } from '@/lib/authedFetch';
 import gsap from 'gsap';
 import { RotateCcw, Sprout, Sparkles, EyeOff, Star, Zap, Flame } from 'lucide-react';
 import TarotArt from '../components/tarot/TarotArt';
@@ -1381,6 +1382,14 @@ const InsightGridCard: React.FC<{ icon: React.ReactNode; title: string; value?: 
   );
 };
 
+const tarotContext = (cards: TarotCard[], positions: string[], reading: AIReading, question?: string): string =>
+  [
+    question ? `Question: ${question}` : "",
+    `Cards: ${cards.map((c, i) => `${positions[i] ?? i + 1}: ${c.name}`).join("; ")}.`,
+    reading.overallMessage ? `Overall message: ${reading.overallMessage}` : "",
+    reading.recommendedAction ? `Suggested action: ${reading.recommendedAction}` : "",
+  ].filter(Boolean).join("\n");
+
 const TimelineReadingDisplay = ({
   cards, positions, question, reading, onReset,
 }: { cards: TarotCard[]; positions: string[]; question: string; reading: AIReading; onReset: () => void }) => {
@@ -1487,6 +1496,8 @@ const TimelineReadingDisplay = ({
         </div>
       )}
 
+      <AskDivyaSection feature="tarot" context={tarotContext(cards, positions, reading, question)} />
+      <AskDivyaSection feature="tarot" context={tarotContext(cards, positions, reading)} />
       <ReadingNote />
       <ResetButton onReset={onReset} />
 
@@ -1783,8 +1794,13 @@ const TarotExperience = () => {
   const abortRef = useRef<AbortController | null>(null);
   useEffect(() => () => abortRef.current?.abort(), []);
 
-  const fetchReading = useCallback(async (cards: TarotCard[], modeArg: Mode, q: string) => {
+  const fetchReading = useCallback(async (cards: TarotCard[], modeArg: Mode, q: string): Promise<void> => {
     if (isLoadingRef.current) return; // ignore duplicate submissions
+    if (!requireSignIn(() => { void fetchReading(cards, modeArg, q); })) {
+      // Signed out: the sign-in dialog is open over the page. If it is closed without signing in, the chosen cards stay and this message offers a retry.
+      setReadingError('Please sign in to get your reading. Your cards are still here.');
+      return;
+    }
     const controller = new AbortController();
     abortRef.current = controller;
     isLoadingRef.current = true;

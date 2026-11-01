@@ -189,7 +189,7 @@ router.post("/reading", async (req: Request, res: Response) => {
       body: JSON.stringify({
         model: MODEL,
         max_tokens: 2000,
-        messages: [{ role: "user", content: buildPrompt(mode, names, category) }],
+        messages: [{ role: "user", content: buildPrompt(mode, names, category) + "\n\nLanguage: write every human-readable text value in natural Hinglish (Roman-script Hindi mixed with English, the way people actually speak). Keep JSON keys, fixed values and any Sanskrit verses or mantras exactly as specified. Only if the person wrote in Devanagari Hindi, answer in Hindi instead." }],
       }),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });

@@ -9,6 +9,8 @@ import { EVENT_TYPES, EVENT_LABELS, PROFILE_FEATURE } from "@/config/events.js";
 import { recordEvent } from "@/utils/usage.js";
 import { noStore } from "@/middleware/noStore.js";
 import { createRateLimiter } from "@/utils/rateLimit.js";
+import { createLibraryRouter, clearPersonalActivity } from "@/modules/library/library.route.js";
+import { logActivity } from "@/modules/library/library.service.js";
 
 const DAY_MS = 86_400_000;
 
@@ -89,6 +91,7 @@ export function createMeRouter(): Router {
       if (Object.keys(data).length === 0) throw new ApiError("No editable fields supplied.", STATUS_CODES.BAD_REQUEST);
       if ("firstName" in data && !data.firstName) throw new ApiError("First name cannot be empty.", STATUS_CODES.BAD_REQUEST);
       const updated = await prisma.user.update({ where: { id: req.user!.id }, data, select: PROFILE_SELECT });
+      void logActivity({ userId: req.user!.id, kind: "profile.updated", title: "Profile details" });
       recordEvent({ userId: req.user!.id, eventType: EVENT_TYPES.profileUpdated, feature: PROFILE_FEATURE, status: "success", metadata: { fields: Object.keys(data), source: "profile_page" } });
       sendResponse(res, true, updated, "Profile updated");
     }),
@@ -101,6 +104,7 @@ export function createMeRouter(): Router {
       const feature = typeof req.body?.feature === "string" ? req.body.feature : "";
       if (!FEATURE_KEYS.has(feature) || req.body?.event !== "opened") throw new ApiError("Unknown feature or event.", STATUS_CODES.BAD_REQUEST);
       recordEvent({ userId: req.user!.id, eventType: EVENT_TYPES.featureOpened, feature, status: "success" });
+      void logActivity({ userId: req.user!.id, kind: "feature.opened", feature });
       sendResponse(res, true, { recorded: true }, "Recorded", STATUS_CODES.CREATED);
     }),
   );
@@ -109,10 +113,16 @@ export function createMeRouter(): Router {
   router.delete(
     "/activity",
     wrap(async (req, res) => {
+      // AI cost rows are the platform's spend records (provider, model, tokens, cost; no content). They are kept for the admin reports but
+      // de-identified, so clearing history removes the link to this person without erasing what the AI cost.
+      await prisma.usageEvent.updateMany({ where: { userId: req.user!.id, aiCalls: { gt: 0 } }, data: { userId: null } });
       const result = await prisma.usageEvent.deleteMany({ where: { userId: req.user!.id } });
-      sendResponse(res, true, { deleted: result.count }, "Activity history cleared");
+      const personal = await clearPersonalActivity(req.user!.id);
+      sendResponse(res, true, { deleted: result.count + personal }, "Activity history cleared");
     }),
   );
+
+  router.use(createLibraryRouter());
 
   return router;
 }

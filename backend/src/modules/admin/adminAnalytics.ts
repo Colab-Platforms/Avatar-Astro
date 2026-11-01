@@ -5,6 +5,7 @@ import { FEATURES, FEATURE_KEYS } from "@/config/features.js";
 import { ALL_EVENT_TYPES, EVENT_LABELS, EVENT_TYPES, AUTH_FEATURE, PROFILE_FEATURE } from "@/config/events.js";
 import { parsePage, parseRange } from "./adminPanel.validation.js";
 import { wrap } from "./adminPanel.route.js";
+import { kindWhere } from "./adminAccounts.js";
 
 const DAY_MS = 86_400_000;
 const num = (v: bigint | number | null | undefined) => Number(v ?? 0);
@@ -106,12 +107,13 @@ export function createAnalyticsRouter(): Router {
         totalUsers, newUsers, signupsDaily, regByProvider, activeRow, returningRow, mauRow, dauRows, mauMonthly,
         requestRows, byFeatureRows, loginMethods, trendRows, firstEvent,
       ] = await Promise.all([
-        prisma.user.count({ where: { isDeleted: false } }),
-        prisma.user.count({ where: { isDeleted: false, createdAt: { gte: from, lt: to } } }),
+        prisma.user.count({ where: kindWhere("customer") }),
+        prisma.user.count({ where: { ...kindWhere("customer"), createdAt: { gte: from, lt: to } } }),
         prisma.$queryRaw<{ day: Date; provider: string; total: bigint }[]>`
           SELECT date_trunc('day', created_at) AS day, auth_provider::text AS provider, COUNT(*) AS total
-          FROM users WHERE is_deleted = false AND created_at >= ${from} AND created_at < ${to} GROUP BY 1, 2 ORDER BY 1`,
-        prisma.user.groupBy({ by: ["authProvider"], where: { isDeleted: false }, _count: { _all: true } }),
+          FROM users WHERE is_deleted = false AND created_at >= ${from} AND created_at < ${to}
+            AND NOT EXISTS (SELECT 1 FROM user_role_mapping m JOIN roles r ON r.id = m.role_id WHERE m.user_id = users.id AND r.name IN ('ADMIN','SUPERADMIN','SUPER_ADMIN')) GROUP BY 1, 2 ORDER BY 1`,
+        prisma.user.groupBy({ by: ["authProvider"], where: kindWhere("customer"), _count: { _all: true } }),
         prisma.$queryRaw<{ n: bigint }[]>`
           SELECT COUNT(DISTINCT user_id) AS n FROM usage_events WHERE user_id IS NOT NULL AND status = 'success' AND created_at >= ${from} AND created_at < ${to}`,
         prisma.$queryRaw<{ n: bigint }[]>`

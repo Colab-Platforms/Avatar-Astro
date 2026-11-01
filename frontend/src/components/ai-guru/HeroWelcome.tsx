@@ -58,7 +58,7 @@ const HeroWelcome = ({ name }: HeroWelcomeProps) => (
     >
       Whatever trouble weighs on your soul – speak openly.
       <br className="hidden sm:block" />
-      Pandit Ji will understand your situation fully before prescribing the right path.
+      Divya Margdarshak will understand your situation before suggesting a path forward.
     </motion.p>
   </div>
 );

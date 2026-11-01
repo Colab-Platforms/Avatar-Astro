@@ -1,4 +1,5 @@
-import EducationSection, { EducationBlock, EducationFaq } from "@/components/EducationSection";
+import EducationSection, { EducationBlock } from "@/components/EducationSection";
+import { FEATURE_FAQS } from "@/data/featureFaqs";
 import { SQUARE_PALM_MIN, LONG_FINGERS_MIN } from "@/lib/palmAnalysis/lineEstimator";
 
 const blocks: EducationBlock[] = [
@@ -66,32 +67,7 @@ const blocks: EducationBlock[] = [
   },
 ];
 
-const faqs: EducationFaq[] = [
-  {
-    question: "Is my photo uploaded or stored?",
-    answer:
-      "No. Your photo is processed in your browser and is not sent to MyBhagya Astro's servers. The first scan downloads the hand-detection model files from public content networks (jsDelivr and Google), so you need an internet connection for that step.",
-  },
-  {
-    question: "Does it read my palm lines?",
-    answer:
-      "No. It detects your hand and measures its proportions to classify your hand shape. It does not detect or interpret the lines or marks on your palm.",
-  },
-  {
-    question: "Why was my photo rejected?",
-    answer:
-      "The Seva needs to see a clear, well-lit palm that fills enough of the frame. Try a sharper photo with your whole hand visible and fingers slightly spread. Files that are not JPG, PNG or WebP images, or are larger than 10 MB, are not accepted.",
-  },
-  {
-    question: "Why did another photo give a different hand shape?",
-    answer:
-      "The shape comes from measured proportions, and the angle of the camera or how far your fingers are spread can change them slightly. If your hand sits near a cut-off, the result can switch.",
-  },
-  {
-    question: "Can I use Palm Reading for free?",
-    answer: "Yes. Hasta Rekha is one of MyBhagya Astro's free Seva and needs no sign-in.",
-  },
-];
+const faqs = FEATURE_FAQS.palm;
 
 const DISCLAIMER =
   "Palm reading is offered for personal interest, cultural exploration and reflection. It is a traditional practice that is not scientifically proven, and the result is not a prediction, a medical assessment or professional advice.";

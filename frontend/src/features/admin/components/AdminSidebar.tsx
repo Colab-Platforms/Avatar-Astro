@@ -1,7 +1,7 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, Activity, Sparkles, MessageCircleHeart, Flame, Store, FileText, CreditCard,
-  Plug, BarChart3, ScrollText, LogOut, X, Lock,
+  Plug, BarChart3, ScrollText, LogOut, X, Lock, ShieldCheck, Library, History,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -15,10 +15,20 @@ import {
 
 interface NavDef { to: string; label: string; icon: typeof Users; end?: boolean; mainOnly?: boolean }
 
-const NAV: NavDef[] = [
-  { to: "/admin", label: "Overview", icon: LayoutDashboard, end: true, mainOnly: true },
-  { to: "/admin/users", label: "Users", icon: Users, mainOnly: true },
+const OVERVIEW: NavDef[] = [{ to: "/admin", label: "Overview", icon: LayoutDashboard, end: true, mainOnly: true }];
+
+const CUSTOMER_MGMT: NavDef[] = [
+  { to: "/admin/customers", label: "Customers", icon: Users, mainOnly: true },
   { to: "/admin/activity", label: "Customer activity", icon: Activity, mainOnly: true },
+  { to: "/admin/customer-library", label: "Customer readings / library", icon: Library, mainOnly: true },
+];
+
+const ADMINISTRATION: NavDef[] = [
+  { to: "/admin/admins", label: "Admin management", icon: ShieldCheck, mainOnly: true },
+  { to: "/admin/settings?scope=admin", label: "Admin activity / audit", icon: History, mainOnly: true },
+];
+
+const NAV: NavDef[] = [
   { to: "/admin/reports", label: "Reports", icon: BarChart3, mainOnly: true },
   { to: "/admin/tools", label: "Astrology tools", icon: Sparkles, mainOnly: true },
   { to: "/admin/inner-voice", label: "Inner Voice", icon: MessageCircleHeart, mainOnly: true },
@@ -52,6 +62,7 @@ export function AdminSidebar({ mobileOpen = false, onMobileClose }: AdminSidebar
   const user = useAuthStore((s) => s.user);
   const logoutMutation = useLogoutMutation();
   const navigate = useNavigate();
+  const loc = useLocation();
   const { isMain, isLoading } = useMainAdmin();
 
   const displayName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.email || "Admin";
@@ -71,7 +82,7 @@ export function AdminSidebar({ mobileOpen = false, onMobileClose }: AdminSidebar
       );
     }
     return (
-      <NavLink key={to} to={to} end={end} onClick={onMobileClose} className={linkClass}>
+      <NavLink key={to} to={to} end={end || to.includes("?")} onClick={onMobileClose} className={({ isActive }) => linkClass({ isActive: to.includes("?") ? loc.pathname + loc.search === to : isActive })}>
         <Icon className="h-4 w-4 shrink-0" />
         <span>{label}</span>
       </NavLink>
@@ -93,6 +104,12 @@ export function AdminSidebar({ mobileOpen = false, onMobileClose }: AdminSidebar
       </div>
 
       <nav aria-label="Admin sections" className="flex-1 space-y-0.5 overflow-y-auto px-3 py-3">
+        {OVERVIEW.map(renderItem)}
+        <p className="px-3 pb-1 pt-4 text-xs font-medium text-[#9A9086]">Customer management</p>
+        {CUSTOMER_MGMT.map(renderItem)}
+        <p className="px-3 pb-1 pt-4 text-xs font-medium text-[#9A9086]">Administration</p>
+        {ADMINISTRATION.map(renderItem)}
+        <p className="px-3 pb-1 pt-4 text-xs font-medium text-[#9A9086]">Platform</p>
         {NAV.map(renderItem)}
         <p className="px-3 pb-1 pt-4 text-xs font-medium text-[#9A9086]">Catalogue editors</p>
         {CATALOGUE.map(renderItem)}

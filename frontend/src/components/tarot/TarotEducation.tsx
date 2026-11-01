@@ -1,4 +1,5 @@
-import EducationSection, { EducationBlock, EducationFaq } from "@/components/EducationSection";
+import EducationSection, { EducationBlock } from "@/components/EducationSection";
+import { FEATURE_FAQS } from "@/data/featureFaqs";
 
 const blocks: EducationBlock[] = [
   {
@@ -27,20 +28,7 @@ const blocks: EducationBlock[] = [
   },
 ];
 
-const faqs: EducationFaq[] = [
-  {
-    question: "Do I need to enter personal details?",
-    answer: "No. You only choose a life area (for Life Timeline) and your cards. No name, birth details or account are needed.",
-  },
-  {
-    question: "Is my reading saved?",
-    answer: "No. It is shown on screen only. If you leave the page or begin a new reading, the current result is gone.",
-  },
-  {
-    question: "Why did the same cards give a different reading?",
-    answer: "The card meanings are fixed, but the interpretation is written by an AI model, so its wording can vary. The cards you drew never change.",
-  },
-];
+const faqs = FEATURE_FAQS.tarot;
 
 const DISCLAIMER =
   "Tarot Drishti is offered for personal interest and reflection. Readings are AI-written interpretations, not predictions, and not medical, legal, financial or relationship advice.";

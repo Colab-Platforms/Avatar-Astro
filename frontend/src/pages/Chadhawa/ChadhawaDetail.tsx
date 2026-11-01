@@ -446,19 +446,6 @@ const ChadhawaDetail = () => {
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      aria-disabled="true"
-                      title="Online offerings are not available yet"
-                      disabled
-                      className={`btn-cosmic w-full py-3.5 rounded-xl text-sm tracking-wider font-semibold transition-opacity ${totalItems === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
-                    >
-                      🙏 Proceed to Offer
-                    </button>
-
-                    <p className="text-[11px] text-muted-foreground text-center mt-3 leading-relaxed">
-                      Online offerings are not available yet. Please check back soon.
-                    </p>
                   </div>
                 </div>
               </div>
@@ -774,27 +761,6 @@ const ChadhawaDetail = () => {
             ))}
           </div>
         </section>
-      </div>
-
-      {/* ── MOBILE: Fixed bottom bar ──────────────────────────────────────── */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-[#E8DED0] px-4 py-3"
-        style={{ background: 'rgba(248,244,236,0.96)', backdropFilter: 'blur(12px)' }}>
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-[10px] uppercase tracking-wider" style={{ color: '#9C7B62' }}>Total</p>
-            <p className="text-base font-bold text-primary">₹{totalAmt > 0 ? totalAmt : temple.priceFrom}</p>
-          </div>
-          <button
-            type="button"
-            disabled
-            aria-disabled="true"
-            title="Online offerings are not available yet"
-            className={`btn-cosmic flex-1 py-3 rounded-xl text-sm tracking-wider font-semibold flex items-center justify-center gap-2 cursor-not-allowed opacity-60 ${totalItems === 0 ? 'opacity-70' : ''}`}
-          >
-            <ShoppingBag className="w-4 h-4" />
-            {totalItems > 0 ? `Proceed (${totalItems} items)` : 'Participate Now'}
-          </button>
-        </div>
       </div>
 
       {/* Spin animation keyframes */}

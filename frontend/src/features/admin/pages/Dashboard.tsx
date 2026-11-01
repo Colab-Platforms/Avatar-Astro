@@ -36,8 +36,8 @@ export default function AdminOverviewPage() {
             return (
               <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                  <Stat label="Registered users" value={o.users.total} hint={`${o.users.active} active · ${o.users.inactive} deactivated · ${o.users.emailVerified} email-verified`} to="/admin/users" />
-                  <Stat label={`New users (${o.windowDays} days)`} value={o.users.newInWindow} hint={`${o.users.newLast7Days} in the last 7 days`} to={`/admin/users?registeredFrom=${daysAgo(o.windowDays - 1)}&registeredTo=${isoDay(new Date())}`} />
+                  <Stat label="Registered users" value={o.users.total} hint={`${o.users.active} active · ${o.users.inactive} deactivated · ${o.users.emailVerified} email-verified`} to="/admin/customers" />
+                  <Stat label={`New users (${o.windowDays} days)`} value={o.users.newInWindow} hint={`${o.users.newLast7Days} in the last 7 days`} to={`/admin/customers?registeredFrom=${daysAgo(o.windowDays - 1)}&registeredTo=${isoDay(new Date())}`} />
                   <Stat label={`Feature requests (${o.windowDays}d)`} value={o.usage.totalRequests} hint={o.trackingSince ? `Tracked since ${fmtDate(o.trackingSince)}` : "Tracking starts with the first request"} to={`/admin/activity?eventType=feature.request&${range}`} />
                   <Stat label="Server failures" value={o.usage.totalErrors} hint={`${fmtPct(o.usage.errorRate)} of requests`} tone={o.usage.totalErrors ? "bad" : "default"} to={`/admin/activity?eventType=feature.request&status=error&${range}`} />
                 </div>
@@ -77,14 +77,14 @@ export default function AdminOverviewPage() {
                       </ul>
                     )}
                   </Card>
-                  <Card title="Recent sign-ups" actions={<Link to="/admin/users" className="text-sm font-medium text-[#803003] hover:underline">All users</Link>}>
+                  <Card title="Recent sign-ups" actions={<Link to="/admin/customers" className="text-sm font-medium text-[#803003] hover:underline">All users</Link>}>
                     {o.recentSignups.length === 0 ? (
                       <Empty title="No users yet" />
                     ) : (
                       <ul className="divide-y divide-[#EEE9E2] text-sm">
                         {o.recentSignups.map((u) => (
                           <li key={u.id}>
-                            <Link className="flex items-center justify-between gap-3 py-2 hover:text-[#803003]" to={`/admin/users?user=${u.id}`}>
+                            <Link className="flex items-center justify-between gap-3 py-2 hover:text-[#803003]" to={`/admin/customers?user=${u.id}`}>
                               <span className="min-w-0 truncate">{personName(u)}</span>
                               <span className="shrink-0 text-xs text-[#6B6259]">{fmtDate(u.createdAt)}</span>
                             </Link>

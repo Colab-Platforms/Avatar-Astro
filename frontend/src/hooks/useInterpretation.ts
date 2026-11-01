@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { apiService, API_BASE_URL } from '@/lib/api';
 import { authedFetch, SignInRequiredError } from '@/lib/authedFetch';
+import { useAuthStore } from '@/store/authStore';
 
 interface HumanReadableInterpretation {
   summary: string;
@@ -67,7 +68,9 @@ export function useAIDailyHoroscope(sign: string) {
     setState({ data: null, loading: true, error: null });
     try {
       // window.fetch on purpose: the local callback below is also named `fetch` and would otherwise call itself.
-      const response = await window.fetch(`${API_BASE_URL}/interpretation/horoscope/${sign}`);
+      // The token is sent when signed in so the server can save the horoscope to the user's library; anonymous visitors send nothing.
+      const token = useAuthStore.getState().accessToken;
+      const response = await window.fetch(`${API_BASE_URL}/interpretation/horoscope/${sign}`, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined);
 
       if (!response.ok) {
         throw new Error('Failed to generate horoscope');

@@ -1,4 +1,6 @@
 import { useState } from "react";
+import AskDivyaSection from "@/features/guru/AskDivyaSection";
+import FeatureFaq from "@/components/FeatureFaq";
 import FullScreenLoader from "@/components/Loader/FullScreenLoader";
 import { FEATURES } from "@/data/featureCatalog";
 import { useFeatureTitle } from "@/hooks/useFeatureTitle";
@@ -6,7 +8,7 @@ import { Link } from "react-router-dom";
 import { Compass, RotateCcw, Pencil, Loader2 } from "lucide-react";
 import FeatureIntro from "@/components/FeatureIntro";
 import { API_BASE_URL } from "@/lib/api";
-import { authedFetch, SignInRequiredError } from "@/lib/authedFetch";
+import { authedFetch, requireSignIn, SignInRequiredError } from "@/lib/authedFetch";
 
 const FOCUS_OPTIONS = [
   { value: "general", label: "General life direction" },
@@ -60,6 +62,7 @@ export default function FutureLifePath() {
       setError("Please enter a valid date of birth.");
       return;
     }
+    if (!requireSignIn(() => { void generate(); })) return; // signed out: ask first, keep the form
     setError("");
     setLoading(true);
     try {
@@ -230,6 +233,8 @@ export default function FutureLifePath() {
               </section>
             )}
 
+            <AskDivyaSection feature="futurePath" context={SECTIONS.map(({ key, title }) => (result[key] ? `${title}: ${result[key] as string}` : "")).filter(Boolean).join("\n")} />
+
             {!!result.nextSteps?.length && (
               <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 sm:p-6">
                 <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-[#D9895F]">Practical Next Steps</h2>
@@ -300,6 +305,7 @@ export default function FutureLifePath() {
             )}
           </div>
         )}
+        <FeatureFaq feature="futurePath" />
       </div>
     </div>
   );

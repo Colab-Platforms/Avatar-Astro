@@ -1,4 +1,5 @@
-import EducationSection, { EducationBlock, EducationFaq } from "@/components/EducationSection";
+import EducationSection, { EducationBlock } from "@/components/EducationSection";
+import { FEATURE_FAQS } from "@/data/featureFaqs";
 
 const blocks: EducationBlock[] = [
   {
@@ -52,32 +53,7 @@ const blocks: EducationBlock[] = [
   },
 ];
 
-const faqs: EducationFaq[] = [
-  {
-    question: "Why is my Vedic sign different from my Western sign?",
-    answer:
-      "Western astrology uses the tropical zodiac, fixed to the seasons. Vedic astrology uses the sidereal zodiac, fixed to the stars. They differ by about 24°, so for most birthdays the Vedic sign is the one before the Western sign.",
-  },
-  {
-    question: "Why does it ask for my birthplace?",
-    answer:
-      "The birthplace gives the time zone, which converts your clock time to the real moment of birth, and the latitude and longitude, which fix the Lagna and the local sunrise used in the Panchang.",
-  },
-  {
-    question: "Which ayanamsa and houses are used?",
-    answer:
-      "The Lahiri (Chitrapaksha) ayanamsa and whole-sign houses, the most widely used convention in India. Other schools may differ slightly.",
-  },
-  {
-    question: "Why does a friend with the same sign see the same text?",
-    answer:
-      "The Rashi descriptions are written once for each sign. Only the calculated details, such as your Nakshatra, Lagna and Panchang, are specific to your birth.",
-  },
-  {
-    question: "Can I use it for free?",
-    answer: "Yes. Janma Kundali is one of MyBhagya Astro's free Seva.",
-  },
-];
+const faqs = FEATURE_FAQS.birthChart;
 
 const DISCLAIMER =
   "This profile is offered for personal interest, cultural exploration and reflection. Astrology and numerology are traditional belief systems that are not scientifically proven, and the profile is not a prediction or professional advice.";

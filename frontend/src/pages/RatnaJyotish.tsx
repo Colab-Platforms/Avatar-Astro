@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import FeatureFaq from "@/components/FeatureFaq";
 import { useNavigate } from "react-router-dom";
 import { FEATURES } from "@/data/featureCatalog";
 import RatnaEmblem from "@/features/ratna/RatnaEmblem";
@@ -6,6 +7,7 @@ import RatnaLoader from "@/features/ratna/RatnaLoader";
 import LocationPicker from "@/features/ratna/LocationPicker";
 import { ratnaApi } from "@/features/ratna/api";
 import { MIN_LOADER_MS } from "@/features/ratna/loaderTiming";
+import { requireSignIn } from "@/lib/authedFetch";
 import { clearResult, loadDraft, saveDraft, saveResult } from "@/features/ratna/storage";
 import type { Gender, PlaceResult } from "@/features/ratna/types";
 import "@/features/ratna/ratna.css";
@@ -89,13 +91,15 @@ const RatnaJyotish = () => {
     return e;
   };
 
-  const onSubmit = async (ev: React.FormEvent) => {
+  const onSubmit = async (ev: React.FormEvent): Promise<void> => {
     ev.preventDefault();
     if (inFlight.current) return; // prevent duplicate submissions
     const e = validate();
     setErrors(e);
     setApiError(null);
     if (Object.keys(e).length > 0 || !place) return;
+    // Signed out: ask first. Every field stays as typed and the calculation runs once after sign-in.
+    if (!requireSignIn(() => { void onSubmit({ preventDefault() {} } as React.FormEvent); })) return;
 
     inFlight.current = true;
     clearResult(); // never show an old result for new inputs
@@ -313,6 +317,7 @@ const RatnaJyotish = () => {
           </button>
         </form>
       </section>
+      <FeatureFaq feature="ratna" />
     </>
   );
 };

@@ -436,20 +436,6 @@ const PujaDetail = () => {
               <p className="font-bold text-primary" style={{ fontSize: 32 }}>₹{total}</p>
             </div>
 
-            <button
-              type="button"
-              disabled
-              aria-disabled="true"
-              title="Online booking is not available yet"
-              className="btn-cosmic w-full rounded-2xl font-semibold tracking-wider cursor-not-allowed opacity-60"
-              style={{ fontSize: 18, paddingTop: 20, paddingBottom: 20 }}
-            >
-              🙏 Proceed to Book
-            </button>
-
-            <p className="text-center text-muted-foreground mt-4" style={{ fontSize: 14 }}>
-              Online booking is not available yet. Please check back soon.
-            </p>
           </div>
         </section>
 

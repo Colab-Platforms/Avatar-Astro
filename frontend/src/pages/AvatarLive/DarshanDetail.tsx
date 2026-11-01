@@ -150,24 +150,6 @@ const OfflineDarshanState = ({ temple }: { temple: (typeof liveTemples)[0] }) =>
         </div>
       )}
 
-      {/* No notification service exists yet, so this must not pretend to subscribe anyone. */}
-      <button
-        type="button"
-        disabled
-        aria-disabled="true"
-        title="Live notifications are not available yet"
-        style={{
-          display: 'inline-flex', alignItems: 'center', gap: 8,
-          background: 'rgba(89,34,9,0.08)',
-          color: 'rgba(89,34,9,0.6)', fontSize: 14, fontWeight: 700, letterSpacing: '0.08em',
-          padding: '13px 26px', borderRadius: 12, border: 'none',
-          cursor: 'not-allowed',
-          fontFamily: "'DM Sans', system-ui, sans-serif",
-        }}
-      >
-        <BellRing style={{ width: 15, height: 15 }} />
-        Notifications coming soon
-      </button>
     </div>
   );
 };
@@ -358,86 +340,6 @@ const LiveEmbedPlayer = ({ videoId }: { videoId: string }) => {
 };
 
 // ── Donation card ──────────────────────────────────────────────────────────────
-const DonationCard = ({ templeName }: { templeName: string }) => {
-  const [amount, setAmount] = useState<number | ''>('');
-  const presets = [51, 101, 251, 501, 1001, 2100];
-
-  return (
-    <div style={{
-      background: 'linear-gradient(135deg, rgba(89,34,9,0.08) 0%, rgba(89,34,9,0.05) 100%)',
-      borderRadius: 20, border: '1.5px solid rgba(89,34,9,0.20)',
-      boxShadow: '0 4px 20px rgba(89,34,9,0.2)',
-      overflow: 'hidden',
-    }}>
-      <div style={{ background: '#F5E9D6', padding: '20px 24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 24 }}>🪔</span>
-          <div>
-            <h3 className="font-display uppercase tracking-wide" style={{ fontSize: 17, color: '#301607', fontWeight: 700 }}>
-              Make a Donation
-            </h3>
-            <p style={{ fontSize: 13, color: 'rgba(48,22,7,1)' }}>Contribute to {templeName}</p>
-          </div>
-        </div>
-      </div>
-
-      <div style={{ padding: '20px 24px' }}>
-        {/* Presets */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 16 }}>
-          {presets.map(p => (
-            <button
-              key={p}
-              onClick={() => setAmount(p)}
-              style={{
-                padding: '9px 4px', borderRadius: 10, cursor: 'pointer', fontSize: 14, fontWeight: 600,
-                border: amount === p ? '1.5px solid #592209' : '1.5px solid rgba(89,34,9,0.22)',
-                background: amount === p ? 'rgba(89,34,9,0.08)' : 'transparent',
-                color: amount === p ? '#592209' : '#7A5C42',
-              }}
-            >
-              ₹{p}
-            </button>
-          ))}
-        </div>
-
-        {/* Custom */}
-        <input
-          type="number"
-          value={amount}
-          onChange={e => setAmount(e.target.value ? Number(e.target.value) : '')}
-          placeholder="Enter custom amount (₹)"
-          style={{
-            width: '100%', height: 44, padding: '0 16px', marginBottom: 16,
-            fontSize: 14, color: '#301607', background: '#FFF',
-            border: '1.5px solid rgba(89,34,9,0.22)', borderRadius: 12, outline: 'none',
-          }}
-        />
-
-        <button
-          type="button"
-          disabled
-          aria-disabled="true"
-          title="Online donations are not available yet"
-          style={{
-            width: '100%', padding: '14px', borderRadius: 12, border: 'none', cursor: 'not-allowed',
-            background: 'rgba(89,34,9,0.08)',
-            color: 'rgba(89,34,9,0.6)',
-            fontSize: 15, fontWeight: 700, letterSpacing: '0.08em',
-            fontFamily: "'DM Sans', system-ui, sans-serif", display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            transition: 'all 0.25s',
-          }}
-        >
-          <Heart style={{ width: 16, height: 16 }} />
-          Donations coming soon
-        </button>
-
-        <p style={{ fontSize: 12, color: '#9C7B62', textAlign: 'center', marginTop: 12 }}>
-          Online donations are not available yet.
-        </p>
-      </div>
-    </div>
-  );
-};
 
 // ── Page ───────────────────────────────────────────────────────────────────────
 const DarshanDetail = () => {
@@ -647,7 +549,6 @@ const DarshanDetail = () => {
 
             {/* Right — donation + nearby */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20, position: 'sticky', top: 88 }}>
-              <DonationCard templeName={temple.name} />
 
               {/* Quick info */}
               <div style={{

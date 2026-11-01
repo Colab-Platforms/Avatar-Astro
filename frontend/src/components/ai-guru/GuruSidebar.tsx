@@ -1,5 +1,7 @@
 import { FEATURES } from "@/data/featureCatalog";
 import { Link } from "react-router-dom";
+import { PersonaCard } from "./PersonaCard";
+import type { Astrologer } from "@/data/astrologers";
 import { motion } from "framer-motion";
 import {
   Sparkles,
@@ -10,7 +12,6 @@ import {
   Clock,
   Bookmark,
   Settings,
-  Star,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -47,6 +48,8 @@ interface GuruSidebarProps {
   profile: Profile | null;
   open: boolean;
   onClose: () => void;
+  /** The guidance profile for the current conversation, if one has been assigned. */
+  persona?: Astrologer | null;
 }
 
 const navItems: { key: GuruTab; label: string; icon: typeof Home }[] = [
@@ -66,6 +69,7 @@ const GuruSidebar = ({
   profile,
   open,
   onClose,
+  persona,
 }: GuruSidebarProps) => {
   const content = (
     <div className="flex h-full w-full flex-col bg-[#FBF5EC]/95 backdrop-blur-xl">
@@ -206,40 +210,9 @@ const GuruSidebar = ({
           </div>
         )}
 
-        <button
-          onClick={() => window.alert("Settings coming soon")}
-          className="mt-4 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-muted-foreground transition-colors hover:bg-primary/10"
-        >
-          <Settings className="h-[18px] w-[18px] shrink-0" />
-          <span>Settings</span>
-        </button>
       </nav>
 
-      {/* Pandit profile card */}
-      <div className="mx-3 mb-3 rounded-2xl border border-primary/15 bg-[#FBF5EC] p-3.5">
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#592209]/40 to-[#592209]/20 text-xl ring-1 ring-[#592209]/30">
-            🙏
-          </div>
-          <div className="min-w-0">
-            <div className="truncate text-sm font-semibold text-foreground">Pandit Rameshwar Ji</div>
-            <div className="text-[11px] text-muted-foreground">40+ Years Experience</div>
-          </div>
-        </div>
-        <div className="mt-2.5 flex items-center gap-1.5">
-          {Array.from({ length: 5 }, (_, i) => (
-            <Star key={i} className="h-3 w-3 fill-[#592209] text-[#301607]" />
-          ))}
-          <span className="text-[11px] text-muted-foreground">4.9 (12K+ Reviews)</span>
-        </div>
-        <div className="mt-2.5 flex items-center gap-1.5 text-[11px] font-medium text-[#6B4A37]">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#592209] opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-[#592209]" />
-          </span>
-          Online · Available for Consultation
-        </div>
-      </div>
+      <PersonaCard persona={persona ?? null} />
 
       {/* Bottom user profile */}
       <Link

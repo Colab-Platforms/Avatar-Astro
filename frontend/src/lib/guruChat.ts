@@ -10,6 +10,8 @@ export interface GuruTurn {
   message: string;
   progress?: number;
   readyForDiagnosis?: boolean;
+  /** Set by the server when the exchange was saved: pass it back to keep the same conversation. */
+  conversationId?: string;
 }
 
 export class GuruChatError extends Error {}
@@ -67,6 +69,9 @@ export async function askGuru(
   history: { role: "user" | "assistant"; content: string }[],
   userMessage: string,
   languageDirective: string,
+  conversationId?: string,
+  /** Extra instructions for this conversation: the guidance profile's expertise and the user's result summary. */
+  extraSystem = "",
 ): Promise<GuruTurn> {
   let res: Response;
   try {
@@ -74,9 +79,11 @@ export async function askGuru(
       temperature: 0.7,
       max_tokens: 900,
       json: true,
+      library: { feature: "ai-guru", ...(conversationId ? { conversationId } : {}) },
       messages: [
         { role: "system", content: GURU_CONSULTATION_SYSTEM },
         { role: "system", content: languageDirective },
+        ...(extraSystem ? [{ role: "system" as const, content: extraSystem }] : []),
         ...trimHistory(history),
         { role: "user", content: userMessage.slice(0, MAX_GURU_INPUT_CHARS) },
       ],
@@ -90,5 +97,6 @@ export async function askGuru(
   if (!res.ok || data?.error) throw new GuruChatError("Divya Margdarshak is unavailable right now. Please try again in a moment.");
   const turn = parseGuruReply(data?.choices?.[0]?.message?.content ?? "");
   if (!turn) throw new GuruChatError("Divya Margdarshak's reply came back incomplete. Please try again.");
-  return turn;
+  const savedId = res.headers?.get?.("X-Conversation-Id");
+  return savedId ? { ...turn, conversationId: savedId } : turn;
 }

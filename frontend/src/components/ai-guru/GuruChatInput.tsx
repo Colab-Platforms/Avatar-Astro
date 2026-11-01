@@ -17,13 +17,32 @@ interface GuruChatInputProps {
 }
 
 const GuruChatInput = forwardRef<HTMLTextAreaElement, GuruChatInputProps>(
-  ({ value, onChange, onSend, onKeyDown, listening, onToggleVoice, loading, glowPulse, disabled }, ref) => (
+  (
+    {
+      value,
+      onChange,
+      onSend,
+      onKeyDown,
+      listening,
+      onToggleVoice,
+      loading,
+      glowPulse,
+      disabled,
+    },
+    ref,
+  ) => (
     <>
       <motion.div
         animate={
           glowPulse
-            ? { boxShadow: "0 0 0 3px rgba(89,34,9,0.35)", borderColor: "rgba(89,34,9,0.5)" }
-            : { boxShadow: "0 0 0 0px rgba(89,34,9,0)", borderColor: "rgba(89,34,9,0.2)" }
+            ? {
+                boxShadow: "0 0 0 3px rgba(89,34,9,0.35)",
+                borderColor: "rgba(89,34,9,0.5)",
+              }
+            : {
+                boxShadow: "0 0 0 0px rgba(89,34,9,0)",
+                borderColor: "rgba(89,34,9,0.2)",
+              }
         }
         transition={{ duration: 0.28, ease: "easeInOut" }}
         className={`flex w-full items-center gap-3 rounded-2xl border bg-[#FBF5EC] px-4 py-2.5 focus-within:border-[#592209]/40 focus-within:shadow-[0_0_0_3px_rgba(255,157,77,0.12)] ${disabled ? "opacity-60" : ""}`}
@@ -37,7 +56,13 @@ const GuruChatInput = forwardRef<HTMLTextAreaElement, GuruChatInputProps>(
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={onKeyDown}
           disabled={disabled}
-          placeholder={disabled ? "Your daily session has ended" : listening ? "Listening… speak now" : "Ask Pandit Ji anything…"}
+          placeholder={
+            disabled
+              ? "Your daily session has ended"
+              : listening
+                ? "Listening… speak now"
+                : "Ask Pandit Ji anything…"
+          }
           aria-label="Message Pandit Ji"
           className="min-h-[24px] max-h-[140px] flex-1 resize-none bg-transparent p-0 text-[15px] leading-6 text-foreground placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed"
         />
@@ -81,8 +106,16 @@ const GuruChatInput = forwardRef<HTMLTextAreaElement, GuruChatInputProps>(
             type="button"
             onClick={onSend}
             disabled={!value.trim() || loading || disabled}
-            whileHover={value.trim() && !loading && !disabled ? { scale: 1.08 } : undefined}
-            whileTap={value.trim() && !loading && !disabled ? { scale: 0.94 } : undefined}
+            whileHover={
+              value.trim() && !loading && !disabled
+                ? { scale: 1.08 }
+                : undefined
+            }
+            whileTap={
+              value.trim() && !loading && !disabled
+                ? { scale: 0.94 }
+                : undefined
+            }
             aria-label="Send message"
             className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#592209] to-[#592209] text-[#F5E9D6] shadow-[0_0_16px_rgba(255,157,77,0.4)] transition-opacity disabled:opacity-30 disabled:shadow-none"
           >

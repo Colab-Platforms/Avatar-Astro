@@ -1057,6 +1057,8 @@
 import { useState, useEffect, useRef, useCallback, type CSSProperties } from "react";
 import { FEATURES } from "@/data/featureCatalog";
 import { useFeatureTitle } from "@/hooks/useFeatureTitle";
+import AskDivyaSection from "@/features/guru/AskDivyaSection";
+import { kundaliContext } from "@/features/guru/contexts";
 import LocationPicker from "@/features/ratna/LocationPicker";
 import "@/features/ratna/ratna.css";
 import { kundaliApi } from "@/features/kundali/api";
@@ -1713,7 +1715,8 @@ function Results({data,onReset}){
       <p style={{maxWidth:640,margin:"0 auto 28px",textAlign:"center",fontSize:14,lineHeight:1.7,fontStyle:"italic",color:"#6B4A37"}}>
         This profile is for personal interest and reflection. It describes traditional themes for your Sun sign and Life Path number and is not a prediction or professional advice.
       </p>
-      <button onClick={onReset} style={{display:"block",margin:"0 auto",padding:"14px 40px",background:"transparent",border:"1px solid rgba(89,34,9,0.28)",borderRadius:50,color:"#4A2E1F",fontSize:13,letterSpacing:"0.1em",textTransform:"uppercase",cursor:"pointer"}}>
+      {kundali&&<AskDivyaSection feature="birthChart" context={kundaliContext(kundali)+`\nLife Path number: ${lifePath}.`}/>}
+      <button onClick={onReset} style={{display:"block",margin:"28px auto 0",padding:"14px 40px",background:"transparent",border:"1px solid rgba(89,34,9,0.28)",borderRadius:50,color:"#4A2E1F",fontSize:13,letterSpacing:"0.1em",textTransform:"uppercase",cursor:"pointer"}}>
         ✦ New Profile
       </button>
     </div>
@@ -1762,7 +1765,7 @@ export default function App(){
 
   const generate=useCallback(async()=>{
     if(phase!=="form")return; // ignore double submits
-    if(!requireSignIn())return; // account required to generate a reading
+    if(!requireSignIn(()=>{void generate();}))return; // signed out: ask, keep the form, then run this once
     setError("");
     const day=+form.day, month=+form.month, year=+form.year;
     if(!form.firstName.trim()||!form.day||!form.month||!form.year){

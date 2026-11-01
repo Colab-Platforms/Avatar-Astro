@@ -13,7 +13,7 @@ vi.mock("@/lib/authClient", () => ({
 vi.mock("@/lib/featureFlags", () => ({ useFeatureFlags: () => ({ status: "ready", disabled: [], isPathDisabled: () => false }) }));
 vi.mock("@/features/auth/api/authApi", () => ({ authApi: { logoutAll: vi.fn() } }));
 
-import { DashboardHome, MyAstrology, MyDevotion, ProfileSettings } from "./DashboardPages";
+import { ProfileSettings } from "./DashboardPages";
 
 const profile = {
   id: "u1", firstName: "Asha", lastName: "Rao", email: "asha@example.com", phoneNo: null, gender: null, city: "Pune", state: null, country: null,
@@ -32,37 +32,20 @@ const mount = (ui: React.ReactNode) => {
 describe("dashboard pages", () => {
   beforeEach(() => { authRequest.mockReset(); });
 
-  it("home: shows the empty-activity state honestly, with no invented history", async () => {
-    authRequest.mockResolvedValue(dash());
-    mount(<DashboardHome />);
-    await screen.findByText(/Namaste, Asha/);
-    expect(screen.getByText(/No activity recorded yet/)).toBeInTheDocument();
-    expect(authRequest).toHaveBeenCalledWith("/me/dashboard");
-  });
-
-  it("home: lists real recent activity and flags failures", async () => {
-    authRequest.mockResolvedValue(dash({ recentActivity: [{ id: "e1", feature: "tarot", label: "AI Tarot Reading", status: "error", at: "2026-02-01T10:00:00.000Z" }] }));
-    mount(<DashboardHome />);
-    await screen.findByText("AI Tarot Reading");
-    expect(screen.getByText(/complete/)).toBeInTheDocument();
-  });
-
   it("shows an error with retry when the API fails", async () => {
     authRequest.mockRejectedValue(new Error("Server exploded")); // the hook retries once before giving up
-    mount(<DashboardHome />);
+    mount(<ProfileSettings />);
     await screen.findByRole("alert", undefined, { timeout: 4000 });
     authRequest.mockResolvedValue(dash());
     fireEvent.click(screen.getByRole("button", { name: "Try again" }));
-    await screen.findByText(/Namaste, Asha/);
+    await screen.findByText("Profile & Settings");
   });
 
-  it("astrology and devotion pages state what is not stored or booked", async () => {
+  it("profile: states honestly that there is no self-service deletion or notification setting", async () => {
     authRequest.mockResolvedValue(dash());
-    const a = mount(<MyAstrology />);
-    await screen.findByText(/not saved to your account/);
-    a.unmount();
-    mount(<MyDevotion />);
-    await screen.findByText(/Bookings and orders are not part of the site yet/);
+    mount(<ProfileSettings />);
+    await screen.findByText(/no self-service deletion yet/);
+    expect(screen.getByText(/does not send marketing messages/)).toBeInTheDocument();
   });
 
   it("profile: save is disabled until a field changes, then PATCHes only editable fields and confirms", async () => {

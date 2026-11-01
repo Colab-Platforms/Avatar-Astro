@@ -1,13 +1,13 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AuthLayout } from "../components/AuthLayout";
 import { OtpForm } from "../components/OtpForm";
 import {
+  useApplySession,
   useResendOtpMutation,
   useVerifyOtpMutation,
 } from "../hooks/useAuthMutations";
-import type { OtpType, VerifyOtpLocationState } from "../types";
-import { getPostAuthPath } from "../utils/postAuthRedirect";
+import type { AuthSession, OtpType, VerifyOtpLocationState } from "../types";
 import {
   clearPendingRegistration,
   loadPendingRegistration,
@@ -22,7 +22,11 @@ export default function VerifyOtpPage() {
   const email = state?.email ?? pending?.email ?? "";
   const type: OtpType = state?.type ?? "REGISTER";
 
-  const verifyMutation = useVerifyOtpMutation();
+  const verifyMutation = useVerifyOtpMutation({ deferSession: true });
+  const applySession = useApplySession();
+  // OtpForm calls handleVerified from a closure taken at submit time, so the
+  // confirmed session lives in a ref rather than in mutation state.
+  const sessionRef = useRef<AuthSession | null>(null);
   const resendMutation = useResendOtpMutation();
 
   const subtitle = useMemo(() => {
@@ -40,10 +44,20 @@ export default function VerifyOtpPage() {
 
   if (!email) return null;
 
+  // Rejects on an invalid code; OtpForm only plays its success animation once
+  // the backend has confirmed, then calls handleVerified.
   const handleSubmit = async (otp: string) => {
-    const session = await verifyMutation.mutateAsync({ email, otp, type });
+    sessionRef.current = await verifyMutation.mutateAsync({ email, otp, type });
+  };
+
+  const handleVerified = () => {
+    const session = sessionRef.current;
+    if (!session) return;
     clearPendingRegistration();
-    navigate(getPostAuthPath(session.user), { replace: true });
+    // Storing the session is what navigates: PublicRoute redirects signed-in
+    // users to getPostAuthPath(user). An explicit navigate() here would be a
+    // second, duplicate redirect to the same place.
+    applySession(session);
   };
 
   const handleResend = () => {
@@ -54,9 +68,9 @@ export default function VerifyOtpPage() {
     <AuthLayout title="Verify OTP" subtitle={subtitle}>
       <OtpForm
         email={email}
-        loading={verifyMutation.isPending}
         resending={resendMutation.isPending}
-        onSubmit={(otp) => void handleSubmit(otp)}
+        onSubmit={handleSubmit}
+        onVerified={handleVerified}
         onResend={handleResend}
       />
 

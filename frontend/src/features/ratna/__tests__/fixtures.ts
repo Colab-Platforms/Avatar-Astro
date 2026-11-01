@@ -1,4 +1,5 @@
 import { fireEvent, screen } from "@testing-library/react";
+import { useAuthStore } from "@/store/authStore";
 import type { ChartAnalysis, GemstoneInfo, MatchedProduct, PlaceResult, PlanetProfile, RatnaResult, ShopMatches, StoneAssessment } from "../types";
 
 export const delhi: PlaceResult = {
@@ -251,6 +252,12 @@ export const emptyShop: ShopMatches = {
   chartLinked: [],
   complementary: [],
 };
+
+/** Puts a signed-in session in the auth store (generating a result needs an account). */
+export const signInForTests = () =>
+  useAuthStore.setState({ user: { id: "u1" } as never, accessToken: "access", refreshToken: "refresh", isAuthenticated: true });
+export const signOutForTests = () =>
+  useAuthStore.setState({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false });
 
 /** Fills name, gender, weight and an ordinary date of birth on the form. */
 export const fillPersonalAndPanchang = () => {
