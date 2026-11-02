@@ -48,7 +48,7 @@ export function FeatureCostBreakdown({ from, to }: { from: string; to: string })
     setBusy(true); setMsg(null);
     try {
       await panelDownloadCsv(`/costs/features/export?${range}${filters ? `&${filters}` : ""}`, "mybhagya-feature-costs.csv");
-      setMsg({ ok: true, text: "Exported the AI feature cost breakdown with the current filters. Recorded in the audit log." });
+      setMsg({ ok: true, text: "Exported the feature cost breakdown with the current filters. Recorded in the audit log." });
     } catch (e) { setMsg({ ok: false, text: errorMessage(e) }); } finally { setBusy(false); }
   };
 
@@ -56,8 +56,8 @@ export function FeatureCostBreakdown({ from, to }: { from: string; to: string })
     <section aria-labelledby="fcb-heading" className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h3 id="fcb-heading" className="text-xl font-semibold tracking-tight text-[#1F1B16]">AI feature cost breakdown</h3>
-          <p className="mt-1 max-w-2xl text-sm text-[#6B6259]">What each AI operation costs per generation. <strong>Actual</strong> is the cost the provider reported on real requests. <strong>Estimated</strong> is recorded tokens times a verified price. <strong>Unknown</strong> is never shown as $0.</p>
+          <h3 id="fcb-heading" className="text-xl font-semibold tracking-tight text-[#1F1B16]">Feature cost breakdown</h3>
+          <p className="mt-1 max-w-2xl text-sm text-[#6B6259]">What each generation costs per generation. <strong>Actual</strong> is the cost the provider reported on real requests. <strong>Estimated</strong> is recorded tokens times a verified price. <strong>Unknown</strong> is never shown as $0.</p>
         </div>
         <button className={ghostBtn} disabled={busy} onClick={exportCsv}>{busy ? "Preparing…" : "Export breakdown CSV"}</button>
       </div>
@@ -72,7 +72,7 @@ export function FeatureCostBreakdown({ from, to }: { from: string; to: string })
         <label className="text-sm text-[#4A423A]">Provider
           <select className={`${inputClass} mt-1 block`} value={provider} onChange={(e) => setProvider(e.target.value)}>
             <option value="">All providers</option>
-            <option value="none">None (no AI)</option>
+            <option value="none">None (no model)</option>
             {providers.map((p) => <option key={p} value={p}>{p}</option>)}
           </select>
         </label>
@@ -122,9 +122,9 @@ export function FeatureCostBreakdown({ from, to }: { from: string; to: string })
 
               {section("paid", "Paid", "Provider-reported cost on real requests (actual).")}
               {section("estimated", "Estimated", "Recorded tokens multiplied by a verified or configured price.")}
-              {section("free-model", "Free model", "AI is used, but the verified model price is $0.")}
+              {section("free-model", "Free model", "A model is used, but the verified model price is $0.")}
               {section("unknown", "Unknown cost", "Not enough usage or pricing data. Hover a row for the reason.")}
-              {section("free", "Free (no AI)", "No provider call on these paths.")}
+              {section("free", "Free (no model)", "No provider call on these paths.")}
 
               <Card title="Provider and model breakdown" description="Actual and estimated amounts are kept in separate columns.">
                 {d.providerModel.length === 0 ? <Empty title="Nothing to show" /> : (

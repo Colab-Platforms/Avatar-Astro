@@ -38,7 +38,7 @@ const NAV: NavDef[] = [
   { to: "/admin/shop-orders", label: "Shop & Orders", icon: Store, mainOnly: true },
   { to: "/admin/content", label: "Content & banners", icon: FileText, mainOnly: true },
   { to: "/admin/payments", label: "Payments & plans", icon: CreditCard, mainOnly: true },
-  { to: "/admin/integrations", label: "AI & integrations", icon: Plug, mainOnly: true },
+  { to: "/admin/integrations", label: "Integrations", icon: Plug, mainOnly: true },
   { to: "/admin/settings", label: "Settings & audit", icon: ScrollText, mainOnly: true },
 ];
 

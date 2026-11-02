@@ -51,3 +51,27 @@ describe("askGuru", () => {
     await expect(askGuru([], "hi", "")).rejects.toThrow(/incomplete/);
   });
 });
+
+describe("scripture references", () => {
+  const ok = (message: string) => Promise.resolve(new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ type: "gathering", message }) } }] }), { status: 200 }));
+  beforeEach(() => { vi.mocked(aiChat).mockReset(); });
+
+  it("the prompt asks for very simple words, short answers and verified-only scripture", () => {
+    expect(GURU_CONSULTATION_SYSTEM).toMatch(/as if talking to a child/);
+    expect(GURU_CONSULTATION_SYSTEM).toMatch(/What our scriptures teach/);
+    expect(GURU_CONSULTATION_SYSTEM).toMatch(/Never invent or guess a verse, chapter number, story, tithi/);
+  });
+  it("shows a reply that cites only the verified verse", async () => {
+    vi.mocked(aiChat).mockImplementation(() => ok("The Gita, Chapter 2, Verse 47, says to do your best and let go of worry."));
+    expect((await askGuru([], "q", "", undefined, "", ["2.47"])).message).toContain("Verse 47");
+  });
+  it("refuses a reply that cites a verse it was not given", async () => {
+    vi.mocked(aiChat).mockImplementation(() => ok("The Gita, Chapter 9, Verse 22 promises this."));
+    await expect(askGuru([], "q", "", undefined, "", ["2.47"])).rejects.toThrow(/could not be checked/);
+    await expect(askGuru([], "q")).rejects.toThrow(/could not be checked/);
+  });
+  it("a reply with no reference is fine", async () => {
+    vi.mocked(aiChat).mockImplementation(() => ok("Take a slow breath and do one small kind thing today."));
+    expect((await askGuru([], "q")).message).toMatch(/slow breath/);
+  });
+});

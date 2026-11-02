@@ -1,14 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import AskDivyaSection from "@/features/guru/AskDivyaSection";
 import FeatureFaq from "@/components/FeatureFaq";
-import { requireSignIn } from "@/lib/authedFetch";
-import FullScreenLoader from "@/components/Loader/FullScreenLoader";
 import { FEATURES } from "@/data/featureCatalog";
 import { useFeatureTitle } from "@/hooks/useFeatureTitle";
-import { Link } from "react-router-dom";
-import FeatureIntro from "@/components/FeatureIntro";
-import { useFeatureFlags } from "@/lib/featureFlags";
-import { fetchKarmaReading, KarmaReadingError, MIN_SITUATION_CHARS, MAX_SITUATION_CHARS, type KarmaReading } from "@/lib/karmaReading";
+import LotusOm from "@/components/ai-guru/LotusOm";
+import KarmaBot from "@/components/karma/KarmaBot";
 
 
 
@@ -198,28 +194,15 @@ const CSS = `
 .iv-quote-lbl{font-family:'DM Sans', system-ui, sans-serif;font-size:13px;letter-spacing:5px;color:rgba(48,22,7,1);text-transform:uppercase;margin-bottom:24px;}
 .iv-quote-txt{font-family:'DM Sans', system-ui, sans-serif;font-size:clamp(20px,3vw,32px);color:#592209;line-height:1.65;position:relative;z-index:1;}
 
+.iv-nav-card{background:#FFFBF3;border:1px solid rgba(229,138,69,.45);box-shadow:0 10px 26px -20px rgba(89,34,9,.5);}
+.iv-nav-card:hover{border-color:#E58A45;background:#FBF1DF;}
+.iv-nc-tag{font-size:11px;letter-spacing:2px;min-height:2.6em;display:flex;align-items:flex-end;color:#6B4A37 !important;}
+.iv-nc-desc{font-size:15px;}
+
 /* Reset */
 .iv-reset-btn{width:100%;background:transparent;border:1px solid rgba(89,34,9,.28);border-radius:14px;padding:18px;color:#301607;font-family:'DM Sans', system-ui, sans-serif;font-size:14px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all .3s;}
 .iv-reset-btn:hover{background:rgba(89,34,9,.08);color:#592209;border-color:rgba(89,34,9,.5);}
 `;
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type SpeechCtor = new () => any;
-type SpeechWindow = { SpeechRecognition?: SpeechCtor; webkitSpeechRecognition?: SpeechCtor };
-
-const NAV_CARDS = [
-  { icon:"🧘", name:FEATURES.guru.name, tag:"Pandit Intelligence", desc:FEATURES.guru.subtitle, path:"/inner-voice/chat", color:"gold" },
-  { icon:"⚡", name:FEATURES.karmaScore.name, tag:"Daily Practice Tracker", desc:FEATURES.karmaScore.subtitle, path:"/inner-voice/dashboard", color:"purple" },
-  { icon:"🧭", name:FEATURES.futurePath.name, tag:"Interpretive Astrology", desc:FEATURES.futurePath.subtitle, path:"/inner-voice/future-path", color:"rose" },
-  { icon:"🕉", name:FEATURES.shloka.name, tag:"Vedic Wisdom", desc:FEATURES.shloka.subtitle, path:"/inner-voice/wisdom", color:"cyan" },
-];
-
-const HINTS = [
-  { icon:"💼", text:"Career stagnation, job loss, or a difficult boss" },
-  { icon:"💛", text:"Relationship conflicts, marriage issues, or loneliness" },
-  { icon:"💰", text:"Financial struggles, debt, or business failure" },
-  { icon:"🌿", text:"Recurring health issues or unexplained suffering" },
-];
 
 // ── Animated starfield canvas ──────────────────────────────────────────────
 function StarCanvas() {
@@ -307,155 +290,19 @@ function StarCanvas() {
   return <canvas ref={canvasRef} className="iv-canvas" />;
 }
 
-const NEXT_STEPS = [
-  { icon:"🧘", name:`Ask ${FEATURES.guru.name}`, desc:"Talk through a specific question.", path:"/inner-voice/chat" },
-  { icon:"⚡", name:`Track your ${FEATURES.karmaScore.name}`, desc:"Log daily actions and watch your progress.", path:"/inner-voice/dashboard" },
-  { icon:"🕉", name:`Read a ${FEATURES.shloka.name}`, desc:"Find a verse to reflect on.", path:"/inner-voice/wisdom" },
-];
-
-function ReportView({ result, onReset }: { result: KarmaReading; onReset: () => void }) {
-  const { isPathDisabled } = useFeatureFlags();
-  return (
-    <div className="iv-report iv-report-anim">
-      <div className="iv-report-hdr">
-        <div className="iv-report-title">
-          Your Karma Reflection
-          <span>{FEATURES.karma.name} · An AI-generated interpretation for reflection</span>
-        </div>
-        <div className="iv-report-badges">
-          {result.lifeDomain && <span className="iv-badge" style={{background:"rgba(89,34,9,.08)",border:"1px solid rgba(89,34,9,.25)",color:"#592209"}}>{result.lifeDomain}</span>}
-        </div>
-      </div>
-
-      <div className="iv-row iv-row-2">
-        <div className="iv-card gold-card">
-          <span className="iv-card-lbl">Your Reading</span>
-          <div className="iv-card-body">{result.overview}</div>
-        </div>
-        <div className="iv-card cyan-card">
-          <span className="iv-card-lbl">What It Means</span>
-          <div className="iv-card-body italic">{result.meaning}</div>
-        </div>
-      </div>
-
-      {result.insights.length > 0 && (
-        <div className="iv-card" style={{marginBottom:22}}>
-          <span className="iv-card-lbl">Key Insights</span>
-          <div className="iv-lessons">
-            {result.insights.map((it, i) => (
-              <div key={i} className="iv-lesson">
-                <div className="iv-lesson-num">0{i+1}</div>
-                <div className="iv-lesson-txt"><strong style={{display:"block",color:"#D9895F",marginBottom:4}}>{it.title}</strong>{it.text}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {result.soulLesson && (
-        <div className="iv-card purple-card" style={{marginBottom:22}}>
-          <span className="iv-card-lbl">What You May Be Learning</span>
-          <div className="iv-card-body">{result.soulLesson}</div>
-        </div>
-      )}
-
-      <div className="iv-card dark-card" style={{marginBottom:22}}>
-        <span className="iv-card-lbl">Practical Guidance</span>
-        <div className="iv-week">
-          {result.guidance.map((g, i) => (
-            <div key={i} className="iv-week-item">
-              <div className="iv-week-check">✓</div>
-              <div className="iv-week-txt">{g}</div>
-            </div>
-          ))}
-        </div>
-        {result.practice && <div className="iv-card-body" style={{marginTop:22,fontSize:17}}><strong style={{color:"#D9895F"}}>Optional practice: </strong>{result.practice}</div>}
-      </div>
-
-      {result.reflectionQuestion && (
-        <div className="iv-card" style={{marginBottom:22}}>
-          <span className="iv-card-lbl">Question to Reflect On</span>
-          <div className="iv-card-body italic gold">{result.reflectionQuestion}</div>
-        </div>
-      )}
-
-      {result.affirmation && (
-        <div className="iv-quote">
-          <span className="iv-quote-deco l">"</span>
-          <span className="iv-quote-deco r">"</span>
-          <div className="iv-quote-lbl">Affirmation</div>
-          <div className="iv-quote-txt">"{result.affirmation}"</div>
-        </div>
-      )}
-
-      <div className="iv-card" style={{marginBottom:22}}>
-        <span className="iv-card-lbl">Next Steps</span>
-        <div className="iv-planets">
-          {NEXT_STEPS.filter(n => !isPathDisabled(n.path, true)).map(n => (
-            <Link key={n.path} to={n.path} className="iv-planet-card" style={{textDecoration:"none"}}>
-              <div className="iv-planet-name">{n.icon} {n.name}</div>
-              <div className="iv-planet-note">{n.desc}</div>
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      <p style={{fontSize:13,color:"rgba(255,255,255,.6)",textAlign:"center",marginBottom:22,lineHeight:1.6}}>
-        This is a reflective, AI-generated interpretation, not a prediction, diagnosis or professional advice. For health, financial or emotional difficulty, please also speak to a qualified professional or someone you trust.
-      </p>
-      <button className="iv-reset-btn" onClick={onReset}>↩ New Reading</button>
-    </div>
-  );
-}
-
 export default function InnerVoice() {
   useFeatureTitle(FEATURES.karma);
-  const { isPathDisabled } = useFeatureFlags();
-  const [text, setText] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<KarmaReading | null>(null);
-  const [error, setError] = useState("");
-  const [listening, setListening] = useState(false);
-  const recognitionRef = useRef(null);
+  const [lastThought, setLastThought] = useState("");
 
   useEffect(() => {
-    const s = document.createElement("style");
-    s.textContent = CSS;
-    document.head.appendChild(s);
-    return () => { document.head.removeChild(s); };
+    const el = document.createElement("style");
+    el.textContent = CSS;
+    document.head.appendChild(el);
+    return () => { document.head.removeChild(el); };
   }, []);
 
-  const karmaHistory = (() => { try { return JSON.parse(localStorage.getItem("iv_karma_v2")||"[]"); } catch { return []; } })();
+  const karmaHistory = (() => { try { return JSON.parse(localStorage.getItem("iv_karma_v2") || "[]"); } catch { return []; } })();
   const latestScore = karmaHistory[0]?.composite ?? null;
-
-  const startVoice = () => {
-    const SR = (window as unknown as SpeechWindow).SpeechRecognition || (window as unknown as SpeechWindow).webkitSpeechRecognition;
-    if (!SR) { alert("Use Chrome for voice input."); return; }
-    if (listening) { recognitionRef.current?.stop(); setListening(false); return; }
-    const rec = new SR();
-    rec.continuous = true; rec.interimResults = true; rec.lang = "hi-IN";
-    rec.onresult = e => setText(Array.from(e.results).map(r => r[0].transcript).join(" "));
-    rec.onend = () => setListening(false);
-    rec.start(); recognitionRef.current = rec; setListening(true);
-  };
-
-  const diagnose = async (): Promise<void> => {
-    if (loading || text.trim().length < MIN_SITUATION_CHARS) return;
-    if (!requireSignIn(() => { void diagnose(); })) return; // signed out: ask first, keep what was typed
-    setLoading(true); setError(""); setResult(null);
-    try {
-      setResult(await fetchKarmaReading(text));
-    } catch (e) {
-      console.error("[Know Your Karma] request failed:", e);
-      setError(e instanceof KarmaReadingError ? e.message : "Could not create your reading right now. Please try again in a moment.");
-    } finally { setLoading(false); }
-  };
-
-  // Hint click — fills textarea and scrolls to input
-  const onHintClick = (txt) => {
-    setText(txt);
-    (document.querySelector(".iv-textarea") as HTMLElement | null)?.focus();
-  };
 
   return (
     <div className="iv-app">
@@ -463,101 +310,32 @@ export default function InnerVoice() {
       <StarCanvas />
       <div className="iv-page">
 
-        {/* Hero */}
-        <div className="iv-hero">
-          <div className="iv-hero-eyebrow">Spiritual Intelligence Platform</div>
-          <span className="iv-hero-om">🕉</span>
-          <h1 className="iv-hero-title">Inner Voice</h1>
-          <div className="iv-hero-tagline">Know Your Karma · Improve Your Karma</div>
-          <p className="iv-hero-sub">Your personal Vedic guidance system — powered by ancient wisdom and modern AI. Diagnose karmic patterns, track your dharmic progress, and receive actionable remedies.</p>
+        {/* Hero: a softly glowing lotus, the heading, a sub-heading and a quote */}
+        <div className="iv-hero" style={{ paddingBottom: 36 }}>
+          <span className="iv-hero-om" style={{ filter: "none", marginBottom: 12 }}><LotusOm size={140} className="mx-auto" animated /></span>
+          <h1 className="iv-hero-title" style={{ marginBottom: 10 }}>Inner Voice</h1>
+          <h2 className="iv-hero-tagline" style={{ marginBottom: 22, letterSpacing: 3, fontSize: 15 }}>Know Your Karma for a Better Life</h2>
+          <figure className="mx-auto max-w-xl" data-testid="inner-voice-quote">
+            <blockquote className="font-home-serif text-xl italic leading-relaxed text-[#592209] sm:text-2xl">“Every kind thought and small good deed plants a seed for a better tomorrow.”</blockquote>
+          </figure>
           {latestScore !== null && (
-            <div className="iv-karma-strip">
+            <div className="iv-karma-strip" style={{ marginTop: 28 }}>
               <div className="iv-ks-item"><div className="iv-ks-val">{latestScore}</div><div className="iv-ks-lbl">{FEATURES.karmaScore.name}</div></div>
               <div className="iv-ks-item"><div className="iv-ks-val">{karmaHistory.length}</div><div className="iv-ks-lbl">Days Saved</div></div>
             </div>
           )}
         </div>
 
-        {/* Nav grid */}
-        <div className="iv-nav-section">
-          <div className="iv-nav-grid">
-            {NAV_CARDS.filter(c => !isPathDisabled(c.path, true)).map(c => (
-              <Link key={c.path} to={c.path} className={`iv-nav-card ${c.color}`}>
-                <span className="iv-nc-icon">{c.icon}</span>
-                <div className="iv-nc-tag">{c.tag}</div>
-                <div className="iv-nc-name">{c.name}</div>
-                <div className="iv-nc-desc">{c.desc}</div>
-                <span className="iv-nc-arrow">→</span>
-              </Link>
-            ))}
-          </div>
+        {/* Know Your Karma guide */}
+        <div className="iv-container" style={{ paddingBottom: 56 }}>
+          <KarmaBot onAnswered={setLastThought} />
+          {lastThought && (
+            <div className="mx-auto mt-6 max-w-3xl">
+              <AskDivyaSection feature="karma" context={`Latest Know Your Karma thought and action: ${lastThought}`} />
+            </div>
+          )}
         </div>
 
-        {/* Diagnosis */}
-        {!result && (
-          <div className="iv-diag-section">
-            <FeatureIntro
-              className="mb-10"
-              description="Explore the principles of karma and reflect on how your actions, intentions, and choices influence your personal journey. Know Your Karma offers a space to understand karmic concepts and discover meaningful guidance inspired by traditional spiritual wisdom."
-              steps={[
-                { title: "Share Your Situation", text: "Describe what is on your mind in your own words (Hindi, English or Hinglish), or tap an example below." },
-                { title: "Explore Your Karma Insights", text: "Review the karmic pattern, soul lesson and suggested practices generated for you." },
-                { title: "Reflect and Learn", text: "Use the insights as an opportunity for personal reflection and more mindful decision-making." },
-              ]}
-              disclaimer="Karma insights are spiritual guidance for reflection. They are AI-generated interpretations, not scientific fact, professional advice, or a prediction of what will happen."
-            />
-            <div className="iv-diag-inner">
-              <div>
-                <h2 className="iv-diag-heading">{FEATURES.karma.name}</h2>
-                <p className="iv-diag-sub" style={{ maxWidth: 560, margin: "0 auto 16px", color: "rgba(48,22,7,0.78)", lineHeight: 1.6 }}>{FEATURES.karma.subtitle}</p>
-                <p className="iv-diag-sub" style={{ maxWidth: 560, margin: "0 auto 16px", color: "rgba(48,22,7,0.78)", lineHeight: 1.6 }}>Share your situation in any language — Hindi, English, or Hinglish. You will receive a reflective reading with practical guidance.</p>
-                <div className="iv-diag-hints">
-                  {HINTS.map((h, i) => (
-                    <div key={i} className="iv-hint" onClick={() => onHintClick(h.text)} role="button" tabIndex={0} onKeyDown={e => e.key==="Enter" && onHintClick(h.text)}>
-                      <span className="iv-hint-icon">{h.icon}</span>
-                      <span className="iv-hint-txt">{h.text}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <div className="iv-input-card">
-                  <div className="iv-voice-row">
-                    <button className={`iv-voice-btn${listening?" listening":""}`} onClick={startVoice}>
-                      {listening ? "🔴 Listening..." : "🎙️ Speak"}
-                    </button>
-                    <span className="iv-char">{text.length} / {MAX_SITUATION_CHARS}</span>
-                  </div>
-                  <textarea
-                    className="iv-textarea"
-                    placeholder="Apni situation batayein... What is weighing on your heart right now? Be honest and specific."
-                    value={text}
-                    onChange={e => setText(e.target.value.slice(0, MAX_SITUATION_CHARS))}
-                  />
-                  {loading ? (
-                    <FullScreenLoader title="Preparing Your Karma Reflection" description="Reflecting on the situation you shared…" steps={["Reading your situation", "Finding the karmic pattern", "Preparing your reflection"]} testId="karma-loader" />
-                  ) : (
-                    <button className="iv-submit-btn" onClick={diagnose} disabled={text.trim().length < MIN_SITUATION_CHARS}>
-                      ॐ &nbsp; Know My Karma
-                    </button>
-                  )}
-                  {!loading && text.trim().length > 0 && text.trim().length < MIN_SITUATION_CHARS && <div className="iv-char" style={{marginTop:10}}>Please write a little more (at least {MIN_SITUATION_CHARS} characters).</div>}
-                  {error && <div className="iv-err" role="alert">⚠ {error} <button onClick={diagnose} style={{marginLeft:8,textDecoration:"underline",background:"none",border:0,color:"inherit",cursor:"pointer"}}>Try again</button></div>}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Report */}
-        {result && (
-          <div className="iv-report-wrap">
-            <div className="iv-container">
-              <ReportView result={result} onReset={() => { setResult(null); setText(""); setError(""); }} />
-              <AskDivyaSection feature="karma" context={`Area of life: ${result.lifeDomain}. Reading: ${result.overview} Soul lesson: ${result.soulLesson} Suggested practice: ${result.practice}`} />
-            </div>
-          </div>
-        )}
         <FeatureFaq feature="karma" />
       </div>
     </div>

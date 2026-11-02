@@ -70,7 +70,7 @@ function DetailDialog({ item, onClose }: { item: Item | null; onClose: () => voi
               <DetailRow k="Duration" v={`${item.durationMs} ms`} />
               <DetailRow k="Served from cache" v={item.servedFromCache ? "Yes (nothing generated)" : "No"} />
             </dl>
-            <h4 className="mt-3 text-sm font-semibold text-[#1F1B16]">AI usage</h4>
+            <h4 className="mt-3 text-sm font-semibold text-[#1F1B16]">Usage</h4>
             {ai ? (
               <dl>
                 <DetailRow k="Provider" v={ai.provider} />
@@ -85,10 +85,10 @@ function DetailDialog({ item, onClose }: { item: Item | null; onClose: () => voi
             ) : (
               <p className="text-sm text-[#6B6259]">
                 {item.servedFromCache
-                  ? "This answer was reused, so no AI provider was called and nothing was charged."
+                  ? "This answer was reused, so no model provider was called and nothing was charged."
                   : item.status !== "success"
-                    ? "No AI provider call was recorded. The request failed before one was made (for example the provider is not configured on that server, or the input was rejected), so no AI usage exists. See AI & integrations > AI usage capture status."
-                    : "No AI provider was called for this activity (or it happened before cost tracking began, or on a server that had not yet been updated), so no AI cost applies."}
+                    ? "No model provider call was recorded. The request failed before one was made (for example the provider is not configured on that server, or the input was rejected), so no recorded usage exists. See Integrations > Usage capture status."
+                    : "No model provider was called for this activity (or it happened before cost tracking began, or on a server that had not yet been updated), so no cost applies."}
               </p>
             )}
             {item.customer && !item.customer.removed && <Link className="mt-3 inline-block text-sm text-[#803003] hover:underline" to={`/admin/customers?user=${item.customer.id}`}>Open customer profile</Link>}
@@ -171,11 +171,11 @@ export default function ActivityPage() {
             set({ costBasis: ["actual", "estimated", "none"].includes(v) ? v : null, ai: v === "nonai" ? "no" : v === "ai" ? "yes" : null });
           }}>
             <option value="">Any</option>
-            <option value="ai">All AI requests</option>
+            <option value="ai">All Model requests</option>
             <option value="actual">Actual cost</option>
             <option value="estimated">Estimated cost</option>
-            <option value="none">AI, cost not known</option>
-            <option value="nonai">No AI used</option>
+            <option value="none">Model used, cost not known</option>
+            <option value="nonai">No model used</option>
           </select>
         </label>
         <label className="text-xs text-[#6B6259]">From

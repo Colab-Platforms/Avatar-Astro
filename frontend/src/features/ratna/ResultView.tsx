@@ -78,7 +78,7 @@ const WhyPanel = ({ result }: { result: RatnaResult }) => {
           <p className="whitespace-pre-line">{result.explanation.text}</p>
           <p className="text-xs text-[#6B4A37]">
             {result.explanation.source === "ai"
-              ? "Wording written by AI from your calculated details and checked against them. The Ratna itself comes from the calculation rules, not the AI."
+              ? "Wording generated from your calculated details and checked against them. The Ratna itself comes from the calculation rules, not the generated text."
               : "Explanation generated from your calculated details using fixed rules."}
           </p>
         </Accordion>

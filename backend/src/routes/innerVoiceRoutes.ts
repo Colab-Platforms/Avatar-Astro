@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { createRateLimiter } from "../utils/rateLimit.js";
 import { auth } from "../middleware/authMiddleware.js";
+import { buildTodayPanchang } from "../modules/gemstone/panchang.today.js";
 import { getDailyChatStatus, consumeDailyChatSession } from "../utils/dailyChatSession.js";
 import { screenMessage, ESCALATION_REPLY, OFF_TOPIC_REPLY } from "../utils/chatScreening.js";
 import prisma from "@root/prisma.js";
@@ -83,9 +84,9 @@ const MODEL = "google/gemma-4-31b-it:free";
 // Every AI reply defaults to Hinglish, which is how most users speak and write.
 export const HINGLISH_RULE = `\n\nLanguage: write every human-readable text value in natural Hinglish (Roman-script Hindi mixed with English, the way people actually speak). Keep JSON keys, fixed values and any Sanskrit verses or mantras exactly as specified. Only if the person wrote in Devanagari Hindi, answer in Hindi instead.`;
 
-/** A provider failure with the facts needed to diagnose it (never the prompt, the key or the user's details). */
-class ProviderError extends Error {
-  constructor(message: string, readonly httpStatus: number, readonly providerCode: string | number | null) {
+/** A provider failure that keeps the provider's own status (e.g. 429 rate limit, 401 bad key) for routing and logs. */
+export class ProviderError extends Error {
+  constructor(message: string, readonly status: number) {
     super(message);
     this.name = "ProviderError";
   }
@@ -108,10 +109,29 @@ async function callAI(apiKey: string, prompt: string, maxTokens = 1000, model: s
     }),
   });
   // A timeout while reading the body must stay a timeout, not look like an empty reply.
-  const data = (await res.json().catch((e) => { if (e?.name === "TimeoutError" || e?.name === "AbortError") throw e; return {}; })) as any;
-  if (data.error) throw new ProviderError(data.error.message, res.status, data.error.code ?? null);
-  if (!res.ok) throw new ProviderError(`HTTP ${res.status}`, res.status, null);
-  return data.choices?.[0]?.message?.content ?? "";
+  const data = await res.json().catch((e) => { if (e?.name === "TimeoutError" || e?.name === "AbortError") throw e; return null; }) as any;
+  if (data?.error) throw new ProviderError(String(data.error.message ?? "Provider error"), Number(data.error.code) || res.status);
+  if (!res.ok) throw new ProviderError("Provider returned an error status", res.status);
+  return data?.choices?.[0]?.message?.content ?? "";
+}
+
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+/** The free model is shared and is often rate limited for a moment: retry once before giving up. */
+export const LIFE_PATH_RETRY_DELAY_MS = Number(process.env.LIFE_PATH_RETRY_DELAY_MS ?? 1500);
+
+// ── Facts that are calculated here, not written by the model ──────────────────
+const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const digitSum = (n: number): number => String(n).split("").reduce((a, c) => a + Number(c), 0);
+/** Reduce by adding digits until one digit remains, keeping the master numbers 11, 22 and 33. */
+const reduceNumber = (n: number): number => { while (n > 9 && n !== 11 && n !== 22 && n !== 33) n = digitSum(n); return n; };
+
+/** Weekday and life path number from the calendar date alone; nothing here depends on time, place or time zone. */
+export function lifePathFacts(y: number, m: number, d: number) {
+  const weekday = WEEKDAYS[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
+  const total = digitSum(y) + digitSum(m) + digitSum(d);
+  const number = reduceNumber(total);
+  const working = [...String(y), ...String(m), ...String(d)].join(" + ") + " = " + total + (total === number ? "" : " → " + number);
+  return { weekday, total, number, working };
 }
 
 function parseJSON(raw: string): any {
@@ -280,37 +300,50 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
   }
 });
 
+// ── GET /api/inner-voice/panchang ─────────────────────────────────────────────
+// Today's Hindu calendar for the Know Your Karma guide. Calculated from the real Sun and Moon positions by the
+// same engine as the Kundali (see modules/gemstone/panchang.ts); no model is involved and no value is guessed.
+router.get("/panchang", createRateLimiter({ windowMs: 60_000, max: 30 }), (_req: Request, res: Response) => {
+  try {
+    return res.json(buildTodayPanchang(new Date()));
+  } catch (err: any) {
+    console.error("Panchang error:", err?.name);
+    return res.status(503).json({ error: "Today's calendar details are not available right now" });
+  }
+});
+
 // ── POST /api/inner-voice/life-path ───────────────────────────────────────────
 // Birth details are used only to build the prompt for this request; nothing is
 // stored or logged. No ephemeris is computed here: the reading is an AI-written
 // interpretation, and the prompt forbids inventing exact planetary positions.
 const LIFE_PATH_FOCUS = ["general", "career", "relationships", "personal-growth", "finance"] as const;
 
-/** Maps a provider failure to the status and wording the user sees. Nothing here falls back to invented readings. */
-export function lifePathFailure(err: any): { status: number; kind: string; message: string; retryAfter?: number } {
-  if (err?.name === "TimeoutError" || err?.name === "AbortError") return { status: 504, kind: "TIMEOUT", message: "The reading service took too long to respond. Please try again." };
-  const st = err?.httpStatus;
-  if (st === 429) return { status: 429, kind: "PROVIDER_BUSY", message: "The reading service is very busy right now. Please wait a minute and try again.", retryAfter: 60 };
-  if (st === 401 || st === 402 || st === 403) return { status: 503, kind: "PROVIDER_UNAVAILABLE", message: "The reading service is temporarily unavailable. Please try again later." };
-  return { status: 502, kind: "PROVIDER_ERROR", message: "The reading service is unavailable right now. Please try again in a moment." };
-}
-
 router.post("/life-path", createRateLimiter({ windowMs: 60_000, max: 10 }), async (req: Request, res: Response) => {
   try {
     const { dob, tob, pob, focus = "general" } = req.body ?? {};
 
     const dobStr = typeof dob === "string" ? dob.trim() : "";
-    const dobDate = new Date(dobStr);
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(dobStr) || isNaN(dobDate.getTime())) {
+    // Compare the calendar parts themselves: new Date("2021-02-31") silently becomes 3 March, and
+    // parsing in local time can shift the day, so neither is used for the check.
+    const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dobStr);
+    const [y, mo, d] = parts ? [Number(parts[1]), Number(parts[2]), Number(parts[3])] : [0, 0, 0];
+    const check = new Date(Date.UTC(y, mo - 1, d));
+    if (!parts || check.getUTCFullYear() !== y || check.getUTCMonth() !== mo - 1 || check.getUTCDate() !== d) {
       return res.status(400).json({ error: "A valid date of birth (YYYY-MM-DD) is required" });
     }
-    if (dobDate > new Date() || dobDate.getFullYear() < 1900) {
+    if (dobStr > new Date().toISOString().slice(0, 10) || y < 1900) {
       return res.status(400).json({ error: "Date of birth is out of range" });
     }
     if (!LIFE_PATH_FOCUS.includes(focus)) {
       return res.status(400).json({ error: "Invalid focus area" });
     }
-    const tobStr = typeof tob === "string" && /^\d{2}:\d{2}$/.test(tob.trim()) ? tob.trim() : "";
+    // Time is optional, but when it is given it must be a real HH:MM time; it is never guessed or dropped silently.
+    if (tob != null && typeof tob !== "string") return res.status(400).json({ error: "Time of birth must be HH:MM" });
+    const tobStr = typeof tob === "string" ? tob.trim() : "";
+    if (tobStr && !/^([01]\d|2[0-3]):[0-5]\d$/.test(tobStr)) {
+      return res.status(400).json({ error: "Time of birth must be a valid HH:MM time" });
+    }
+    const facts = lifePathFacts(y, mo, d);
     // Place is interpolated into the prompt, so keep it to plain place-name characters.
     const pobStr = typeof pob === "string" ? pob.trim() : "";
     if (pobStr && (pobStr.length > 100 || !/^[\p{L}\p{M}\d\s,.'’-]+$/u.test(pobStr))) {
@@ -328,6 +361,7 @@ router.post("/life-path", createRateLimiter({ windowMs: 60_000, max: 10 }), asyn
 - Time of birth: ${tobStr || "not provided"}
 - Place of birth: ${pobStr || "not provided"}
 - Area of interest: ${focus}
+- Calculated facts you may rely on: born on a ${facts.weekday}; numerology life path number ${facts.number} (${facts.working})
 - Today's date: ${new Date().toISOString().slice(0, 10)}
 
 Rules:
@@ -350,35 +384,60 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
   "reflectionQuestions": ["a question for self-reflection", "another question"]
 }`;
 
-    const startedAt = Date.now();
-    let result: any = null;
-    let lastKind = "INCOMPLETE_RESPONSE";
-    // One automatic regeneration if the model's reply is empty, garbled or incomplete; never a stand-in reading.
-    for (let attempt = 1; attempt <= 2 && !result; attempt++) {
-      let raw: string;
+    let raw: string;
+    try {
       try {
+        // The shared free model is rate limited by its upstream; the app's standard model (OPENROUTER_MODEL) is used here. 3000 tokens: 1200 cut Hinglish replies off mid-JSON.
         raw = await callAI(apiKey, prompt, 3000, OPENROUTER_MODEL);
       } catch (err: any) {
-        const failure = lifePathFailure(err);
-        // Safe diagnostics only: model, HTTP status, provider code and timing. No key, prompt, birth details or provider message text.
-        console.error(`Life path provider error: model=${OPENROUTER_MODEL} providerStatus=${err?.httpStatus ?? "none"} providerCode=${err?.providerCode ?? "none"} kind=${failure.kind} attempt=${attempt} ms=${Date.now() - startedAt}`);
-        if (failure.retryAfter) res.setHeader("Retry-After", failure.retryAfter);
-        return res.status(failure.status).json({ error: failure.message, code: failure.kind });
+        if (!(err instanceof ProviderError && err.status === 429)) throw err;
+        await sleep(LIFE_PATH_RETRY_DELAY_MS);
+        raw = await callAI(apiKey, prompt, 3000, OPENROUTER_MODEL);
       }
-      try {
-        const parsed = parseJSON(raw);
-        if (parsed && typeof parsed.lifePathOverview === "string" && parsed.lifePathOverview.trim()) result = parsed;
-        else lastKind = "INCOMPLETE_RESPONSE";
-      } catch {
-        lastKind = "UNREADABLE_RESPONSE";
+    } catch (err: any) {
+      const timedOut = err?.name === "TimeoutError" || err?.name === "AbortError";
+      const status = err instanceof ProviderError ? err.status : undefined;
+      // Kind and status only: never the provider message (it can echo request details) and never the key.
+      console.error(`Life path provider error: model=${OPENROUTER_MODEL} kind=${timedOut ? "timeout" : err?.name} providerStatus=${status ?? "none"}`);
+      if (status === 429) {
+        return res.status(503).json({ error: "The reading service is busy right now. Please try again in a minute.", code: "provider_busy" });
       }
-      if (!result) console.error(`Life path provider error: model=${OPENROUTER_MODEL} kind=${lastKind} chars=${raw.length} attempt=${attempt} ms=${Date.now() - startedAt}`);
+      return res
+        .status(timedOut ? 504 : 502)
+        .json({ error: timedOut ? "The reading service timed out" : "The reading service is unavailable" });
     }
-    if (!result) {
-      return res.status(502).json({ error: "The reading came back incomplete. Please try again.", code: lastKind });
+
+    let result: any;
+    try {
+      result = parseJSON(raw);
+    } catch {
+      return res.status(502).json({ error: "The reading service returned an unreadable response" });
+    }
+    if (!result || typeof result.lifePathOverview !== "string" || !result.lifePathOverview.trim()) {
+      return res.status(502).json({ error: "The reading service returned an incomplete response" });
     }
     const str = (v: unknown) => (typeof v === "string" ? v : undefined);
     return res.json({
+      basis: {
+        used: [
+          { label: "Date of birth", value: dobStr },
+          { label: "Area of interest", value: focus },
+          ...(tobStr ? [{ label: "Time of birth", value: tobStr }] : []),
+          ...(pobStr ? [{ label: "Place of birth", value: pobStr }] : []),
+        ],
+        notProvided: [...(tobStr ? [] : ["Time of birth"]), ...(pobStr ? [] : ["Place of birth"])],
+        calculated: [
+          { label: "Day of the week you were born", value: facts.weekday, how: "Calendar arithmetic on your date of birth." },
+          { label: "Life path number (numerology)", value: String(facts.number), how: `Add every digit of your birth date: ${facts.working}. Master numbers 11, 22 and 33 are kept.` },
+        ],
+        limits: [
+          "No birth chart, planetary position, ascendant or house was calculated.",
+          ...(tobStr && pobStr
+            ? ["Your birth time and place are passed to the reading as context only; they were not used to calculate a chart."]
+            : ["Without a birth time and place an ascendant or house-based reading is not possible, so the reading stays general."]),
+          "Every section of the reading is an interpretation written for reflection, not a fact or a prediction.",
+        ],
+      },
       lifePathOverview: result.lifePathOverview,
       careerAndGrowth: str(result.careerAndGrowth),
       relationships: str(result.relationships),

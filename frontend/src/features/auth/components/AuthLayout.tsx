@@ -24,7 +24,7 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
               <path d="M12 2L14.8 9.2L22 12L14.8 14.8L12 22L9.2 14.8L2 12L9.2 9.2L12 2Z" />
             </svg>
             <span className="font-display text-lg font-bold tracking-[0.25em] text-[#592209]">
-              SPIRITUAL
+              MYBHAGYA
             </span>
           </Link>
         </div>

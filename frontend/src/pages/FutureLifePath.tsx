@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import AskDivyaSection from "@/features/guru/AskDivyaSection";
 import FeatureFaq from "@/components/FeatureFaq";
 import FullScreenLoader from "@/components/Loader/FullScreenLoader";
@@ -9,6 +9,9 @@ import { Compass, RotateCcw, Pencil, Loader2 } from "lucide-react";
 import FeatureIntro from "@/components/FeatureIntro";
 import { API_BASE_URL } from "@/lib/api";
 import { authedFetch, requireSignIn, SignInRequiredError } from "@/lib/authedFetch";
+import LocationPicker from "@/features/ratna/LocationPicker";
+import type { PlaceResult } from "@/features/ratna/types";
+import "@/features/ratna/ratna.css";
 
 const FOCUS_OPTIONS = [
   { value: "general", label: "General life direction" },
@@ -18,7 +21,15 @@ const FOCUS_OPTIONS = [
   { value: "finance", label: "Financial habits and goals" },
 ];
 
+interface LifePathBasis {
+  used: { label: string; value: string }[];
+  notProvided: string[];
+  calculated: { label: string; value: string; how: string }[];
+  limits: string[];
+}
+
 interface LifePathResult {
+  basis?: LifePathBasis;
   lifePathOverview?: string;
   careerAndGrowth?: string;
   relationships?: string;
@@ -44,21 +55,20 @@ export default function FutureLifePath() {
   useFeatureTitle(FEATURES.futurePath);
   const [dob, setDob] = useState("");
   const [tob, setTob] = useState("");
-  const [pob, setPob] = useState("");
+  // The place is chosen from a searchable list of real places, so it is spelled and identified correctly.
+  const [place, setPlace] = useState<PlaceResult | null>(null);
   const [focus, setFocus] = useState("general");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [retryable, setRetryable] = useState(false); // true when the request itself failed, so the same details can be sent again
   const [result, setResult] = useState<LifePathResult | null>(null);
-  /** Set synchronously, so a double click or a sign-in resume can never send two requests. */
-  const inFlight = useRef(false);
-  /** Show Retry for temporary failures (busy, timeout, outage), not for input mistakes. */
-  const [retryable, setRetryable] = useState(false);
 
   const now = new Date();
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
   async function generate() {
-    if (inFlight.current) return;
+    if (loading) return; // one request at a time
+    setRetryable(false);
     if (!dob) {
       setError("Please enter your date of birth.");
       return;
@@ -69,25 +79,29 @@ export default function FutureLifePath() {
     }
     if (!requireSignIn(() => { void generate(); })) return; // signed out: ask first, keep the form
     setError("");
-    setRetryable(false);
-    inFlight.current = true;
     setLoading(true);
     try {
       const res = await authedFetch(`${API_BASE_URL}/inner-voice/life-path`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dob, tob: tob || undefined, pob: pob.trim() || undefined, focus }),
+        body: JSON.stringify({ dob, tob: tob || undefined, pob: place?.label || undefined, focus }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        // The server's own wording is meant for users (busy, timeout, unavailable, invalid input); a rate limiter's body has no such text.
-        const serverText = typeof data?.error === "string" ? data.error : "";
-        if (res.status === 429) setError(serverText || "Too many readings requested. Please wait a minute and try again.");
-        else if (res.status === 400) setError(serverText || "Please check your details and try again.");
-        else setError(serverText || "We couldn't generate your reading right now. Please try again in a moment.");
-        setRetryable(res.status !== 400);
+      if (res.status === 429) {
+        setError("Too many readings requested. Please wait a minute and try again.");
         return;
       }
+      if (res.status === 503 && data?.code === "provider_busy") {
+        // The service answered, but it is busy. Nothing was generated; the form keeps your details.
+        setError("The reading service is busy right now. Your details are still here, so please try again in a minute.");
+        setRetryable(true);
+        return;
+      }
+      if (res.status === 400 && typeof data?.error === "string") {
+        setError(data.error);
+        return;
+      }
+      if (!res.ok) throw new Error(data?.error || "Request failed");
       if (!data || !data.lifePathOverview) throw new Error("Empty reading");
       setResult(data);
     } catch (e) {
@@ -99,7 +113,6 @@ export default function FutureLifePath() {
       setError("We couldn't generate your reading right now. Please try again in a moment.");
       setRetryable(true);
     } finally {
-      inFlight.current = false;
       setLoading(false);
     }
   }
@@ -126,7 +139,7 @@ export default function FutureLifePath() {
             { title: "Generate Your Reading", text: "A life path interpretation is written for you from the details you provide." },
             { title: "Explore Your Insights", text: "Read each section and use the reflection questions to think through your next steps." },
           ]}
-          disclaimer="This is interpretive guidance, not certain knowledge of the future. Readings are AI-written interpretations and do not include a computed birth chart. Please don't treat them as medical, legal or financial advice."
+          disclaimer="This is interpretive guidance, not certain knowledge of the future. Readings are generated interpretations and do not include a computed birth chart. Please don't treat them as medical, legal or financial advice."
         />
 
         {!result ? (
@@ -165,18 +178,10 @@ export default function FutureLifePath() {
                 <input id="flp-tob" type="time" value={tob} onChange={(e) => setTob(e.target.value)} className={inputCls} />
               </div>
               <div>
-                <label htmlFor="flp-pob" className={labelCls}>
+                <span id="flp-pob-label" className={labelCls}>
                   Place of birth <span className="font-normal text-foreground/70">(optional)</span>
-                </label>
-                <input
-                  id="flp-pob"
-                  type="text"
-                  maxLength={100}
-                  value={pob}
-                  onChange={(e) => setPob(e.target.value)}
-                  placeholder="City, country"
-                  className={inputCls}
-                />
+                </span>
+                <LocationPicker value={place} onSelect={setPlace} disabled={loading} />
               </div>
               <div className="sm:col-span-2">
                 <label htmlFor="flp-focus" className={labelCls}>
@@ -284,11 +289,33 @@ export default function FutureLifePath() {
               </section>
             )}
 
-            <p className="px-2 text-center text-xs text-white/60">
-              Based on: your date of birth{tob ? ", time of birth" : ""}
-              {pob.trim() ? ", place of birth" : ""}. {!tob || !pob.trim() ? "Without a birth time and place, an ascendant or house-based reading is not possible, so this stays general. " : ""}
-              No birth chart was calculated.
-            </p>
+            {result.basis && (
+              <section aria-labelledby="flp-basis" data-testid="flp-basis" className="rounded-2xl border border-primary/20 bg-card p-5 text-left">
+                <h2 id="flp-basis" className="mb-3 text-lg font-semibold text-[#592209]">How this reading was made</h2>
+                <p className="text-sm text-foreground/90">
+                  <strong>Details used:</strong> {result.basis.used.map((u) => `${u.label}: ${u.value}`).join(" · ")}
+                </p>
+                {result.basis.notProvided.length > 0 && (
+                  <p className="mt-1 text-sm text-foreground/80">
+                    <strong>Not provided:</strong> {result.basis.notProvided.join(", ")}. Nothing was assumed in their place.
+                  </p>
+                )}
+                <h3 className="mb-1 mt-4 text-sm font-semibold uppercase tracking-wider text-[#592209]">Calculated facts</h3>
+                <ul className="space-y-2 text-sm text-foreground/90">
+                  {result.basis.calculated.map((c) => (
+                    <li key={c.label}>
+                      <strong>{c.label}: {c.value}.</strong> <span className="text-foreground/80">{c.how}</span>
+                    </li>
+                  ))}
+                </ul>
+                <h3 className="mb-1 mt-4 text-sm font-semibold uppercase tracking-wider text-[#592209]">Interpretation and limits</h3>
+                <ul className="list-disc space-y-1 pl-5 text-sm text-foreground/80">
+                  {result.basis.limits.map((l) => (
+                    <li key={l}>{l}</li>
+                  ))}
+                </ul>
+              </section>
+            )}
             <p className="px-2 text-center text-xs italic text-foreground/70">
               This reading is interpretive guidance for reflection, not a prediction of certain outcomes.
             </p>

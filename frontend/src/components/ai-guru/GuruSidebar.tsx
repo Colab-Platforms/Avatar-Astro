@@ -1,6 +1,7 @@
 import { FEATURES } from "@/data/featureCatalog";
 import { Link } from "react-router-dom";
 import { PersonaCard } from "./PersonaCard";
+import LotusOm from "./LotusOm";
 import type { Astrologer } from "@/data/astrologers";
 import { motion } from "framer-motion";
 import {
@@ -13,6 +14,7 @@ import {
   Bookmark,
   Settings,
   X,
+  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -76,15 +78,12 @@ const GuruSidebar = ({
       {/* Logo */}
       <div className="flex items-center justify-between gap-3 px-5 pb-4 pt-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#592209]/25 to-[#592209]/10 text-lg ring-1 ring-[#592209]/30">
-            🕉️
-          </div>
+          <LotusOm size={40} />
           <div>
             <div className="font-home-serif text-lg font-semibold leading-tight text-foreground">
               {FEATURES.guru.name}
             </div>
-            <div className="text-[11px] leading-tight text-muted-foreground">Your Vedic Guide</div>
-            <p className="mt-1.5 line-clamp-3 max-w-[200px] text-[11px] leading-snug text-muted-foreground/80">{FEATURES.guru.subtitle}</p>
+            <div className="text-[11px] leading-tight text-muted-foreground">Guidance with MyBhagya</div>
           </div>
         </div>
         <button
@@ -220,7 +219,7 @@ const GuruSidebar = ({
         className="flex items-center gap-3 border-t border-primary/15 px-4 py-3.5 text-left transition-colors hover:bg-primary/10"
       >
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-white/15 to-white/5 text-base ring-1 ring-primary/15">
-          🧑
+          <User className="h-4 w-4 text-[#592209]" aria-hidden="true" />
         </div>
         <div className="min-w-0">
           <div className="truncate text-sm font-medium text-foreground">
