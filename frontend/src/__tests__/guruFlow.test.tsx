@@ -172,7 +172,7 @@ const mountChat = async () => {
 
 /** Mounts the chat and waits for the guru search to finish and a profile to be assigned. */
 const mountReady = async () => {
-  mountChat();
+  await mountChat();
   await screen.findByTestId("persona-header", {}, { timeout: 4000 });
 };
 
@@ -314,7 +314,7 @@ describe("active guru search on entry", () => {
   beforeEach(() => signIn());
 
   it("starts searching on entry, then opens with the assigned profile's real name and avatar, without sending anything", async () => {
-    mountChat();
+    await mountChat();
     expect(screen.getByTestId("searching-guru")).toHaveTextContent("Searching for an available Guru...");
     const header = await screen.findByTestId("persona-header", {}, { timeout: 4000 });
     expect(screen.queryByTestId("searching-guru")).toBeNull();
@@ -345,7 +345,7 @@ describe("active guru search on entry", () => {
     const mod = await import("@/data/astrologers");
     const saved = mod.ASTROLOGERS.splice(0, mod.ASTROLOGERS.length);
     try {
-      mountChat();
+      await mountChat();
       const none = await screen.findByTestId("no-guru", {}, { timeout: 4000 });
       expect(none).toHaveTextContent("No Guru is currently available.");
       expect(none).toHaveTextContent("Please try again shortly.");
@@ -362,7 +362,7 @@ describe("active guru search on entry", () => {
 
   it("a handoff question waits for the assignment, then is sent once", async () => {
     saveHandoff({ question: "Will Saturn affect my career?", feature: "birthChart", featureName: "Janma Kundali", context: "ctx" });
-    mountChat();
+    await mountChat();
     await screen.findByText("Here is a thoughtful reply.", {}, { timeout: 4000 });
     expect(askGuru).toHaveBeenCalledTimes(1);
   });
@@ -417,7 +417,7 @@ describe("Guru search and typing timing", () => {
   it("shows 'Searching for an available Guru...' straight away and keeps it up for at least the minimum time, then opens with the real Guru", async () => {
     guruTiming.searchMinMs = 700;
     const t0 = Date.now();
-    mountChat();
+    await mountChat();
     expect(screen.getByTestId("searching-guru")).toHaveTextContent("Searching for an available Guru...");
     await new Promise((r) => setTimeout(r, 350));
     expect(screen.queryByTestId("persona-header")).toBeNull(); // still searching, although a Guru was found at once
@@ -432,7 +432,7 @@ describe("Guru search and typing timing", () => {
     const mod = await import("@/data/astrologers");
     const saved = mod.ASTROLOGERS.splice(0, mod.ASTROLOGERS.length);
     try {
-      mountChat();
+      await mountChat();
       const none = await screen.findByTestId("no-guru", {}, { timeout: 1500 });
       expect(none).toHaveTextContent("No Guru is currently available.");
       guruTiming.searchMinMs = 0;
@@ -446,7 +446,7 @@ describe("Guru search and typing timing", () => {
 
   it("only one search runs, and the same Guru stays for the whole conversation", async () => {
     guruTiming.searchMinMs = 300;
-    mountChat();
+    await mountChat();
     const found = await screen.findByTestId("persona-header", {}, { timeout: 3000 });
     const name = found.textContent;
     const box = screen.getByLabelText("Message Divya Margdarshak");
