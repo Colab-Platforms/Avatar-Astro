@@ -21,13 +21,14 @@ describe("one shared loader", () => {
       "pages/TarotExperience.tsx",
       "pages/BirthChart.tsx",
       "pages/CompatibilityChecker.tsx",
-      "pages/InnerVoice.tsx",
       "pages/InnerVoiceWisdom.tsx",
       "pages/InnerVoiceChat.tsx",
       "pages/FutureLifePath.tsx",
     ]) {
       expect(src(page), page).toContain("<FullScreenLoader");
     }
+    // Know Your Karma is a conversation: it waits with the same in-chat typing indicator as Divya Margdarshak, not a spinner.
+    expect(src("components/karma/KarmaBot.tsx")).toContain("karma-typing");
     const tarot = src("pages/TarotExperience.tsx");
     expect(tarot).not.toContain("Akashic");
     expect(src("features/ratna/RatnaLoader.tsx")).toContain("OrbitalLoader");

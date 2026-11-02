@@ -1586,7 +1586,7 @@ function Results({ result, onReset }: { result: Result; onReset: () => void }) {
       <div className="r-note" style={{...cardStyle, marginBottom:40, borderColor:"rgba(89,34,9,0.35)"}}>
         <div style={{...label, color:"#592209"}}>How this comparison was made</div>
         <p style={{fontSize:16, lineHeight:1.7, color:"#4A2E1F"}}>
-          Each person's Sun sign comes from their birth date. The Seva then compares the two signs' elements and the traditional aspect between them. It uses fixed written text, no AI, and it does not give a score or percentage, because no recognised formula turns two Sun signs into a single number. Names are shown only for display and do not affect the result.
+          Each person's Sun sign comes from their birth date. The Seva then compares the two signs' elements and the traditional aspect between them. It uses fixed written text, no generated text, and it does not give a score or percentage, because no recognised formula turns two Sun signs into a single number. Names are shown only for display and do not affect the result.
         </p>
       </div>
 

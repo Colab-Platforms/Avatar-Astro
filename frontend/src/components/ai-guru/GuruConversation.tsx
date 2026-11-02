@@ -1,6 +1,18 @@
 import { forwardRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Flower2, User } from "lucide-react";
 import type { GuruMessage } from "./types";
+
+/** Turns **bold** into <strong> (used for the short section headings); everything else stays plain text. */
+function Inline({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
+        /^\*\*[^*]+\*\*$/.test(part) ? <strong key={i}>{part.slice(2, -2)}</strong> : <span key={i}>{part}</span>,
+      )}
+    </>
+  );
+}
 
 /** Renders paragraphs (blank-line separated) and "- " bullet lists as real elements. */
 function MessageText({ text }: { text: string }) {
@@ -12,11 +24,11 @@ function MessageText({ text }: { text: string }) {
         if (lines.length > 0 && lines.every((l) => /^\s*[-•*]\s+/.test(l))) {
           return (
             <ul key={i} className="list-disc space-y-1 pl-5">
-              {lines.map((l, j) => <li key={j}>{l.replace(/^\s*[-•*]\s+/, "")}</li>)}
+              {lines.map((l, j) => <li key={j}><Inline text={l.replace(/^\s*[-•*]\s+/, "")} /></li>)}
             </ul>
           );
         }
-        return <p key={i} className="whitespace-pre-line">{block}</p>;
+        return <p key={i} className="whitespace-pre-line"><Inline text={block} /></p>;
       })}
     </div>
   );
@@ -25,6 +37,8 @@ function MessageText({ text }: { text: string }) {
 interface GuruConversationProps {
   messages: GuruMessage[];
   loading: boolean;
+  /** Name of the assigned guidance profile, shown in the typing indicator. */
+  guruName?: string;
   onRetry?: (text: string) => void;
 }
 
@@ -35,7 +49,7 @@ interface GuruConversationProps {
  * columns.
  */
 const GuruConversation = forwardRef<HTMLDivElement, GuruConversationProps>(
-  ({ messages, loading, onRetry }, bottomRef) => (
+  ({ messages, loading, guruName, onRetry }, bottomRef) => (
     <div className="flex w-full flex-col gap-5 py-2">
       <AnimatePresence initial={false}>
         {messages.map((msg, i) => (
@@ -53,7 +67,7 @@ const GuruConversation = forwardRef<HTMLDivElement, GuruConversationProps>(
                   : "bg-gradient-to-br from-[#592209]/40 to-[#592209]/15 ring-1 ring-[#592209]/30"
               }`}
             >
-              {msg.role === "user" ? "🙏" : "🧘"}
+              {msg.role === "user" ? <User className="h-4 w-4 text-[#592209]" aria-hidden="true" /> : <Flower2 className="h-4 w-4 text-[#592209]" aria-hidden="true" />}
             </div>
             <div
               className={`max-w-[85%] rounded-2xl px-4 py-3 text-[15px] leading-relaxed ${
@@ -78,11 +92,12 @@ const GuruConversation = forwardRef<HTMLDivElement, GuruConversationProps>(
       </AnimatePresence>
 
       {loading && (
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-3" role="status" aria-live="polite" data-testid="guru-typing">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#592209]/40 to-[#592209]/15 text-base ring-1 ring-[#592209]/30">
-            🧘
+            <Flower2 className="h-4 w-4 text-[#592209]" aria-hidden="true" />
           </div>
           <div className="flex items-center gap-1.5 rounded-2xl rounded-tl-sm border border-primary/15 bg-[#FBF5EC] px-4 py-3.5">
+            <span className="mr-1 text-xs italic text-[#6B4A37]">{guruName ? `${guruName} is typing` : "Typing"}</span>
             {[0, 1, 2].map((d) => (
               <motion.span
                 key={d}

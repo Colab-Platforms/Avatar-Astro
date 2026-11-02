@@ -20,7 +20,7 @@ const blocks: EducationBlock[] = [
     ],
     ordered: true,
     after: [
-      "The Seva does not read the lines or marks on your palm, and it does not use AI to interpret your photo. The hand detection is a machine-learning model that runs in your browser, and everything after that is fixed rules and fixed text.",
+      "The Seva does not read the lines or marks on your palm, and it does not use generated text to interpret your photo. The hand detection is a machine-learning model that runs in your browser, and everything after that is fixed rules and fixed text.",
     ],
   },
   {

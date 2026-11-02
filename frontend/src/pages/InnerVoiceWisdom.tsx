@@ -4,6 +4,8 @@ import FullScreenLoader from "@/components/Loader/FullScreenLoader";
 import { FEATURES } from "@/data/featureCatalog";
 import { useFeatureTitle } from "@/hooks/useFeatureTitle";
 import { Link } from "react-router-dom";
+import { BookOpen, Bookmark, Check, Compass, Copy, Leaf, Lightbulb, Link2, RotateCcw, Sparkles, type LucideIcon } from "lucide-react";
+import LotusOm from "@/components/ai-guru/LotusOm";
 import FeatureIntro from "@/components/FeatureIntro";
 import { useAuthStore } from "@/store/authStore";
 import { requireSignIn } from "@/lib/authedFetch";
@@ -69,50 +71,56 @@ const CSS = `
 .ivw-src-chapter{font-family:'DM Sans', system-ui, sans-serif;font-size:10px;color:#301607;letter-spacing:2px;}
 
 /* Shloka display */
-.ivw-shloka{background:linear-gradient(160deg,rgba(89,34,9,.08),rgba(89,34,9,.06));border:1px solid rgba(89,34,9,.25);border-radius:24px;padding:48px 36px;text-align:center;margin-bottom:20px;position:relative;}
-.ivw-shloka-deco{position:absolute;font-family:'DM Sans', system-ui, sans-serif;font-size:22px;color:rgba(48,22,7,0.75);}
-.ivw-shloka-deco.tl{top:16px;left:24px;}
-.ivw-shloka-deco.br{bottom:16px;right:24px;}
-.ivw-dev{font-size:clamp(14px,3.5vw,30px);line-height:2.1;color:#592209;margin-bottom:22px;font-weight:400;letter-spacing:.8px;}
-.ivw-roman{font-style:italic;font-size:clamp(14px,2vw,20px);line-height:2;color:#592209;margin-bottom:18px;}
-.ivw-wbw-divider{width:60px;height:1px;background:rgba(89,34,9,0.08);margin:18px auto;}
-.ivw-wbw{font-family:'DM Sans', system-ui, sans-serif;font-size:10px;color:#301607;line-height:2;}
+.ivw-shloka{background:linear-gradient(165deg,#FFFBF3 0%,#F8EBD6 100%);border:1px solid rgba(229,138,69,.55);border-radius:26px;padding:44px 36px 36px;text-align:center;margin-bottom:22px;position:relative;box-shadow:0 18px 50px -24px rgba(89,34,9,.35),inset 0 0 0 6px rgba(255,251,243,.9),inset 0 0 0 7px rgba(229,138,69,.25);}
+.ivw-shloka-om{display:flex;justify-content:center;margin:-8px 0 18px;opacity:.95;}
+.ivw-shloka-deco{position:absolute;font-family:'DM Sans', system-ui, sans-serif;font-size:22px;color:#E58A45;}
+.ivw-shloka-deco.tl{top:20px;left:28px;}
+.ivw-shloka-deco.br{bottom:20px;right:28px;}
+.ivw-dev{font-size:clamp(20px,3.6vw,30px);line-height:2;color:#592209;margin-bottom:18px;font-weight:500;letter-spacing:.6px;}
+.ivw-roman{font-style:italic;font-size:clamp(14px,1.9vw,18px);line-height:1.9;color:#6B4A37;margin:0 auto;max-width:640px;}
+.ivw-wbw-divider{display:flex;align-items:center;gap:12px;margin:22px auto 14px;max-width:260px;color:#E58A45;}
+.ivw-wbw-divider::before,.ivw-wbw-divider::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(229,138,69,.7),transparent);}
+.ivw-wbw-lbl{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#6B4A37;margin-bottom:8px;}
+.ivw-wbw{font-family:'DM Sans', system-ui, sans-serif;font-size:13px;color:#4A2E1F;line-height:1.9;max-width:660px;margin:0 auto;}
 
-/* Info sections */
-.ivw-sections{display:flex;flex-direction:column;gap:16px;margin-bottom:20px;}
+/* Info sections: small boxes side by side */
+.ivw-sections{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:22px;}
+@media (max-width:640px){.ivw-sections{grid-template-columns:1fr;}}
+.ivw-sections > .ivw-sec:last-child:nth-child(odd){grid-column:1/-1;}
 
-.ivw-sec{border-radius:18px;padding:28px 30px;}
-.ivw-sec.meaning{background:rgba(89,34,9,.05);border:1px solid rgba(89,34,9,.2);}
-.ivw-sec.application{background:rgba(89,34,9,0.2);border:1px solid rgba(89,34,9,0.2);}
-.ivw-sec.wisdom{background:rgba(89,34,9,.07);border:1px solid rgba(89,34,9,.22);}
-.ivw-sec.action{background:rgba(89,34,9,.05);border:1px solid rgba(89,34,9,.2);}
-.ivw-sec.related{background:rgba(89,34,9,0.2);border:1px solid rgba(89,34,9,0.2);}
+.ivw-sec{--tint:#F5E9D6;--accent:#592209;position:relative;border-radius:20px;padding:22px 22px 24px;background:var(--tint);border:1px solid rgba(229,138,69,.38);box-shadow:0 8px 24px -18px rgba(89,34,9,.45);transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease;}
+.ivw-sec::before{content:"";position:absolute;left:22px;right:22px;top:0;height:3px;border-radius:0 0 4px 4px;background:var(--accent);opacity:.55;}
+.ivw-sec:hover{transform:translateY(-3px);border-color:rgba(229,138,69,.8);box-shadow:0 16px 32px -18px rgba(89,34,9,.5);}
+.ivw-sec.meaning{--tint:#F8EBD2;--accent:#B9722F;}
+.ivw-sec.application{--tint:#E8F0E1;--accent:#4F7A45;}
+.ivw-sec.wisdom{--tint:#ECE6F5;--accent:#6B58A6;}
+.ivw-sec.action{--tint:#F7E4DC;--accent:#B5502F;}
+.ivw-sec.reflect{--tint:#F9E7E9;--accent:#A8455A;}
+.ivw-sec.related{--tint:#EFE9E2;--accent:#6B4A37;}
 
-.ivw-sec-icon{font-size:22px;margin-bottom:10px;display:block;}
-.ivw-sec-lbl{font-family:'DM Sans', system-ui, sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;margin-bottom:14px;display:block;}
-.lbl-meaning{color:#592209;}
-.lbl-app{color:rgba(48,22,7,0.75);}
-.lbl-wisdom{color:#592209;}
-.lbl-action{color:#592209;}
-.lbl-related{color:rgba(48,22,7,0.72);}
+.ivw-sec-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.ivw-sec-icon{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;flex:none;border-radius:50%;background:rgba(255,251,243,.85);color:var(--accent);box-shadow:inset 0 0 0 1px rgba(89,34,9,.12);}
+.ivw-sec-lbl{font-family:'DM Sans', system-ui, sans-serif;font-size:11px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;line-height:1.35;color:var(--accent);}
 
-.ivw-sec-text{font-size:clamp(14px,2.2vw,21px);line-height:1.85;color:#301607;}
-.ivw-sec-text.gold{color:#592209;}
-.ivw-sec-text.italic{font-style:italic;color:rgba(48,22,7,1);}
-.ivw-sec-text.small{font-size:16px;color:#301607;font-style:italic;}
+.ivw-sec-text{font-size:clamp(14px,1.5vw,16px);line-height:1.75;color:#301607;}
+.ivw-sec-text.gold{color:#4A2E1F;}
+.ivw-sec-text.italic{font-style:italic;}
+.ivw-sec-text.small{font-size:14px;font-style:italic;color:#4A2E1F;}
 
 /* Mantra box */
-.ivw-mantra{background:linear-gradient(135deg,rgba(89,34,9,.15),rgba(89,34,9,.08));border:1px solid rgba(89,34,9,.35);border-radius:18px;padding:32px;text-align:center;margin-bottom:20px;}
-.ivw-mantra-lbl{font-family:'DM Sans', system-ui, sans-serif;font-size:10px;letter-spacing:3px;color:#592209;text-transform:uppercase;margin-bottom:14px;display:block;}
-.ivw-mantra-txt{font-family:'DM Sans', system-ui, sans-serif;font-size:clamp(14px,2.5vw,24px);color:#592209;letter-spacing:3px;line-height:1.8;margin-bottom:10px;}
-.ivw-mantra-count{font-family:'DM Sans', system-ui, sans-serif;font-size:10px;color:#592209;}
+.ivw-mantra{background:linear-gradient(135deg,#592209 0%,#7A3513 100%);border-radius:22px;padding:28px 26px;text-align:center;margin-bottom:22px;color:#F5E9D6;box-shadow:0 18px 40px -22px rgba(89,34,9,.7);position:relative;overflow:hidden;}
+.ivw-mantra::after{content:"";position:absolute;inset:8px;border:1px solid rgba(229,138,69,.45);border-radius:16px;pointer-events:none;}
+.ivw-mantra-lbl{font-family:'DM Sans', system-ui, sans-serif;font-size:11px;letter-spacing:3px;color:#F2B77F;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px;}
+.ivw-mantra-txt{font-family:'DM Sans', system-ui, sans-serif;font-size:clamp(16px,2.6vw,24px);color:#FBF5EC;letter-spacing:2px;line-height:1.7;margin-bottom:8px;}
+.ivw-mantra-count{font-family:'DM Sans', system-ui, sans-serif;font-size:12px;color:#F2B77F;}
 
 /* Buttons */
-.ivw-btns{display:flex;gap:12px;margin-top:8px;}
-.ivw-save{flex:1;background:rgba(89,34,9,.08);border:1px solid rgba(89,34,9,.3);border-radius:12px;padding:16px;color:#592209;font-family:'DM Sans', system-ui, sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .3s;}
-.ivw-save:hover{background:rgba(89,34,9,0.08);}
-.ivw-again{flex:1;background:transparent;border:1px solid rgba(89,34,9,.25);border-radius:12px;padding:16px;color:#592209;font-family:'DM Sans', system-ui, sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .3s;}
-.ivw-again:hover{background:rgba(89,34,9,.07);color:#592209;}
+.ivw-btns{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;}
+.ivw-save,.ivw-again{flex:1 1 150px;display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:14px;padding:15px 16px;font-family:'DM Sans', system-ui, sans-serif;font-size:11px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;cursor:pointer;transition:transform .2s,background .2s,box-shadow .2s;}
+.ivw-save{background:#592209;border:1px solid #592209;color:#F5E9D6;}
+.ivw-save:hover{transform:translateY(-2px);box-shadow:0 12px 26px -14px rgba(89,34,9,.7);}
+.ivw-again{background:#FFFBF3;border:1px solid rgba(89,34,9,.3);color:#592209;}
+.ivw-again:hover{transform:translateY(-2px);background:#F5E9D6;}
 
 /* Saved */
 .ivw-saved-hdr{font-family:'DM Sans', system-ui, sans-serif;font-size:10px;letter-spacing:3px;color:#301607;text-transform:uppercase;margin:32px 0 14px;}
@@ -157,23 +165,23 @@ function StarCanvas() {
 }
 
 interface FieldProps {
-  icon?: string;
+  icon: LucideIcon;
   label: string;
-  labelClass: string;
   text?: string;
   textClass?: string;
-  children?: React.ReactNode;
 }
 
-function Field({ icon, label, labelClass, text, textClass, children }: FieldProps) {
-  const content = text || children;
-  if (!content) return null;
+/** One small themed box: an icon chip and label, then the text. Renders nothing without text. */
+function Field({ icon: Icon, label, text, textClass }: FieldProps) {
+  if (!text) return null;
   return (
-    <div>
-      {icon && <span className="ivw-sec-icon">{icon}</span>}
-      <span className={`ivw-sec-lbl ${labelClass}`}>{label}</span>
-      <div className={`ivw-sec-text ${textClass || ""}`}>{content}</div>
-    </div>
+    <>
+      <div className="ivw-sec-head">
+        <span className="ivw-sec-icon"><Icon size={17} aria-hidden="true" /></span>
+        <span className="ivw-sec-lbl">{label}</span>
+      </div>
+      <div className={`ivw-sec-text ${textClass || ""}`}>{text}</div>
+    </>
   );
 }
 
@@ -251,7 +259,7 @@ export default function InnerVoiceWisdom() {
               { title: "Understand Its Meaning", text: "Read the Sanskrit verse, its transliteration, word meanings and the English meaning." },
               { title: "Apply the Wisdom", text: "Explore how the verse applies to you and the practical action it suggests." },
             ]}
-            disclaimer="The verse is chosen from a curated list and the personal reflection is AI-written. Please check any verse against an authentic edition before quoting or relying on it or relying on it."
+            disclaimer="The verse is chosen from a curated list and the personal reflection is generated. Please check any verse against an authentic edition before quoting or relying on it or relying on it."
           />
         )}
 
@@ -314,83 +322,54 @@ export default function InnerVoiceWisdom() {
               {display.chapter && <span className="ivw-src-chapter">{display.chapter}</span>}
             </div>
 
-            {display.context && <p style={{textAlign:"center",fontSize:14,color:"rgba(255,255,255,.65)",margin:"0 0 14px"}}>{display.context}</p>}
+            {display.context && <p style={{textAlign:"center",fontSize:15,color:"#4A2E1F",margin:"0 auto 18px",maxWidth:620,lineHeight:1.7}}>{display.context}</p>}
 
             {/* The Shloka */}
             <div className="ivw-shloka">
               <span className="ivw-shloka-deco tl">॥</span>
               <span className="ivw-shloka-deco br">॥</span>
+              <div className="ivw-shloka-om"><LotusOm size={46} /></div>
               {display.devanagari && <div className="ivw-dev">{display.devanagari}</div>}
               {display.transliteration && <div className="ivw-roman">{display.transliteration}</div>}
               {display.wordByWord && (
                 <>
-                  <div className="ivw-wbw-divider" />
+                  <div className="ivw-wbw-divider"><Sparkles size={14} aria-hidden="true" /></div>
+                  <div className="ivw-wbw-lbl">Word by word</div>
                   <div className="ivw-wbw">{display.wordByWord}</div>
                 </>
               )}
             </div>
 
-            {/* Content sections */}
+            {/* Content sections: small boxes side by side */}
             <div className="ivw-sections">
-
-              {display.meaning && (
-                <div className="ivw-sec meaning">
-                  <Field icon="📖" label="English Meaning" labelClass="lbl-meaning" text={display.meaning} textClass="gold" />
-                </div>
-              )}
-
-              {display.application && (
-                <div className="ivw-sec application">
-                  <Field icon="🎯" label="How This Speaks to Your Situation" labelClass="lbl-app" text={display.application} />
-                </div>
-              )}
-
-              {display.deeperWisdom && (
-                <div className="ivw-sec wisdom">
-                  <Field icon="🔮" label="Deeper Wisdom" labelClass="lbl-wisdom" text={display.deeperWisdom} textClass="italic" />
-                </div>
-              )}
-
-              {display.action && (
-                <div className="ivw-sec action">
-                  <Field icon="⚡" label="Practical Lesson for Today" labelClass="lbl-action" text={display.action} />
-                </div>
-              )}
-
-              {display.reflectionQuestion && (
-                <div className="ivw-sec wisdom">
-                  <Field icon="💭" label="Question to Reflect On" labelClass="lbl-wisdom" text={display.reflectionQuestion} textClass="italic" />
-                </div>
-              )}
-
-              {display.relatedVerse && (
-                <div className="ivw-sec related">
-                  <Field icon="🔗" label="Also See" labelClass="lbl-related" text={display.relatedVerse} textClass="small" />
-                </div>
-              )}
-
+              {display.meaning && <div className="ivw-sec meaning"><Field icon={BookOpen} label="English Meaning" text={display.meaning} textClass="gold" /></div>}
+              {display.application && <div className="ivw-sec application"><Field icon={Compass} label="How This Speaks to Your Situation" text={display.application} /></div>}
+              {display.deeperWisdom && <div className="ivw-sec wisdom"><Field icon={Sparkles} label="Deeper Wisdom" text={display.deeperWisdom} textClass="italic" /></div>}
+              {display.action && <div className="ivw-sec action"><Field icon={Leaf} label="Practical Lesson for Today" text={display.action} /></div>}
+              {display.reflectionQuestion && <div className="ivw-sec reflect"><Field icon={Lightbulb} label="Question to Reflect On" text={display.reflectionQuestion} textClass="italic" /></div>}
+              {display.relatedVerse && <div className="ivw-sec related"><Field icon={Link2} label="Also See" text={display.relatedVerse} textClass="small" /></div>}
             </div>
 
             {/* Mantra */}
             {display.mantra && (
               <div className="ivw-mantra">
-                <span className="ivw-mantra-lbl">🕉 Daily Contemplation Mantra</span>
+                <span className="ivw-mantra-lbl"><LotusOm size={20} /> Daily Contemplation Mantra</span>
                 <div className="ivw-mantra-txt">"{display.mantra}"</div>
-                {display.mantraCount && <div className="ivw-mantra-count">↳ {display.mantraCount}</div>}
+                {display.mantraCount && <div className="ivw-mantra-count">{display.mantraCount}</div>}
               </div>
             )}
 
-            <p style={{textAlign:"center",fontSize:13,fontStyle:"italic",color:"rgba(48,22,7,0.75)",margin:"4px 0 16px"}}>
+            <p style={{textAlign:"center",fontSize:13,fontStyle:"italic",color:"#6B4A37",margin:"4px 0 16px"}}>
               {display.verified
-                ? "The verse comes from a curated list; the personal reflection is AI-written. For study or formal use, please check the verse against an authentic edition."
-                : "This saved verse was suggested by an AI and may contain errors. Please verify the text and reference in an authentic edition before quoting."}
+                ? "The verse comes from a curated list; the personal reflection is generated. For study or formal use, please check the verse against an authentic edition."
+                : "This saved verse was suggested automatically and may contain errors. Please verify the text and reference in an authentic edition before quoting."}
             </p>
 
             <div className="ivw-btns">
-              <button className="ivw-save" onClick={saveShloka}>✦ Save Shloka</button>
-              <button className="ivw-again" onClick={copyShloka}>{copied ? "✓ Copied" : "⧉ Copy Verse"}</button>
+              <button className="ivw-save" onClick={saveShloka}><Bookmark size={15} aria-hidden="true" /> Save Shloka</button>
+              <button className="ivw-again" onClick={copyShloka}>{copied ? <><Check size={15} aria-hidden="true" /> Copied</> : <><Copy size={15} aria-hidden="true" /> Copy Verse</>}</button>
               <button className="ivw-again" onClick={()=>{ setResult(null); setViewingSaved(null); setSituation(""); }}>
-                ↩ Seek Another
+                <RotateCcw size={15} aria-hidden="true" /> Seek Another
               </button>
             </div>
 

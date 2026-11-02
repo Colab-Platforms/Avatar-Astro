@@ -71,7 +71,7 @@ export function Overview() {
 
       {empty ? (
         <Empty icon={Sparkles} title="Your journey begins here" body="You have no readings or conversations yet. Try one of these and it will appear here automatically."
-          action={<div className="mt-2 flex flex-wrap justify-center gap-2">{[{ p: "/tarot", t: "Tarot reading" }, { p: "/horoscopes", t: "Daily horoscope" }, { p: "/inner-voice/chat", t: "Talk to AI Guru" }, { p: "/birth-chart", t: "Birth chart" }].filter((x) => !isPathDisabled(x.p)).map((x) => <Link key={x.p} to={x.p} className={btn}>{x.t}</Link>)}</div>} />
+          action={<div className="mt-2 flex flex-wrap justify-center gap-2">{[{ p: "/tarot", t: "Tarot reading" }, { p: "/horoscopes", t: "Daily horoscope" }, { p: "/inner-voice/chat", t: "Talk to Divya Margdarshak" }, { p: "/birth-chart", t: "Birth chart" }].filter((x) => !isPathDisabled(x.p)).map((x) => <Link key={x.p} to={x.p} className={btn}>{x.t}</Link>)}</div>} />
       ) : (
         <>
           <section aria-labelledby="cont-h" className="mb-6">
@@ -226,7 +226,7 @@ export function MyActivity() {
         <label className="text-xs text-[#301607]/70">Feature
           <select className={`${field} mt-1 w-auto`} value={params.get("feature") ?? ""} onChange={(e) => set({ feature: e.target.value || null })}>
             <option value="">All features</option>
-            {[["tarot", "Tarot"], ["horoscope", "Daily Horoscope"], ["birth-chart", "Birth Chart"], ["compatibility", "Compatibility"], ["name-analysis", "Name Analysis"], ["palm-reading", "Palm Reading"], ["gemstone", "Gemstone"], ["karma", "Karma"], ["shloka", "Shloka"], ["ai-guru", "AI Guru"], ["inner-voice", "Inner Voice"]].map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+            {[["tarot", "Tarot"], ["horoscope", "Daily Horoscope"], ["birth-chart", "Birth Chart"], ["compatibility", "Compatibility"], ["name-analysis", "Name Analysis"], ["palm-reading", "Palm Reading"], ["gemstone", "Gemstone"], ["karma", "Karma"], ["shloka", "Shloka"], ["ai-guru", "Guru"], ["inner-voice", "Inner Voice"]].map(([v, l]) => <option key={v} value={v}>{l}</option>)}
           </select>
         </label>
         <label className="text-xs text-[#301607]/70">From<input type="date" className={`${field} mt-1 w-auto`} value={params.get("from") ?? ""} onChange={(e) => set({ from: e.target.value || null })} /></label>
@@ -263,11 +263,11 @@ export function Conversations() {
   const q = useConversations({ feature: params.get("feature"), page, pageSize: 12 });
   return (
     <>
-      <PageHeader title="My Conversations" sub="Your past chats with AI Guru and Inner Voice, saved so you can return to them." />
+      <PageHeader title="My Conversations" sub="Your past chats with Divya Margdarshak and Inner Voice, saved so you can return to them." />
       <div className="mb-5"><label className="text-xs text-[#301607]/70">Type
-        <select className={`${field} mt-1 w-auto`} value={params.get("feature") ?? ""} onChange={(e) => set({ feature: e.target.value || null })}><option value="">All</option><option value="ai-guru">AI Guru</option><option value="inner-voice">Inner Voice</option></select></label></div>
+        <select className={`${field} mt-1 w-auto`} value={params.get("feature") ?? ""} onChange={(e) => set({ feature: e.target.value || null })}><option value="">All</option><option value="ai-guru">Guru</option><option value="inner-voice">Inner Voice</option></select></label></div>
       {q.isLoading ? <Loading /> : q.error || !q.data ? <ErrorBox error={q.error} onRetry={() => q.refetch()} /> : q.data.items.length === 0 ? (
-        <Empty icon={MessageCircleHeart} title="No conversations yet" body="Chats with AI Guru and Inner Voice are saved here once you start one while signed in." action={<Link to="/inner-voice/chat" className={btn}>Talk to AI Guru</Link>} />
+        <Empty icon={MessageCircleHeart} title="No conversations yet" body="Chats with Divya Margdarshak and Inner Voice are saved here once you start one while signed in." action={<Link to="/inner-voice/chat" className={btn}>Talk to Divya Margdarshak</Link>} />
       ) : (
         <>
           <ul className="space-y-3">{q.data.items.map((c) => (

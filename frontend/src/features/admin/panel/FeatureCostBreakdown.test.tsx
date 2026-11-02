@@ -49,7 +49,7 @@ describe("AI feature cost breakdown", () => {
     expect(await screen.findByText("Paid (1)")).toBeInTheDocument();
     expect(screen.getByText("Free model (1)")).toBeInTheDocument();
     expect(screen.getByText("Unknown cost (1)")).toBeInTheDocument();
-    expect(screen.getByText("Free (no AI) (1)")).toBeInTheDocument();
+    expect(screen.getByText("Free (no model) (1)")).toBeInTheDocument();
     const unknownRow = screen.getByText("Palm reading (image)").closest("tr")!;
     expect(unknownRow.textContent).toContain("—");
     expect(unknownRow.textContent).not.toContain("$0.00");

@@ -1637,7 +1637,7 @@ function Results({data,onReset}){
       <div className="r-sec" style={{...cardStyle,marginBottom:56,borderColor:"rgba(255,126,71,0.35)"}}>
         <div style={{...smallLabel,color:"#592209"}}>How this profile was made</div>
         <p style={{fontSize:16,lineHeight:1.7,color:"#4A2E1F"}}>
-          The Rashis, Nakshatra, Lagna and Panchang above are calculated from your birth date, time and place (Vedic sidereal zodiac, Lahiri ayanamsa); nothing is looked up from a table or written by AI. The sign descriptions and insight tabs below are traditional written text for each Rashi, so people with the same Surya Rashi and Life Path read the same text. Your Life Path number is numerology, worked out by adding the digits of your birth date.
+          The Rashis, Nakshatra, Lagna and Panchang above are calculated from your birth date, time and place (Vedic sidereal zodiac, Lahiri ayanamsa); nothing is looked up from a table or generated text. The sign descriptions and insight tabs below are traditional written text for each Rashi, so people with the same Surya Rashi and Life Path read the same text. Your Life Path number is numerology, worked out by adding the digits of your birth date.
         </p>
       </div>
 

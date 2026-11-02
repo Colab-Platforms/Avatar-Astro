@@ -16,7 +16,7 @@ const TITLE_BY_PATH: Record<string, string> = {
   "/admin/shop-orders": "Shop & Orders",
   "/admin/content": "Content & banners",
   "/admin/payments": "Payments & plans",
-  "/admin/integrations": "AI & integrations",
+  "/admin/integrations": "Integrations",
   "/admin/reports": "Reports",
   "/admin/settings": "Settings & audit",
   "/admin/puja": "Puja",

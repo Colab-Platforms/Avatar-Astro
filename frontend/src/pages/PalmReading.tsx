@@ -526,7 +526,7 @@ export default function PalmReading() {
     <div>
       <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
       <div style={{ minHeight: "80vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px", color: "#301607" }}>
-        <div style={{ fontSize: 14, color: "#592209", letterSpacing: "0.3em", marginBottom: 32, fontWeight: 600 }}>✦ AI VISION ENGINE ✦</div>
+        <div style={{ fontSize: 14, color: "#592209", letterSpacing: "0.3em", marginBottom: 32, fontWeight: 600 }}>✦ HAND SCAN ✦</div>
         <div style={{ width: 64, height: 64, borderRadius: "50%", border: "3px solid rgba(89,34,9,0.18)", borderTopColor: "#592209", animation: "spin 0.9s linear infinite", marginBottom: 28 }}/>
         <div style={{ color: "#592209", fontSize: 16, fontWeight: 700, letterSpacing: "0.04em", marginBottom: 22, textAlign: "center" }}>{processingMessage}</div>
         <div style={{ width: "100%", maxWidth: 320, height: 6, background: "rgba(89,34,9,0.2)", borderRadius: 6, overflow: "hidden" }}>
@@ -732,7 +732,7 @@ export default function PalmReading() {
         <div style={{ ...card, marginTop: 28, borderColor: "rgba(188,106,77,0.4)" }}>
           <div style={{ fontSize: 13, color: "rgba(188,106,77,0.9)", letterSpacing: "0.15em", marginBottom: 10, textTransform: "uppercase", fontWeight: 700 }}>What this reading does not cover</div>
           <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: "#4A2E1F" }}>
-            This Seva does not read the lines or marks on your palm. It measures the shape of your hand and gives the traditional description for that shape. There is no AI interpretation, no score, and no prediction of your future, health, career or relationships.
+            This Seva does not read the lines or marks on your palm. It measures the shape of your hand and gives the traditional description for that shape. There is no generated interpretation, no score, and no prediction of your future, health, career or relationships.
           </p>
         </div>
 

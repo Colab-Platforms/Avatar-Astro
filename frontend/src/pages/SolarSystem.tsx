@@ -9,12 +9,12 @@ const SOLAR_SYSTEM_URL: string = import.meta.env.VITE_SOLAR_SYSTEM_URL || (impor
 
 export default function SolarSystem() {
   useEffect(() => {
-    document.title = "3D Solar System Explorer | Spiritual AI";
+    document.title = "3D Solar System Explorer | MyBhagya Astro";
     // replace(), not assign(): this route is swapped out of history, so the browser Back button
     // returns to the page the visitor came from instead of bouncing back here.
     if (SOLAR_SYSTEM_URL) window.location.replace(SOLAR_SYSTEM_URL);
     return () => {
-      document.title = "Spiritual AI";
+      document.title = "MyBhagya Astro";
     };
   }, []);
 

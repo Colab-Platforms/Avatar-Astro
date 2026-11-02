@@ -239,7 +239,7 @@ export function DeleteDialog({ kind, account, open, onClose, onDone }: { kind: A
           <li>The account is closed for good: it can no longer sign in, and every session ends now.</li>
           <li>Name, email, phone, password and profile details are erased; only an anonymous placeholder row remains.</li>
           <li>Their saved readings, conversations and personal activity timeline are permanently deleted.</li>
-          <li>Anonymous usage statistics and AI cost totals are kept, no longer linked to the person.</li>
+          <li>Anonymous usage statistics and cost totals are kept, no longer linked to the person.</li>
           <li>The admin audit history of this and earlier actions is kept.</li>
           {kind === "admin" && <li>Content they created stays; they lose all administrator access.</li>}
         </ul>

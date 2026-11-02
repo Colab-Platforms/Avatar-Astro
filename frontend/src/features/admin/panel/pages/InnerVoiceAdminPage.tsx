@@ -19,7 +19,7 @@ export default function InnerVoiceAdminPage() {
   const [msg, setMsg] = useState<string | null>(null);
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <PageHeader title="Inner Voice" subtitle="Know Your Karma, AI Guru, Sacred Shloka and Future Life Path: configuration, real usage, errors and provider status." />
+      <PageHeader title="Inner Voice" subtitle="Know Your Karma, Guru, Sacred Shloka and Future Life Path: configuration, real usage, errors and provider status." />
       {msg && <p role="status" className="rounded-lg bg-emerald-100 px-3 py-2 text-sm text-emerald-900">{msg}</p>}
       <QueryView q={q}>
         {(d) => {

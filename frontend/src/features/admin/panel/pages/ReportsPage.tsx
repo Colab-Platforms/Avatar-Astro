@@ -185,7 +185,7 @@ export default function ReportsPage() {
                       {d.leastUsed.map((f) => <li key={f.key}><Link className="flex items-center justify-between py-2 hover:text-[#803003]" to={`/admin/activity?feature=${f.key}&${rangeQs}`}><span>{f.label}</span><span className="tabular-nums text-[#6B6259]">{f.total}</span></Link></li>)}
                     </ul>
                   </Card>
-                  <Card title="Provider usage and failures" description="Feature requests grouped by the AI provider behind them.">
+                  <Card title="Provider usage and failures" description="Feature requests grouped by the model provider behind them.">
                     {d.providers.length === 0 ? <Empty title="No provider-backed requests" /> : (
                       <Table head={["Provider", "Requests", "Failed", "Failure rate"]}>
                         {d.providers.map((p) => <tr key={p.provider}><td className="px-3 py-2">{PROVIDER_LABEL[p.provider] ?? p.provider}</td><td className="px-3 py-2">{p.requests}</td><td className="px-3 py-2">{p.failed}</td><td className="px-3 py-2">{p.requests ? fmtPct(p.failed / p.requests) : "—"}</td></tr>)}

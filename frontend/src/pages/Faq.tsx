@@ -4,9 +4,9 @@ import FaqSection from "@/components/FaqSection";
 /** Standalone FAQ page (the footer links here). Reuses the homepage FAQ, including FAQs published from the admin panel. */
 const Faq = () => {
   useEffect(() => {
-    document.title = "FAQ | Spiritual AI";
+    document.title = "FAQ | MyBhagya Astro";
     return () => {
-      document.title = "Spiritual AI";
+      document.title = "MyBhagya Astro";
     };
   }, []);
 

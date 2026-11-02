@@ -19,8 +19,12 @@ beforeAll(() => {
 describe("FAQs", () => {
   const keys = Object.keys(FEATURE_FAQS) as (keyof typeof FEATURE_FAQS)[];
 
-  it("covers all twelve features and the astrologer section", () => {
-    for (const k of Object.keys(FEATURES)) expect(FEATURE_FAQS, k).toHaveProperty(k);
+  it("Divya Margdarshak has no FAQ block", () => {
+    expect(FEATURE_FAQS).not.toHaveProperty("guru");
+  });
+
+  it("covers the other eleven features and the astrologer section", () => {
+    for (const k of Object.keys(FEATURES).filter((x) => x !== "guru")) expect(FEATURE_FAQS, k).toHaveProperty(k);
     expect(FEATURE_FAQS).toHaveProperty("astrologers");
   });
 
@@ -59,8 +63,8 @@ describe("FAQs", () => {
   });
 
   it("the standalone FAQ block lists every question for its feature", () => {
-    render(<FeatureFaq feature="guru" />);
-    for (const f of FEATURE_FAQS.guru) expect(screen.getByText(f.question)).toBeInTheDocument();
+    render(<FeatureFaq feature="karma" />);
+    for (const f of FEATURE_FAQS.karma) expect(screen.getByText(f.question)).toBeInTheDocument();
   });
 });
 

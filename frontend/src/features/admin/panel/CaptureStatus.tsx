@@ -11,15 +11,15 @@ interface Diag {
   note: string;
 }
 
-/** Explains why AI usage might be missing, from this server process. Flags and counts only. */
+/** Explains why Usage might be missing, from this server process. Flags and counts only. */
 export function CaptureStatus() {
   const q = usePanel<Diag>("/costs/diagnostics");
   return (
-    <Card title="AI usage capture status" description="Why a request might show no provider, model or cost. This describes the server process answering this page.">
+    <Card title="Usage capture status" description="Why a request might show no provider, model or cost. This describes the server process answering this page.">
       {q.isLoading && <p className="text-sm text-[#6B6259]">Loading…</p>}
       {q.error && (
         <p role="alert" className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
-          Diagnostics are not available from this server ({q.error.message}). If it is running an older version of the backend, restart or redeploy it: an old process records activity without any AI usage.
+          Diagnostics are not available from this server ({q.error.message}). If it is running an older version of the backend, restart or redeploy it: an old process records activity without any recorded usage.
         </p>
       )}
       {q.data && (
@@ -30,7 +30,7 @@ export function CaptureStatus() {
           </p>
           {q.data.counters.providerCallsSeen === 0 && (
             <p role="note" className="rounded-lg bg-[#FBF8F3] p-3 text-xs leading-relaxed text-[#4A423A]">
-              No AI request has run on this server since it started, so there is nothing to record yet. Requests made before this server started (or on a different server) are never back-filled. Make one AI request (for example a Tarot reading) and reload this page: the counters below will move.
+              No model request has run on this server since it started, so there is nothing to record yet. Requests made before this server started (or on a different server) are never back-filled. Make one model request (for example a Tarot reading) and reload this page: the counters below will move.
             </p>
           )}
           <p className="flex flex-wrap items-center gap-2">
@@ -45,7 +45,7 @@ export function CaptureStatus() {
             <li>Calls outside a customer request (not counted): <strong className={q.data.counters.providerCallsWithoutRequestContext ? "text-red-700" : ""}>{q.data.counters.providerCallsWithoutRequestContext}</strong></li>
           </ul>
           {q.data.features.length > 0 && (
-            <Table head={["Feature (last 7 days)", "Requests", "With AI usage", "Succeeded, no AI usage", "Not successful"]}>
+            <Table head={["Feature (last 7 days)", "Requests", "With recorded usage", "Succeeded, no recorded usage", "Not successful"]}>
               {q.data.features.map((f) => (
                 <tr key={f.feature}>
                   <td className="px-3 py-2 font-medium">{f.feature}</td>

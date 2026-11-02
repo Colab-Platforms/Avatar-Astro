@@ -4,34 +4,34 @@ import { usePublicContent } from "@/lib/publicContent";
 
 const faqs = [
   {
-    question: "What can I explore on Spiritual?",
+    question: "What can I explore on MyBhagya?",
     answer:
-      "Spiritual brings astrology and spiritual guidance together in one place. You can explore Janma Kundali, Tarot Drishti, Naamank Jyotish, Hasta Rekha, Jodi Jyotish, Rashi Chakra, Ratna Jyotish, Daily Horoscope, Divya Margdarshak guidance, Live Darshan, and devotional experiences.",
+      "MyBhagya brings astrology and spiritual guidance together in one place. You can explore Janma Kundali, Tarot Drishti, Naamank Jyotish, Hasta Rekha, Jodi Jyotish, Rashi Chakra, Ratna Jyotish, Daily Horoscope, Divya Margdarshak guidance, Live Darshan, and devotional experiences.",
   },
   {
-    question: "How does Janma Kundali work on Spiritual?",
+    question: "How does Janma Kundali work on MyBhagya?",
     answer:
-      "Enter your birth details to generate your personalized Janma Kundali. Spiritual uses your birth information to present planetary positions and astrology-based insights in an easy-to-understand format.",
+      "Enter your birth details to generate your personalized Janma Kundali. MyBhagya uses your birth information to present planetary positions and astrology-based insights in an easy-to-understand format.",
   },
   {
-    question: "Can I use Spiritual without knowing much about astrology?",
+    question: "Can I use MyBhagya without knowing much about astrology?",
     answer:
-      "Yes. Spiritual is designed for both beginners and people who already follow astrology. Our Seva explain insights in a simple way so you can explore your chart, predictions, and spiritual guidance without needing advanced astrology knowledge.",
+      "Yes. MyBhagya is designed for both beginners and people who already follow astrology. Our Seva explain insights in a simple way so you can explore your chart, predictions, and spiritual guidance without needing advanced astrology knowledge.",
   },
   {
-    question: "What is Divya Margdarshak on Spiritual?",
+    question: "What is Divya Margdarshak on MyBhagya?",
     answer:
-      "Divya Margdarshak is your conversational spiritual guide. You can ask questions about astrology, life situations, spirituality, and personal guidance and receive AI-powered responses based on the information available to the experience.",
+      "Divya Margdarshak is your conversational spiritual guide. You can ask questions about astrology, life situations, spirituality, and personal guidance and receive personalized responses based on the information available to the experience.",
   },
   {
-    question: "Can I get a daily horoscope on Spiritual?",
+    question: "Can I get a daily horoscope on MyBhagya?",
     answer:
-      "Yes. Spiritual provides daily horoscope guidance based on your zodiac sign, helping you explore themes and insights for your day.",
+      "Yes. MyBhagya provides daily horoscope guidance based on your zodiac sign, helping you explore themes and insights for your day.",
   },
   {
     question: "What other spiritual experiences are available?",
     answer:
-      "Along with astrology Seva, Spiritual includes Live Darshan, temples, Daily Aarti, spiritual books, and Mantras & Chants, bringing multiple spiritual experiences together in one platform.",
+      "Along with astrology Seva, MyBhagya includes Live Darshan, temples, Daily Aarti, spiritual books, and Mantras & Chants, bringing multiple spiritual experiences together in one platform.",
   },
 ];
 

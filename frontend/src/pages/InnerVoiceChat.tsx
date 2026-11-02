@@ -8,12 +8,7 @@ import { API_BASE_URL } from "@/lib/api";
 import CosmicOverlay from "@/components/ai-guru/CosmicOverlay";
 import GuruSidebar, { type GuruTab } from "@/components/ai-guru/GuruSidebar";
 import GuruTopHeader from "@/components/ai-guru/GuruTopHeader";
-import GuruTabs from "@/components/ai-guru/GuruTabs";
 import GuruProgressBar from "@/components/ai-guru/GuruProgressBar";
-import HeroWelcome from "@/components/ai-guru/HeroWelcome";
-import CategoryCards from "@/components/ai-guru/CategoryCards";
-import AnalysisTimeline from "@/components/ai-guru/AnalysisTimeline";
-import SuggestedQuestions from "@/components/ai-guru/SuggestedQuestions";
 import GuruConversation from "@/components/ai-guru/GuruConversation";
 import GuruChatInput from "@/components/ai-guru/GuruChatInput";
 import LanguageControls from "@/components/ai-guru/LanguageControls";
@@ -23,10 +18,15 @@ import { authRequest } from "@/lib/authClient";
 import { askGuru, GuruChatError, MAX_GURU_INPUT_CHARS } from "@/lib/guruChat";
 import { authedFetch, requireSignIn } from "@/lib/authedFetch";
 import { ASTROLOGERS } from "@/data/astrologers";
-import FeatureFaq from "@/components/FeatureFaq";
 import { assignPersona, lastPersonaId, personaInstruction, rememberPersona, type PersonaChoice } from "@/lib/guruPersona";
 import { takeHandoff } from "@/lib/guruHandoff";
-import { SearchingGuru } from "@/components/ai-guru/PersonaCard";
+import WelcomePanel from "@/components/ai-guru/WelcomePanel";
+import { type GuruTopic } from "@/components/ai-guru/topics";
+import { useAuthStore } from "@/store/authStore";
+import { SearchingGuru, GuruUnavailable } from "@/components/ai-guru/PersonaCard";
+import { guruTiming, typingDelayMs } from "@/lib/guruTiming";
+import { allowedReferences, buildGrounding, groundingPrompt, wantsCalendar } from "@/lib/guruScripture";
+import { fetchTodayCalendar } from "@/lib/karmaCalendar";
 
 
 // Configurable so a deprecated/renamed model doesn't require a code change —
@@ -1106,12 +1106,41 @@ export default function InnerVoiceChat(){
   const [activeTab,setActiveTab]=useState("consultation");
   // Guidance profile for this conversation (from the astrologer data) and the result the user came from, if any.
   const [persona,setPersona]=useState<PersonaChoice|null>(null);
-  const [searching,setSearching]=useState(false);
+  // Searching starts as soon as the page opens; a handoff question turns it off again (it searches inside send).
+  const [searching,setSearching]=useState(true);
+  const [noGuru,setNoGuru]=useState(false);
+  const searchRef=useRef<Promise<PersonaChoice|null>|null>(null);
   const [resultName,setResultName]=useState("");
   const personaChosen=useRef(false);
   const personaRef=useRef<PersonaChoice|null>(null);
   const ctxRef=useRef<{feature:string;featureName:string;context:string}|null>(null);
   const handoffTaken=useRef(false);
+  // Looks for an available profile (real profiles must be online). One search at a time; once a profile is
+  // assigned it is kept for the whole conversation.
+  const findGuru=(question:string):Promise<PersonaChoice|null>=>{
+    if(personaRef.current)return Promise.resolve(personaRef.current);
+    if(searchRef.current)return searchRef.current;
+    setNoGuru(false);setSearching(true);
+    const run=(async()=>{
+      // The search itself starts now and is not delayed. Once an eligible Guru is found the screen stays up for at least
+      // guruTiming.searchMinMs so it does not flash; a slower search simply takes as long as it takes, and when no Guru
+      // is available the message appears straight away (no waiting to say "none").
+      await Promise.resolve(); // let searchRef be set before this finishes, even when there is nothing to wait for
+      const started=Date.now();
+      const choice=assignPersona(ASTROLOGERS,question,ctxRef.current?.feature,lastPersonaId());
+      if(choice){const wait=guruTiming.searchMinMs-(Date.now()-started);if(wait>0)await new Promise<void>(r=>setTimeout(r,wait));}
+      searchRef.current=null;
+      if(choice){personaRef.current=choice;personaChosen.current=true;rememberPersona(choice.profile.id);setPersona(choice);}
+      else setNoGuru(true);
+      setSearching(false);
+      return choice;
+    })();
+    searchRef.current=run;
+    return run;
+  };
+  const [topic,setTopic]=useState<GuruTopic|null>(null);
+  const authUser=useAuthStore(s=>s.user) as {firstName?:string;lastName?:string;email?:string}|null;
+  const displayName=[authUser?.firstName,authUser?.lastName].filter(Boolean).join(" ")||authUser?.email?.split("@")[0]||"Seeker";
   const [messages,setMessages]=useState([]);
   const [input,setInput]=useState("");
   const [loading,setLoading]=useState(false);
@@ -1174,29 +1203,29 @@ export default function InnerVoiceChat(){
   const buildHistory=()=>messages.filter(m=>!m.error).map(m=>({role:(m.role==="user"?"user":"assistant") as "user"|"assistant",content:typeof m.content==="string"?m.content:(m.content?.message||"[response]")}));
 
   const send=async(text,{retry=false}={})=>{
-    const msg=text.trim().slice(0,MAX_GURU_INPUT_CHARS);if(!msg||loading||searching)return;
+    const msg=text.trim().slice(0,MAX_GURU_INPUT_CHARS);if(!msg||loading||searchRef.current)return;
     if(!requireSignIn(()=>{void send(text,{retry});}))return; // signed out: ask first, the typed message stays in the box
+    // No chat opens without an available profile: find one first; if there is none the message stays in the box.
+    if(!personaRef.current&&!(await findGuru(msg))){setInput(msg);return;}
     setInput("");if(textareaRef.current)textareaRef.current.style.height="24px";
     // On retry the user's message is already shown; only drop the failed reply.
     if(!retry)setMessages(prev=>[...prev,{role:"user",content:msg}]);
     setLoading(true);
     try{
-      // First message of a conversation: choose a guidance profile. Follow-ups keep it, with no new search.
-      let choice=personaRef.current;
-      let revealPersona=Promise.resolve();
-      if(!personaChosen.current){
-        personaChosen.current=true;
-        choice=assignPersona(ASTROLOGERS,msg,ctxRef.current?.feature,lastPersonaId());
-        personaRef.current=choice;
-        if(choice){
-          rememberPersona(choice.profile.id);
-          setSearching(true);
-          revealPersona=new Promise<void>(r=>setTimeout(r,1600)).then(()=>{setPersona(choice);setSearching(false);});
-        }
-      }
+      const choice=personaRef.current;
       const ctx=ctxRef.current;
+      // The typing indicator lasts at least as long as the length of the message suggests. It starts now, together with the
+      // real request, so the answer is never held back beyond that and a slow answer adds nothing.
+      const typingDone=new Promise<void>(r=>setTimeout(r,typingDelayMs(msg)));
+      // Scripture and calendar facts come only from verified sources: the curated verse list, a short list of Bhagavata
+      // stories, and (only when the user asks about the Hindu calendar) the calculated Panchang.
+      const asksCalendar=wantsCalendar(msg);
+      const calendar=asksCalendar?await fetchTodayCalendar().catch(()=>null):null;
+      const grounding=buildGrounding(msg,calendar,asksCalendar);
       const extraSystem=[
         personaInstruction(choice),
+        groundingPrompt(grounding),
+        topic?`Topic chosen by the user: ${topic.title}. ${topic.hint}`:"",
         ctx&&ctx.context?`The user is asking about their own "${ctx.featureName}" result. Use these facts about it and do not invent others: ${ctx.context}`:"",
       ].filter(Boolean).join("\n\n");
       // History excludes the failed-reply bubbles and the message being sent now.
@@ -1204,7 +1233,8 @@ export default function InnerVoiceChat(){
       const baseHistory=retry?history.slice(0,-1):history;
       const detected=detectLanguage(msg);
       const languageDirective=buildLanguageDirective(inputLanguage,replyLanguage,detected);
-      const [data]=await Promise.all([askGuru(baseHistory,msg,languageDirective,conversationIdRef.current||undefined,extraSystem),revealPersona]);
+      // The reply is shown only after the typing moment; a reply that arrives early waits for it, a late one is shown at once.
+      const [data]=await Promise.all([askGuru(baseHistory,msg,languageDirective,conversationIdRef.current||undefined,extraSystem,allowedReferences(grounding)),typingDone]);
       if(data.conversationId)conversationIdRef.current=data.conversationId;
       setMessages(prev=>[...prev.filter(m=>!m.error),{role:"guru",content:data}]);
       if(data.progress)setProgress(data.progress);
@@ -1221,7 +1251,8 @@ export default function InnerVoiceChat(){
     if(handoffTaken.current)return;
     handoffTaken.current=true;
     const h=takeHandoff();
-    if(!h)return;
+    if(!h){void findGuru("");return;}
+    setSearching(false);
     ctxRef.current={feature:h.feature,featureName:h.featureName,context:h.context};
     setResultName(h.featureName);
     void send(h.question);
@@ -1285,8 +1316,9 @@ export default function InnerVoiceChat(){
   // them into Consultation Mode.
   const newConversation=()=>{
     // A new conversation gets a new guidance profile, no result context and a new saved-conversation id.
-    personaChosen.current=false;personaRef.current=null;ctxRef.current=null;
-    setPersona(null);setSearching(false);setResultName("");
+    personaChosen.current=false;personaRef.current=null;searchRef.current=null;ctxRef.current=null;
+    setPersona(null);setResultName("");setTopic(null);
+    void findGuru("");
     conversationIdRef.current=null;
     setMessages([]);
     setInput("");
@@ -1312,6 +1344,28 @@ export default function InnerVoiceChat(){
     }
   };
 
+  const composer=(
+    <>
+      <LanguageControls
+        inputLanguage={inputLanguage}
+        onInputLanguageChange={setInputLanguage}
+        replyLanguage={replyLanguage}
+        onReplyLanguageChange={setReplyLanguage}
+      />
+      <GuruChatInput
+        ref={textareaRef}
+        value={input}
+        onChange={(v)=>{setInput(v);autoResize();}}
+        onSend={()=>send(input)}
+        onKeyDown={onKeyDown}
+        listening={listening}
+        onToggleVoice={toggleVoice}
+        loading={loading||searching}
+        glowPulse={suggestionPulse}
+      />
+    </>
+  );
+
   return(
     <div className="relative flex h-screen w-full overflow-hidden bg-[#FBF5EC] font-['DM Sans', system-ui, sans-serif] text-foreground">
       <style>{CSS}</style>
@@ -1336,13 +1390,6 @@ export default function InnerVoiceChat(){
 
       <main className="relative z-10 flex min-w-0 flex-1 flex-col">
         <GuruTopHeader onOpenSidebar={()=>setSidebarOpen(true)} persona={persona?.profile??null} />
-        <GuruTabs
-          activeTab={activeTab as GuruTab}
-          onChange={handleTabChange}
-          reportReady={!!report}
-          reportGenerating={generatingReport}
-        />
-
         {activeTab==="consultation"&&(
           <>
             {progress>0&&(
@@ -1355,35 +1402,15 @@ export default function InnerVoiceChat(){
               <div ref={mainScrollRef} className="flex-1 overflow-y-auto px-4 py-6 md:px-8">
                 <div className="mx-auto flex max-w-3xl flex-col gap-8">
                   <AnimatePresence mode="wait">
-                    {messages.length===0 ? (
+                    {messages.length===0&&searching ? (
+                      <motion.div key="searching"><SearchingGuru/></motion.div>
+                    ) : messages.length===0&&noGuru ? (
+                      <motion.div key="noguru"><GuruUnavailable onRetry={()=>{void findGuru("");}}/></motion.div>
+                    ) : messages.length===0 ? (
                       <motion.div key="welcome" className="flex flex-col gap-8">
-                        <motion.div
-                          className="flex flex-col gap-8"
-                          initial={{opacity:0,y:-20,scale:0.98}}
-                          animate={{opacity:1,y:0,scale:1}}
-                          exit={{opacity:0,y:-20,scale:0.98}}
-                          transition={{duration:0.3,ease:"easeInOut"}}
-                        >
-                          <HeroWelcome name={profile?.name||"Seeker"} />
-                        </motion.div>
-                        <CategoryCards suggestions={SUGGESTIONS} onSelect={handleSuggestionSelect} />
-                        <motion.div
-                          initial={{opacity:0,y:-15}}
-                          animate={{opacity:1,y:0}}
-                          exit={{opacity:0,y:-15}}
-                          transition={{duration:0.25,delay:0.15,ease:"easeInOut"}}
-                        >
-                          <AnalysisTimeline/>
-                        </motion.div>
-                        <motion.div
-                          initial={{opacity:0,y:-10}}
-                          animate={{opacity:1,y:0}}
-                          exit={{opacity:0,y:-10}}
-                          transition={{duration:0.25,delay:0.2,ease:"easeInOut"}}
-                        >
-                          <SuggestedQuestions onSelectSuggestion={handleSuggestionSelect} />
-                        </motion.div>
-                        <FeatureFaq feature="guru" className="px-0 pb-4 pt-0" />
+                        <WelcomePanel name={displayName} topic={topic} onTopicChange={setTopic} onStarter={handleSuggestionSelect}>
+                          {composer}
+                        </WelcomePanel>
                       </motion.div>
                     ) : (
                       <motion.div
@@ -1394,34 +1421,18 @@ export default function InnerVoiceChat(){
                         transition={{duration:0.3,ease:"easeInOut"}}
                       >
                         {resultName&&<p className="mb-3 text-center text-xs text-muted-foreground" data-testid="result-context-note">Using your {resultName} result for this conversation.</p>}
-                        <GuruConversation ref={bottomRef} messages={messages} loading={loading&&!searching} onRetry={(t)=>send(t,{retry:true})} />
+                        <GuruConversation ref={bottomRef} messages={messages} guruName={persona?.profile.name} loading={loading&&!searching} onRetry={(t)=>send(t,{retry:true})} />
                         {searching&&<div className="mt-4"><SearchingGuru/></div>}
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </div>
               </div>
-              <div className="border-t border-primary/15 bg-[#FBF5EC]/95 px-4 py-4 backdrop-blur-xl md:px-8">
-                <div className="mx-auto max-w-3xl">
-                  <LanguageControls
-                    inputLanguage={inputLanguage}
-                    onInputLanguageChange={setInputLanguage}
-                    replyLanguage={replyLanguage}
-                    onReplyLanguageChange={setReplyLanguage}
-                  />
-                  <GuruChatInput
-                    ref={textareaRef}
-                    value={input}
-                    onChange={(v)=>{setInput(v);autoResize();}}
-                    onSend={()=>send(input)}
-                    onKeyDown={onKeyDown}
-                    listening={listening}
-                    onToggleVoice={toggleVoice}
-                    loading={loading}
-                    glowPulse={suggestionPulse}
-                  />
+              {messages.length>0&&(
+                <div className="border-t border-primary/15 bg-[#FBF5EC]/95 px-4 py-4 backdrop-blur-xl md:px-8">
+                  <div className="mx-auto max-w-3xl">{composer}</div>
                 </div>
-              </div>
+              )}
             </div>
           </>
         )}

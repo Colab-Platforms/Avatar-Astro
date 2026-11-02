@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -8,7 +8,22 @@ import PublishedArticles from '@/components/PublishedArticles';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const categories = ['All', 'Beginner Astrology', 'Celestial Events', 'Planetary Transits', 'Rituals & Practices', 'Life Cycles'];
+/** Card picture. If the file cannot load, a plain tinted box with the post's symbol is shown instead of an empty space. */
+const BlogThumb = ({ src, symbol, alt }: { src: string; symbol: string; alt: string }) => {
+  const [failed, setFailed] = useState(false);
+  if (failed) {
+    return (
+      <div className="flex h-48 items-center justify-center bg-gradient-to-br from-[#F5E9D6] to-[#E9B887]" role="img" aria-label={alt}>
+        <span className="text-6xl text-[#592209]" aria-hidden="true">{symbol}</span>
+      </div>
+    );
+  }
+  return (
+    <div className="h-48 overflow-hidden bg-[#F5E9D6]">
+      <img src={src} alt={alt} loading="lazy" onError={() => setFailed(true)} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+    </div>
+  );
+};
 
 const Blog = () => {
   const pageRef = useRef<HTMLDivElement>(null);
@@ -51,30 +66,12 @@ const Blog = () => {
 
         <PublishedArticles />
 
-        {/* Categories */}
-        <div className="flex flex-wrap justify-center gap-3 mb-12">
-          {categories.map((category) => (
-            <button
-              key={category}
-              className={`px-4 py-2 rounded-full text-sm transition-all ${
-                category === 'All'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'glass-card hover:border-primary/30 text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {category}
-            </button>
-          ))}
-        </div>
-
         {/* Blog Grid */}
         <div className="blog-grid grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {blogPosts.map((post) => (
             <article key={post.id} className="blog-card glass-card-hover rounded-2xl overflow-hidden group">
               {/* Thumbnail */}
-              <div className="h-48 bg-gradient-to-br from-cosmic-purple/50 to-cosmic-blue/50 flex items-center justify-center">
-                <span className="text-6xl">{post.image}</span>
-              </div>
+              <BlogThumb src={post.image} symbol={post.symbol} alt={post.title} />
               
               {/* Content */}
               <div className="p-6">

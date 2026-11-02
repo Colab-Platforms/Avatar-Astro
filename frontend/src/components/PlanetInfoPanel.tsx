@@ -284,7 +284,7 @@ export const PlanetInfoPanel = ({ planet, influence, isOpen, onClose, zodiacSign
           >
             <p className="text-[9px] uppercase tracking-widest text-white/45 mb-2 flex items-center gap-1.5">
               <Sparkles className="w-2.5 h-2.5" style={{ color: planet.color }} />
-              AI Cosmic Reading
+              Cosmic Reading
             </p>
             <p className="text-xs leading-relaxed text-white/80">{detail.aiInterpretation}</p>
           </motion.div>

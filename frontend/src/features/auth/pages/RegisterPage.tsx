@@ -139,7 +139,7 @@ export default function RegisterPage() {
       }
       subtitle={
         step === "details"
-          ? "Join Spiritual and unlock personalized cosmic guidance."
+          ? "Join MyBhagya and unlock personalized cosmic guidance."
           : step === "method"
             ? "Choose how you want to verify your new account."
             : `Confirm the OTP sent to +91 ${pendingPhone}`

@@ -9,7 +9,7 @@ export interface Faq {
   answer: string;
 }
 
-export type FaqKey = FeatureKey | "astrologers";
+export type FaqKey = Exclude<FeatureKey, "guru"> | "astrologers"; // Divya Margdarshak has no FAQ block
 
 export const FEATURE_FAQS: Record<FaqKey, Faq[]> = {
   tarot: [
@@ -210,38 +210,6 @@ export const FEATURE_FAQS: Record<FaqKey, Faq[]> = {
       question: "How do I go deeper?",
       answer:
         "Ask Divya Margdarshak about your reflection from the box under your result, or track your daily practices in Karma Sankhya.",
-    },
-  ],
-  guru: [
-    {
-      question: "What kinds of questions can I ask?",
-      answer:
-        "Anything you would like perspective on: relationships, career, family, purpose, stress, or spiritual practice. You can also ask about your own Kundali, tarot, palm or numerology result.",
-    },
-    {
-      question: "How does Divya Margdarshak understand my question?",
-      answer:
-        "It reads your message, the conversation so far and, when you arrive from a result, the details of that result. It then matches your question to a guidance area and replies in your language.",
-    },
-    {
-      question: "Can I ask follow-up questions?",
-      answer:
-        "Yes. Keep the conversation going and the earlier messages are taken into account. Start a new conversation whenever you want to explore something different.",
-    },
-    {
-      question: "Can I explore spiritual and astrological guidance?",
-      answer:
-        "Yes. Replies draw on Vedic and Indian spiritual traditions, including the Gita and Upanishads, as well as Jyotish, always offered as perspectives for reflection.",
-    },
-    {
-      question: "How can I get more personalised guidance?",
-      answer:
-        "Share specifics in your own words. You can also generate a Janma Kundali or another reading first and use \"Ask Divya\" from it, so your result travels with your question.",
-    },
-    {
-      question: "Are the answers written by a person?",
-      answer:
-        "No. Divya Margdarshak is AI-guided. Replies are generated for your question, with a focus area chosen from the guidance profiles, and they are not a live consultation.",
     },
   ],
   karmaScore: [

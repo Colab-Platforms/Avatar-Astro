@@ -116,7 +116,7 @@ export default function NameDestinyReport({ profile }: { profile: NameProfile })
       </header>
 
       <div className="mx-auto max-w-3xl rounded-2xl border border-[#592209]/35 bg-[#592209]/5 p-5 text-sm leading-relaxed text-[#4A2E1F]">
-        <strong className="text-[#592209]">How this was made.</strong> Each number is simple arithmetic on the letters of your name or the digits of your birth date, and the working is shown for every one. The descriptions are fixed traditional meanings written for each number. No AI, score or prediction is involved.
+        <strong className="text-[#592209]">How this was made.</strong> Each number is simple arithmetic on the letters of your name or the digits of your birth date, and the working is shown for every one. The descriptions are fixed traditional meanings written for each number. No generated text, score or prediction is involved.
       </div>
 
       <section aria-label="Your numbers" className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">

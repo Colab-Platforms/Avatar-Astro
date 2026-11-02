@@ -25,7 +25,7 @@ const blocks: EducationBlock[] = [
       "Names are shown on the result page and do not change the result.",
       "The Seva does not ask for birth time or place, and it does not use numerology, Moon signs or any birth chart.",
     ],
-    after: ["Your entries are processed in your browser. This Seva does not send them to MyBhagya Astro's servers and does not use AI."],
+    after: ["Your entries are processed in your browser. This Seva does not send them to MyBhagya Astro's servers and uses no automated text generation."],
   },
   {
     heading: "How Is the Compatibility Result Calculated?",

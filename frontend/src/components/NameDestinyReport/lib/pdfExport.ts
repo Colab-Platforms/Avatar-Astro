@@ -73,7 +73,7 @@ export function downloadBlueprintPDF(profile: NameProfile) {
   text(`Sun sign (Western, by date): ${profile.zodiac}`, 11, false, SLATE);
   y += 6;
   text(
-    "How this was made: each number below is simple arithmetic on your name's letters or your birth date, shown step by step. The descriptions are fixed traditional interpretations. No AI, score or prediction is involved.",
+    "How this was made: each number below is simple arithmetic on your name's letters or your birth date, shown step by step. The descriptions are fixed traditional interpretations. No generated text, score or prediction is involved.",
     9,
     false,
     SLATE,

@@ -37,7 +37,7 @@ const blocks: EducationBlock[] = [
     ],
     ordered: true,
     after: [
-      "Everything runs in your browser. Your name and birth date are not sent to a server, and no AI is used.",
+      "Everything runs in your browser. Your name and birth date are not sent to a server, and no text-generation service is used.",
     ],
   },
   {
