@@ -21,7 +21,8 @@ import { detectLanguage, buildLanguageDirective, type InputLanguageChoice, type 
 import { aiChat } from "@/lib/aiClient";
 import { screenChatMessage } from "@/lib/chatScreen";
 import { SignInRequiredError } from "@/lib/authedFetch";
-import { authRequest } from "@/lib/authClient";
+import { authRequest, AuthApiError } from "@/lib/authClient";
+import { resolveRestoreTarget, conversationUrl } from "@/lib/guruSessionRestore";
 import { askGuru, GuruChatError, MAX_GURU_INPUT_CHARS } from "@/lib/guruChat";
 import { fetchDailyChatStatus, consumeDailyChatSession, DailyChatLimitError } from "@/lib/dailyChatLimit";
 import { useDailyChatLimitStore, useDailyChatCountdownTicker, formatRemaining } from "@/store/dailyChatLimitStore";
@@ -29,7 +30,7 @@ import { authedFetch, requireSignIn } from "@/lib/authedFetch";
 import { ASTROLOGERS } from "@/data/astrologers";
 import FeatureFaq from "@/components/FeatureFaq";
 import { assignPersona, lastPersonaId, personaInstruction, rememberPersona, type PersonaChoice } from "@/lib/guruPersona";
-import { takeHandoff } from "@/lib/guruHandoff";
+import { takeHandoff, hasPendingHandoff } from "@/lib/guruHandoff";
 import { SearchingGuru } from "@/components/ai-guru/PersonaCard";
 
 
@@ -1133,34 +1134,77 @@ export default function InnerVoiceChat(){
   const [savedMantras,setSavedMantras]=useState(()=>{try{return JSON.parse(localStorage.getItem("iv_saved_mantras")||"[]");}catch{return [];}});
   const [chatSessions,setChatSessions]=useState(()=>{try{return JSON.parse(localStorage.getItem("iv_chat_sessions")||"[]");}catch{return [];}});
   const conversationIdRef=useRef(null); // the saved conversation this chat belongs to (set by the server)
-  // "Continue this conversation" from the dashboard opens /inner-voice/chat?conversation=<id>: load the saved messages (the server only returns the signed-in user's own).
-  useEffect(()=>{
-    const id=new URLSearchParams(window.location.search).get("conversation");
-    if(!id)return;
-    let cancelled=false;
-    authRequest<any>(`/me/conversations/${encodeURIComponent(id)}`).then((c:any)=>{
-      if(cancelled||c?.feature!=="ai-guru"||!Array.isArray(c.messages))return;
-      conversationIdRef.current=c.id;
-      setMessages(c.messages.map((m:any)=>m.role==="user"?{role:"user",content:m.content}:{role:"guru",content:{type:"gathering",message:m.content}}));
-    }).catch(()=>{/* not found or not yours: start a normal new chat */});
-    return()=>{cancelled=true;};
-  },[]);
   const bottomRef=useRef(null),textareaRef=useRef(null),recognitionRef=useRef(null),mainScrollRef=useRef(null);
   const profile=(()=>{try{return JSON.parse(localStorage.getItem("iv_profile")||"null");}catch{return null;}})();
 
   // Daily free-tier timer: backend is the source of truth; we only mirror it.
-  // One read on mount and one on tab re-focus (no polling); the 1s ticker is a
-  // local countdown that flips to EXPIRED at expiresAt.
+  // The 1s ticker is a local countdown derived from expiresAt (on the server's clock), never a source of truth.
   const chatLimit=useDailyChatLimitStore();
   useDailyChatCountdownTicker();
   const limitReached=chatLimit.status==="EXPIRED";
+
+  // Restoring the saved conversation on open / refresh. Until it settles the thread shows a loader (never a
+  // flash of an empty new chat) and sending is blocked, so a message can't start a duplicate conversation while
+  // the existing one is still being fetched. "error" keeps sending blocked too until Retry or an explicit New Chat.
+  // A pending "Need more guidance?" handoff starts a brand-new consultation, so there is nothing to wait for.
+  const [restore,setRestore]=useState<"loading"|"done"|"error">(()=>hasPendingHandoff()?"done":"loading");
+  const [restoreTick,setRestoreTick]=useState(0);
+  const restoring=restore!=="done";
+  const skippedRestoreForHandoff=useRef(false);
+  const syncUrl=(id:string|null)=>{
+    try{window.history.replaceState(window.history.state,"",conversationUrl(window.location,id));}catch{/* URL sync is best-effort */}
+  };
   useEffect(()=>{
-    const load=()=>{fetchDailyChatStatus().then(s=>useDailyChatLimitStore.getState().setSession(s)).catch(()=>{
-      // Status is advisory; the consume call is the real gate. Don't lock the UI on a read failure.
-      if(useDailyChatLimitStore.getState().status==="LOADING")useDailyChatLimitStore.getState().setSession({status:"NOT_STARTED",allowed:true,remainingSeconds:0,startedAt:null,expiresAt:null,nextAvailableAt:null});
-    });};
-    load();
-    const onVis=()=>{if(document.visibilityState==="visible")load();};
+    let cancelled=false;
+    const settle=(v:"done"|"error")=>{if(!cancelled)setRestore(v);};
+    const applyConversation=(c:any)=>{
+      conversationIdRef.current=c.id;
+      setMessages(c.messages.map((m:any)=>m.role==="user"?{role:"user",content:m.content}:{role:"guru",content:{type:"gathering",message:m.content}}));
+      setRestore("done");
+    };
+    (async()=>{
+      if(restoreTick>0)setRestore("loading");
+      const search=window.location.search;
+      const hasHandoff=hasPendingHandoff(); // read before the handoff effect consumes it
+      skippedRestoreForHandoff.current=hasHandoff;
+      let activeConversationId:string|null=null;
+      try{
+        const s=await fetchDailyChatStatus();
+        if(cancelled)return;
+        useDailyChatLimitStore.getState().setSession(s);
+        activeConversationId=s.activeConversationId??null;
+      }catch(e){
+        // Status is advisory; the consume call is the real gate. Don't lock the UI on a read failure.
+        if(useDailyChatLimitStore.getState().status==="LOADING")useDailyChatLimitStore.getState().setSession({status:"NOT_STARTED",allowed:true,remainingSeconds:0,startedAt:null,expiresAt:null,nextAvailableAt:null});
+        if(e instanceof SignInRequiredError){settle("done");return;}
+      }
+      if(cancelled)return;
+      const target=resolveRestoreTarget({search,hasHandoff,activeConversationId});
+      if(target.kind==="none"){
+        // If the status call failed we can't see today's conversation, but a status outage must not lock the chat:
+        // the daily-limit gate on send is the real check. (A URL pointer that fails to load still blocks, below.)
+        settle("done");
+        return;
+      }
+      try{
+        const c:any=await authRequest<any>(`/me/conversations/${encodeURIComponent(target.id)}`);
+        if(cancelled)return;
+        if(c?.feature!=="ai-guru"||!Array.isArray(c.messages))throw new AuthApiError("Not an AI Guru conversation.",404);
+        applyConversation(c);
+        if(!target.fromUrl)syncUrl(c.id);
+      }catch(e){
+        if(cancelled)return;
+        if(e instanceof AuthApiError&&(e.status===403||e.status===404)){
+          // Gone or not yours: start a normal new chat, and drop the dead pointer from the URL.
+          syncUrl(null);settle("done");
+        }else settle("error"); // network / server failure: keep the pointer and let the user retry
+      }
+    })();
+    return()=>{cancelled=true;};
+  },[restoreTick]);
+  // Re-sync the timer when the tab regains focus (no polling).
+  useEffect(()=>{
+    const onVis=()=>{if(document.visibilityState==="visible")fetchDailyChatStatus().then(s=>useDailyChatLimitStore.getState().setSession(s)).catch(()=>{});};
     document.addEventListener("visibilitychange",onVis);
     return()=>document.removeEventListener("visibilitychange",onVis);
   },[]);
@@ -1197,7 +1241,7 @@ export default function InnerVoiceChat(){
   const buildHistory=()=>messages.filter(m=>!m.error&&!m.local).map(m=>({role:(m.role==="user"?"user":"assistant") as "user"|"assistant",content:typeof m.content==="string"?m.content:(m.content?.message||"[response]")}));
 
   const send=async(text,{retry=false}={})=>{
-    const msg=text.trim().slice(0,MAX_GURU_INPUT_CHARS);if(!msg||loading||searching||limitReached)return;
+    const msg=text.trim().slice(0,MAX_GURU_INPUT_CHARS);if(!msg||loading||searching||limitReached||restoring)return;
     if(!requireSignIn(()=>{void send(text,{retry});}))return; // signed out: ask first, the typed message stays in the box
     setLoading(true);
     // Screen first: personal-contact / "are you human?" messages go to the admin queue and off-topic
@@ -1258,7 +1302,7 @@ export default function InnerVoiceChat(){
       const detected=detectLanguage(msg);
       const languageDirective=buildLanguageDirective(inputLanguage,replyLanguage,detected);
       const [data]=await Promise.all([askGuru(baseHistory,msg,languageDirective,conversationIdRef.current||undefined,extraSystem),revealPersona]);
-      if(data.conversationId)conversationIdRef.current=data.conversationId;
+      if(data.conversationId){conversationIdRef.current=data.conversationId;syncUrl(data.conversationId);}
       setMessages(prev=>[...prev.filter(m=>!m.error),{role:"guru",content:data}]);
       if(data.progress)setProgress(data.progress);
       if(data.readyForDiagnosis)setReadyForDiagnosis(true);
@@ -1274,7 +1318,11 @@ export default function InnerVoiceChat(){
     if(handoffTaken.current)return;
     handoffTaken.current=true;
     const h=takeHandoff();
-    if(!h)return;
+    if(!h){
+      // A stale/foreign handoff was discarded: nothing to send, so resume the saved conversation after all.
+      if(skippedRestoreForHandoff.current){skippedRestoreForHandoff.current=false;setRestoreTick(t=>t+1);}
+      return;
+    }
     ctxRef.current={feature:h.feature,featureName:h.featureName,context:h.context};
     setResultName(h.featureName);
     void send(h.question);
@@ -1341,6 +1389,8 @@ export default function InnerVoiceChat(){
     personaChosen.current=false;personaRef.current=null;ctxRef.current=null;
     setPersona(null);setSearching(false);setResultName("");
     conversationIdRef.current=null;
+    syncUrl(null); // ?new=1 so a refresh keeps this fresh chat instead of resuming the old one
+    setRestore("done");
     setMessages([]);
     setInput("");
     setProgress(0);
@@ -1408,7 +1458,18 @@ export default function InnerVoiceChat(){
               <div ref={mainScrollRef} className="flex-1 overflow-y-auto px-4 py-6 md:px-8">
                 <div className="mx-auto flex max-w-3xl flex-col gap-8">
                   <AnimatePresence mode="wait">
-                    {messages.length===0 ? (
+                    {restoring&&messages.length===0 ? (
+                      <motion.div key="restoring" className="flex flex-col items-center gap-4 py-24 text-center" data-testid="guru-restoring" role="status" aria-live="polite">
+                        {restore==="error"?(
+                          <>
+                            <p className="text-sm text-[#592209]">We couldn't load your previous conversation. Your messages are safe.</p>
+                            <button type="button" className="rounded-xl border border-[#592209]/30 bg-[#592209]/10 px-4 py-2 text-sm font-medium text-[#592209]" onClick={()=>setRestoreTick(t=>t+1)}>Try again</button>
+                          </>
+                        ):(
+                          <p className="text-sm text-[#592209]/80">Restoring your conversation…</p>
+                        )}
+                      </motion.div>
+                    ) : messages.length===0 ? (
                       <motion.div key="welcome" className="flex flex-col gap-8">
                         <motion.div
                           className="flex flex-col gap-8"
@@ -1475,7 +1536,7 @@ export default function InnerVoiceChat(){
                   )}
                   <GuruChatInput
                     ref={textareaRef}
-                    disabled={limitReached}
+                    disabled={limitReached||restoring}
                     value={input}
                     onChange={(v)=>{setInput(v);autoResize();}}
                     onSend={()=>send(input)}

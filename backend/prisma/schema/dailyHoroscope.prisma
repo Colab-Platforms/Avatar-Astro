@@ -1,0 +1,18 @@
+/// One generated daily horoscope per zodiac sign per calendar day (Asia/Kolkata). The first request of the day generates
+/// and stores it; every later request for the same sign and day returns this row, so refreshes never produce a different reading.
+model DailyHoroscope {
+  id String @id @default(cuid())
+
+  /// Lower-case Sun-sign name, e.g. "aries".
+  sign          String
+  /// Calendar date in Asia/Kolkata, stored as a date (no time component).
+  horoscopeDate DateTime @map("horoscope_date") @db.Date
+  /// Validated sections: { overview, career, love, health, mood, opportunities, mindful, guidance, lucky? }.
+  content       Json
+  model         String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([sign, horoscopeDate])
+  @@map("daily_horoscopes")
+}

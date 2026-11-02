@@ -81,11 +81,16 @@ export interface DailyChatSessionView {
   startedAt: string | null;
   expiresAt: string | null;
   nextAvailableAt: string | null;
+  /** The server's clock at the time of this response, so the browser can countdown without trusting its own clock. */
+  serverNow: string;
+  /** The AI Guru conversation being held in today's session (latest one touched since it started), or null. */
+  activeConversationId: string | null;
 }
 
-function viewFromSession(session: { startedAt: Date; expiresAt: Date } | null, now: Date): DailyChatSessionView {
+function viewFromSession(session: { startedAt: Date; expiresAt: Date } | null, now: Date, activeConversationId: string | null = null): DailyChatSessionView {
+  const serverNow = now.toISOString();
   if (!session) {
-    return { status: "NOT_STARTED", allowed: true, remainingSeconds: DAILY_CHAT_DURATION_SECONDS, startedAt: null, expiresAt: null, nextAvailableAt: null };
+    return { status: "NOT_STARTED", allowed: true, remainingSeconds: DAILY_CHAT_DURATION_SECONDS, startedAt: null, expiresAt: null, nextAvailableAt: null, serverNow, activeConversationId: null };
   }
   const remainingMs = session.expiresAt.getTime() - now.getTime();
   if (remainingMs <= 0) {
@@ -96,6 +101,8 @@ function viewFromSession(session: { startedAt: Date; expiresAt: Date } | null, n
       startedAt: session.startedAt.toISOString(),
       expiresAt: session.expiresAt.toISOString(),
       nextAvailableAt: nextMidnightUtc(now).toISOString(),
+      serverNow,
+      activeConversationId,
     };
   }
   return {
@@ -105,7 +112,19 @@ function viewFromSession(session: { startedAt: Date; expiresAt: Date } | null, n
     startedAt: session.startedAt.toISOString(),
     expiresAt: session.expiresAt.toISOString(),
     nextAvailableAt: null,
+    serverNow,
+    activeConversationId,
   };
+}
+
+/** Latest AI Guru conversation the user touched since today's session started. Their own rows only. */
+async function findActiveConversationId(userId: string, since: Date): Promise<string | null> {
+  const c = await prisma.conversation.findFirst({
+    where: { userId, feature: "ai-guru", lastMessageAt: { gte: since } },
+    orderBy: { lastMessageAt: "desc" },
+    select: { id: true },
+  });
+  return c?.id ?? null;
 }
 
 /** Read-only: never creates a row. Opening the chat page must never start the timer. */
@@ -115,7 +134,8 @@ export async function getDailyChatStatus(userId: string, now: Date): Promise<Dai
     where: { userId_usageDate: { userId, usageDate } },
     select: { startedAt: true, expiresAt: true },
   });
-  return viewFromSession(session, now);
+  const activeConversationId = session ? await findActiveConversationId(userId, session.startedAt) : null;
+  return viewFromSession(session, now, activeConversationId);
 }
 
 /**

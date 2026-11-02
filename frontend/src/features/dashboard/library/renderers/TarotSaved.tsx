@@ -2,6 +2,8 @@ import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { IconChip } from "../ui";
 import { StructuredView } from "../ReadingView";
+import { ALL_CARDS, type TarotCard } from "@/data/tarotData";
+import { TimelineResult, KarmaResult, type AIReading } from "@/components/tarot/TarotReadingResult";
 
 /**
  * Tarot, shaped like the live result: the spread (each card with its position and meaning), the overall message, then the
@@ -21,7 +23,28 @@ const CLOSING = [["reflectionQuestion", "Reflection question"], ["positiveAffirm
 export const isTarotOutput = (o: unknown): o is Record<string, unknown> =>
   isObj(o) && (Array.isArray(o.timelineNarrative) || Array.isArray(o.cardInsights));
 
+/** The drawn cards of a complete saved spread (5 timeline / 3 karma), or null when any card can't be identified. */
+function resolveSpread(output: Record<string, unknown>): { mode: "timeline" | "karma"; cards: TarotCard[] } | null {
+  const mode = Array.isArray(output.timelineNarrative) ? "timeline" : Array.isArray(output.cardInsights) ? "karma" : null;
+  if (!mode) return null;
+  const list = (mode === "timeline" ? output.timelineNarrative : output.cardInsights) as Insight[];
+  if (list.length !== (mode === "timeline" ? 5 : 3)) return null;
+  const cards = list.map((c) => ALL_CARDS.find((k) => k.name === c?.card));
+  return cards.every(Boolean) ? { mode, cards: cards as TarotCard[] } : null;
+}
+
 export default function TarotSaved({ output }: { output: Record<string, unknown> }) {
+  // A complete spread looks exactly like a freshly generated reading (same cards, same sections).
+  const full = resolveSpread(output);
+  if (full) {
+    return (
+      <div data-testid="reading-output">
+        {full.mode === "timeline"
+          ? <TimelineResult embedded cards={full.cards} reading={output as AIReading} />
+          : <KarmaResult embedded cards={full.cards} reading={output as AIReading} />}
+      </div>
+    );
+  }
   const spread = (Array.isArray(output.timelineNarrative) ? output.timelineNarrative : Array.isArray(output.cardInsights) ? output.cardInsights : []) as Insight[];
   const used = new Set<string>(["timelineNarrative", "cardInsights", "lifeAreasAffected", ...LEAD.map(([k]) => k), ...GUIDE.map(([k]) => k), ...CLOSING.map(([k]) => k)]);
   const rest = Object.fromEntries(Object.entries(output).filter(([k]) => !used.has(k)));

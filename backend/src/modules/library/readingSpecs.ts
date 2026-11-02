@@ -15,6 +15,8 @@ export interface ReadingBuild {
   inputMeta?: Record<string, unknown>;
   /** Default true: only save when an AI provider call in this request actually succeeded (so canned fallbacks are never saved as readings). */
   requiresProvider?: boolean;
+  /** Overrides the X-Client-Request-Id header: makes saving idempotent for results that are stable per user (e.g. one horoscope per sign per day). */
+  clientRequestId?: string;
 }
 export interface ConversationBuild {
   kind: "conversation";
@@ -89,7 +91,9 @@ export const SPECS: CaptureSpec[] = [
       const data = dataBody(body);
       if (!data || !data.horoscope) return null;
       const sign = str(data.sign ?? decodeURIComponent(m[1]), 20) ?? "Daily";
-      return { kind: "reading", feature: "horoscope", title: `${sign} daily horoscope`, output: data, inputMeta: { sign, date: str(data.date, 12) } };
+      return { kind: "reading", feature: "horoscope", title: `${sign} daily horoscope`, output: data, inputMeta: { sign, date: str(data.date, 12) },
+        // The day's reading is stored once and served to everyone, so a cached response has no provider call of its own; saving is keyed by sign and date so repeat views stay one entry.
+        requiresProvider: false, clientRequestId: `horoscope-${String(data.sign).toLowerCase()}-${String(data.date)}` };
     },
   },
   simple("POST", /^\/interpretation\/birth-chart$/, "birth-chart", "Birth chart interpretation", dataBody),

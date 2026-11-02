@@ -10,6 +10,10 @@ export interface DailyChatSession {
   startedAt: string | null;
   expiresAt: string | null;
   nextAvailableAt: string | null;
+  /** Server clock when this was produced; lets the countdown ignore a wrong browser clock. */
+  serverNow?: string;
+  /** Today's AI Guru conversation, if one was started in this session (status endpoint only). */
+  activeConversationId?: string | null;
 }
 
 export class DailyChatLimitError extends Error {

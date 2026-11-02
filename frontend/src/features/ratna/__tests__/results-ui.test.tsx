@@ -43,12 +43,13 @@ describe("unknown birth time: gemstone-led result", () => {
   it("shows the primary gemstone, planet, method label and summary", () => {
     renderResult();
     expect(screen.getByTestId("recommended-stone")).toHaveTextContent("Emerald");
-    expect(screen.getByText("Traditional Birth-Weekday Ratna")).toBeInTheDocument();
+    expect(screen.getByText("Your Recommended Ratna")).toBeInTheDocument();
+    expect(screen.getByTestId("ratna-weekday-banner")).toHaveTextContent("not a Kundali-based recommendation");
     const card = screen.getByRole("region", { name: /^Emerald/ });
-    expect(within(card).getByText(/Traditionally associated with Mercury/)).toBeInTheDocument();
+    expect(within(card).getByText("Mercury")).toBeInTheDocument();
     expect(screen.getByTestId("method-label")).toHaveTextContent("Method: Birth-Date & Place Ratna Method");
-    expect(within(card).getByText("Born on a Wednesday, a day ruled by Mercury.")).toBeInTheDocument();
-    expect(within(card).getByText(/Based on your birth date and birthplace; exact birth time was not used\./)).toBeInTheDocument();
+    expect(within(card).getByTestId("ratna-weekday-banner")).toHaveTextContent("Wednesday, ruled by Mercury");
+    expect(within(card).getByTestId("ratna-weekday-banner")).toHaveTextContent("no birth time was given");
     expect(screen.getByRole("img", { name: "Emerald (पन्ना · Panna) Ratna photograph" })).toBeInTheDocument();
   });
 
@@ -57,8 +58,8 @@ describe("unknown birth time: gemstone-led result", () => {
     expect(screen.getByText("YOUR PERSONAL RATNA")).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 1, name: "Your Ratna Jyotish Reading" })).toBeInTheDocument();
     const meta = screen.getByRole("list", { name: "Birth details used" });
-    expect(within(meta).getByText("Born 9 May 1990")).toBeInTheDocument();
-    expect(within(meta).getByText("Birth time not provided")).toBeInTheDocument();
+    expect(within(meta).getByText("9 May 1990")).toBeInTheDocument();
+    expect(within(meta).getByText("Not provided")).toBeInTheDocument();
     expect(within(meta).getByText("Vasai, Palghar, Maharashtra, India")).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Ratna Jyotish emblem" })).toBeInTheDocument();
   });
@@ -79,11 +80,9 @@ describe("unknown birth time: gemstone-led result", () => {
   it("shows themes in hedged language, with no personal-problem claims", () => {
     renderResult();
     const section = screen.getByTestId("ratna-significance");
-    expect(within(section).getByRole("heading", { name: "Traditional significance" })).toBeInTheDocument();
-    expect(within(section).getByText(/Traditional interpretation in some Vedic astrology schools/)).toBeInTheDocument();
+    expect(within(section).getByRole("heading", { name: "Traditional Significance" })).toBeInTheDocument();
     expect(within(section).getByText("Communication")).toBeInTheDocument();
     expect(within(section).getByText("Learning and study")).toBeInTheDocument();
-    expect(within(section).getByText(/not scientific evidence/)).toBeInTheDocument();
     expect(section.textContent).not.toMatch(/you have|you will|will fix|guarantee(?!d?\b)|become wealthy/i);
   });
 
@@ -91,18 +90,18 @@ describe("unknown birth time: gemstone-led result", () => {
     renderResult();
     expect(screen.queryByRole("heading", { name: "What This Means for You" })).toBeNull(); // folded into the card
     expect(screen.getByText(/You were born on a Wednesday, ruled by Mercury/)).toBeInTheDocument(); // inside "Full explanation"
-    expect(screen.getByRole("link", { name: "Calculate again with an exact birth time" })).toHaveAttribute("href", "/ratna-jyotish");
+    expect(screen.getByRole("link", { name: "Calculate with your birth time" })).toHaveAttribute("href", "/ratna-jyotish");
   });
 
   it("shows wearing guidance with the weekday, sunrise, location and time zone used", () => {
     renderResult();
     const w = screen.getByTestId("ratna-wearing");
-    expect(within(w).getByRole("heading", { name: "Wearing guidance" })).toBeInTheDocument();
+    expect(within(w).getByRole("heading", { name: "Wearing Guidance (Traditional)" })).toBeInTheDocument();
     expect(within(w).getByText("Wednesday")).toBeInTheDocument();
     expect(within(w).getByText("Gold or silver")).toBeInTheDocument();
     expect(within(w).getByText("Little finger")).toBeInTheDocument();
     expect(within(w).getByText(/New Delhi \(your birthplace\) · Asia\/Kolkata/)).toBeInTheDocument();
-    expect(within(w).getByText("Next Wednesday sunrise")).toBeInTheDocument();
+    expect(within(w).getByText(/Next Wednesday sunrise/)).toBeInTheDocument();
   });
 
   it("says no exact time was calculated when sunrise is unavailable", () => {
@@ -136,12 +135,12 @@ describe("exact birth time: result is the same method with the new layout", () =
     saveResult(complete);
     renderResult();
     expect(screen.getByTestId("method-label")).toHaveTextContent("Method: Parashari Lagna-lord method");
-    expect(screen.getByText("Recommended Ratna")).toBeInTheDocument();
+    expect(screen.getByText("Your Recommended Ratna")).toBeInTheDocument();
     expect(screen.getByTestId("recommended-stone")).toHaveTextContent("Diamond or White Sapphire");
     expect(screen.getByRole("region", { name: /^Diamond or White Sapphire/ })).toBeInTheDocument();
-    expect(screen.getByText("Venus reason one.")).toBeInTheDocument();
-    expect(screen.getByText("Born 5 May 1990")).toBeInTheDocument();
-    expect(screen.getByText("at 10:00")).toBeInTheDocument();
+    expect(screen.getAllByText("Venus reason one.").length).toBeGreaterThan(0);
+    expect(screen.getByText("5 May 1990")).toBeInTheDocument();
+    expect(screen.getByText("10:00")).toBeInTheDocument();
     expect(screen.queryByText(/Traditional Birth-Weekday Ratna/)).toBeNull();
   });
 
@@ -244,7 +243,7 @@ describe("compact, wide layout", () => {
   it("keeps visible copy short: long explanations live in collapsed disclosures", () => {
     saveResult({ ...dateBased, explanation: { ...dateBased.explanation, text: "A long explanation. ".repeat(40) } });
     renderResult();
-    const visible = [...document.querySelectorAll("p")].filter((p) => !p.closest(".ratna-acc-panel"));
+    const visible = [...document.querySelectorAll("p")].filter((p) => !p.closest(".ratna-acc-panel") && !p.closest("[data-testid=ratna-details]"));
     expect(visible.length).toBeGreaterThan(3);
     for (const p of visible) expect(p.textContent!.length, p.textContent!).toBeLessThan(260);
   });
@@ -252,12 +251,12 @@ describe("compact, wide layout", () => {
   it("shows the exact-time note only for unknown-time results, and no top-of-page disclaimer", () => {
     saveResult(dateBased);
     const { unmount } = renderResult();
-    expect(screen.getByText(/exact birth time was not used/)).toBeInTheDocument();
+    expect(screen.getByText(/no birth time was given/)).toBeInTheDocument();
     expect(screen.queryByText(/cannot be calculated|No recommendation/i)).toBeNull();
     unmount();
     saveResult(complete);
     renderResult();
-    expect(screen.queryByText(/exact birth time was not used/)).toBeNull();
+    expect(screen.queryByText(/no birth time was given/)).toBeNull();
   });
 
   it("product cards are compact: image, name, price and a View Product action only", async () => {
@@ -335,13 +334,12 @@ describe("shop products for the date-based gemstone", () => {
     expect(await screen.findByRole("link", { name: "Colombian Emerald" })).toHaveAttribute("href", "/shop/em-1");
     expect(api.products).toHaveBeenCalledWith("emerald");
     expect(screen.getByText("₹3,499")).toBeInTheDocument();
-    for (const t of ["Your Matching Ratna", "Matching Ratna Jewellery", "Planet-Linked Accessories", "Complementary Spiritual Accessories"]) {
-      expect(screen.getByRole("heading", { name: t })).toBeInTheDocument();
-    }
-    // chart-linked is labelled as convention-based, general accessories as not personalised
-    expect(screen.getByText("Linked by convention to Mercury, the planet of Emerald (पन्ना · Panna); not a prescription.")).toBeInTheDocument();
-    expect(screen.getByText("General accessories, not selected from your birth details.")).toBeInTheDocument();
-    expect(screen.getAllByRole("link", { name: "View Product" })).toHaveLength(4);
+    // the short result shows only the matching gemstone and its jewellery; unrelated accessories are not offered
+    for (const t of ["Your Matching Ratna", "Matching Ratna Jewellery"]) expect(screen.getByRole("heading", { name: t })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Matching Gemstone in MyBhagya Shop" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Planet-Linked Accessories" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Complementary Spiritual Accessories" })).toBeNull();
+    expect(screen.getAllByRole("link", { name: "View Product" })).toHaveLength(2);
     expect(screen.queryByText(/prescribed for you|your remedy/i)).toBeNull();
   });
 

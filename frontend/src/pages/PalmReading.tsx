@@ -37,6 +37,48 @@ const HAND_MEANINGS: Record<HandType, string> = {
   Fire: "In classical palmistry the Fire hand has a long palm and short fingers. It is traditionally associated with an energetic, spontaneous and enthusiastic temperament, and a bold approach to new ventures.",
 };
 
+// Traditional notes per hand shape, grouped the way the result page shows them. They describe the SHAPE our measurement found,
+// not lines or marks on the palm, and are fixed text chosen only by that measured shape (no AI, no scoring).
+const HAND_SECTIONS: Record<HandType, { personality: string; strengths: string[]; tendencies: string; career: string; relationships: string }> = {
+  Earth: {
+    personality: "Practical, steady and down to earth. You are traditionally seen as someone people can depend on.",
+    strengths: ["Reliability", "Patience", "A good sense for practical matters"],
+    tendencies: "You may prefer routine and tangible results, and take time to accept change. At times this can look like stubbornness.",
+    career: "Traditionally suited to hands-on or structured work, such as building, craft, farming, finance or administration.",
+    relationships: "Loyal and steady. You are likely to show care through actions rather than words, and may be slow to share feelings.",
+  },
+  Air: {
+    personality: "Curious, talkative and analytical. You are traditionally seen as quick to understand and to share ideas.",
+    strengths: ["Communication", "Learning quickly", "Adaptability"],
+    tendencies: "You may spend a lot of time in your thoughts, and can overthink or spread your attention across too many things.",
+    career: "Traditionally suited to teaching, writing, media, technology, law or sales, where ideas and words are central.",
+    relationships: "You value conversation and shared interests. It can help to express feelings as well as discuss ideas.",
+  },
+  Water: {
+    personality: "Sensitive, imaginative and caring. You are traditionally seen as someone who feels things deeply.",
+    strengths: ["Intuition", "Creativity", "Compassion"],
+    tendencies: "Your moods may change with your surroundings, and you can absorb other people's feelings. Quiet time to recharge may help.",
+    career: "Traditionally suited to the arts, design, music, healing, counselling and other caring work.",
+    relationships: "Emotionally rich and wanting closeness. Clear personal boundaries can protect your energy.",
+  },
+  Fire: {
+    personality: "Energetic, bold and enthusiastic. You are traditionally seen as someone who gets things moving.",
+    strengths: ["Initiative", "Courage", "Motivation"],
+    tendencies: "You may start quickly and lose patience with slow work. Pausing before big decisions can be useful.",
+    career: "Traditionally suited to leadership, business ventures, sport, sales or performance, where energy and drive count.",
+    relationships: "Warm, passionate and generous. Listening without rushing can deepen your closest bonds.",
+  },
+};
+
+const PALM_TERMS: [string, string][] = [
+  ["Hasta Samudrika Shastra", "The Indian tradition of reading the hand. It looks mainly at the lines and mounts of the palm."],
+  ["Jeevan, Mastishk, Hriday and Bhagya Rekha", "The life line, head line, heart line and fate line. This Seva does not read them."],
+  ["Hand shape (Earth, Air, Water, Fire)", "A classical way to group hands by the proportions of the palm and fingers. It comes from the European tradition of palmistry (chiromancy)."],
+  ["Palm width ÷ length", "How wide your palm is compared with how long it is. A value of about 0.9 or more is called a square palm here."],
+  ["Finger ÷ palm length", "How long your fingers are compared with your palm. A higher value means longer fingers."],
+  ["Hand landmarks", "21 points (knuckles and fingertips) that the app finds in your photo so it can measure the hand."],
+];
+
 // ─── Live blueprint skeleton — connects the 21 MediaPipe hand landmarks into
 // the finger/palm topology so the live camera view can render a real-time
 // tracking overlay (not a canned animation — these edges follow the actual
@@ -703,22 +745,22 @@ export default function PalmReading() {
               <div className="pr-measure" data-testid="palm-measures">
                 <div>
                   <div style={{ fontSize: 12, color: "#6B4A37", marginBottom: 4 }}>Palm width ÷ length</div>
-                  <div style={{ fontSize: 22, fontWeight: 800, color: "#fff" }}>{g.palmWidthToLengthRatio.toFixed(2)}</div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: "#301607" }}>{g.palmWidthToLengthRatio.toFixed(2)}</div>
                   <div style={{ fontSize: 13, color: "#BC6A4D" }}>{squarePalm ? "Square palm" : "Long palm"} (square at {SQUARE_PALM_MIN} or more)</div>
                 </div>
                 <div>
                   <div style={{ fontSize: 12, color: "#6B4A37", marginBottom: 4 }}>Average finger ÷ palm length</div>
-                  <div style={{ fontSize: 22, fontWeight: 800, color: "#fff" }}>{avgFinger.toFixed(2)}</div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: "#301607" }}>{avgFinger.toFixed(2)}</div>
                   <div style={{ fontSize: 13, color: "#BC6A4D" }}>{longFingers ? "Long fingers" : "Short fingers"} (long at {LONG_FINGERS_MIN} or more)</div>
                 </div>
                 <div>
                   <div style={{ fontSize: 12, color: "#6B4A37", marginBottom: 4 }}>Hand in the photo</div>
-                  <div style={{ fontSize: 22, fontWeight: 800, color: "#fff" }}>{hand} hand</div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: "#301607" }}>{hand} hand</div>
                   <div style={{ fontSize: 13, color: "#6B4A37" }}>We can't tell which is your dominant hand</div>
                 </div>
                 <div>
                   <div style={{ fontSize: 12, color: "#6B4A37", marginBottom: 4 }}>Thumb angle</div>
-                  <div style={{ fontSize: 22, fontWeight: 800, color: "#fff" }}>{Math.round(g.thumbAngleDeg)}°</div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: "#301607" }}>{Math.round(g.thumbAngleDeg)}°</div>
                   <div style={{ fontSize: 13, color: "#592209" }}>Measured, not used in the shape</div>
                 </div>
               </div>
@@ -729,10 +771,38 @@ export default function PalmReading() {
           </div>
         </div>
 
+        {(() => {
+          const sec = HAND_SECTIONS[g.handType];
+          const box: React.CSSProperties = { ...card, padding: 22 };
+          const lab: React.CSSProperties = { fontSize: 13, color: "#592209", letterSpacing: "0.14em", marginBottom: 8, textTransform: "uppercase", fontWeight: 700 };
+          const body: React.CSSProperties = { margin: 0, fontSize: 17, lineHeight: 1.7, color: "#301607" };
+          return (
+            <section data-testid="palm-sections" aria-label="What your hand shape traditionally suggests" style={{ marginTop: 28 }}>
+              <h2 style={{ fontSize: "clamp(22px,3.5vw,28px)", fontWeight: 800, color: "#301607", margin: "0 0 6px", textAlign: "center" }}>What a {shape.label} Traditionally Suggests</h2>
+              <p style={{ textAlign: "center", color: "#4A2E1F", fontSize: 15, margin: "0 auto 18px", maxWidth: 640 }}>
+                Your photo measured as a {squarePalm ? "square" : "long"} palm with {longFingers ? "long" : "short"} fingers. These notes are the traditional description for that shape, not observations of lines on your palm.
+              </p>
+              <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))" }}>
+                <div style={box}><div style={lab}>Personality</div><p style={body}>{sec.personality}</p></div>
+                <div style={box}><div style={lab}>Strengths</div><ul style={{ display: "flex", flexWrap: "wrap", gap: 8, padding: 0, margin: 0, listStyle: "none" }}>{sec.strengths.map((x) => <li key={x} style={{ padding: "4px 12px", borderRadius: 999, border: "1px solid rgba(89,34,9,0.3)", background: "rgba(89,34,9,0.06)", color: "#592209", fontSize: 15 }}>{x}</li>)}</ul></div>
+                <div style={box}><div style={lab}>Tendencies</div><p style={body}>{sec.tendencies}</p></div>
+                <div style={box}><div style={lab}>Career</div><p style={body}>{sec.career}</p></div>
+                <div style={box}><div style={lab}>Relationships</div><p style={body}>{sec.relationships}</p></div>
+              </div>
+              <div style={{ ...card, marginTop: 16 }}>
+                <div style={lab}>Palmistry terms in simple words</div>
+                <dl style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", margin: 0 }}>
+                  {PALM_TERMS.map(([t, d]) => <div key={t}><dt style={{ fontWeight: 700, color: "#301607" }}>{t}</dt><dd style={{ margin: 0, fontSize: 15, lineHeight: 1.6, color: "#4A2E1F" }}>{d}</dd></div>)}
+                </dl>
+              </div>
+            </section>
+          );
+        })()}
+
         <div style={{ ...card, marginTop: 28, borderColor: "rgba(188,106,77,0.4)" }}>
           <div style={{ fontSize: 13, color: "rgba(188,106,77,0.9)", letterSpacing: "0.15em", marginBottom: 10, textTransform: "uppercase", fontWeight: 700 }}>What this reading does not cover</div>
           <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: "#4A2E1F" }}>
-            This Seva does not read the lines or marks on your palm. It measures the shape of your hand and gives the traditional description for that shape. There is no AI interpretation, no score, and no prediction of your future, health, career or relationships.
+            This Seva does not read the lines or marks on your palm, which is the main focus of the Indian Hasta Samudrika tradition. It measures the shape of your hand and gives the traditional description for that shape. There is no AI interpretation, no score, and no prediction of your future, health, career or relationships.
           </p>
         </div>
 

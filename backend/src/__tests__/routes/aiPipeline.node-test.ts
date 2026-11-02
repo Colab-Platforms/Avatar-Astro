@@ -75,6 +75,7 @@ before(async () => {
   process.env.JWT_SECRET = SECRET;
   process.env.DB_POOL_MAX = "1";
   const prisma = (await import("../../../prisma.js")).default as any;
+  await prisma.dailyHoroscope.deleteMany();
   await prisma.usageEvent.deleteMany();
   await prisma.platformSetting.deleteMany();
   await prisma.user.deleteMany({ where: { email: { endsWith: "@pipeline-test.example" } } });
@@ -124,6 +125,7 @@ after(async () => {
   child?.kill();
   await sleep(500);
   const prisma = (await import("../../../prisma.js")).default as any;
+  await prisma.dailyHoroscope.deleteMany();
   await prisma.usageEvent.deleteMany();
   await prisma.platformSetting.deleteMany();
   await prisma.user.deleteMany({ where: { email: { endsWith: "@pipeline-test.example" } } });

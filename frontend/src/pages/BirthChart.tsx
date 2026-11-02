@@ -1063,6 +1063,7 @@ import LocationPicker from "@/features/ratna/LocationPicker";
 import "@/features/ratna/ratna.css";
 import { kundaliApi } from "@/features/kundali/api";
 import KundaliPanels from "@/features/kundali/KundaliPanels";
+import KundaliGuide from "@/features/kundali/KundaliGuide";
 import FullScreenLoader from "@/components/Loader/FullScreenLoader";
 import { useBackOverride } from "../context/NavigationContext";
 import { Link } from "react-router-dom";
@@ -1586,7 +1587,7 @@ function Results({data,onReset}){
 
   const [dy,dm,dd]=dob.split("-");
   const dobFormatted=`${dd} ${MONTHS[+dm-1]} ${dy}`;
-  const heroDesc=`Your Surya Rashi, ${rashiName} (${zodiac}), brings ${ZODIAC_HERO_TRAITS[zodiac]||"a distinctive presence"}. Life Path ${lifePath} adds ${LIFE_PATH_TRAITS[lifePath]||"its own blend of themes"}.`;
+  const heroDesc=`Your Western Sun sign, ${zodiac}, brings ${ZODIAC_HERO_TRAITS[zodiac]||"a distinctive presence"}. Life Path ${lifePath} adds ${LIFE_PATH_TRAITS[lifePath]||"its own blend of themes"}. Your Vedic Rashi, Lagna and Nakshatra are calculated below from your birth details.`;
   const working=lifePathWorking(dob);
 
   const cardStyle:CSSProperties={background:"#FBF5EC",border:"1px solid rgba(89,34,9,0.2)",borderRadius:16,padding:28};
@@ -1606,7 +1607,7 @@ function Results({data,onReset}){
         <div>
           <div style={{color:"#6B4A37",fontWeight:700,fontSize:14,letterSpacing:"0.15em",marginBottom:12}}>{FEATURES.birthChart.name.toUpperCase()} · VEDIC RASHI &amp; LIFE PATH PROFILE</div>
           <h1 style={{fontFamily:"'DM Sans', system-ui, sans-serif",fontSize:"clamp(30px,5vw,52px)",color:"#301607",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.04em",marginBottom:16,lineHeight:1.1,wordBreak:"break-word"}}>{name}</h1>
-          <div style={{color:"#592209",fontWeight:700,fontSize:18,marginBottom:20}}>SURYA RASHI {rashiName.toUpperCase()} ({zodiac.toUpperCase()}){kundali&&!kundali.sun.certain?" — DEPENDS ON BIRTH TIME":""} &nbsp;•&nbsp; LIFE PATH {lifePath}</div>
+          <div style={{color:"#592209",fontWeight:700,fontSize:18,marginBottom:20}}>{kundali?.moon.rashi?`CHANDRA RASHI ${kundali.moon.rashi.name.toUpperCase()} (MOON SIGN)`:kundali?`CHANDRA RASHI: DEPENDS ON BIRTH TIME`:`WESTERN SUN SIGN ${zodiac.toUpperCase()}`} &nbsp;•&nbsp; LIFE PATH {lifePath}</div>
           <p style={{fontSize:18,fontStyle:"italic",lineHeight:1.7,color:"#301607",marginBottom:28}}>{heroDesc}</p>
           <div className="bcp-facts">
             <div style={{display:"flex",alignItems:"center",gap:12}}>
@@ -1631,7 +1632,8 @@ function Results({data,onReset}){
         </div>
       </div>
 
-      {kundali&&<div className="r-sec" style={{marginBottom:40}}><KundaliPanels k={kundali}/></div>}
+      {kundali&&<div className="r-sec" style={{marginBottom:40}}><KundaliGuide k={kundali}/></div>}
+      {kundali&&<div className="r-sec" style={{marginBottom:40}}><div style={{...sectionTitle,marginBottom:16}}>The Calculations Behind It</div><KundaliPanels k={kundali}/></div>}
 
       {/* ── HOW THIS PROFILE WAS MADE ── */}
       <div className="r-sec" style={{...cardStyle,marginBottom:56,borderColor:"rgba(255,126,71,0.35)"}}>
@@ -1644,7 +1646,7 @@ function Results({data,onReset}){
       {/* ── SUN SIGN + LIFE PATH ── */}
       <div className="r-sec bcp-two">
         <div className="r-hcard" style={cardStyle}>
-          <div style={smallLabel}>Your Sun sign</div>
+          <div style={smallLabel}>Your Western Sun sign (tropical zodiac)</div>
           <div style={{color:"#301607",fontWeight:800,fontSize:26,marginBottom:4}}>{zodiac} {ZODIAC_SYMBOLS[zodiac]}</div>
           {sign&&<>
             <div style={{color:"rgba(48,22,7,0.85)",fontSize:15,marginBottom:14}}>{sign.dates} · {sign.element} · Ruler: {sign.traditionalRuling?`${sign.ruling} (modern), ${sign.traditionalRuling} (traditional)`:sign.ruling}</div>

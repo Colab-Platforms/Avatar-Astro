@@ -28,6 +28,7 @@ const CONTENT_FILE = path.join(TMP, "content.json");
 let child: ChildProcess | undefined;
 let base = "";
 let log = "";
+const HOROSCOPE = { overview: "A calm and focused day.", career: "Finish what you started.", love: "Listen more than you speak.", health: "Take a short walk.", mood: "Steady and hopeful.", opportunities: "A small chance to help a colleague.", mindful: "Rushing small decisions.", guidance: "Write down your top task and do it first." };
 const ids: Record<string, string> = {};
 let t: Record<string, string> = {};
 
@@ -56,6 +57,7 @@ before(async () => {
   process.env.JWT_SECRET = SECRET;
   process.env.DB_POOL_MAX = "1";
   const prisma = (await import("../../../prisma.js")).default as any;
+  await prisma.dailyHoroscope.deleteMany();
   await prisma.usageEvent.deleteMany();
   await prisma.platformSetting.deleteMany();
   await prisma.user.deleteMany({ where: { email: { endsWith: "@library-test.example" } } });
@@ -101,6 +103,7 @@ after(async () => {
   child?.kill();
   await sleep(500);
   const prisma = (await import("../../../prisma.js")).default as any;
+  await prisma.dailyHoroscope.deleteMany();
   await prisma.usageEvent.deleteMany();
   await prisma.platformSetting.deleteMany();
   await prisma.user.deleteMany({ where: { email: { endsWith: "@library-test.example" } } });
@@ -120,7 +123,7 @@ interface Case {
 }
 const CASES: Case[] = [
   { name: "Tarot", feature: "tarot", says: KARMA_TAROT, run: (k) => call("POST", "/api/tarot/reading", k, { mode: "karma", cards: ["The Fool", "The Magician", "The High Priestess"] }), expected: (b) => b.data },
-  { name: "Daily horoscope", feature: "horoscope", says: "Today brings a calm and focused energy for Aries, a good day to finish what you started.", run: (k) => call("GET", "/api/interpretation/horoscope/aries", k), expected: (b) => b.data },
+  { name: "Daily horoscope", feature: "horoscope", says: HOROSCOPE, run: (k) => call("GET", "/api/interpretation/horoscope/aries", k), expected: (b) => b.data },
   { name: "Chart interpretation (birth chart)", feature: "birth-chart", says: { overview: "Your Sun is strong and your Moon is gentle; together they favour steady growth in your career.", strengths: ["Focus", "Warmth"] }, run: (k) => call("POST", "/api/interpretation/birth-chart", k, { birthData: { name: "Asha", date: "1990-05-15", time: "10:30", place: "Delhi", planets: [], houses: [] } }), expected: (b) => (typeof b.data === "string" ? { text: b.data } : b.data) },
   { name: "Compatibility (zodiac)", feature: "compatibility", says: "Aries and Leo share fire and enthusiasm, with a natural warmth between them.", run: (k) => call("GET", "/api/interpretation/compatibility?sign1=aries&sign2=leo", k), expected: (b) => b.data },
   { name: "Compatibility (relationship analysis)", feature: "compatibility", says: { loveInsight: "A warm and honest bond", marriageWindow: "2027-2029" }, run: (k) => call("POST", "/api/compatibility/analyze", k, { p1: { name: "A", dob: "1990-01-01", zodiac: "Aries", lifePath: 1 }, p2: { name: "B", dob: "1991-02-02", zodiac: "Leo", lifePath: 3 }, scores: { overall: 80, love: 80, marriage: 80 } }), expected: (b) => b },
@@ -227,7 +230,7 @@ test("USER ISOLATION: user B cannot see, open, save, delete or find anything of 
 
 test("anonymous and failed generations are never saved; a retry with the same key is saved once", { skip }, async () => {
   // anonymous horoscope: works, nothing saved, no header
-  says("A calm day for Taurus, with steady progress in whatever you start.");
+  says(HOROSCOPE);
   const anon = await call("GET", "/api/interpretation/horoscope/taurus");
   assert.equal(anon.status, 200);
   assert.equal(anon.headers.get("x-reading-id"), null);
@@ -238,7 +241,7 @@ test("anonymous and failed generations are never saved; a retry with the same ke
   assert.equal(failed.headers.get("x-reading-saved"), null);
   setMode("ok");
   // idempotent retry
-  says("Gemini today favours conversation and quick decisions in small things.");
+  says(HOROSCOPE);
   const k = { "x-client-request-id": "retry-key-0001" };
   const one = await call("GET", "/api/interpretation/horoscope/gemini", t.A, undefined, k);
   const two = await call("GET", "/api/interpretation/horoscope/gemini", t.A, undefined, k);

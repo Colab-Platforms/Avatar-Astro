@@ -229,3 +229,33 @@ export function buildProfile(name: string, dob: string): NameProfile | { error: 
     birth: birthNumberWorking(dob),
   };
 }
+
+// ── Plain-language breakdown of a number's traditional theme ─────────────────
+
+export interface NumberInsight { meaning: string; strengths: string[]; challenge: string; tip: string }
+
+/** General guidance for each single digit: a gentle, practical suggestion (not a prediction). */
+const NUMBER_TIPS: Record<number, string> = {
+  1: "Take the lead on one thing this week, and ask for another person's view before you decide.",
+  2: "Say what you need out loud instead of hoping others will notice; kind honesty keeps the peace better than silence.",
+  3: "Give your creativity a regular outlet, such as writing, music or talking with friends, and finish what you begin.",
+  4: "Keep your routines, but leave a little room in your plan for change.",
+  5: "Choose one commitment to keep steadily, and enjoy variety in everything else.",
+  6: "Care for others, and also plan time for your own rest so that giving does not turn into strain.",
+  7: "Set aside quiet time to think, then share the conclusions with someone you trust instead of staying alone with them.",
+  8: "Keep work and rest in balance, and measure success by more than status or money.",
+  9: "Finish one old task or let go of one old grievance, so that your generosity has room to flow.",
+};
+
+/** Splits the fixed traditional theme into meaning, strengths, a challenge and a tip. Nothing here is newly invented: it re-presents NUMBER_THEMES. */
+export function numberInsight(n: number): NumberInsight {
+  const theme = themeFor(n);
+  const m = theme.text.match(/^(.*?)\s*The shadow side is\s+(.*?)\.?\s*$/s);
+  const root = reduceNumber(n, false);
+  return {
+    meaning: (m ? m[1] : theme.text).trim(),
+    strengths: theme.keywords.split("·").map((x) => x.trim()).filter(Boolean),
+    challenge: m ? `The shadow side is ${m[2].replace(/\.$/, "")}.` : "Tradition also warns of the shadow side of this number; some systems do not use it.",
+    tip: NUMBER_TIPS[root] ?? NUMBER_TIPS[9],
+  };
+}

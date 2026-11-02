@@ -1,0 +1,24 @@
+/// Per-tool usage limit set by the main admin (uses per user per rolling 24 hours). No row, or perUserLimit = null, means unlimited.
+model ToolLimit {
+  toolKey      String   @id @map("tool_key")
+  /// Maximum admitted requests per signed-in user in any rolling 24 hours. null = unlimited.
+  perUserLimit Int?     @map("per_user_limit")
+  updatedBy    String?  @map("updated_by")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("tool_limits")
+}
+
+/// One row per request admitted to a limited tool. Counting rule: every request that passes the on/off switch and the limit check
+/// is one use, whether it later succeeds or is rejected for bad input; a 5xx (our or the provider's failure) is refunded by deleting the row.
+/// Rows older than 24 hours no longer count and are pruned as users make new requests.
+model ToolUsageAttempt {
+  id        String   @id @default(cuid())
+  toolKey   String   @map("tool_key")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([toolKey, userId, createdAt])
+  @@index([createdAt])
+  @@map("tool_usage_attempts")
+}
