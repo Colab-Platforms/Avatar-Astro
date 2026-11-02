@@ -1,4 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
+import { optionalAuth } from "@/middleware/authMiddleware.js";
+import { toolLimitGate } from "@/services/toolLimits.js";
 import prisma from "@root/prisma.js";
 import { featureSettingKey } from "@/config/features.js";
 import { isFeatureEnabled } from "@/modules/admin/settings.js";
@@ -97,7 +99,9 @@ export function trackFeature(feature: string) {
       // Anonymous 401s are probes/bots, not usage.
       const userId = (req as UserReq).user?.id ?? null;
       if (statusCode === 401 && !userId) return;
-      const status = statusCode < 400 ? "success" : statusCode >= 500 ? "error" : "rejected";
+      // A request the gates turned away on purpose (tool switched off, usage limit reached) is "rejected", not a failure, even for a 503.
+      const rejectReason = res.locals.__rejectReason as string | undefined;
+      const status = rejectReason ? "rejected" : statusCode < 400 ? "success" : statusCode >= 500 ? "error" : "rejected";
       // A 304 means the browser reused its copy: nothing was generated, so it carries no AI cost.
       const notModified = statusCode === 304;
       recordEvent({
@@ -107,7 +111,7 @@ export function trackFeature(feature: string) {
         status,
         statusCode,
         durationMs: Date.now() - started,
-        metadata: { method: req.method, route: `${req.baseUrl}${req.route?.path && req.route.path !== "/" ? req.route.path : ""}` || req.path },
+        metadata: { method: req.method, route: `${req.baseUrl}${req.route?.path && req.route.path !== "/" ? req.route.path : ""}` || req.path, ...(rejectReason ? { reason: rejectReason } : {}) },
         ai: notModified ? undefined : summarizeCalls(store.calls),
         servedFromCache: notModified || store.servedFromCache,
       });
@@ -122,7 +126,8 @@ export function featureGate(feature: string) {
     if (req.method === "OPTIONS") return next();
     try {
       if (!(await isFeatureEnabled(featureSettingKey(feature)))) {
-        const message = "This feature is temporarily unavailable. Please try again later.";
+        res.locals.__rejectReason = "disabled";
+        const message = "This tool is temporarily unavailable. Please try again later.";
         return res.status(503).json({ success: false, status: false, error: message, message, code: "FEATURE_DISABLED" });
       }
     } catch {
@@ -133,4 +138,4 @@ export function featureGate(feature: string) {
 }
 
 /** Tracking + gate for a feature, as a mount-time middleware list. */
-export const feature = (key: string) => [trackFeature(key), featureGate(key)];
+export const feature = (key: string) => [trackFeature(key), featureGate(key), optionalAuth(), toolLimitGate(key)];

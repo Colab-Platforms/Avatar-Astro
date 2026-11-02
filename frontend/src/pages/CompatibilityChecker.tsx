@@ -1045,6 +1045,7 @@ import { useState, useEffect, useRef, useCallback, type CSSProperties } from "re
 import { FEATURES } from "@/data/featureCatalog";
 import { useFeatureTitle } from "@/hooks/useFeatureTitle";
 import AskDivyaSection from "@/features/guru/AskDivyaSection";
+import { Link } from "react-router-dom";
 import FullScreenLoader from "@/components/Loader/FullScreenLoader";
 import { useBackOverride } from "../context/NavigationContext";
 import { User, ArrowRight } from "lucide-react";
@@ -1448,6 +1449,43 @@ const CONVERSATION_STARTERS = [
   "What are we each hoping for in the next few years, and where do those hopes overlap?",
 ];
 
+// Plain-language style of each element, used to describe each person and then the pair. Fixed text, no AI.
+const ELEMENT_STYLE: Record<string, { emotional: string; communication: string; strength: string; watch: string }> = {
+  Fire: { emotional: "feelings are warm and quick, and shown openly", communication: "direct and enthusiastic, saying things straight away", strength: "energy, optimism and courage", watch: "impatience and a quick temper" },
+  Earth: { emotional: "feelings are steady and slow to show, and care is shown through actions", communication: "practical and to the point", strength: "reliability and patience", watch: "stubbornness and resistance to change" },
+  Air: { emotional: "feelings are processed by thinking and talking, sometimes from a little distance", communication: "talkative, curious and full of ideas", strength: "open-mindedness and humour", watch: "overthinking and avoiding deeper feelings" },
+  Water: { emotional: "feelings are deep, sensitive and intuitive", communication: "gentle and indirect, speaking through feeling and tone", strength: "empathy and loyalty", watch: "moodiness and taking things personally" },
+};
+const ASPECT_ADVICE = [
+  "Because you share a Sun sign, notice the habits you have in common and give each other space to grow in different directions.",
+  "Be curious about how differently the other person sees things; treat the differences as things to learn, not faults to fix.",
+  "Keep using what already works between you, and put a little regular effort into the areas where you drift apart.",
+  "Expect some friction and agree how you will handle it, for example a pause before reacting, so that it becomes motivation instead of conflict.",
+  "Enjoy how naturally you understand each other, and still talk about the things that are easy to take for granted.",
+  "Name your differences early and adjust on both sides, since there is less in common to rely on by default.",
+  "Look for balance: each of you has what the other lacks, so share the decisions and appreciate the contrast.",
+];
+
+// ── Love compatibility percentages ──────────────────────────────────────────
+// A fixed, published rubric over the two factors this Seva already computes. Same inputs always give the same numbers; nothing is random
+// or written by AI. It is a Sun-sign tendency score for reflection, NOT Guna Milan and not a prediction of how a relationship will go.
+//   Aspect points (distance between the signs, 0-6):  same 70 · neighbouring 55 · sextile 75 · square 50 · trine 90 · quincunx 45 · opposition 65
+//   Element points:  same element 90 · Air+Fire or Earth+Water 80 · Earth+Fire 55 · Air+Water 55 · Air+Earth 50 · Fire+Water 45
+//   Overall = average of the two. Each person's own figure adds +4 if the partner's element traditionally feeds theirs
+//   (Air feeds Fire, Water nourishes Earth) and subtracts 4 for the feeder, so the two figures can differ a little.
+const ASPECT_POINTS = [70, 55, 75, 50, 90, 45, 65];
+const ELEMENT_POINTS: Record<string, number> = { "Fire+Fire": 90, "Earth+Earth": 90, "Air+Air": 90, "Water+Water": 90, "Air+Fire": 80, "Earth+Water": 80, "Earth+Fire": 55, "Air+Water": 55, "Air+Earth": 50, "Fire+Water": 45 };
+const FEEDS: Record<string, string> = { Air: "Fire", Water: "Earth" }; // feeder -> fed
+function loveScores(distance: number, e1: string, e2: string) {
+  const key = [e1, e2].sort().join("+");
+  const aspectPts = ASPECT_POINTS[distance], elementPts = ELEMENT_POINTS[key];
+  const overall = Math.round((aspectPts + elementPts) / 2);
+  const adj = (mine: string, theirs: string) => (FEEDS[theirs] === mine ? 4 : FEEDS[mine] === theirs ? -4 : 0);
+  const clamp = (n: number) => Math.max(0, Math.min(100, n));
+  return { aspectPts, elementPts, overall, p1: clamp(overall + adj(e1, e2)), p2: clamp(overall + adj(e2, e1)) };
+}
+const scoreBand = (n: number) => (n >= 80 ? "Very harmonious" : n >= 65 ? "Comfortable, with some effort" : n >= 50 ? "Mixed: ease and effort" : "Asks for conscious effort");
+
 function comparePair(sign1: string, sign2: string) {
   const d = (SIGN_INDEX[sign2] - SIGN_INDEX[sign1] + 12) % 12;
   const distance = Math.min(d, 12 - d);
@@ -1586,7 +1624,7 @@ function Results({ result, onReset }: { result: Result; onReset: () => void }) {
       <div className="r-note" style={{...cardStyle, marginBottom:40, borderColor:"rgba(89,34,9,0.35)"}}>
         <div style={{...label, color:"#592209"}}>How this comparison was made</div>
         <p style={{fontSize:16, lineHeight:1.7, color:"#4A2E1F"}}>
-          Each person's Sun sign comes from their birth date. The Seva then compares the two signs' elements and the traditional aspect between them. It uses fixed written text, no generated text, and it does not give a score or percentage, because no recognised formula turns two Sun signs into a single number. Names are shown only for display and do not affect the result.
+          Each person's Sun sign comes from their birth date. The Seva then compares the two signs' elements and the traditional aspect between them. It uses fixed written text and a fixed scoring table (shown under the percentages), with no generated text and no randomness. The percentages describe Sun-sign tendencies for reflection; they are not Guna Milan. Names are shown only for display and do not affect the result.
         </p>
       </div>
 
@@ -1600,8 +1638,56 @@ function Results({ result, onReset }: { result: Result; onReset: () => void }) {
         ))}
       </div>
 
+      {(() => {
+        const sc = loveScores(c.aspect.distance, c.e1, c.e2);
+        const ring = (n: number, big: boolean) => (
+          <div style={{width: big ? 150 : 96, height: big ? 150 : 96, borderRadius:"50%", margin:"0 auto", display:"grid", placeItems:"center",
+            background:`conic-gradient(#E9B872 ${n * 3.6}deg, rgba(245,233,214,0.22) 0)`}}>
+            <div style={{width: big ? 122 : 76, height: big ? 122 : 76, borderRadius:"50%", background: big ? "#3b1706" : "#FBF5EC", display:"grid", placeItems:"center", color: big ? "#F5E9D6" : "#592209", fontWeight:800, fontSize: big ? 38 : 24}}>{n}%</div>
+          </div>
+        );
+        const person = (who: typeof p1, n: number, e: string, i: typeof info1, k: "p1" | "p2") => {
+          const st = ELEMENT_STYLE[e];
+          return (
+            <div data-testid={`cc-${k}-love`} style={{...cardStyle, textAlign:"center"}}>
+              <div style={label}>{who.name} · {who.zodiac}</div>
+              {ring(n, false)}
+              <div style={{fontWeight:800, fontSize:18, color:"#592209", margin:"10px 0 4px"}}>{who.name}'s Love Compatibility</div>
+              <div style={{fontSize:14, color:"#6B4A37", marginBottom:10}}>{scoreBand(n)}</div>
+              <p style={{fontSize:16, lineHeight:1.65, color:"#301607", margin:0, textAlign:"left"}}>
+                As a {who.zodiac} ({e}){i ? `, ${i.traits.slice(0,3).join(", ").toLowerCase()}` : ""}, {st.emotional}. In conversation {who.name} is {st.communication}. {who.name} brings {st.strength}, and may need to watch for {st.watch}.
+              </p>
+            </div>
+          );
+        };
+        return (
+          <div style={{marginBottom:40}} data-testid="cc-love">
+            <div data-testid="cc-overall" style={{...cardStyle, marginBottom:20, textAlign:"center", background:"linear-gradient(150deg,#592209,#3b1706)", color:"#F5E9D6", borderColor:"#592209"}}>
+              <div style={{...label, color:"#E9B872"}}>Overall Love Compatibility</div>
+              <div data-testid="cc-overall-pct">{ring(sc.overall, true)}</div>
+              <div style={{fontWeight:800, fontSize:"clamp(20px,4vw,26px)", margin:"12px 0 6px"}}>{p1.name} &amp; {p2.name}: {scoreBand(sc.overall)}</div>
+              <p style={{fontSize:16, lineHeight:1.7, margin:"0 auto", maxWidth:660}}>
+                This percentage comes from two things: the element pairing ({c.harmonious ? "traditionally harmonious" : "traditionally contrasting"}, {sc.elementPts} points) and the aspect between your signs ({c.aspect.name}, {sc.aspectPts} points). It shows how easily your Sun-sign styles fit. It is not a prediction, and couples with any score can build a good relationship.
+              </p>
+            </div>
+            <div className="cc-two" style={{marginBottom:12}}>
+              {person(p1, sc.p1, c.e1, info1, "p1")}
+              {person(p2, sc.p2, c.e2, info2, "p2")}
+            </div>
+            <details data-testid="cc-score-method" style={{...cardStyle, padding:18}}>
+              <summary style={{cursor:"pointer", fontWeight:700, color:"#592209"}}>How these percentages are worked out</summary>
+              <p style={{fontSize:15, lineHeight:1.7, color:"#4A2E1F", margin:"10px 0 0"}}>
+                Overall = average of the aspect points and the element points. Aspect points: same sign 70, neighbouring signs 55, sextile 75, square 50, trine 90, quincunx 45, opposition 65. Element points: same element 90, Air with Fire or Earth with Water 80, Earth with Fire 55, Air with Water 55, Air with Earth 50, Fire with Water 45.
+                Each person's figure is the overall score plus 4 if the partner's element traditionally feeds theirs (Air feeds Fire, Water nourishes Earth), or minus 4 for the feeding partner. Here: ({sc.aspectPts} + {sc.elementPts}) ÷ 2 = {sc.overall}%.
+              </p>
+            </details>
+          </div>
+        );
+      })()}
+
       <div style={{marginBottom:40}}>
-        <div style={sectionTitle}>The Sun Sign Pairing</div>
+        <div style={sectionTitle}>Matching Factors</div>
+        <p style={{textAlign:"center", color:"#4A2E1F", fontSize:15, margin:"-14px auto 20px", maxWidth:600}}>The two individual factors behind the overall result.</p>
         <div className="cc-two" style={{marginBottom:0}}>
           <div data-testid="cc-aspect" style={cardStyle}>
             <div style={label}>Aspect between the signs</div>
@@ -1616,6 +1702,43 @@ function Results({ result, onReset }: { result: Result; onReset: () => void }) {
             <p style={{fontSize:16, lineHeight:1.7, color:"#4A2E1F"}}>{c.elementNote}</p>
           </div>
         </div>
+      </div>
+
+      {(() => {
+        const st1 = ELEMENT_STYLE[c.e1], st2 = ELEMENT_STYLE[c.e2];
+        const same = c.e1 === c.e2;
+        const blocks: { key: string; title: string; ask: string; text: string }[] = [
+          { key:"strengths", title:"Relationship strengths", ask:"What can help you two the most?", text: `${p1.name}'s ${c.e1} nature brings ${st1.strength}${same ? "" : `, and ${p2.name}'s ${c.e2} nature brings ${st2.strength}`}. ${c.harmonious ? "The pairing is traditionally harmonious, which supports these strengths." : "The contrast can become a strength when each respects the other's style."}` },
+          { key:"differences", title:"Where you differ", ask:"How are you not the same?", text: same ? `You share the ${c.e1} element, so your styles are alike. Differences will come more from personal experience than from the sign.` : `${p1.name} is ${c.e1}: ${st1.communication}. ${p2.name} is ${c.e2}: ${st2.communication}.` },
+          { key:"emotional", title:"Emotional connection", ask:"How do you each feel and show feelings?", text: same ? `For both ${p1.name} and ${p2.name}, ${st1.emotional}. Because you feel in a similar way, you are likely to understand each other without much explanation.` : `For ${p1.name}, ${st1.emotional}. For ${p2.name}, ${st2.emotional}.` },
+          { key:"communication", title:"Communication", ask:"How do you each talk things through?", text: same ? `Both of you are usually ${st1.communication}. You will probably understand each other quickly, and it can help to slow down when you are both strongly opinionated.` : `${p1.name} is usually ${st1.communication}; ${p2.name} is usually ${st2.communication}. Putting your point in the other person's style helps a lot.` },
+          { key:"challenges", title:"Possible challenges", ask:"What could you stumble on?", text: `Each of you may need to watch for ${st1.watch}${same ? "" : ` (${p1.name}) and ${st2.watch} (${p2.name})`}. The aspect between your signs is a ${c.aspect.name.toLowerCase()}, read as ${c.aspect.tone.toLowerCase()}.` },
+          { key:"guidance", title:"Practical guidance", ask:"What can you do about it?", text: ASPECT_ADVICE[c.aspect.distance] },
+        ];
+        return (
+          <div style={{marginBottom:40}} data-testid="cc-guide">
+            <div style={sectionTitle}>Your Pairing, Step by Step</div>
+            <div style={{display:"grid", gap:16, gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))"}}>
+              {blocks.map(b => (
+                <div key={b.key} data-testid={`cc-${b.key}`} style={{...cardStyle, padding:22}}>
+                  <div style={{fontWeight:800, fontSize:18, color:"#592209"}}>{b.title}</div>
+                  <div style={{fontSize:13.5, fontStyle:"italic", color:"#6B4A37", marginBottom:10}}>{b.ask}</div>
+                  <p style={{fontSize:16.5, lineHeight:1.7, color:"#301607", margin:0}}>{b.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
+      <div data-testid="cc-vedic-note" style={{...cardStyle, marginBottom:40, borderColor:"rgba(201,135,58,0.6)", background:"#FFF7E6"}}>
+        <div style={{...label, color:"#592209"}}>About traditional Vedic matching</div>
+        <p style={{fontSize:16, lineHeight:1.7, color:"#301607", margin:"0 0 10px"}}>
+          This Seva compares Western (tropical) Sun signs from your birth dates. It is not Guna Milan (Ashtakoota), the traditional Indian method that gives a score out of 36 by comparing both people's <strong>Moon signs and Nakshatras</strong>. That method needs each person's exact birth time and place, which this tool does not ask for, so it is not calculated here. The percentages above are Sun-sign tendencies, not a Guna score.
+        </p>
+        <p style={{fontSize:15, lineHeight:1.7, color:"#4A2E1F", margin:0}}>
+          To see each person's Chandra Rashi and Janma Nakshatra, which are the starting point for Guna Milan, open <Link to="/birth-chart" style={{color:"#592209", fontWeight:700}}>Janma Kundali</Link> for each of you.
+        </p>
       </div>
 
       <div style={{marginBottom:40}}>

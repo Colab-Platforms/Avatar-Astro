@@ -1,4 +1,5 @@
 import EducationSection, { EducationBlock } from "@/components/EducationSection";
+import { FEATURES } from "@/data/featureCatalog";
 import { FEATURE_FAQS } from "@/data/featureFaqs";
 import { CHALDEAN_MAP, PYTHAGOREAN_MAP, buildProfile } from "@/lib/numerology";
 import { chainText } from "@/components/NameDestinyReport/lib/pdfExport";
@@ -106,5 +107,5 @@ const DISCLAIMER =
   "Numerology is offered for personal interest, cultural exploration and reflection. It is a traditional belief system that is not scientifically proven. Results are not predictions, and they are not professional advice.";
 
 export default function NameNumerologyEducation() {
-  return <EducationSection idPrefix="numerology" title="About Naamank Jyotish" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
+  return <EducationSection audioToolSlug={FEATURES.numerology.id} idPrefix="numerology" title="About Naamank Jyotish" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
 }

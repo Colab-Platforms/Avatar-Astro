@@ -10,11 +10,14 @@ import { invalidateAccountStatus } from "@/middleware/authMiddleware.js";
 import { writeAudit } from "./audit.js";
 import { createRateLimiter } from "@/utils/rateLimit.js";
 import { cacheSetting, getAllSettings, setSetting } from "./settings.js";
+import { METERED, isMeteredTool } from "@/config/toolMeters.js";
+import { cacheToolLimit, MAX_LIMIT } from "@/services/toolLimits.js";
 import { parseContent, parsePage, parseRange, toCsv, maskSecret, CONTENT_TYPES } from "./adminPanel.validation.js";
 import { EVENT_TYPES, EVENT_LABELS, ALL_EVENT_TYPES } from "@/config/events.js";
 import { createAnalyticsRouter } from "./adminAnalytics.js";
 import { createCostsRouter, aiCostCsv } from "./adminCosts.js";
 import { createAccountsRouter, kindWhere } from "./adminAccounts.js";
+import { createChatEscalationsRouter } from "./adminChatEscalations.js";
 
 const DAY_MS = 86_400_000;
 /** Known ApiErrors pass through; anything else (e.g. Prisma, with file paths and SQL) is logged and replaced. */
@@ -42,18 +45,20 @@ interface UsageRow {
   total: bigint;
   errors: bigint;
   rejected: bigint;
+  blocked: bigint;
   lastAt: Date | null;
 }
 
-async function usageByFeature(from: Date, to: Date): Promise<Map<string, { total: number; errors: number; rejected: number; lastAt: Date | null }>> {
+async function usageByFeature(from: Date, to: Date): Promise<Map<string, { total: number; errors: number; rejected: number; blocked: number; lastAt: Date | null }>> {
   const rows = await prisma.$queryRaw<UsageRow[]>`
     SELECT feature, COUNT(*) AS total,
            COUNT(*) FILTER (WHERE status = 'error') AS errors,
            COUNT(*) FILTER (WHERE status = 'rejected') AS rejected,
+           COUNT(*) FILTER (WHERE status = 'rejected' AND metadata->>'reason' IN ('disabled', 'limit')) AS blocked,
            MAX(created_at) AS "lastAt"
     FROM usage_events WHERE event_type = 'feature.request' AND created_at >= ${from} AND created_at < ${to}
     GROUP BY feature`;
-  return new Map(rows.map((r) => [r.feature, { total: num(r.total), errors: num(r.errors), rejected: num(r.rejected), lastAt: r.lastAt }]));
+  return new Map(rows.map((r) => [r.feature, { total: num(r.total), errors: num(r.errors), rejected: num(r.rejected), blocked: num(r.blocked), lastAt: r.lastAt }]));
 }
 
 async function dailyUsage(from: Date, to: Date, features?: string[]) {
@@ -146,22 +151,29 @@ export function createAdminPanelRouter(): Router {
     }),
   );
 
-  // ── Astrology tools / feature switches ─────────────────────────────────────
+  // ── Astrology tools: on/off switch, per-user 24h limit, 30-day usage ───────────
   router.get(
     "/tools",
     wrap(async (_req, res) => {
-      const [settings, usage] = await Promise.all([getAllSettings(), usageByFeature(new Date(Date.now() - 30 * DAY_MS), new Date(Date.now() + 1000))]);
+      const [settings, usage, limits] = await Promise.all([
+        getAllSettings(),
+        usageByFeature(new Date(Date.now() - 30 * DAY_MS), new Date(Date.now() + 1000)),
+        prisma.toolLimit.findMany(),
+      ]);
+      const limitOf = new Map(limits.map((l) => [l.toolKey, l.perUserLimit]));
       sendResponse(res, true, {
         windowDays: 30,
+        limitWindowHours: 24,
+        countingRule: "A request to a metered endpoint by a signed-in user counts as one use once it is admitted, whether it later succeeds or fails on bad input. Server or provider failures (5xx) are refunded. Requests rejected because the tool is off or the limit is reached never count.",
         tools: FEATURES.map((f) => ({
           ...f,
           enabled: settings.get(featureSettingKey(f.key)) !== false,
-          usage: usage.get(f.key) ?? { total: 0, errors: 0, rejected: 0, lastAt: null },
+          limitSupported: isMeteredTool(f.key),
+          limit: limitOf.get(f.key) ?? null,
+          endpoints: isMeteredTool(f.key) ? METERED[f.key].map((r) => r.label) : [f.mount],
+          usage: usage.get(f.key) ?? { total: 0, errors: 0, rejected: 0, blocked: 0, lastAt: null },
         })),
-        unsupported: [
-          { key: "usage-limits", label: "Per-user usage limits", reason: "Not implemented: requests are only rate-limited per IP." },
-          { key: "pricing", label: "Tool pricing", reason: "Not applicable: there is no payment system, so tools have no price." },
-        ],
+        unsupported: [{ key: "pricing", label: "Tool pricing", reason: "Not applicable: there is no payment system, so tools have no price." }],
       });
     }),
   );
@@ -171,14 +183,30 @@ export function createAdminPanelRouter(): Router {
     wrap(async (req, res) => {
       const key = req.params.key;
       if (!FEATURE_KEYS.has(key)) throw notFound("Feature");
-      if (typeof req.body?.enabled !== "boolean") throw bad("enabled (true/false) is required.");
-      const enabled: boolean = req.body.enabled;
+      const body = req.body ?? {};
+      const hasEnabled = "enabled" in body, hasLimit = "limit" in body;
+      if (!hasEnabled && !hasLimit) throw bad("Provide enabled (true/false) and/or limit (a whole number, or null for unlimited).");
+      if (hasEnabled && typeof body.enabled !== "boolean") throw bad("enabled must be true or false.");
+      let limit: number | null | undefined;
+      if (hasLimit) {
+        if (!isMeteredTool(key)) throw bad("This tool has no metered endpoint, so a usage limit cannot be set.");
+        if (body.limit === null) limit = null;
+        else if (typeof body.limit === "number" && Number.isInteger(body.limit) && body.limit >= 1 && body.limit <= MAX_LIMIT) limit = body.limit;
+        else throw bad(`limit must be a whole number from 1 to ${MAX_LIMIT}, or null for unlimited.`);
+      }
       await prisma.$transaction(async (tx) => {
-        await setSetting(featureSettingKey(key), enabled, req.user!.id, tx);
-        await writeAudit(req, { action: "feature.toggle", entityType: "feature", entityId: key, summary: `${enabled ? "Enabled" : "Disabled"} feature ${key}` }, tx);
+        if (hasEnabled) {
+          await setSetting(featureSettingKey(key), body.enabled, req.user!.id, tx);
+          await writeAudit(req, { action: "feature.toggle", entityType: "feature", entityId: key, summary: `${body.enabled ? "Enabled" : "Disabled"} feature ${key}` }, tx);
+        }
+        if (hasLimit) {
+          await tx.toolLimit.upsert({ where: { toolKey: key }, update: { perUserLimit: limit, updatedBy: req.user!.id }, create: { toolKey: key, perUserLimit: limit, updatedBy: req.user!.id } });
+          await writeAudit(req, { action: "feature.limit", entityType: "feature", entityId: key, summary: limit === null ? `Removed the per-user limit for ${key}` : `Set the per-user limit for ${key} to ${limit} per 24 hours`, metadata: { limit } }, tx);
+        }
       });
-      cacheSetting(featureSettingKey(key), enabled);
-      sendResponse(res, true, { key, enabled }, "Feature updated");
+      if (hasEnabled) cacheSetting(featureSettingKey(key), body.enabled);
+      if (hasLimit) cacheToolLimit(key, limit ?? null);
+      sendResponse(res, true, { key, ...(hasEnabled ? { enabled: body.enabled } : {}), ...(hasLimit ? { limit } : {}) }, "Tool updated");
     }),
   );
 
@@ -482,6 +510,7 @@ export function createAdminPanelRouter(): Router {
   router.use(createAccountsRouter());
   router.use(createAnalyticsRouter());
   router.use(createCostsRouter());
+  router.use(createChatEscalationsRouter());
 
   return router;
 }

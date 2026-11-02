@@ -11,6 +11,16 @@ import { sendOtpEmail, sendPasswordResetEmail } from "@/utils/mailer.js";
 import { verifyMsg91AccessToken, getMsg91WidgetConfig } from "@/utils/msg91.js";
 import { verifyGoogleIdToken, type GoogleProfile } from "@/utils/googleAuth.js";
 import { recordEvent } from "@/utils/usage.js";
+import {
+  MAX_OTP_ATTEMPTS,
+  MAX_OTPS_PER_HOUR,
+  OTP_TTL_MINUTES,
+  RESEND_COOLDOWN_SECONDS,
+  assertOtpSecretConfigured,
+  generateOtp,
+  hashOtp,
+  verifyOtpHash,
+} from "@/utils/otpSecurity.js";
 import { EVENT_TYPES, AUTH_FEATURE } from "@/config/events.js";
 import {
   RegisterBody,
@@ -50,12 +60,6 @@ const signAccessToken = (
 
 const hashToken = (token: string): string =>
   crypto.createHash("sha256").update(token).digest("hex");
-
-const hashOtp = (otp: string): string =>
-  crypto.createHash("sha256").update(otp).digest("hex");
-
-const generateOtp = (): string =>
-  Math.floor(100000 + Math.random() * 900000).toString();
 
 // Creates a session, stores hashed refresh token, returns plain token to caller
 const createSession = async (
@@ -207,14 +211,53 @@ class AuthService {
     };
   }
 
+  /**
+   * Issues a fresh OTP for an e-mail + flow: any earlier unused OTP is retired in the same transaction, the new one is
+   * stored only as a keyed hash, and the plain code goes nowhere except the e-mail.
+   */
+  private async issueOtp(email: string, type: OtpType, userId: string) {
+    assertOtpSecretConfigured(); // fail closed before any database work
+
+    const issuedLastHour = await prisma.otpVerification.count({
+      where: { email, type, createdAt: { gte: dayjs().subtract(1, "hour").toDate() } },
+    });
+    if (issuedLastHour >= MAX_OTPS_PER_HOUR) {
+      throw new ApiError(
+        "Too many OTP requests. Please try again in an hour.",
+        STATUS_CODES.TOO_MANY_REQUESTS,
+      );
+    }
+
+    const otp = generateOtp();
+    await prisma.$transaction([
+      prisma.otpVerification.updateMany({
+        where: { email, type, used: false },
+        data: { used: true },
+      }),
+      prisma.otpVerification.create({
+        data: {
+          email,
+          otpCode: hashOtp(otp, email, type),
+          type,
+          userId,
+          expiresAt: dayjs().add(OTP_TTL_MINUTES, "minute").toDate(),
+        },
+      }),
+    ]);
+
+    // Log the failure reason only: the provider error object may carry the request (and so the code).
+    await sendOtpEmail(email, otp, type).catch((err) =>
+      console.error("[Auth] Failed to send OTP email:", err instanceof Error ? err.message : "unknown error"),
+    );
+  }
+
   async verifyOtp(data: VerifyOtpBody, device?: string) {
+    assertOtpSecretConfigured();
+    const type = data.type as OtpType;
+
+    // Only the newest unused OTP for this e-mail + flow can ever match; compare in application code, in constant time.
     const otpRecord = await prisma.otpVerification.findFirst({
-      where: {
-        email: data.email,
-        otpCode: hashOtp(data.otp),
-        type: data.type as OtpType,
-        used: false,
-      },
+      where: { email: data.email, type, used: false },
       orderBy: { createdAt: "desc" },
     });
 
@@ -227,10 +270,39 @@ class AuthService {
       );
     }
 
-    await prisma.otpVerification.update({
+    // Spend an attempt atomically BEFORE comparing, so parallel guesses cannot exceed the limit.
+    const { attempts } = await prisma.otpVerification.update({
       where: { id: otpRecord.id },
-      data: { used: true },
+      data: { attempts: { increment: 1 } },
+      select: { attempts: true },
     });
+    const burn = () =>
+      prisma.otpVerification.updateMany({
+        where: { id: otpRecord.id, used: false },
+        data: { used: true },
+      });
+    const tooMany = () =>
+      new ApiError(
+        "Too many incorrect attempts. Please request a new OTP.",
+        STATUS_CODES.TOO_MANY_REQUESTS,
+      );
+
+    if (attempts > MAX_OTP_ATTEMPTS) {
+      await burn();
+      throw tooMany();
+    }
+
+    if (!verifyOtpHash(otpRecord.otpCode, data.otp, data.email, type)) {
+      if (attempts >= MAX_OTP_ATTEMPTS) {
+        await burn();
+        throw tooMany();
+      }
+      throw new ApiError("Invalid OTP", STATUS_CODES.BAD_REQUEST);
+    }
+
+    // Single use, even under concurrent submissions of the correct code: only one request can claim it.
+    const claimed = await burn();
+    if (claimed.count !== 1) throw new ApiError("Invalid OTP", STATUS_CODES.BAD_REQUEST);
 
     const user = await prisma.user.findFirst({
       where: { email: data.email, isDeleted: false },
@@ -371,25 +443,7 @@ class AuthService {
 
     if (!user.isEmailVerified && !user.isPhoneVerified) {
       recordEvent({ userId: user.id, eventType: EVENT_TYPES.authLoginFailed, feature: AUTH_FEATURE, status: "failed", metadata: { method: "password", reason: "unverified" } });
-      await prisma.otpVerification.updateMany({
-        where: { email: data.email, type: OtpType.LOGIN, used: false },
-        data: { used: true },
-      });
-
-      const otp = generateOtp();
-      await prisma.otpVerification.create({
-        data: {
-          email: data.email,
-          otpCode: hashOtp(otp),
-          type: OtpType.LOGIN,
-          userId: user.id,
-          expiresAt: dayjs().add(10, "minute").toDate(),
-        },
-      });
-
-      await sendOtpEmail(data.email, otp, "LOGIN").catch((err) =>
-        console.error("[Auth] Failed to send login OTP email:", err),
-      );
+      await this.issueOtp(data.email, OtpType.LOGIN, user.id);
 
       return {
         requiresVerification: true,
@@ -586,36 +640,18 @@ class AuthService {
         email: data.email,
         type: data.type as OtpType,
         used: false,
-        createdAt: { gte: dayjs().subtract(60, "second").toDate() },
+        createdAt: { gte: dayjs().subtract(RESEND_COOLDOWN_SECONDS, "second").toDate() },
       },
     });
 
     if (recentOtp) {
       throw new ApiError(
-        "Please wait 60 seconds before requesting another OTP.",
+        `Please wait ${RESEND_COOLDOWN_SECONDS} seconds before requesting another OTP.`,
         STATUS_CODES.TOO_MANY_REQUESTS,
       );
     }
 
-    await prisma.otpVerification.updateMany({
-      where: { email: data.email, type: data.type as OtpType, used: false },
-      data: { used: true },
-    });
-
-    const otp = generateOtp();
-    await prisma.otpVerification.create({
-      data: {
-        email: data.email,
-        otpCode: hashOtp(otp),
-        type: data.type as OtpType,
-        userId: user.id,
-        expiresAt: dayjs().add(10, "minute").toDate(),
-      },
-    });
-
-    await sendOtpEmail(data.email, otp, data.type).catch((err) =>
-      console.error("[Auth] Failed to resend OTP email:", err),
-    );
+    await this.issueOtp(data.email, data.type as OtpType, user.id);
 
     return { message: "A new OTP has been sent to your email." };
   }

@@ -28,6 +28,22 @@ export interface ProviderBalance {
   /** last time a check returned usable data; kept when a later check fails */
   lastSuccessAt: string | null;
   error: string | null;
+  /** OpenRouter only: account credits purchased / used / remaining. */
+  credits?: OpenRouterCredits;
+}
+
+/** OpenRouter account credits (GET /api/v1/credits with a management key). Never estimated: every number is what OpenRouter returned. */
+export interface OpenRouterCredits {
+  /** ok = fetched now; not_configured = no management key; error = the last attempt failed (numbers, if any, are the last good ones and `stale` is true) */
+  status: "ok" | "not_configured" | "error";
+  totalCredits: number | null;
+  totalUsage: number | null;
+  /** total credits purchased minus total usage, computed from the two numbers above */
+  remaining: number | null;
+  /** when the numbers were fetched from OpenRouter */
+  fetchedAt: string | null;
+  stale: boolean;
+  error: string | null;
 }
 
 export interface BalanceSnapshot {
@@ -75,7 +91,34 @@ async function get(f: Fetch, url: string, key: string) {
 /** Never includes the provider's response text or the key: only a fixed, safe message. */
 const fail = (e: any) => (e?.name === "AbortError" ? "The provider did not respond in time." : "Could not reach the provider.");
 
+const noCredits = (status: OpenRouterCredits["status"], error: string | null = null): OpenRouterCredits => ({ status, totalCredits: null, totalUsage: null, remaining: null, fetchedAt: null, stale: false, error });
+
+/** Reads account credits with the management key. A missing key is "not_configured", not an error. */
+export async function fetchOpenRouterCredits(env: NodeJS.ProcessEnv, f: Fetch): Promise<OpenRouterCredits> {
+  const mgmt = env.OPENROUTER_MANAGEMENT_KEY;
+  if (!mgmt) return noCredits("not_configured");
+  try {
+    const c = await get(f, "https://openrouter.ai/api/v1/credits", mgmt);
+    if (c.status === 401 || c.status === 403) return noCredits("error", "OpenRouter rejected the management key.");
+    const total = nn(c.body?.data?.total_credits);
+    const used = nn(c.body?.data?.total_usage);
+    if (c.status !== 200 || total == null || used == null) return noCredits("error", `OpenRouter returned HTTP ${c.status}.`);
+    return { status: "ok", totalCredits: total, totalUsage: used, remaining: total - used, fetchedAt: new Date().toISOString(), stale: false, error: null };
+  } catch (e) {
+    return noCredits("error", fail(e));
+  }
+}
+
 export async function checkOpenRouter(env: NodeJS.ProcessEnv, f: Fetch): Promise<ProviderBalance> {
+  const [base, credits] = await Promise.all([checkOpenRouterKey(env, f), fetchOpenRouterCredits(env, f)]);
+  // The account balance, when OpenRouter gave it, is the headline balance.
+  if (credits.status === "ok" && credits.remaining != null) {
+    return { ...base, credits, balance: { state: "available", remainingUsd: credits.remaining, unlimited: false, scope: "account", note: "Account credits purchased minus usage, from OpenRouter." } };
+  }
+  return { ...base, credits };
+}
+
+async function checkOpenRouterKey(env: NodeJS.ProcessEnv, f: Fetch): Promise<ProviderBalance> {
   const out = blank("openrouter");
   const key = env.OPENROUTER_API_KEY;
   if (!key) return { ...out, balance: { ...out.balance, note: "OPENROUTER_API_KEY is not set on this server." } };
@@ -94,23 +137,6 @@ export async function checkOpenRouter(env: NodeJS.ProcessEnv, f: Fetch): Promise
       out.balance = { state: "available", remainingUsd: limitRemaining, unlimited: false, scope: "key", note: "Remaining credit limit set on this API key (not the whole account balance)." };
     } else {
       out.balance = { state: "unavailable", remainingUsd: null, unlimited: d.limit == null, scope: "key", note: "This key has no spending limit, so there is no key-level balance." };
-    }
-    const mgmt = env.OPENROUTER_MANAGEMENT_KEY;
-    if (mgmt) {
-      try {
-        const c = await get(f, "https://openrouter.ai/api/v1/credits", mgmt);
-        const total = nn(c.body?.data?.total_credits);
-        const used = nn(c.body?.data?.total_usage);
-        if (c.status === 200 && total != null && used != null) {
-          out.balance = { state: "available", remainingUsd: total - used, unlimited: false, scope: "account", note: "Account credits purchased minus usage, from OpenRouter." };
-        } else {
-          out.balance.note += " Account credits could not be read with the management key.";
-        }
-      } catch (e) {
-        out.balance.note += ` Account credits check failed: ${fail(e)}`;
-      }
-    } else {
-      out.balance.note += " Set OPENROUTER_MANAGEMENT_KEY to also read the account balance.";
     }
     return out;
   } catch (e) {
@@ -155,7 +181,12 @@ export async function checkAll(env: NodeJS.ProcessEnv = process.env, f: Fetch = 
 export function mergeWithPrevious(next: ProviderBalance[], prev: ProviderBalance[] | undefined): ProviderBalance[] {
   return next.map((n) => {
     const p = prev?.find((x) => x.id === n.id);
-    return n.lastSuccessAt || !p?.lastSuccessAt ? n : { ...n, lastSuccessAt: p.lastSuccessAt };
+    const merged = n.lastSuccessAt || !p?.lastSuccessAt ? n : { ...n, lastSuccessAt: p.lastSuccessAt };
+    // A failed credits fetch keeps the last good numbers (marked stale) instead of blanking or inventing them.
+    if (merged.credits?.status === "error" && p?.credits && p.credits.fetchedAt) {
+      return { ...merged, credits: { ...p.credits, status: "error", stale: true, error: merged.credits.error } };
+    }
+    return merged;
   });
 }
 

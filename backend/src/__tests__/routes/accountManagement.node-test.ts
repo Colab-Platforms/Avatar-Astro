@@ -4,7 +4,6 @@
 // Auth is real: the app's own login, OTP verification, refresh, reset-password and token middleware are used.
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import crypto from "node:crypto";
 import type { AddressInfo } from "node:net";
 import type { Server } from "node:http";
 import express from "express";
@@ -15,6 +14,7 @@ const isLocal = /@(127\.0\.0\.1|localhost)(:|\/)/.test(TEST_DB);
 const skip = !isLocal ? "set TEST_DATABASE_URL to a disposable localhost Postgres to run" : false;
 
 process.env.JWT_SECRET = "test-only-jwt-secret";
+process.env.OTP_HMAC_SECRET = "test-only-otp-hmac-secret-0123456789abcdef"; // OTPs are stored as a keyed hash; there is no fallback
 delete process.env.MAIN_ADMIN_EMAIL;
 for (const k of ["RESEND_API_KEY", "SMTP_FROM_EMAIL", "SUPPORT_EMAIL"]) process.env[k] = ""; // no real e-mail can ever be sent from this test
 process.env.ACCOUNT_STATUS_TTL_MS = "5000";
@@ -22,7 +22,6 @@ if (isLocal) process.env.DATABASE_URL = TEST_DB;
 process.env.DB_POOL_MAX = "1";
 
 const tok = (id: string, role: string) => jwt.sign({ id, role }, process.env.JWT_SECRET!);
-const sha = (s: string) => crypto.createHash("sha256").update(s).digest("hex");
 const DOM = "@acct-test.com";
 const PW = "Strong#Pass1";
 
@@ -47,9 +46,11 @@ const A = (method: string, path: string, token: string | undefined, body?: unkno
 
 /** Signs in through the real login + OTP verification flow (the new account's e-mail is not pre-verified). */
 async function signIn(email: string, password: string) {
+  await prisma.otpVerification.deleteMany({ where: { email } }); // this suite signs the same account in many times; keep it clear of the per-hour OTP issue cap
   const first = await call("POST", "/api/auth/login", undefined, { email, password });
   if (first.status !== 200 || !first.data?.data?.requiresVerification) return first;
-  await prisma.otpVerification.create({ data: { email, otpCode: sha("123456"), type: "LOGIN", expiresAt: new Date(Date.now() + 600000) } });
+  const { hashOtp } = await import("../../utils/otpSecurity.js");
+  await prisma.otpVerification.create({ data: { email, otpCode: hashOtp("123456", email, "LOGIN"), type: "LOGIN", expiresAt: new Date(Date.now() + 600000) } });
   return call("POST", "/api/auth/verify-otp", undefined, { email, otp: "123456", type: "LOGIN" });
 }
 

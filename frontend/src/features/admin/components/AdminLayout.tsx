@@ -12,6 +12,7 @@ const TITLE_BY_PATH: Record<string, string> = {
   "/admin/activity": "Customer activity",
   "/admin/tools": "Astrology tools",
   "/admin/inner-voice": "Inner Voice",
+  "/admin/chat-escalations": "Chat escalations",
   "/admin/devotion": "Devotion & Live",
   "/admin/shop-orders": "Shop & Orders",
   "/admin/content": "Content & banners",

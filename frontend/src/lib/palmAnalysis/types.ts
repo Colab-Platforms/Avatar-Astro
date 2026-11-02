@@ -20,6 +20,8 @@ export interface HandLandmarks {
   ring: [Point, Point, Point, Point];
   pinky: [Point, Point, Point, Point];
   handedness: "Left" | "Right";
+  /** False when the fingers are too bunched or edge-on to tell left from right reliably. */
+  handednessCertain?: boolean;
   confidence: number; // 0..1
 }
 

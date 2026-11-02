@@ -1,0 +1,96 @@
+// Astrology Audio Manager: narration text per tool+language, admin-managed ElevenLabs voices,
+// and the generated MP3 assets (stored in Cloudinary).
+
+enum AudioStatus {
+  PENDING
+  GENERATING
+  READY
+  FAILED
+  OUTDATED
+}
+
+/// The approved narration text for one astrology tool in one language. The English row is seeded
+/// verbatim from the About section shown on the tool page; hi/mr rows exist only once an admin
+/// has entered and saved a translation (no row = untranslated, never auto-filled).
+model AstrologyNarration {
+  id String @id @default(cuid())
+
+  toolSlug String @map("tool_slug")
+  language String
+  /// Display title of the About section (not narrated separately).
+  title    String
+  /// Exactly what is sent to ElevenLabs.
+  text     String
+  /// sha256 of the normalised text; changes whenever the narration changes.
+  contentHash String @map("content_hash")
+  /// Bumped on every change to the text.
+  version     Int    @default(1)
+  /// SOURCE (seeded from the page) or REVIEWED (saved by an admin).
+  translationStatus String @default("REVIEWED") @map("translation_status")
+
+  updatedBy String?  @map("updated_by")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  assets AstrologyAudioAsset[]
+
+  @@unique([toolSlug, language])
+  @@map("astrology_narrations")
+}
+
+/// An ElevenLabs voice an admin has made available for a language. Voice and model ids live here,
+/// so changing them needs no deployment. The API key stays in the environment.
+model AstrologyVoiceConfig {
+  id String @id @default(cuid())
+
+  languageCode String  @map("language_code")
+  languageName String  @map("language_name")
+  voiceId      String  @map("voice_id")
+  voiceName    String  @map("voice_name")
+  modelId      String  @map("model_id")
+  isActive     Boolean @default(true) @map("is_active")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  @@unique([languageCode, voiceId])
+  @@index([languageCode, isActive])
+  @@map("astrology_voice_configs")
+}
+
+/// One generated MP3. A new generation always creates a new row and a new Cloudinary public id,
+/// so the currently published asset is never overwritten.
+model AstrologyAudioAsset {
+  id String @id @default(cuid())
+
+  narrationId String @map("narration_id")
+  narration   AstrologyNarration @relation(fields: [narrationId], references: [id], onDelete: Cascade)
+
+  toolSlug       String @map("tool_slug")
+  language       String
+  contentVersion Int    @map("content_version")
+  contentHash    String @map("content_hash")
+
+  provider String @default("elevenlabs")
+  modelId  String @map("model_id")
+  voiceId  String @map("voice_id")
+
+  cloudinaryUrl      String? @map("cloudinary_url")
+  cloudinaryPublicId String? @map("cloudinary_public_id")
+  durationSeconds    Float?  @map("duration_seconds")
+  bytes              Int?
+
+  status       AudioStatus @default(PENDING)
+  isPublished  Boolean     @default(false) @map("is_published")
+  publishedAt  DateTime?   @map("published_at")
+  errorMessage String?     @map("error_message")
+
+  createdBy String?   @map("created_by")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  @@index([toolSlug, language, isPublished])
+  @@index([narrationId, status])
+  @@index([toolSlug, language, createdAt])
+  @@map("astrology_audio_assets")
+}

@@ -1,4 +1,5 @@
 import EducationSection, { EducationBlock } from "@/components/EducationSection";
+import { FEATURES } from "@/data/featureCatalog";
 import { FEATURE_FAQS } from "@/data/featureFaqs";
 
 const blocks: EducationBlock[] = [
@@ -73,5 +74,5 @@ const DISCLAIMER =
   "Compatibility readings are offered for personal interest, cultural exploration and reflection. They describe traditional symbolism, are not scientifically proven, and are not predictions or relationship advice.";
 
 export default function CompatibilityEducation() {
-  return <EducationSection idPrefix="compat" title="About Jodi Jyotish" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
+  return <EducationSection audioToolSlug={FEATURES.compatibility.id} idPrefix="compat" title="About Jodi Jyotish" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
 }

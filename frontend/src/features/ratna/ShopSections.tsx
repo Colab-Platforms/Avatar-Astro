@@ -49,12 +49,15 @@ const ShopSections = ({
   stoneName,
   stoneLabel,
   planet,
+  compact = false,
 }: {
   stoneKey: string;
   stoneName: string;
   /** English plus Hindi name, e.g. "Yellow Sapphire (पुखराज · Pukhraj)". */
   stoneLabel?: string;
   planet: string;
+  /** Only the matching Ratna and its jewellery; skips accessories that are not the recommended stone. */
+  compact?: boolean;
 }) => {
   const named = stoneLabel ?? stoneName;
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
@@ -66,7 +69,7 @@ const ShopSections = ({
   return (
     <section className="ratna-reveal space-y-5" style={{ ["--i" as string]: 5 }} aria-labelledby="ratna-shop-h">
       <h2 id="ratna-shop-h" className="font-home-serif text-xl font-semibold text-[#592209] sm:text-2xl">
-        From the My Bhagya Shop
+        Matching Gemstone in MyBhagya Shop
       </h2>
 
       {isLoading && (
@@ -99,7 +102,7 @@ const ShopSections = ({
 
           {data.jewellery.length > 0 && <Group title="Matching Ratna Jewellery" items={data.jewellery} />}
 
-          {data.chartLinked.length > 0 && (
+          {!compact && data.chartLinked.length > 0 && (
             <Group
               title="Planet-Linked Accessories"
               intro={`Linked by convention to ${planet}, the planet of ${named}; not a prescription.`}
@@ -107,7 +110,7 @@ const ShopSections = ({
             />
           )}
 
-          {data.complementary.length > 0 && (
+          {!compact && data.complementary.length > 0 && (
             <Group
               title="Complementary Spiritual Accessories"
               intro="General accessories, not selected from your birth details."

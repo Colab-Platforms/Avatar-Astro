@@ -88,6 +88,39 @@ export const uploadImageBuffer = (
   });
 };
 
+export interface UploadedAudio extends UploadedAsset {
+  durationSeconds: number | null;
+  bytes: number;
+}
+
+/**
+ * Uploads an MP3 to Cloudinary. Audio is stored under resource_type "video". `publicId` is the full
+ * versioned id (folder included) and `overwrite` is false, so an existing asset can never be replaced.
+ */
+export const uploadAudioBuffer = (buffer: Buffer, publicId: string): Promise<UploadedAudio> => {
+  assertConfigured();
+
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { public_id: publicId, resource_type: "video", overwrite: false, unique_filename: false },
+      (error, result) => {
+        if (error || !result) {
+          console.error("Cloudinary audio upload failed:", error?.message ?? error);
+          reject(new ApiError(describeUploadError(error), STATUS_CODES.BAD_REQUEST));
+          return;
+        }
+        resolve({
+          url: result.secure_url,
+          publicId: result.public_id,
+          durationSeconds: typeof result.duration === "number" ? result.duration : null,
+          bytes: typeof result.bytes === "number" ? result.bytes : buffer.length,
+        });
+      },
+    );
+    stream.end(buffer);
+  });
+};
+
 /**
  * Deletes an asset. Resolves `false` (rather than throwing) when Cloudinary
  * reports anything other than success so callers can decide whether an

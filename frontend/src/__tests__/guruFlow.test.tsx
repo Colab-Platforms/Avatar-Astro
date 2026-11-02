@@ -156,8 +156,8 @@ describe("Need More Guidance? box", () => {
   });
 });
 
-const mountChat = () =>
-  render(
+const mountChat = async () => {
+  const view = render(
     <QueryClientProvider client={new QueryClient()}>
       <MemoryRouter initialEntries={["/inner-voice/chat"]}>
         <SignInPrompt />
@@ -165,6 +165,10 @@ const mountChat = () =>
       </MemoryRouter>
     </QueryClientProvider>,
   );
+  // The page first restores any saved conversation (a loader, never an empty-chat flash); wait for that to settle.
+  await waitFor(() => expect(screen.queryByTestId("guru-restoring")).toBeNull());
+  return view;
+};
 
 /** Mounts the chat and waits for the guru search to finish and a profile to be assigned. */
 const mountReady = async () => {
@@ -175,9 +179,9 @@ const mountReady = async () => {
 describe("Divya Margdarshak conversation", () => {
   const handoff = { question: "Will Saturn affect my career?", feature: "birthChart", featureName: "Janma Kundali", context: "Chandra Rashi: Karka. Lagna: Vrishabha." };
 
-  it("has no hardcoded human identity or invented statistics", () => {
+  it("has no hardcoded human identity or invented statistics", async () => {
     signIn();
-    mountChat();
+    await mountChat();
     const text = document.body.textContent ?? "";
     expect(text).not.toMatch(/Rameshwar|Pandit Ji|40\+|120K|12K\+ Reviews|Online · Available/);
     // The product name appears once (sidebar); no profile card or header before a guru is assigned.
@@ -190,7 +194,7 @@ describe("Divya Margdarshak conversation", () => {
     signIn();
     guruTiming.searchMinMs = 800; // long enough to see the searching screen
     saveHandoff(handoff);
-    mountChat();
+    await mountChat();
 
     const searching = await screen.findByTestId("searching-guru");
     expect(searching).toHaveTextContent("Searching for an available Guru...");
@@ -219,7 +223,7 @@ describe("Divya Margdarshak conversation", () => {
   it("a follow-up keeps the same profile, shows no new search, and still sends the context", async () => {
     signIn();
     saveHandoff(handoff);
-    mountChat();
+    await mountChat();
     await screen.findByText("Here is a thoughtful reply.", {}, { timeout: 4000 });
     const nameBefore = screen.getByTestId("persona-header").textContent;
 
@@ -235,7 +239,7 @@ describe("Divya Margdarshak conversation", () => {
 
   it("signed out: nothing is sent before login; after login the question is answered once", async () => {
     saveHandoff(handoff);
-    mountChat();
+    await mountChat();
     expect(await screen.findByTestId("signin-gate")).toBeInTheDocument();
     expect(askGuru).not.toHaveBeenCalled();
     expect(screen.queryByText("Here is a thoughtful reply.")).toBeNull();

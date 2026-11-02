@@ -1,4 +1,5 @@
 import EducationSection, { EducationBlock } from "@/components/EducationSection";
+import { FEATURES } from "@/data/featureCatalog";
 import { FEATURE_FAQS } from "@/data/featureFaqs";
 
 const blocks: EducationBlock[] = [
@@ -34,5 +35,5 @@ const DISCLAIMER =
   "Tarot Drishti is offered for personal interest and reflection. Readings are generated interpretations, not predictions, and not medical, legal, financial or relationship advice.";
 
 export default function TarotEducation() {
-  return <EducationSection idPrefix="tarot" title="About Tarot Drishti" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
+  return <EducationSection audioToolSlug={FEATURES.tarot.id} idPrefix="tarot" title="About Tarot Drishti" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
 }

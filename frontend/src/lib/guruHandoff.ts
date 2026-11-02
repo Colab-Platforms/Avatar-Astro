@@ -54,6 +54,15 @@ export const takeHandoff = (): GuruHandoff | null => {
   }
 };
 
+/** True if a handoff is waiting (without consuming it). */
+export const hasPendingHandoff = (): boolean => {
+  try {
+    return !!sessionStorage.getItem(KEY);
+  } catch {
+    return false;
+  }
+};
+
 export const clearHandoff = (): void => {
   try {
     sessionStorage.removeItem(KEY);

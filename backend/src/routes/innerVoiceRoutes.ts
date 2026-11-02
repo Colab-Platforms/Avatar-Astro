@@ -2,10 +2,80 @@ import { Router, Request, Response } from "express";
 import { createRateLimiter } from "../utils/rateLimit.js";
 import { auth } from "../middleware/authMiddleware.js";
 import { buildTodayPanchang } from "../modules/gemstone/panchang.today.js";
+import { getDailyChatStatus, consumeDailyChatSession } from "../utils/dailyChatSession.js";
+import { screenMessage, ESCALATION_REPLY, OFF_TOPIC_REPLY } from "../utils/chatScreening.js";
+import prisma from "@root/prisma.js";
 
 const router = Router();
 // Life path readings and TTS are generated per user and spend provider credits.
 router.use(auth("USER"));
+
+// ── Inner Voice chat daily timer (/inner-voice/chat free-tier limit) ─────────
+// The chat page itself talks to the shared /api/ai/chat proxy (used by other,
+// unrelated AI features too), so the 5-minute daily gate lives here instead of
+// on that shared endpoint: the frontend calls POST .../chat/consume right
+// before each message it sends through the proxy, and this is the only place
+// that creates or reads a user's daily session. The database row is the sole
+// source of truth — nothing here trusts a client-supplied timestamp.
+router.get("/chat/status", createRateLimiter({ windowMs: 60_000, max: 60 }), async (req: Request, res: Response) => {
+  try {
+    const status = await getDailyChatStatus(req.user!.id, new Date());
+    return res.json({ success: true, data: status });
+  } catch (err: any) {
+    console.error("Daily chat status error:", err?.message);
+    return res.status(500).json({ success: false, error: "Failed to load chat session status" });
+  }
+});
+
+router.post("/chat/consume", createRateLimiter({ windowMs: 60_000, max: 60 }), async (req: Request, res: Response) => {
+  try {
+    const status = await consumeDailyChatSession(req.user!.id, new Date());
+    if (!status.allowed) {
+      return res.status(429).json({
+        success: false,
+        code: "DAILY_CHAT_LIMIT_REACHED",
+        message: "Your daily AI astrology chat limit has been reached.",
+        data: status,
+      });
+    }
+    return res.json({ success: true, data: status });
+  } catch (err: any) {
+    console.error("Daily chat consume error:", err?.message);
+    return res.status(500).json({ success: false, error: "Failed to start chat session" });
+  }
+});
+
+// ── Message screening (queue instead of AI reply) ───────────────────────────
+// The frontend calls this BEFORE /chat/consume and the AI proxy. Personal-contact requests and
+// "are you human?" probes are stored in chat_escalations for the super admin and get a fixed reply;
+// off-topic messages get a fixed refusal. Neither spends AI credits or the daily timer.
+const MAX_PENDING_PER_USER = 5;
+
+router.post("/chat/screen", createRateLimiter({ windowMs: 60_000, max: 40 }), async (req: Request, res: Response) => {
+  try {
+    const message = typeof req.body?.message === "string" ? req.body.message.trim().slice(0, 1000) : "";
+    if (!message) return res.status(400).json({ success: false, error: "message is required" });
+    const last = typeof req.body?.lastGuruReply === "string" ? req.body.lastGuruReply : undefined;
+
+    const result = await screenMessage(message, last);
+    if (result.action === "ALLOW") return res.json({ success: true, data: { action: "ALLOW" } });
+
+    if (result.action === "OFF_TOPIC") {
+      return res.json({ success: true, data: { action: "OFF_TOPIC", reply: result.reply || OFF_TOPIC_REPLY } });
+    }
+
+    const userId = req.user!.id;
+    const pending = await prisma.chatEscalation.count({ where: { userId, status: "PENDING" } });
+    if (pending < MAX_PENDING_PER_USER) {
+      await prisma.chatEscalation.create({ data: { userId, message, reason: result.reason } });
+    }
+    return res.json({ success: true, data: { action: "ESCALATED", reply: result.reply || ESCALATION_REPLY } });
+  } catch (err: any) {
+    console.error("Chat screen error:", err?.message);
+    // Never fall through to the AI on a failure: for a personal-contact request that would be the wrong outcome.
+    return res.status(500).json({ success: false, error: "Could not process your message. Please try again." });
+  }
+});
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const MODEL = "google/gemma-4-31b-it:free";

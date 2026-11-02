@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import {
   generateHumanReadableInterpretation,
-  generateDailyHoroscope,
   generateCompatibilityAnalysis
 } from '../services/chatgptService.js';
+import { getDailyHoroscope, parseSign, toPlainText, HoroscopeUnavailableError } from '../services/dailyHoroscopeService.js';
 
 // Generate human-readable birth chart interpretation
 export const interpretBirthChart = async (req: Request, res: Response) => {
@@ -32,34 +32,23 @@ export const interpretBirthChart = async (req: Request, res: Response) => {
   }
 };
 
-// Generate AI-powered daily horoscope
+// Daily horoscope for a Sun sign: one stored reading per sign per Asia/Kolkata day (see dailyHoroscopeService).
 export const generateAIDailyHoroscope = async (req: Request, res: Response) => {
+  const sign = parseSign(req.params.sign);
+  if (!sign) {
+    return res.status(400).json({ success: false, error: 'Unknown zodiac sign' });
+  }
   try {
-    const { sign } = req.params;
-
-    if (!sign) {
-      return res.status(400).json({
-        success: false,
-        error: 'Zodiac sign is required'
-      });
-    }
-
-    const horoscope = await generateDailyHoroscope(sign);
-
-    res.json({
-      success: true,
-      data: {
-        sign,
-        horoscope,
-        date: new Date().toISOString().split('T')[0]
-      }
-    });
+    const h = await getDailyHoroscope(sign);
+    // The reading changes at midnight IST, so it must never be served from a browser or CDN cache past that.
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({ success: true, data: { ...h, horoscope: toPlainText(h.sections) } });
   } catch (error: any) {
-    console.error('Horoscope Generation Error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Failed to generate horoscope'
-    });
+    if (error instanceof HoroscopeUnavailableError) {
+      return res.status(503).json({ success: false, code: 'HOROSCOPE_UNAVAILABLE', error: "Today's horoscope is not available right now. Please try again later." });
+    }
+    console.error('Horoscope Generation Error:', error?.message);
+    res.status(500).json({ success: false, error: 'Failed to load the horoscope' });
   }
 };
 

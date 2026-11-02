@@ -1,16 +1,9 @@
 import RatnaEmblem from "./RatnaEmblem";
-import { formatBirthDate } from "./format";
 import type { RatnaResult } from "./types";
 
 const STARS: [number, number][] = [
   [6, 30], [14, 70], [24, 18], [76, 22], [88, 64], [94, 28], [60, 8], [40, 82],
 ];
-
-const Chip = ({ children }: { children: React.ReactNode }) => (
-  <li className="max-w-full break-words rounded-full border border-[#592209]/35 bg-[#FBF5EC] px-3 py-1 text-sm text-[#4A2E1F]">
-    {children}
-  </li>
-);
 
 const ResultHero = ({ result }: { result: RatnaResult }) => (
   <header className="ratna-hero relative isolate overflow-hidden px-2 pb-1 pt-14 text-center sm:pt-3">
@@ -28,15 +21,6 @@ const ResultHero = ({ result }: { result: RatnaResult }) => (
       <p className="mt-1 text-xs font-semibold tracking-[0.28em] text-[#592209]">YOUR PERSONAL RATNA</p>
       <h1 className="mt-1 font-home-serif text-[1.4rem] font-semibold leading-tight text-[#592209] min-[420px]:text-2xl sm:text-3xl lg:text-4xl">Your Ratna Jyotish Reading</h1>
     </div>
-    <ul
-      className="ratna-reveal mx-auto mt-3 flex max-w-3xl flex-wrap justify-center gap-1.5"
-      style={{ ["--i" as string]: 1 }}
-      aria-label="Birth details used"
-    >
-      <Chip>Born {formatBirthDate(result.birth.dateOfBirth)}</Chip>
-      <Chip>{result.birth.timeOfBirth ? `at ${result.birth.timeOfBirth}` : "Birth time not provided"}</Chip>
-      <Chip>{result.birth.place}</Chip>
-    </ul>
   </header>
 );
 
