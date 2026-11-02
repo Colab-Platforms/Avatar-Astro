@@ -68,6 +68,21 @@ function toPoint(lm: { x: number; y: number }): Point {
 }
 
 /**
+ * Which hand is this, judged from the landmarks themselves. For a palm facing the camera in an un-mirrored photo, a RIGHT hand
+ * has its index finger clockwise of its little finger as seen from the wrist (negative cross product in image coordinates,
+ * where y points down). This does not depend on how the photo is rotated. MediaPipe's own label assumes a mirrored selfie
+ * image and also flips when the back of the hand is shown, so it is only used as a cross-check, never as the answer.
+ * `strength` is the normalised size of the cross product: near 0 means the fingers are too bunched or edge-on to tell.
+ */
+export function handednessFromGeometry(lm: Array<{ x: number; y: number }>): { hand: "Left" | "Right"; strength: number } {
+  const w = lm[0], i = lm[5], p = lm[17];
+  const ax = i.x - w.x, ay = i.y - w.y, bx = p.x - w.x, by = p.y - w.y;
+  const cross = ax * by - ay * bx;
+  const norm = Math.hypot(ax, ay) * Math.hypot(bx, by) || 1;
+  return { hand: cross < 0 ? "Right" : "Left", strength: Math.abs(cross) / norm };
+}
+
+/**
  * Runs real detection on an image/canvas and returns the first detected
  * hand's 21 landmarks in our shape, or null if no hand was found.
  */
@@ -80,7 +95,7 @@ export async function detectHandLandmarks(
   if (!result?.landmarks?.length) return null;
 
   const lm = result.landmarks[0] as Array<{ x: number; y: number }>;
-  const handednessLabel: string | undefined = result.handedness?.[0]?.[0]?.categoryName;
+  const geo = handednessFromGeometry(lm);
   const confidence: number = result.handedness?.[0]?.[0]?.score ?? 0.75;
 
   return {
@@ -90,9 +105,8 @@ export async function detectHandLandmarks(
     middle: LANDMARK_INDEX.middle.map((i) => toPoint(lm[i])) as HandLandmarks["middle"],
     ring: LANDMARK_INDEX.ring.map((i) => toPoint(lm[i])) as HandLandmarks["ring"],
     pinky: LANDMARK_INDEX.pinky.map((i) => toPoint(lm[i])) as HandLandmarks["pinky"],
-    // MediaPipe reports handedness from the camera's perspective, which is
-    // mirrored relative to the subject's own hand — flip it back.
-    handedness: handednessLabel === "Left" ? "Right" : "Left",
+    handedness: geo.hand,
+    handednessCertain: geo.strength >= 0.25,
     confidence,
   };
 }

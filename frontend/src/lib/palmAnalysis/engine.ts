@@ -29,6 +29,9 @@ class DefaultPalmAnalysisEngine implements PalmAnalysisEngine {
     if (landmarks.confidence < 0.55) {
       return { ok: false, issue: "low_confidence", message: "Palm detection confidence is low — try better lighting.", blurScore, landmarks };
     }
+    if (landmarks.handednessCertain === false) {
+      return { ok: false, issue: "low_confidence", message: "We can't tell which hand this is from the photo. Please upload a clear photo with your palm facing the camera and fingers slightly apart.", blurScore, landmarks };
+    }
     if (isTooBlurry(blurScore)) {
       return { ok: false, issue: "too_blurry", message: "This image looks a little blurry for a precise reading.", blurScore, landmarks };
     }

@@ -1,47 +1,24 @@
 import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react';
-import AskDivyaSection from "@/features/guru/AskDivyaSection";
 import FullScreenLoader from "@/components/Loader/FullScreenLoader";
 import { FEATURES } from "@/data/featureCatalog";
 import { useFeatureTitle } from "@/hooks/useFeatureTitle";
 import { motion, AnimatePresence } from 'framer-motion';
 import { authedFetch, requireSignIn, SignInRequiredError } from '@/lib/authedFetch';
 import gsap from 'gsap';
-import { RotateCcw, Sprout, Sparkles, EyeOff, Star, Zap, Flame } from 'lucide-react';
+import { RotateCcw, Shuffle } from 'lucide-react';
 import TarotArt from '../components/tarot/TarotArt';
 import { TarotCard, ALL_CARDS, MAJOR_ARCANA, shuffleDeck, getCategoryCardImage } from '../data/tarotData';
 import { TarotLandingScene } from '../components/tarot/TarotLandingScene';
 import { useBackOverride } from '../context/NavigationContext';
 import { API_BASE_URL } from '@/lib/api';
 import TarotEducation from '../components/tarot/TarotEducation';
+import { TimelineResult, KarmaResult, TIMELINE_POSITIONS, KARMA_POSITIONS, type AIReading } from '../components/tarot/TarotReadingResult';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Phase = 'landing' | 'opening' | 'shuffling' | 'mode' | 'question' | 'spread' | 'revealing' | 'reading';
 type Mode = 'timeline' | 'karma';
 
-interface AIReading {
-  currentLifeStage?: string;
-  mainOpportunity?: string;
-  hiddenChallenge?: string;
-  nextMajorTurningPoint?: string;
-  recommendedAction?: string;
-  spiritualGuidance?: string;
-  timelineNarrative?: { position: string; card: string; insight: string }[];
-  overallMessage?: string;
-  currentKarmaTheme?: string;
-  rootCause?: string;
-  lifeAreasAffected?: string[];
-  dailyAction?: string;
-  weeklyAction?: string;
-  spiritualPractice?: string;
-  recommendedHabit?: string;
-  reflectionQuestion?: string;
-  positiveAffirmation?: string;
-  cardInsights?: { position: string; card: string; insight: string }[];
-}
-
 // ─── Constants ────────────────────────────────────────────────────────────────
-const TIMELINE_POSITIONS = ['Past Energy', 'Current Energy', 'Hidden Influence', 'Next 6 Months', 'Future Potential'];
-const KARMA_POSITIONS = ['Current Karma', 'Hidden Blockage', 'Healing Path'];
 
 // ─── Card Theme Helper ────────────────────────────────────────────────────────
 interface CardTheme { bg: string; border: string; glow: string; accent: string; dim: string; }
@@ -996,26 +973,34 @@ const CardSpreadScene = ({ numCards, positions, question, onComplete }: { numCar
       </div>
 
       <motion.button
+        type="button"
+        data-testid="shuffle-cards"
+        aria-label="Shuffle the cards"
         onClick={handleShuffle}
         disabled={uiPhase !== 'idle'}
         whileHover={uiPhase === 'idle' ? { scale: 1.04 } : {}}
         whileTap={uiPhase === 'idle' ? { scale: 0.96 } : {}}
         style={{
-          marginTop: '4px', zIndex: 20,
-          padding: '14px 42px',
+          marginTop: '8px', zIndex: 20,
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+          minHeight: 48, maxWidth: 'calc(100vw - 32px)',
+          padding: '12px 32px',
           borderRadius: 999,
           border: '1.5px solid #592209',
-          background: '#FBF5EC',
+          background: '#592209',
           color: '#F5E9D6',
           fontFamily: "'DM Sans', system-ui, sans-serif",
-          fontSize: '15px', letterSpacing: '0.18em', textTransform: 'uppercase', fontWeight: 700,
+          fontSize: '15px', letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 700,
           cursor: uiPhase === 'idle' ? 'pointer' : 'default',
-          boxShadow: '0 0 18px rgba(89,34,9,0.35), inset 0 0 12px rgba(89,34,9,0.08)',
-          opacity: uiPhase === 'idle' ? 1 : 0.6,
+          boxShadow: '0 6px 18px rgba(89,34,9,0.3)',
+          opacity: uiPhase === 'idle' ? 1 : 0.7,
           transition: 'box-shadow 0.3s ease, opacity 0.3s ease',
         }}
       >
-        {buttonLabel}
+        <motion.span aria-hidden style={{ display: 'inline-flex' }} animate={uiPhase === 'idle' ? { rotate: 0 } : { rotate: 360 }} transition={uiPhase === 'idle' ? { duration: 0 } : { duration: 1.2, repeat: Infinity, ease: 'linear' }}>
+          <Shuffle size={18} />
+        </motion.span>
+        <span aria-live="polite">{buttonLabel}</span>
       </motion.button>
 
       <style>{`
@@ -1213,517 +1198,27 @@ const InsightCard = ({
   );
 };
 
-// ─── Timeline Reading Display ─────────────────────────────────────────────────
-const RESULT_LABELS = ['Past Soul Lesson', 'Current Path', 'Hidden Calling', 'Next Awakening', 'Purpose Guidance'];
-
-/** Uniform copper-on-navy tarot tile — lift + glow + sparkle + shine on hover, opens the detail panel on click */
-const ResultCard: React.FC<{
-  card: TarotCard; label: string; active: boolean; delay: number; onToggle: () => void; category?: string;
-}> = ({ card, label, active, delay, onToggle, category }) => {
-  const [hovered, setHovered] = useState(false);
-  const [imgFailed, setImgFailed] = useState(false);
-  const imgSrc = !imgFailed ? getCategoryCardImage(category, card) : null;
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.5 }}
-      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}
-    >
-      <motion.button
-        onClick={onToggle}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        animate={{ y: hovered ? -10 : 0, scale: hovered ? 1.05 : 1 }}
-        transition={{ duration: 0.25, ease: 'easeOut' }}
-        style={{
-          position: 'relative', width: 200, height: 300, padding: 0, cursor: 'pointer',
-          border: `1px solid ${active ? 'rgba(89,34,9,0.9)' : 'rgba(89,34,9,0.35)'}`,
-          borderRadius: '14px', background: '#F5E9D6',
-          overflow: 'hidden',
-          boxShadow: active
-            ? '0 0 32px rgba(89,34,9,0.55), 0 12px 26px rgba(0,0,0,0.55)'
-            : hovered
-            ? '0 0 26px rgba(89,34,9,0.45), 0 12px 24px rgba(0,0,0,0.5)'
-            : '0 4px 16px rgba(0,0,0,0.45)',
-        }}
-      >
-        {imgSrc && (
-          <>
-            <img
-              src={imgSrc}
-              alt={card.name}
-              onError={() => setImgFailed(true)}
-              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
-            />
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, #FBF5EC 0%, transparent 26%, transparent 64%, #FBF5EC 100%)' }} />
-          </>
-        )}
-        <span style={{ position: 'absolute', top: 14, left: 0, right: 0, textAlign: 'center', fontSize: 14, letterSpacing: 1.5, color: imgSrc ? '#301607' : '#F5E9D6', fontFamily: "'DM Sans', system-ui, sans-serif" }}>{card.number}</span>
-        {!imgSrc && <><TarotArt card={card} /><div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(18,6,2,0.75) 0%, transparent 22%, transparent 62%, rgba(18,6,2,0.92) 100%)' }} /></>}
-        <span style={{ position: 'absolute', bottom: 16, left: 10, right: 10, textAlign: 'center', fontSize: 18, letterSpacing: 0.5, color: imgSrc ? '#301607' : '#F5E9D6', fontFamily: "'DM Sans', system-ui, sans-serif", lineHeight: 1.25, fontWeight: 600 }}>{card.name}</span>
-
-        {hovered && <span className="result-card-shine" />}
-        {hovered && Array.from({ length: 3 }).map((_, i) => (
-          <span key={i} className="result-card-sparkle" style={{ left: `${20 + i * 28}%`, animationDelay: `${i * 0.15}s` }} />
-        ))}
-      </motion.button>
-      <span style={{ fontSize: 17, letterSpacing: '1px', color: '#592209', fontFamily: "'DM Sans', system-ui, sans-serif", textTransform: 'uppercase', textAlign: 'center', maxWidth: 200 }}>{label}</span>
-    </motion.div>
-  );
-};
-
-const DetailRow: React.FC<{ label: string; value: string }> = ({ label, value }) => (
-  <div style={{ marginBottom: 16 }}>
-    <p style={{ margin: '0 0 4px', fontSize: 14, letterSpacing: '1.5px', color: 'rgba(48,22,7,1)', textTransform: 'uppercase', fontFamily: "'DM Sans', system-ui, sans-serif" }}>{label}</p>
-    <p style={{ margin: 0, fontSize: 18, lineHeight: 1.75, color: 'rgba(48,22,7,0.92)', fontFamily: "'DM Sans', system-ui, sans-serif" }}>{value}</p>
-  </div>
-);
-
-/** Small artwork tile used in the "Card-by-Card Story" strip — real category art with an emoji-symbol fallback */
-const StoryCardThumb: React.FC<{ card: TarotCard; category?: string }> = ({ card, category }) => {
-  const [imgFailed, setImgFailed] = useState(false);
-  const imgSrc = !imgFailed ? getCategoryCardImage(category, card) : null;
-  return (
-    <div style={{ width: 88, height: 132, margin: '0 auto 16px', borderRadius: 10, border: '1px solid rgba(89,34,9,0.4)', overflow: 'hidden', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(89,34,9,0.05)' }}>
-      {imgSrc
-        ? <img src={imgSrc} alt={card.name} onError={() => setImgFailed(true)} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }} />
-        : <TarotArt card={card} />}
-    </div>
-  );
-};
-
-/** Floating panel with the six requested reading fields for a single selected card */
-const CardDetailPanel: React.FC<{
-  card: TarotCard; label: string; insight?: string; guidance?: string;
-}> = ({ card, label, insight, guidance }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 18 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: 18 }}
-    transition={{ duration: 0.4, ease: 'easeOut' }}
-    style={{
-      width: '100%', maxWidth: 620, margin: '0 auto',
-      padding: '30px 34px', borderRadius: '16px',
-      background: 'linear-gradient(160deg,rgba(89,34,9,0.08) 0%,rgba(89,34,9,0.02) 100%)',
-      border: '1px solid rgba(89,34,9,0.3)',
-    }}
-  >
-    <p style={{ margin: '0 0 6px', fontSize: 13, letterSpacing: '2.5px', color: '#592209', textTransform: 'uppercase', fontFamily: "'DM Sans', system-ui, sans-serif" }}>{label}</p>
-    <h4 style={{ margin: '0 0 18px', fontSize: 28, color: '#592209', fontFamily: "'DM Sans', system-ui, sans-serif", letterSpacing: '2px' }}>{card.name}</h4>
-
-    <DetailRow label="Meaning" value={card.meaning} />
-    {insight && <DetailRow label="Interpretation" value={insight} />}
-    <DetailRow label="Positive Aspects" value={card.keywords.join(' · ')} />
-    <DetailRow label="Challenges" value={card.shadow} />
-    {guidance && <DetailRow label="Guidance" value={guidance} />}
-  </motion.div>
-);
-
-/** Centered white sub-heading, matching the main heading's font/weight but without the glow */
-const SectionHeading: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <motion.h3
-    initial={{ opacity: 0, y: 24 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true, margin: '-80px' }}
-    transition={{ duration: 0.5 }}
-    style={{ margin: 0, fontSize: 30, fontWeight: 600, color: '#301607', fontFamily: "'DM Sans', system-ui, sans-serif", letterSpacing: '2px', textAlign: 'center', textTransform: 'uppercase' }}
-  >
-    {children}
-  </motion.h3>
-);
-
-/** Tiny copper celestial glyph used to separate the two insight-grid rows */
-const SacredDivider: React.FC = () => (
-  <div className="trd-divider" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, gridColumn: '1 / -1' }}>
-    <div style={{ width: 60, height: 1, background: 'linear-gradient(to right, transparent, rgba(89,34,9,0.08))' }} />
-    <svg width="16" height="16" viewBox="0 0 16 16" style={{ opacity: 0.7, flexShrink: 0 }}>
-      <circle cx="8" cy="8" r="6" fill="none" stroke="#592209" strokeWidth="0.6" strokeDasharray="2 3" />
-      <path d="M8,2 L8,14 M2,8 L14,8" stroke="#592209" strokeWidth="0.6" opacity="0.6" />
-      <circle cx="8" cy="8" r="1.8" fill="#592209" opacity="0.8" />
-    </svg>
-    <div style={{ width: 60, height: 1, background: 'linear-gradient(to left, transparent, rgba(89,34,9,0.08))' }} />
-  </div>
-);
-
-/** Insight-grid tile — same border/background/glow tokens as ResultCard, just larger */
-const InsightGridCard: React.FC<{ icon: React.ReactNode; title: string; value?: string; delay: number }> = ({ icon, title, value, delay }) => {
-  const [hovered, setHovered] = useState(false);
-  if (!value) return null;
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-60px' }}
-      whileHover={{ y: -8, scale: 1.02 }}
-      transition={{ duration: 0.5, delay }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        position: 'relative', padding: '30px 28px', borderRadius: '19px',
-        background: '#F5E9D6',
-        border: `1px solid ${hovered ? 'rgba(89,34,9,0.6)' : 'rgba(89,34,9,0.35)'}`,
-        boxShadow: hovered ? '0 8px 26px rgba(0,0,0,0.5), 0 0 24px rgba(89,34,9,0.25)' : '0 4px 16px rgba(0,0,0,0.4)',
-        transition: 'border-color 0.3s ease, box-shadow 0.3s ease',
-        overflow: 'hidden',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-        <span style={{ color: '#592209', display: 'flex' }}>{icon}</span>
-        <span style={{ fontSize: 16, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#592209', fontFamily: "'DM Sans', system-ui, sans-serif", fontWeight: 600 }}>{title}</span>
-      </div>
-      <p style={{ margin: 0, color: 'rgba(48,22,7,0.82)', fontSize: 18, lineHeight: 1.8, fontFamily: "'DM Sans', system-ui, sans-serif" }}>{value}</p>
-
-      {hovered && <span className="result-card-shine" />}
-      {hovered && Array.from({ length: 3 }).map((_, i) => (
-        <span key={i} className="result-card-sparkle" style={{ left: `${15 + i * 30}%`, animationDelay: `${i * 0.15}s` }} />
-      ))}
-    </motion.div>
-  );
-};
-
-const tarotContext = (cards: TarotCard[], positions: string[], reading: AIReading, question?: string): string =>
-  [
-    question ? `Question: ${question}` : "",
-    `Cards: ${cards.map((c, i) => `${positions[i] ?? i + 1}: ${c.name}`).join("; ")}.`,
-    reading.overallMessage ? `Overall message: ${reading.overallMessage}` : "",
-    reading.recommendedAction ? `Suggested action: ${reading.recommendedAction}` : "",
-  ].filter(Boolean).join("\n");
-
+// ─── Result screens (shared components in components/tarot/TarotReadingResult.tsx) ───
 const TimelineReadingDisplay = ({
-  cards, positions, question, reading, onReset,
-}: { cards: TarotCard[]; positions: string[]; question: string; reading: AIReading; onReset: () => void }) => {
-  const [activeIdx, setActiveIdx] = useState<number | null>(null);
-  const activeCard = activeIdx !== null ? cards[activeIdx] : null;
-  const activeInsight = activeIdx !== null ? reading.timelineNarrative?.[activeIdx]?.insight : undefined;
-  const guidance = reading.recommendedAction || reading.spiritualGuidance;
+  cards, question, reading, onReset,
+}: { cards: TarotCard[]; positions: string[]; question: string; reading: AIReading; onReset: () => void }) => (
+  <TimelineResult cards={cards} reading={reading} question={question}>
+    <ReadingNote />
+    <ResetButton onReset={onReset} />
+  </TimelineResult>
+);
 
-  return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 20px 100px', position: 'relative', background: '#FBF5EC', overflow: 'hidden' }}>
-      <Particles count={16} />
-
-      <motion.div initial={{ opacity: 0, y: -14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
-        style={{ textAlign: 'center', zIndex: 10, marginBottom: 32 }}>
-        <p style={{ letterSpacing: '4px', fontSize: 16, color: '#592209', textTransform: 'none', fontFamily: "'DM Sans', system-ui, sans-serif", marginBottom: 14 }}>
-          {FEATURES.tarot.name} · Life Timeline Tarot™ • {question}
-        </p>
-        <h1 style={{ margin: '0 0 16px', fontSize: 'clamp(32px,5vw,48px)', fontFamily: "'DM Sans', system-ui, sans-serif", letterSpacing: '3px', textTransform: 'uppercase', fontWeight: 700 }}>
-          <span style={{ color: '#301607' }}>Your Soul&apos;s </span>
-          <span style={{ color: '#592209' }}>Timeline</span>
-        </h1>
-        <p style={{ margin: 0, fontSize: 18, fontStyle: 'italic', color: 'rgba(48,22,7,0.9)', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-          Tap each card for its meaning · Take what resonates · Leave the rest
-        </p>
-      </motion.div>
-
-      <div className="trd-cards-row" style={{ display: 'flex', justifyContent: 'center', gap: 'clamp(16px,3vw,32px)', flexWrap: 'wrap', zIndex: 10, marginBottom: 36 }}>
-        {cards.map((card, i) => (
-          <ResultCard key={card.id} card={card} label={RESULT_LABELS[i] ?? positions[i]} active={activeIdx === i}
-            delay={0.15 + i * 0.12} onToggle={() => setActiveIdx(cur => (cur === i ? null : i))} category={question} />
-        ))}
-      </div>
-
-      <AnimatePresence mode="wait">
-        {activeCard && (
-          <div key={activeIdx} style={{ zIndex: 10, marginBottom: 36, width: '100%', display: 'flex', justifyContent: 'center', padding: '0 20px' }}>
-            <CardDetailPanel card={activeCard} label={RESULT_LABELS[activeIdx!] ?? positions[activeIdx!]} insight={activeInsight} guidance={guidance} />
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* ── Overall Reading ────────────────────────────────────────────── */}
-      {reading.overallMessage && (
-        <div style={{ zIndex: 10, width: '100%', marginBottom: 90 }}>
-          <SectionHeading>Overall Reading</SectionHeading>
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-60px' }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            style={{ maxWidth: 700, margin: '24px auto 0', textAlign: 'center', fontSize: 18, lineHeight: 1.9, color: 'rgba(48,22,7,0.97)', fontFamily: "'DM Sans', system-ui, sans-serif", padding: '0 20px' }}
-          >
-            {reading.overallMessage}
-          </motion.p>
-        </div>
-      )}
-
-      {/* ── Six insight cards, 3×2 with a sacred divider between the rows ── */}
-      <div className="trd-insight-grid" style={{ zIndex: 10, width: '100%', maxWidth: 1000, marginBottom: 90 }}>
-        <InsightGridCard icon={<Sprout size={18} />}  title="Where You Are Now" value={reading.currentLifeStage}     delay={0} />
-        <InsightGridCard icon={<Sparkles size={18} />} title="What's Helping You"      value={reading.mainOpportunity}     delay={0.08} />
-        <InsightGridCard icon={<EyeOff size={18} />}  title="What's Blocking You"     value={reading.hiddenChallenge}     delay={0.16} />
-        <SacredDivider />
-        <InsightGridCard icon={<Star size={18} />}    title="A Theme To Prepare For"      value={reading.nextMajorTurningPoint} delay={0.24} />
-        <InsightGridCard icon={<Zap size={18} />}     title="A Step You Could Take"    value={reading.recommendedAction}   delay={0.32} />
-        <InsightGridCard icon={<Flame size={18} />}   title="Reflective Guidance"  value={reading.spiritualGuidance}   delay={0.4} />
-      </div>
-
-      {/* ── Card-by-card story ─────────────────────────────────────────── */}
-      {reading.timelineNarrative && reading.timelineNarrative.length > 0 && (
-        <div style={{ zIndex: 10, width: '100%', maxWidth: 1100, marginBottom: 90 }}>
-          <SectionHeading>Your Card-by-Card Story</SectionHeading>
-          <div className="trd-story-row" style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', flexWrap: 'wrap', gap: '28px 0', maxWidth: 960, margin: '36px auto 0' }}>
-            {reading.timelineNarrative.map((n, i) => {
-              const card = cards[i];
-              if (!card) return null;
-              return (
-                <React.Fragment key={i}>
-                  <motion.div
-                    initial={{ opacity: 0, y: 24 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: '-60px' }}
-                    transition={{ duration: 0.5, delay: i * 0.1 }}
-                    style={{
-                      width: 260, boxSizing: 'border-box', padding: '32px 26px', borderRadius: '18px', textAlign: 'center',
-                      background: '#F5E9D6',
-                      border: '1px solid rgba(89,34,9,0.35)',
-                    }}
-                  >
-                    <StoryCardThumb card={card} category={question} />
-                    <p style={{ margin: '0 0 14px', fontSize: 22, color: '#592209', fontFamily: "'DM Sans', system-ui, sans-serif", fontWeight: 600, letterSpacing: '1px' }}>{card.name}</p>
-                    <p style={{ margin: '0 0 6px', fontSize: 15, letterSpacing: '1px', textTransform: 'uppercase', color: 'rgba(48,22,7,1)', fontFamily: "'DM Sans', system-ui, sans-serif" }}>Meaning</p>
-                    <p style={{ margin: '0 0 14px', fontSize: 17, lineHeight: 1.7, color: 'rgba(48,22,7,0.9)', fontFamily: "'DM Sans', system-ui, sans-serif" }}>{card.meaning}</p>
-                    <p style={{ margin: '0 0 6px', fontSize: 15, letterSpacing: '1px', textTransform: 'uppercase', color: 'rgba(48,22,7,1)', fontFamily: "'DM Sans', system-ui, sans-serif" }}>Interpretation</p>
-                    <p style={{ margin: 0, fontSize: 17, lineHeight: 1.7, color: 'rgba(48,22,7,0.9)', fontFamily: "'DM Sans', system-ui, sans-serif" }}>{n.insight}</p>
-                  </motion.div>
-                  {i < reading.timelineNarrative!.length - 1 && (
-                    <span className="trd-story-arrow" style={{ color: '#592209', fontSize: 26, alignSelf: 'center', padding: '0 12px' }}>→</span>
-                  )}
-                </React.Fragment>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      <AskDivyaSection feature="tarot" context={tarotContext(cards, positions, reading, question)} />
-      <AskDivyaSection feature="tarot" context={tarotContext(cards, positions, reading)} />
-      <ReadingNote />
-      <ResetButton onReset={onReset} />
-
-      <style>{`
-        @keyframes resultCardShine {
-          0%   { transform: translateX(-120%) rotate(20deg); opacity: 0; }
-          15%  { opacity: 0.55; }
-          100% { transform: translateX(160%) rotate(20deg); opacity: 0; }
-        }
-        .result-card-shine {
-          position: absolute; top: -40%; left: 0; width: 30%; height: 180%;
-          background: linear-gradient(90deg, transparent, rgba(89,34,9,0.08), transparent);
-          animation: resultCardShine 1.1s ease forwards;
-          pointer-events: none;
-        }
-        @keyframes resultCardSparkle {
-          0%   { opacity: 0; transform: translateY(0) scale(0.4); }
-          40%  { opacity: 1; }
-          100% { opacity: 0; transform: translateY(-26px) scale(1); }
-        }
-        .result-card-sparkle {
-          position: absolute; bottom: 10px; width: 3px; height: 3px; border-radius: 50%;
-          background: #FBF5EC; box-shadow: 0 0 6px #592209;
-          animation: resultCardSparkle 1s ease-out forwards;
-          pointer-events: none;
-        }
-        @media (max-width: 600px) {
-          .trd-cards-row {
-            flex-wrap: nowrap;
-            justify-content: flex-start;
-            overflow-x: auto;
-            padding: 0 20px 8px;
-            -webkit-overflow-scrolling: touch;
-          }
-        }
-
-        .trd-insight-grid {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 24px;
-          padding: 0 20px;
-        }
-        .trd-divider { display: flex; margin: 4px 0; }
-        @media (max-width: 900px) {
-          .trd-insight-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-          .trd-divider { display: none; }
-        }
-        @media (max-width: 560px) {
-          .trd-insight-grid { grid-template-columns: 1fr; }
-        }
-
-        @media (max-width: 700px) {
-          .trd-story-row { justify-content: flex-start; overflow-x: auto; padding: 0 20px 8px; -webkit-overflow-scrolling: touch; }
-          .trd-story-arrow { display: none; }
-        }
-      `}</style>
-    </div>
-  );
-};
-
-// ─── Karma Mirror™ Reading Display ─────────────────────────────────────────────
 const KarmaMirrorDisplay = ({
-  cards, positions, reading, onReset,
-}: { cards: TarotCard[]; positions: string[]; reading: AIReading; onReset: () => void }) => {
-  const karmaThemes = [
-    { color: '#592209', glow: 'rgba(255,112,67,0.5)', arrow: '↓' },
-    { color: '#592209', glow: 'rgba(206,147,216,0.5)', arrow: '↓' },
-    { color: '#592209', glow: 'rgba(77,182,172,0.5)', arrow: null },
-  ];
-  const journeyLabels = ['Current Karma', 'Hidden Blockage', 'Healing Path'];
-  const journeyIcons  = ['🔥', '🌑', '🌿'];
-
-  return (
-    <div style={{ minHeight: '100vh', padding: 'clamp(80px,10vh,120px) clamp(16px,5vw,40px) 80px', maxWidth: '1100px', margin: '0 auto', position: 'relative' }}>
-      <Particles count={18} />
-
-      {/* ── Header ─────────────────────────────────────────────────────── */}
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
-        style={{ textAlign: 'center', marginBottom: '52px', position: 'relative', zIndex: 10 }}>
-        <p style={{ letterSpacing: '6px', fontSize: '14px', color: 'rgba(48,22,7,1)', textTransform: 'uppercase', fontFamily: "'DM Sans', system-ui, sans-serif", marginBottom: '10px' }}>
-          {FEATURES.tarot.name} · Karma Mirror™ Reading
-        </p>
-        <h2 style={{ fontSize: 'clamp(26px,5vw,52px)', fontFamily: "'DM Sans', system-ui, sans-serif", letterSpacing: '5px', textTransform: 'uppercase', color: '#592209', textShadow: '0 0 30px rgba(89,34,9,0.4)', marginBottom: '12px' }}>
-          The Mirror Reveals
-        </h2>
-        <p style={{ color: 'rgba(48,22,7,0.8)', fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: '18px', fontStyle: 'italic' }}>
-          "The cards do not judge. They reflect."
-        </p>
-        <div style={{ width: '100px', height: '1px', background: '#F5E9D6', margin: '16px auto 0' }} />
-      </motion.div>
-
-      {/* ── Journey: 3 cards with flow arrows ─────────────────────────── */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
-        style={{ display: 'flex', alignItems: 'stretch', justifyContent: 'center', flexWrap: 'wrap', gap: '0', marginBottom: '56px', position: 'relative', zIndex: 10 }}>
-        {cards.map((card, i) => {
-          const kt = karmaThemes[i];
-          return (
-            <div key={card.id} style={{ display: 'flex', alignItems: 'center' }}>
-              {/* Card column */}
-              <motion.div initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.22 }}
-                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-                {/* Journey label above card */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '20px' }}>{journeyIcons[i]}</span>
-                  <span style={{ fontSize: '13px', letterSpacing: '2px', color: kt.color, fontFamily: "'DM Sans', system-ui, sans-serif", textTransform: 'uppercase', fontWeight: 600 }}>{journeyLabels[i]}</span>
-                </div>
-                {/* Card — fixed container with position:relative */}
-                <div style={{
-                  position: 'relative', width: '130px', height: '200px',
-                  borderRadius: '10px', overflow: 'hidden', flexShrink: 0,
-                  border: `2px solid ${kt.color}80`,
-                  boxShadow: `0 0 36px ${kt.glow}, 0 18px 45px rgba(0,0,0,0.7)`,
-                }}>
-                  <CardFace card={card} size="lg" />
-                </div>
-                <p style={{ margin: 0, fontSize: '17px', color: '#592209', fontFamily: "'DM Sans', system-ui, sans-serif", textTransform: 'uppercase', textAlign: 'center', letterSpacing: '1px', maxWidth: '130px' }}>{card.name}</p>
-              </motion.div>
-
-              {/* Arrow connector between cards */}
-              {i < cards.length - 1 && (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 12px', marginBottom: '56px' }}>
-                  <div style={{ width: '32px', height: '1px', background: `linear-gradient(90deg,${karmaThemes[i].color}80,${karmaThemes[i+1].color}80)` }} />
-                  <span style={{ fontSize: '14px', color: '#592209', marginTop: '4px' }}>→</span>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </motion.div>
-
-      {/* ── Karma Theme + Root Cause ───────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: '18px', marginBottom: '36px', position: 'relative', zIndex: 10 }}>
-        <InsightCard icon="🔮" label="What Your Karma Is Showing You" value={reading.currentKarmaTheme} delay={0.4} accent="#CE93D8" />
-        <InsightCard icon="🌱" label="Where This Pattern Comes From"  value={reading.rootCause}         delay={0.48} />
-      </div>
-
-      {/* ── Life areas affected ────────────────────────────────────────── */}
-      {reading.lifeAreasAffected && reading.lifeAreasAffected.length > 0 && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55 }}
-          style={{ padding: '22px 26px', border: '1px solid rgba(89,34,9,0.2)', borderRadius: '16px', marginBottom: '32px', position: 'relative', zIndex: 10 }}>
-          <p style={{ fontSize: '13px', letterSpacing: '2.5px', color: 'rgba(48,22,7,1)', fontFamily: "'DM Sans', system-ui, sans-serif", textTransform: 'uppercase', marginBottom: '14px' }}>
-            Life Areas Being Affected
-          </p>
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            {reading.lifeAreasAffected.map(area => (
-              <span key={area} style={{ padding: '6px 16px', background: 'rgba(89,34,9,0.08)', border: '1px solid rgba(89,34,9,0.4)', borderRadius: '24px', fontSize: '15px', color: '#592209', fontFamily: "'DM Sans', system-ui, sans-serif", letterSpacing: '1px' }}>
-                {area}
-              </span>
-            ))}
-          </div>
-        </motion.div>
-      )}
-
-      {/* ── Action Plan ────────────────────────────────────────────────── */}
-      <div style={{ marginBottom: '40px', position: 'relative', zIndex: 10 }}>
-        <h3 style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: '24px', letterSpacing: '4px', color: '#592209', textTransform: 'uppercase', marginBottom: '22px', textAlign: 'center' }}>
-          Your Healing Action Plan
-        </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: '16px' }}>
-          <InsightCard icon="☀" label="Do This Every Day"    value={reading.dailyAction}       delay={0.7}  accent="#592209" />
-          <InsightCard icon="🌙" label="Do This Every Week"   value={reading.weeklyAction}      delay={0.76} accent="#CE93D8" />
-          <InsightCard icon="🧘" label="Spiritual Practice"   value={reading.spiritualPractice} delay={0.82} accent="#4DB6AC" />
-          <InsightCard icon="⭐" label="New Habit To Build"   value={reading.recommendedHabit}  delay={0.88} accent="#4FC3F7" />
-        </div>
-      </div>
-
-      {/* ── Reflection + Affirmation ───────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: '18px', marginBottom: '44px', position: 'relative', zIndex: 10 }}>
-        {reading.reflectionQuestion && (
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.95 }}
-            style={{ padding: '26px', background: 'linear-gradient(135deg,rgba(89,34,9,0.1) 0%,rgba(89,34,9,0.03) 100%)', border: '1px solid rgba(89,34,9,0.22)', borderRadius: '16px' }}>
-            <p style={{ margin: '0 0 12px', fontSize: '13px', letterSpacing: '2.5px', color: '#301607', fontFamily: "'DM Sans', system-ui, sans-serif", textTransform: 'uppercase' }}>🔍 Think About This</p>
-            <p style={{ margin: 0, color: 'rgba(48,22,7,0.92)', fontSize: '19px', lineHeight: 1.8, fontFamily: "'DM Sans', system-ui, sans-serif", fontStyle: 'italic', wordBreak: 'break-word' }}>"{reading.reflectionQuestion}"</p>
-          </motion.div>
-        )}
-        {reading.positiveAffirmation && (
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.04 }}
-            style={{ padding: '26px', background: 'linear-gradient(135deg,rgba(89,34,9,0.1) 0%,rgba(229,138,69,0.03) 100%)', border: '1px solid rgba(89,34,9,0.28)', borderRadius: '16px' }}>
-            <p style={{ margin: '0 0 12px', fontSize: '13px', letterSpacing: '2.5px', color: '#301607', fontFamily: "'DM Sans', system-ui, sans-serif", textTransform: 'uppercase' }}>✨ Say This To Yourself</p>
-            <p style={{ margin: 0, color: '#592209', fontSize: '19px', lineHeight: 1.8, fontFamily: "'DM Sans', system-ui, sans-serif", fontStyle: 'italic', textShadow: '0 0 20px rgba(89,34,9,0.3)', wordBreak: 'break-word' }}>"{reading.positiveAffirmation}"</p>
-          </motion.div>
-        )}
-      </div>
-
-      {/* ── Card-by-card insights ──────────────────────────────────────── */}
-      {reading.cardInsights && reading.cardInsights.length > 0 && (
-        <div style={{ marginBottom: '48px', position: 'relative', zIndex: 10 }}>
-          <h3 style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: '24px', letterSpacing: '4px', color: '#592209', textTransform: 'uppercase', marginBottom: '22px', textAlign: 'center' }}>
-            What Each Card Is Telling You
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {reading.cardInsights.map((n, i) => {
-              const kt = karmaThemes[i] ?? karmaThemes[0];
-              return (
-                <motion.div key={i} initial={{ opacity: 0, x: -14 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1.1 + i * 0.1 }}
-                  style={{
-                    display: 'flex', alignItems: 'flex-start', gap: '18px',
-                    padding: '20px 22px',
-                    background: `linear-gradient(160deg,${kt.color}0d 0%,rgba(89,34,9,0.01) 100%)`,
-                    border: `1px solid ${kt.color}28`, borderRadius: '14px',
-                  }}>
-                  {cards[i] && (
-                    <div style={{ position: 'relative', width: '56px', height: '86px', borderRadius: '6px', overflow: 'hidden', flexShrink: 0 }}>
-                      <CardFace card={cards[i]} size="sm" />
-                    </div>
-                  )}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ margin: '0 0 4px', fontSize: '13px', letterSpacing: '2px', color: 'rgba(48,22,7,1)', fontFamily: "'DM Sans', system-ui, sans-serif", textTransform: 'uppercase' }}>{n.position}</p>
-                    <p style={{ margin: '0 0 10px', fontSize: '16px', color: kt.color, fontFamily: "'DM Sans', system-ui, sans-serif", fontWeight: 600 }}>{n.card}</p>
-                    <p style={{ margin: 0, fontSize: '17px', color: 'rgba(48,22,7,0.9)', lineHeight: 1.76, wordBreak: 'break-word' }}>{n.insight}</p>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      <ReadingNote />
-      <ResetButton onReset={onReset} />
-    </div>
-  );
-};
+  cards, reading, onReset,
+}: { cards: TarotCard[]; positions: string[]; reading: AIReading; onReset: () => void }) => (
+  <KarmaResult cards={cards} reading={reading}>
+    <ReadingNote />
+    <ResetButton onReset={onReset} />
+  </KarmaResult>
+);
 
 const ReadingNote = () => (
-  <p style={{ position: 'relative', zIndex: 10, maxWidth: 560, margin: '0 auto 32px', padding: '0 20px', textAlign: 'center', fontSize: 15, lineHeight: 1.7, fontStyle: 'italic', color: 'rgba(255,255,255,0.6)', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+  <p style={{ position: 'relative', zIndex: 10, maxWidth: 560, margin: '0 auto 32px', padding: '0 20px', textAlign: 'center', fontSize: 15, lineHeight: 1.7, fontStyle: 'italic', color: '#6B4A37', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
     This reading is AI-written reflection based on the cards you drew. It is not a prediction or professional advice.
   </p>
 );

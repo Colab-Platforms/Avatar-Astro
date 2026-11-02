@@ -268,10 +268,8 @@ describe("Ratna Jyotish results page", () => {
     const link = await screen.findByRole("link", { name: "Natural Diamond" });
     expect(link).toHaveAttribute("href", "/shop/diamond-1");
     expect(screen.getByText("₹45,000")).toBeInTheDocument();
-    expect(screen.getByText(/Linked by convention to Venus/)).toBeInTheDocument();
-    expect(screen.getByText("Complementary Spiritual Accessories")).toBeInTheDocument();
-    expect(screen.getByText("General accessories, not selected from your birth details.")).toBeInTheDocument();
-    expect(screen.getByText("Planet-Linked Accessories")).toBeInTheDocument();
+    expect(screen.queryByText("Complementary Spiritual Accessories")).toBeNull(); // the short result offers only the matching gemstone
+    expect(screen.queryByText("Planet-Linked Accessories")).toBeNull();
     expect(screen.getByText("Your Matching Ratna")).toBeInTheDocument();
     expect(screen.queryByText(/left in stock|only \d+ left/i)).toBeNull();
   });

@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { zodiacSigns } from "@/data/zodiacData";
 import { zodiacImages } from "@/data/zodiacImages";
+import DailySignExperience from "@/components/zodiac/DailySignExperience";
 
 /** What each element traditionally stands for — general tradition, not a prediction. */
 const ELEMENT_NOTES: Record<string, string> = {
@@ -39,16 +40,19 @@ const ZodiacDetail = () => {
   const ruler = zodiac.traditionalRuling ? `${zodiac.ruling} (modern) · ${zodiac.traditionalRuling} (traditional)` : zodiac.ruling;
 
   return (
-    <main className="relative z-10 mx-auto max-w-5xl px-4 pb-20 pt-24">
+    <main className="relative z-10 mx-auto max-w-5xl overflow-x-clip px-4 pb-20 pt-40 md:pt-24">
+      <DailySignExperience sign={zodiac} />
+
+      <h2 className="mb-6 border-t border-primary/20 pt-10 text-center font-display text-2xl uppercase tracking-[0.2em] text-primary">About This Zodiac Sign</h2>
       <header className="mb-10 grid items-center gap-8 md:grid-cols-[minmax(0,260px)_1fr]">
         <div className="mx-auto w-48 md:w-full">
           <img src={zodiacImages[zodiac.name]} alt={`${zodiac.name} constellation illustration`} className="w-full object-contain drop-shadow-[0_0_24px_rgba(245,195,106,0.35)]" />
         </div>
         <div className="text-center md:text-left">
-          <p className="mb-2 text-sm uppercase tracking-[0.25em] text-primary/80">{FEATURES.zodiac.name} · Sun sign profile</p>
-          <h1 className="mb-2 font-display text-4xl tracking-wider text-foreground md:text-6xl">
+          <p className="mb-2 text-sm uppercase tracking-[0.25em] text-primary/80">Western (tropical) Sun sign profile</p>
+          <h2 className="mb-2 font-display text-4xl tracking-wider text-foreground md:text-6xl">
             {zodiac.name} <span aria-hidden="true">{zodiac.symbol}</span>
-          </h1>
+          </h2>
           <p className="mb-5 text-lg text-muted-foreground">
             {zodiac.dates} <span className="text-sm">(Western tropical dates; the Vedic Rashi starts about 24 days later)</span>
           </p>
@@ -107,9 +111,9 @@ const ZodiacDetail = () => {
       </div>
 
       <section className="mt-8 rounded-2xl border border-primary/20 bg-primary/5 p-6 text-center md:p-8" aria-labelledby="next-h">
-        <h2 id="next-h" className={h2}>Go Beyond Your Sun Sign</h2>
+        <h2 id="next-h" className={h2}>Explore More</h2>
         <p className="mx-auto mb-5 max-w-2xl text-muted-foreground">
-          Your Sun sign is one part of a full birth chart. See your Sun sign and Life Path profile, or see what the day holds for {zodiac.name}.
+          Your Sun sign is only one part of your story. Your Janma Kundali shows your Vedic Janma Rashi and full birth chart, and Jodi Jyotish looks at compatibility.
         </p>
         <div className="flex flex-col justify-center gap-3 sm:flex-row">
           <Link to="/birth-chart" className="btn-outline-cosmic rounded-lg px-6 py-3">Janma Kundali</Link>

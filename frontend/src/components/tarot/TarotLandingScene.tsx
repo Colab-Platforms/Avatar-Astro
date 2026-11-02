@@ -1,14 +1,17 @@
 import React, { useEffect, useRef, useState } from "react";
+import { MAJOR_ARCANA } from "@/data/tarotData";
+import TarotArt from "./TarotArt";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface TarotMode {
   id: string;
   name: string;
-  trademark: boolean;
-  theme: "gold" | "purple";
-  description: string;
-  tags: string[];
-  icon: "moon" | "eye";
+  cardCount: number;
+  intro: string;
+  steps: { title: string; question: string }[];
+  purpose: string;
+  /** Major Arcana ids shown as the preview fan (real deck artwork). */
+  preview: number[];
 }
 
 interface TarotLandingSceneProps {
@@ -16,29 +19,44 @@ interface TarotLandingSceneProps {
 }
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
-// NOTE: tag labels intentionally mirror TIMELINE_POSITIONS / KARMA_POSITIONS in
-// TarotExperience.tsx so the selection card stays consistent with the reading flow.
+// NOTE: step titles mirror TIMELINE_POSITIONS / KARMA_POSITIONS in TarotReadingResult.tsx so the
+// selection page stays consistent with the reading flow.
 const TAROT_MODES: TarotMode[] = [
   {
     id: "life-timeline",
     name: "Life Timeline Tarot",
-    trademark: true,
-    theme: "gold",
-    description:
-      "A deeper look into the energy surrounding your past, present and future. Five sacred cards reveal where you are, what is shifting, and what may be unfolding next.",
-    tags: ["Past Energy", "Current Energy", "Hidden Influence", "Next 6 Months", "Future Potential"],
-    icon: "moon",
+    cardCount: 5,
+    intro: "Understand your life's journey through five Tarot cards. Each card represents a different part of your journey:",
+    steps: [
+      { title: "Past Energy", question: "What experiences or patterns from your past are influencing you?" },
+      { title: "Current Energy", question: "What is happening in your life right now?" },
+      { title: "Hidden Influence", question: "What might be affecting your situation without you noticing?" },
+      { title: "Next 6 Months", question: "What themes or challenges should you prepare for?" },
+      { title: "Future Potential", question: "What opportunities or possibilities can you reflect on?" },
+    ],
+    purpose: "Helps you understand your current situation, reflect on past experiences and explore possible future directions.",
+    preview: [0, 18, 19],
   },
   {
     id: "karma-mirror",
     name: "Karma Mirror",
-    trademark: true,
-    theme: "purple",
-    description:
-      "Not future prediction – soul reflection. Three cards reveal karmic patterns, hidden blockages and your healing path forward, so you can move on with more confidence.",
-    tags: ["Current Karma", "Hidden Blockage", "Healing Path"],
-    icon: "eye",
+    cardCount: 3,
+    intro: "Explore repeated patterns in your life and understand what may be holding you back. Three Tarot cards help you reflect on:",
+    steps: [
+      { title: "Current Karma", question: "What recurring behaviour or life pattern are you experiencing?" },
+      { title: "Hidden Blockage", question: "What fears, habits or beliefs might be stopping your progress?" },
+      { title: "Healing Path", question: "What changes or positive actions can help you move forward?" },
+    ],
+    purpose: "Focuses on self-reflection, understanding repeated patterns and personal growth. It is not a future timeline prediction.",
+    preview: [2, 11, 14],
   },
+];
+
+const COMPARISON: [string, string][] = [
+  ["Five cards", "Three cards"],
+  ["Past, present and future themes", "Current patterns and personal growth"],
+  ["Understand your life journey", "Understand repeated challenges"],
+  ["Explores the next six months", "Focuses on healing and self-awareness"],
 ];
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -104,249 +122,166 @@ const StarField: React.FC = () => {
   return (
     <canvas
       ref={canvasRef}
-      style={{
-        position: "fixed",
-        inset: 0,
-        width: "100%",
-        height: "100%",
-        pointerEvents: "none",
-        zIndex: 0,
-      }}
+      style={{ position: "fixed", inset: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 0 }}
     />
   );
 };
 
-/** A handful of soft, slow-drifting glow particles for ambient depth */
-const FloatingParticles: React.FC = () => (
-  <>
-    <div
-      className="tarot-particle tarot-anim-drift"
-      style={{ width: 160, height: 160, left: "8%", top: "18%", background: "rgba(89,34,9,0.08)", animationDelay: "0s" }}
-    />
-    <div
-      className="tarot-particle tarot-anim-drift"
-      style={{ width: 200, height: 200, right: "10%", top: "10%", background: "rgba(89,34,9,0.09)", animationDelay: "2.5s" }}
-    />
-    <div
-      className="tarot-particle tarot-anim-drift"
-      style={{ width: 140, height: 140, left: "18%", bottom: "8%", background: "rgba(89,34,9,0.07)", animationDelay: "5s" }}
-    />
-    <div
-      className="tarot-particle tarot-anim-drift"
-      style={{ width: 130, height: 130, right: "16%", bottom: "12%", background: "rgba(89,34,9,0.08)", animationDelay: "1.2s" }}
-    />
-  </>
-);
-
-/** Shared delicate line-art medallion frame: axis pins, dashed ring, ticks. */
-const MedallionFrame: React.FC<{ color: string; bg: string; children?: React.ReactNode }> = ({
-  color,
-  bg,
-  children,
-}) => (
-  <svg viewBox="0 0 120 190" style={{ width: "100%", height: "100%", maxWidth: 108 }}>
-    {/* top axis pin */}
-    <line x1="60" y1="2" x2="60" y2="27" stroke={color} strokeWidth="1" strokeOpacity="0.55" />
-    <polygon points="60,0 63.5,7 60,14 56.5,7" fill={color} opacity="0.8" />
-
-    {/* bottom axis pin */}
-    <line x1="60" y1="163" x2="60" y2="188" stroke={color} strokeWidth="1" strokeOpacity="0.55" />
-    <polygon points="60,190 63.5,183 60,176 56.5,183" fill={color} opacity="0.8" />
-
-    {/* outer dashed ring */}
-    <circle cx="60" cy="95" r="52" stroke={color} strokeWidth="0.7" strokeOpacity="0.25" strokeDasharray="2 5" fill="none" />
-
-    {/* main ring */}
-    <circle cx="60" cy="95" r="44" stroke={color} strokeWidth="1" strokeOpacity="0.55" fill="rgba(89,34,9,0.05)" />
-
-    {/* tick marks */}
-    {Array.from({ length: 12 }).map((_, i) => {
-      const angle = (i * 30 * Math.PI) / 180;
-      const r1 = 44;
-      const r2 = i % 3 === 0 ? 37 : 40;
-      const x1 = 60 + r1 * Math.sin(angle);
-      const y1 = 95 - r1 * Math.cos(angle);
-      const x2 = 60 + r2 * Math.sin(angle);
-      const y2 = 95 - r2 * Math.cos(angle);
-      return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth="0.6" strokeOpacity="0.3" />;
+/** Three overlapping cards drawn with the deck's own artwork */
+const CardFan: React.FC<{ ids: number[] }> = ({ ids }) => (
+  <div className="tls-fan" aria-hidden>
+    {ids.map((id, i) => {
+      const card = MAJOR_ARCANA[id];
+      return (
+        <div key={id} className={`tls-fan-card tls-fan-card--${i}`}>
+          <TarotArt card={card} />
+          <span className="tls-fan-name">{card.name}</span>
+        </div>
+      );
     })}
-
-    {children}
-  </svg>
+  </div>
 );
 
-/** Crescent moon glyph (Life Timeline Tarot) */
-const MoonGlyph: React.FC<{ color: string; bg: string }> = ({ color, bg }) => (
-  <g>
-    <circle cx="60" cy="95" r="6" fill={color} opacity="0.9" />
-    <circle cx="60" cy="95" r="15" fill="none" stroke={color} strokeWidth="1" strokeOpacity="0.7" />
-    <circle cx="66" cy="90" r="12" fill={bg} />
-  </g>
-);
-
-/** Eye + crescent glyph (Karma Mirror) */
-const EyeGlyph: React.FC<{ color: string; bg: string }> = ({ color, bg }) => (
-  <g>
-    <path d="M42,84 Q60,70 78,84 Q60,98 42,84 Z" fill="none" stroke={color} strokeWidth="1" strokeOpacity="0.7" />
-    <circle cx="60" cy="84" r="3.2" fill={color} opacity="0.85" />
-    <circle cx="60" cy="110" r="8" fill="none" stroke={color} strokeWidth="0.9" strokeOpacity="0.6" />
-    <circle cx="63.5" cy="107" r="6.4" fill={bg} />
-  </g>
-);
-
-/** Small L-shaped corner bracket with a star tip, rotated per corner */
-const CornerOrnament: React.FC<{ corner: "tl" | "tr" | "bl" | "br"; color: string }> = ({ corner, color }) => {
-  const style: React.CSSProperties = { position: "absolute", pointerEvents: "none" };
-  if (corner === "tl") Object.assign(style, { top: 8, left: 8 });
-  if (corner === "tr") Object.assign(style, { top: 8, right: 8, transform: "scaleX(-1)" });
-  if (corner === "bl") Object.assign(style, { bottom: 8, left: 8, transform: "scaleY(-1)" });
-  if (corner === "br") Object.assign(style, { bottom: 8, right: 8, transform: "scale(-1,-1)" });
-
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" className="tarot-corner" style={style}>
-      <path d="M1,9 L1,3 Q1,1 3,1 L9,1" stroke={color} strokeWidth="1" strokeOpacity="0.6" fill="none" />
-      <circle cx="1" cy="1" r="1.3" fill={color} opacity="0.85" />
-    </svg>
-  );
-};
-
-/** Diamond separator */
-const DiamondSeparator: React.FC<{ color?: string; size?: number; glow?: boolean }> = ({
-  color = "var(--tarot-gold)",
-  size = 8,
-  glow = false,
-}) => (
-  <span
-    className={`tarot-diamond${glow ? " tarot-diamond--glow" : ""}`}
-    style={{ color, fontSize: size }}
-  >
-    ✦
-  </span>
-);
-
-/** Pill tag badge */
-const PillTag: React.FC<{ label: string; theme: "gold" | "purple" }> = ({ label, theme }) => (
-  <span className={`tarot-pill tarot-pill--${theme}`}>{label}</span>
-);
-
-/** Mode card */
-const ModeCard: React.FC<{
-  mode: TarotMode;
-  onSelect: (id: string) => void;
-  animDelay: number;
-}> = ({ mode, onSelect, animDelay }) => {
+const ModeCard: React.FC<{ mode: TarotMode; onSelect: (id: string) => void; animDelay: number; variant: "a" | "b" }> = ({ mode, onSelect, animDelay, variant }) => {
   const [hovered, setHovered] = useState(false);
-  const isGold = mode.theme === "gold";
-  const accent = isGold ? "var(--tarot-gold)" : "var(--tarot-purple)";
-  const cardBg = "#0a0e1c";
-
   return (
-    <div
+    <article
+      className={`tls-card tls-card--${variant} tarot-anim-slide-up`}
+      style={{ animationDelay: `${animDelay}s` }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onClick={() => onSelect(mode.id)}
-      className={`tarot-mode-card tarot-mode-card--${mode.theme} tarot-anim-slide-up`}
-      style={{ animationDelay: `${animDelay}s` }}
+      data-testid={`tarot-mode-${mode.id}`}
     >
-      <CornerOrnament corner="tl" color={accent} />
-      <CornerOrnament corner="tr" color={accent} />
-      <CornerOrnament corner="bl" color={accent} />
-      <CornerOrnament corner="br" color={accent} />
-
-      {/* Illustration */}
-      <div className="tarot-card-illustration">
-        <MedallionFrame color={accent} bg={cardBg}>
-          {isGold ? <MoonGlyph color={accent} bg={cardBg} /> : <EyeGlyph color={accent} bg={cardBg} />}
-        </MedallionFrame>
-      </div>
-
-      {/* Content */}
-      <div className="tarot-card-content">
-        <h2 className={`tarot-card-title tarot-card-title--${mode.theme}`}>
-          {mode.name}
-          {mode.trademark && <span style={{ fontSize: 15, verticalAlign: "super" }}>™</span>}
-        </h2>
-
-        <p className="tarot-card-body">{mode.description}</p>
-
-        <div className="tarot-tags">
-          {mode.tags.map((tag) => (
-            <PillTag key={tag} label={tag} theme={mode.theme} />
-          ))}
-        </div>
-
-        <div
-          className={`tarot-cta tarot-cta--${mode.theme}`}
-          style={{ marginTop: "auto", opacity: hovered ? 1 : 0.8 }}
-        >
-          <span>Begin Reading</span>
-          <span className="arrow" style={{ transform: hovered ? "translateX(4px)" : "translateX(0)" }}>
-            →
-          </span>
+      <div className="tls-card-top">
+        <CardFan ids={mode.preview} />
+        <div className="tls-card-head">
+          <span className="tls-badge">{mode.cardCount} cards</span>
+          <h2>{mode.name}<sup>™</sup></h2>
         </div>
       </div>
-    </div>
+      <p className="tls-intro">{mode.intro}</p>
+      <ol className="tls-steps">
+        {mode.steps.map((s, i) => (
+          <li key={s.title}>
+            <span className="tls-step-n">{i + 1}</span>
+            <span><strong>{s.title}</strong><em> – {s.question}</em></span>
+          </li>
+        ))}
+      </ol>
+      <p className="tls-purpose"><strong>Purpose: </strong>{mode.purpose}</p>
+      <button type="button" className="tls-cta" onClick={() => onSelect(mode.id)} aria-label={`Begin reading: ${mode.name}`}>
+        <span>Begin Reading</span>
+        <span className="arrow" style={{ transform: hovered ? "translateX(4px)" : "translateX(0)" }}>→</span>
+      </button>
+    </article>
   );
 };
+
+const Comparison: React.FC = () => (
+  <section className="tls-compare tarot-anim-fade" style={{ animationDelay: "0.55s" }} aria-labelledby="tls-compare-h">
+    <h2 id="tls-compare-h">Which reading is right for you?</h2>
+    <div className="tls-table-wrap">
+      <table>
+        <thead>
+          <tr><th scope="col">Life Timeline Tarot™</th><th scope="col">Karma Mirror™</th></tr>
+        </thead>
+        <tbody>
+          {COMPARISON.map(([a, b]) => (
+            <tr key={a}><td>{a}</td><td>{b}</td></tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <ul className="tls-reco">
+      <li><strong>Choose Life Timeline Tarot</strong> if you want to explore your past, present and possible future.</li>
+      <li><strong>Choose Karma Mirror</strong> if you want to understand repeated patterns and what you can change.</li>
+    </ul>
+  </section>
+);
+
+const LANDING_CSS = `
+.tls-root{align-items:flex-start!important;overflow-x:clip}
+.tls-inner{position:relative;z-index:1;width:100%;max-width:1100px;margin:0 auto;display:flex;flex-direction:column;align-items:center}
+.tls-sub{margin:0 0 clamp(24px,4vw,40px);max-width:560px;text-align:center;font-size:16px;line-height:1.65;color:#4A3022}
+.tls-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(16px,3vw,28px);width:100%;align-items:stretch}
+.tls-card{display:flex;flex-direction:column;gap:14px;padding:clamp(20px,3vw,30px);border-radius:20px;background:#FBF5EC;border:1px solid rgba(89,34,9,.28);box-shadow:0 6px 22px rgba(48,22,7,.1);transition:transform .25s,box-shadow .25s}
+.tls-card:hover{transform:translateY(-4px);box-shadow:0 14px 34px rgba(89,34,9,.2)}
+.tls-card--a{border-top:5px solid #C9873A}
+.tls-card--b{border-top:5px solid #592209;background:#F5E9D6}
+.tls-card-top{display:flex;gap:18px;align-items:center}
+.tls-fan{position:relative;flex:0 0 118px;height:124px}
+.tls-fan-card{position:absolute;bottom:0;width:62px;aspect-ratio:2/3;border-radius:7px;overflow:hidden;border:1.5px solid #C9873A;background:#2A0F04;box-shadow:0 4px 12px rgba(48,22,7,.35);transition:transform .3s}
+.tls-fan-card--0{left:0;transform:rotate(-9deg);transform-origin:bottom center}
+.tls-fan-card--1{left:28px;z-index:1;bottom:4px}
+.tls-fan-card--2{left:56px;transform:rotate(9deg);transform-origin:bottom center}
+.tls-card:hover .tls-fan-card--0{transform:rotate(-14deg) translateX(-4px)}
+.tls-card:hover .tls-fan-card--2{transform:rotate(14deg) translateX(4px)}
+.tls-fan-name{position:absolute;left:0;right:0;bottom:0;padding:10px 2px 3px;text-align:center;font-size:7px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#F5E9D6;background:linear-gradient(to top,rgba(18,6,2,.95) 40%,transparent)}
+.tls-badge{display:inline-block;margin-bottom:6px;padding:3px 12px;border-radius:999px;background:#592209;color:#F5E9D6;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.tls-card h2{margin:0;font-size:clamp(24px,3vw,30px);font-weight:700;line-height:1.15;color:#301607}
+.tls-card h2 sup{font-size:.45em;margin-left:2px}
+.tls-intro{margin:0;font-size:16px;line-height:1.65;color:#4A3022}
+.tls-steps{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:9px}
+.tls-steps li{display:flex;gap:12px;align-items:flex-start;font-size:15px;line-height:1.5;color:#301607}
+.tls-steps strong{color:#592209}
+.tls-steps em{font-style:normal;color:#4A3022}
+.tls-step-n{flex:0 0 26px;height:26px;border-radius:50%;display:grid;place-items:center;background:rgba(89,34,9,.12);color:#592209;font-size:13px;font-weight:700}
+.tls-purpose{margin:2px 0 0;padding:12px 14px;border-radius:12px;background:rgba(89,34,9,.07);font-size:15px;line-height:1.55;color:#301607}
+.tls-purpose strong{color:#592209}
+.tls-cta{margin-top:auto;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:50px;padding:13px 20px;border:0;border-radius:12px;background:#592209;color:#F5E9D6;font:700 15px/1 'DM Sans',system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:background .2s,box-shadow .2s}
+.tls-cta:hover{background:#461B07;box-shadow:0 8px 20px rgba(89,34,9,.3)}
+.tls-cta:focus-visible{outline:3px solid #C9873A;outline-offset:3px}
+.tls-cta .arrow{transition:transform .2s}
+.tls-compare{width:100%;margin-top:clamp(28px,5vw,48px);padding:clamp(18px,3vw,28px);border-radius:20px;background:#FBF5EC;border:1px solid rgba(89,34,9,.28)}
+.tls-compare h2{margin:0 0 16px;text-align:center;font-size:clamp(20px,3vw,26px);font-weight:700;color:#301607}
+.tls-table-wrap{overflow-x:auto}
+.tls-compare table{width:100%;border-collapse:separate;border-spacing:0;font-size:15.5px}
+.tls-compare th{padding:12px 14px;text-align:left;font-weight:700;color:#F5E9D6;background:#592209}
+.tls-compare th:first-child{border-top-left-radius:12px}.tls-compare th:last-child{border-top-right-radius:12px}
+.tls-compare td{padding:12px 14px;vertical-align:top;color:#301607;border-bottom:1px solid rgba(89,34,9,.18);width:50%}
+.tls-compare tbody tr:nth-child(even) td{background:rgba(89,34,9,.05)}
+.tls-reco{margin:16px 0 0;padding:0;list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tls-reco li{padding:12px 14px;border-radius:12px;background:#F5E9D6;border-left:4px solid #C9873A;font-size:15px;line-height:1.55;color:#301607}
+.tls-foot{margin-top:clamp(22px,4vw,34px);text-align:center}
+@media (max-width:820px){
+  .tls-grid{grid-template-columns:1fr}
+  .tls-reco{grid-template-columns:1fr}
+}
+@media (max-width:480px){
+  .tls-card-top{flex-direction:column;align-items:flex-start}
+  .tls-compare th,.tls-compare td{padding:10px;font-size:14px}
+}
+`;
 
 // ─── Main Component ────────────────────────────────────────────────────────────
 const TarotLandingScene: React.FC<TarotLandingSceneProps> = ({ onModeSelect }) => {
   return (
-    <div className="tarot-landing-root">
+    <div className="tarot-landing-root tls-root">
       <StarField />
-      <FloatingParticles />
+      <style>{LANDING_CSS}</style>
 
-      <div
-        style={{
-          position: "relative",
-          zIndex: 1,
-          width: "100%",
-          maxWidth: 1100,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-        }}
-      >
-        {/* Eyebrow */}
-        <div
-          className="tarot-anim-fade"
-          style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 10, animationDelay: "0.05s" }}
-        >
+      <div className="tls-inner">
+        <div className="tarot-anim-fade" style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 10, animationDelay: "0.05s" }}>
           <div className="tarot-divider-line tarot-divider-line--gold-right" style={{ flex: "none", width: 40 }} />
           <span className="tarot-eyebrow">Select Your Intuitive Path</span>
           <div className="tarot-divider-line tarot-divider-line--gold-left" style={{ flex: "none", width: 40 }} />
         </div>
 
-        {/* Main headline */}
-        <h1 className="tarot-headline tarot-anim-slide-up" style={{ animationDelay: "0.15s", marginBottom: 44 }}>
+        <h1 className="tarot-headline tarot-anim-slide-up" style={{ animationDelay: "0.15s", marginBottom: 14 }}>
           <span className="tarot-headline-line1">What Are You Seeking</span>
           <span className="tarot-headline-line2">Clarity On Today?</span>
         </h1>
+        <p className="tls-sub tarot-anim-fade" style={{ animationDelay: "0.25s" }}>Two readings, two different purposes. Pick the one that fits what is on your mind.</p>
 
-        {/* Mode cards */}
-        <div className="tarot-mode-grid">
+        <div className="tls-grid">
           {TAROT_MODES.map((mode, i) => (
-            <ModeCard key={mode.id} mode={mode} onSelect={onModeSelect} animDelay={0.3 + i * 0.12} />
+            <ModeCard key={mode.id} mode={mode} onSelect={onModeSelect} animDelay={0.3 + i * 0.12} variant={i === 0 ? "a" : "b"} />
           ))}
         </div>
 
-        {/* Footer */}
-        <div
-          className="tarot-anim-fade"
-          style={{
-            marginTop: 22,
-            width: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 14,
-            animationDelay: "0.7s",
-          }}
-        >
-          <DiamondSeparator size={9} />
-          <span className="tarot-footer-label">Pick a Card. Find Your Clarity. Move Forward.</span>
-          <DiamondSeparator size={9} />
-        </div>
+        <Comparison />
+
+        <p className="tarot-footer-label tarot-anim-fade tls-foot" style={{ animationDelay: "0.7s" }}>Pick a Card. Find Your Clarity. Move Forward.</p>
       </div>
     </div>
   );

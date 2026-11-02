@@ -168,7 +168,7 @@ describe("result page terminology", () => {
     );
     expect(screen.getByTestId("recommended-stone")).toHaveTextContent("Diamond or White Sapphire");
     expect(screen.getByTestId("recommended-stone-hindi")).toHaveTextContent("हीरा · Heera");
-    for (const h of ["Recommended Ratna", "Why this Ratna is recommended", "Traditional significance", "Wearing guidance", "Alternative Ratnas", "Ratnas that require caution"]) {
+    for (const h of ["Your Recommended Ratna", "Why This Gemstone", "Traditional Significance", "Wearing Guidance (Traditional)", "Alternative Ratnas", "Ratnas that require caution"]) {
       expect(screen.getAllByText(h).length, h).toBeGreaterThan(0);
     }
     const alt = screen.getByTestId("ratna-card-emerald");

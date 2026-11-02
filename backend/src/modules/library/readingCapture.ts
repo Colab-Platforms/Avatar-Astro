@@ -45,7 +45,7 @@ export function captureReadings(specs: CaptureSpec[] = SPECS) {
       const clientKey = typeof req.headers["x-client-request-id"] === "string" ? req.headers["x-client-request-id"] : null;
       const save =
         built.kind === "reading"
-          ? createReading({ userId, feature: built.feature, title: built.title, output: built.output, summary: built.summary, inputMeta: built.inputMeta, provider: ai.aiProvider, model: ai.aiModel, clientRequestId: clientKey }).then((r) => ({ header: "X-Reading-Id", id: r.id }))
+          ? createReading({ userId, feature: built.feature, title: built.title, output: built.output, summary: built.summary, inputMeta: built.inputMeta, provider: ai.aiProvider, model: ai.aiModel, clientRequestId: built.clientRequestId ?? clientKey }).then((r) => ({ header: "X-Reading-Id", id: r.id }))
           : appendExchange({ userId, feature: built.feature, conversationId: built.conversationId, user: built.user, assistant: built.assistant }).then((r) => ({ header: "X-Conversation-Id", id: r.id }));
       save
         .then((r) => {
