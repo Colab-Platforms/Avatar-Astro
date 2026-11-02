@@ -48,7 +48,7 @@ export async function consumeDailyChatSession(): Promise<DailyChatSession> {
   const data = await res.json().catch(() => null);
   if (res.status === 429 || data?.code === "DAILY_CHAT_LIMIT_REACHED") {
     throw new DailyChatLimitError(
-      data?.message || "Your daily AI astrology chat limit has been reached.",
+      data?.message || "Your daily astrology chat limit has been reached.",
       (data?.data as DailyChatSession) ?? null,
     );
   }

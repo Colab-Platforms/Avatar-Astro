@@ -15,7 +15,7 @@ export default function RatnaSaved({ result }: { result: RatnaResult }) {
     ["Ephemeris engine", result.method?.engine],
     ["Calculation factors (primary stone)", result.primary?.factors],
     ["Calculation factors (recommendation)", result.recommendation?.factors],
-    ["Explanation source", result.explanation ? { source: result.explanation.source === "ai" ? "AI-written explanation" : "Rule-based explanation", fallbackReason: result.explanation.fallbackReason } : null],
+    ["Explanation source", result.explanation ? { source: result.explanation.source === "ai" ? "Generated explanation" : "Rule-based explanation", fallbackReason: result.explanation.fallbackReason } : null],
     ["Stable signs", result.stableSigns],
     ["Panchang convention and notes", result.panchang ? { convention: result.panchang.convention, basis: result.panchang.basis, reckonedAtUtc: result.panchang.reckonedAtUtc, uncertain: result.panchang.uncertain, uncertainties: result.panchang.uncertainties, notes: result.panchang.notes } : null],
     ["Birth data used", { timeZone: result.birth?.timeZone, utcOffsetMinutes: result.birth?.utcOffsetMinutes, ambiguousLocalTime: result.birth?.ambiguousLocalTime }],
