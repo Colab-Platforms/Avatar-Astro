@@ -20,7 +20,7 @@ const blocks: EducationBlock[] = [
     ],
     ordered: true,
     after: [
-      "This Seva does not ask for your name or birth details, and it does not use AI. Every description is fixed text written for MyBhagya Astro, so the same sign always shows the same profile.",
+      "This Seva does not ask for your name or birth details, and it uses no generated text. Every description is fixed text written for MyBhagya Astro, so the same sign always shows the same profile.",
     ],
   },
   {

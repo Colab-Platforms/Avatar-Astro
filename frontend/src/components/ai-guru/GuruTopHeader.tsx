@@ -1,21 +1,26 @@
-import { useState } from "react";
-import { Menu } from "lucide-react";
+import { ArrowLeft, Menu } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { PersonaHeader } from "./PersonaCard";
+import { getFallback, hasPreviousAppEntry } from "@/components/BackButton";
 import type { Astrologer } from "@/data/astrologers";
-import { cn } from "@/lib/utils";
-
-const PILLS = ["Vedic Astrology", "Palm Reading", "Kundli", "Numerology"];
 
 interface GuruTopHeaderProps {
   onOpenSidebar: () => void;
   persona?: Astrologer | null;
 }
 
+/** Slim header. The product name lives in the sidebar only; the guidance profile appears here once assigned. */
 const GuruTopHeader = ({ onOpenSidebar, persona }: GuruTopHeaderProps) => {
-  const [activePill, setActivePill] = useState(0);
-
+  const navigate = useNavigate();
+  const location = useLocation();
+  // Same rule as the site-wide back button, which is hidden on this page: go to the previous page,
+  // or to the logical parent when there is none (deep link or refresh).
+  const goBack = () => {
+    if (hasPreviousAppEntry(location.key)) navigate(-1);
+    else navigate(getFallback(location.pathname), { replace: true });
+  };
   return (
-    <header className="flex h-auto min-h-[72px] flex-wrap items-center gap-4 border-b border-primary/15 bg-[#FBF5EC]/80 px-4 py-3 backdrop-blur-xl md:h-20 md:px-6">
+    <header className="flex min-h-[56px] items-center gap-3 border-b border-primary/15 bg-[#FBF5EC]/80 px-4 py-2 backdrop-blur-xl md:px-6">
       <button
         onClick={onOpenSidebar}
         className="rounded-lg border border-primary/15 p-2 text-muted-foreground hover:bg-primary/10 lg:hidden"
@@ -23,29 +28,16 @@ const GuruTopHeader = ({ onOpenSidebar, persona }: GuruTopHeaderProps) => {
       >
         <Menu className="h-4 w-4" />
       </button>
-
-      <PersonaHeader persona={persona ?? null} />
-
-      <nav
-        className="order-3 flex w-full flex-wrap items-center justify-center gap-2 md:order-none md:w-auto md:flex-1"
-        aria-label="Astrology categories"
+      <button
+        type="button"
+        onClick={goBack}
+        aria-label="Go back"
+        className="flex items-center gap-1.5 rounded-lg border border-[#592209]/25 px-3 py-2 text-sm text-[#592209] transition-colors hover:border-[#E58A45] hover:bg-[#592209]/5"
       >
-        {PILLS.map((label, i) => (
-          <button
-            key={label}
-            onClick={() => setActivePill(i)}
-            className={cn(
-              "rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all duration-300",
-              activePill === i
-                ? "border-[#592209]/50 bg-[#592209]/12 text-[#FF9D4D] shadow-[0_0_16px_rgba(255,157,77,0.2)]"
-                : "border-primary/15 bg-[#FBF5EC] text-muted-foreground hover:border-[#592209]/30 hover:text-foreground",
-            )}
-          >
-            {label}
-          </button>
-        ))}
-      </nav>
-
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        Back
+      </button>
+      {persona && <PersonaHeader persona={persona} />}
     </header>
   );
 };

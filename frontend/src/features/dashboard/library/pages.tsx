@@ -43,7 +43,7 @@ function useToggleSave() {
 const QUICK = [
   { path: "/tarot", title: "Tarot Reading", desc: "Draw cards for the question on your mind.", icon: Sparkles, tone: "gold" as const },
   { path: "/horoscopes", title: "Daily Horoscope", desc: "Today's guidance, written for your sign.", icon: Sun, tone: "brown" as const },
-  { path: "/inner-voice/chat", title: "Talk to AI Guru", desc: "Ask anything, in your own words.", icon: MessageCircleHeart, tone: "sage" as const },
+  { path: "/inner-voice/chat", title: "Talk to Divya Margdarshak", desc: "Ask anything, in your own words.", icon: MessageCircleHeart, tone: "sage" as const },
   { path: "/birth-chart", title: "Birth Chart", desc: "See the sky as it stood at your birth.", icon: Compass, tone: "plum" as const },
 ];
 
@@ -312,7 +312,7 @@ export function MyActivity() {
         <label className={labelCls}>Feature
           <select className={`${field} mt-1 w-auto`} value={params.get("feature") ?? ""} onChange={(e) => set({ feature: e.target.value || null })}>
             <option value="">All features</option>
-            {[["tarot", "Tarot"], ["horoscope", "Daily Horoscope"], ["birth-chart", "Birth Chart"], ["compatibility", "Compatibility"], ["name-analysis", "Name Analysis"], ["palm-reading", "Palm Reading"], ["gemstone", "Gemstone"], ["karma", "Karma"], ["shloka", "Shloka"], ["ai-guru", "AI Guru"], ["inner-voice", "Inner Voice"]].map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+            {[["tarot", "Tarot"], ["horoscope", "Daily Horoscope"], ["birth-chart", "Birth Chart"], ["compatibility", "Compatibility"], ["name-analysis", "Name Analysis"], ["palm-reading", "Palm Reading"], ["gemstone", "Gemstone"], ["karma", "Karma"], ["shloka", "Shloka"], ["ai-guru", "Guru"], ["inner-voice", "Inner Voice"]].map(([v, l]) => <option key={v} value={v}>{l}</option>)}
           </select>
         </label>
         <label className={labelCls}>From<input type="date" className={`${field} mt-1 w-auto`} value={params.get("from") ?? ""} onChange={(e) => set({ from: e.target.value || null })} /></label>
@@ -349,11 +349,11 @@ export function Conversations() {
   const q = useConversations({ feature: params.get("feature"), page, pageSize: 12 });
   return (
     <>
-      <PageHeader title="My Conversations" sub="Your past chats with AI Guru and Inner Voice, saved so you can return to them." />
+      <PageHeader title="My Conversations" sub="Your past chats with Divya Margdarshak and Inner Voice, saved so you can return to them." />
       <div className={`${card} mb-6 p-4`}><label className={labelCls}>Type
-        <select className={`${field} mt-1 w-auto`} value={params.get("feature") ?? ""} onChange={(e) => set({ feature: e.target.value || null })}><option value="">All</option><option value="ai-guru">AI Guru</option><option value="inner-voice">Inner Voice</option></select></label></div>
+        <select className={`${field} mt-1 w-auto`} value={params.get("feature") ?? ""} onChange={(e) => set({ feature: e.target.value || null })}><option value="">All</option><option value="ai-guru">Guru</option><option value="inner-voice">Inner Voice</option></select></label></div>
       {q.isLoading ? <Loading /> : q.error || !q.data ? <ErrorBox error={q.error} onRetry={() => q.refetch()} /> : q.data.items.length === 0 ? (
-        <Empty icon={MessageCircleHeart} title="No conversations yet" body="Chats with AI Guru and Inner Voice are saved here once you start one while signed in." action={<Link to="/inner-voice/chat" className={btn}>Talk to AI Guru</Link>} />
+        <Empty icon={MessageCircleHeart} title="No conversations yet" body="Chats with Divya Margdarshak and Inner Voice are saved here once you start one while signed in." action={<Link to="/inner-voice/chat" className={btn}>Talk to Divya Margdarshak</Link>} />
       ) : (
         <>
           <ul className="grid grid-cols-1 gap-3 xl:grid-cols-2">{q.data.items.map((c) => (

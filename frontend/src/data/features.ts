@@ -43,7 +43,7 @@ export const featuredSlides: FeaturedSlide[] = [
       "Life Timeline 5-card spread",
       "Karma Mirror 3-card reading",
       "Choose your question category",
-      "Personalised AI interpretation",
+      "Personalised interpretation",
     ],
   },
   {

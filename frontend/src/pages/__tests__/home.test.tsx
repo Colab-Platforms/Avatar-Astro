@@ -221,11 +221,11 @@ describe("homepage content and structure", () => {
 
   it("FAQ keeps its content and toggles", () => {
     renderAt("/");
-    const q = screen.getByRole("button", { name: "How does Janma Kundali work on Spiritual?" });
+    const q = screen.getByRole("button", { name: "How does Janma Kundali work on MyBhagya?" });
     expect(q).toHaveAttribute("aria-expanded", "false");
     fireEvent.click(q);
     expect(q).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByRole("button", { name: "What can I explore on Spiritual?" })).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByRole("button", { name: "What can I explore on MyBhagya?" })).toHaveAttribute("aria-expanded", "false");
   });
 
   it("every image has an alt attribute (empty for the decorative hero art)", () => {

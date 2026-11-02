@@ -22,7 +22,7 @@ export default function IntegrationsPage() {
   const q = usePanel<Data>("/integrations");
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <PageHeader title="AI & integrations" subtitle="What THIS backend process is configured with, read from its environment when you open the page. Secret keys never leave the server." />
+      <PageHeader title="Integrations" subtitle="What THIS backend process is configured with, read from its environment when you open the page. Secret keys never leave the server." />
       <QueryView q={q}>
         {(d) => {
           const local = d.database.kind === "local";

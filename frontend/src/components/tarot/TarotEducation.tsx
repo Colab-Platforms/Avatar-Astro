@@ -18,7 +18,7 @@ const blocks: EducationBlock[] = [
     ],
     ordered: true,
     after: [
-      "Selection is random: your browser shuffles the 22 Major Arcana cards and cards are always read upright. The card names, positions and life area are sent to an AI model, which writes the interpretation, so its wording can differ between readings.",
+      "Selection is random: your browser shuffles the 22 Major Arcana cards and cards are always read upright. The card names, positions and life area are sent to a language model, which writes the interpretation, so its wording can differ between readings.",
     ],
   },
   {
@@ -32,7 +32,7 @@ const blocks: EducationBlock[] = [
 const faqs = FEATURE_FAQS.tarot;
 
 const DISCLAIMER =
-  "Tarot Drishti is offered for personal interest and reflection. Readings are AI-written interpretations, not predictions, and not medical, legal, financial or relationship advice.";
+  "Tarot Drishti is offered for personal interest and reflection. Readings are generated interpretations, not predictions, and not medical, legal, financial or relationship advice.";
 
 export default function TarotEducation() {
   return <EducationSection audioToolSlug={FEATURES.tarot.id} idPrefix="tarot" title="About Tarot Drishti" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;

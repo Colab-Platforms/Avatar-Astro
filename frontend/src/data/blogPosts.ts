@@ -4,7 +4,10 @@ export interface BlogPost {
   excerpt: string;
   category: string;
   date: string;
+  /** Picture shown on the card (a file in public/images/blog). */
   image: string;
+  /** Symbol shown only if the picture cannot load. */
+  symbol: string;
   readTime: string;
 }
 
@@ -15,7 +18,8 @@ export const blogPosts: BlogPost[] = [
     excerpt: 'While your sun sign represents your core identity, your moon sign reveals your emotional landscape and innermost needs...',
     category: 'Beginner Astrology',
     date: '2024-01-15',
-    image: '🌙',
+    image: '/images/blog/moon-signs.jpg',
+    symbol: '🌙',
     readTime: '5 min read',
   },
   {
@@ -24,7 +28,8 @@ export const blogPosts: BlogPost[] = [
     excerpt: 'Mercury retrograde can disrupt communication and technology, but with the right preparation, you can navigate it smoothly...',
     category: 'Celestial Events',
     date: '2024-01-12',
-    image: '☿',
+    image: '/images/blog/mercury-retrograde.jpg',
+    symbol: '☿',
     readTime: '7 min read',
   },
   {
@@ -33,7 +38,8 @@ export const blogPosts: BlogPost[] = [
     excerpt: 'Each house in your birth chart represents a different area of life. Understanding them unlocks deeper self-knowledge...',
     category: 'Beginner Astrology',
     date: '2024-01-10',
-    image: '🏠',
+    image: '/images/blog/twelve-houses.jpg',
+    symbol: '🏠',
     readTime: '10 min read',
   },
   {
@@ -42,7 +48,8 @@ export const blogPosts: BlogPost[] = [
     excerpt: 'When Venus transits through Capricorn, relationships take on a more committed and practical tone...',
     category: 'Planetary Transits',
     date: '2024-01-08',
-    image: '♀',
+    image: '/images/blog/venus-capricorn.jpg',
+    symbol: '♀',
     readTime: '4 min read',
   },
   {
@@ -51,7 +58,8 @@ export const blogPosts: BlogPost[] = [
     excerpt: 'Harness the powerful energy of the full moon with rituals tailored to your unique astrological makeup...',
     category: 'Rituals & Practices',
     date: '2024-01-05',
-    image: '🌕',
+    image: '/images/blog/full-moon-rituals.jpg',
+    symbol: '🌕',
     readTime: '8 min read',
   },
   {
@@ -60,7 +68,8 @@ export const blogPosts: BlogPost[] = [
     excerpt: 'Around ages 28-30, Saturn returns to its natal position, marking a pivotal time of growth and responsibility...',
     category: 'Life Cycles',
     date: '2024-01-02',
-    image: '♄',
+    image: '/images/blog/saturn-return.jpg',
+    symbol: '♄',
     readTime: '6 min read',
   },
 ];

@@ -66,7 +66,7 @@ export default function ChatEscalationsPage() {
   const q = usePanel<Data>(`/chat-escalations?status=${status}`, { refetchInterval: 30_000 });
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <PageHeader title="Chat escalations" subtitle="Messages from AI Guru chat that were held back from the AI (personal-contact requests, “are you human?” questions). Contact these users yourself." />
+      <PageHeader title="Chat escalations" subtitle="Messages from the Divya Margdarshak chat that were held back from the guide (personal-contact requests, “are you human?” questions). Contact these users yourself." />
       {msg && <p role="alert" className="rounded-lg bg-red-100 px-3 py-2 text-sm text-red-900">{msg}</p>}
       <QueryView q={q}>
         {(d) => (

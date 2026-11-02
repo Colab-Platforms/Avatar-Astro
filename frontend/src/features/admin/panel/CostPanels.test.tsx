@@ -97,11 +97,11 @@ describe("Activity page cost columns", () => {
     expect(dialog).toHaveTextContent("Actual (reported by the provider)");
   });
 
-  it("says plainly that a non-AI row has no AI cost", async () => {
+  it("says plainly that a non-model row has no model cost", async () => {
     mount(<ActivityPage />);
     const table = await screen.findByRole("table");
     fireEvent.click(within(table).getAllByRole("row")[4]);
-    expect(await screen.findByRole("dialog")).toHaveTextContent("No AI provider was called");
+    expect(await screen.findByRole("dialog")).toHaveTextContent("No model provider was called");
   });
 
   it("sends the provider and cost-type filters to the API", async () => {
@@ -134,8 +134,8 @@ describe("Feature cost analytics", () => {
     expect((await screen.findAllByText("$0.8500")).length).toBeGreaterThan(0);
     expect(calls()).toContain("/admin/costs/summary?from=2026-10-01&to=2026-10-30");
     const link = (name: RegExp) => screen.getByRole("link", { name });
-    expect(link(/^AI requests/)).toHaveAttribute("href", "/admin/activity?ai=yes&from=2026-10-01&to=2026-10-30");
-    expect(link(/^Failed AI requests/)).toHaveAttribute("href", expect.stringContaining("status=error"));
+    expect(link(/^Model requests/)).toHaveAttribute("href", "/admin/activity?ai=yes&from=2026-10-01&to=2026-10-30");
+    expect(link(/^Failed model requests/)).toHaveAttribute("href", expect.stringContaining("status=error"));
     expect(link(/^Actual cost/)).toHaveAttribute("href", expect.stringContaining("costBasis=actual"));
     expect(link(/^Estimated cost/)).toHaveAttribute("href", expect.stringContaining("costBasis=estimated"));
     expect(link(/^Requests with no cost/)).toHaveAttribute("href", expect.stringContaining("costBasis=none"));
@@ -152,7 +152,7 @@ describe("Feature cost analytics", () => {
   it("shows an honest empty state when nothing has been recorded", async () => {
     authRequest.mockResolvedValue(costs({ kpis: { ...costs().kpis, totalAiRequests: 0, totalCostUsd: null } }));
     mount(<CostAnalytics from="2026-10-01" to="2026-10-30" />);
-    expect(await screen.findByText(/No AI requests with recorded usage/)).toBeInTheDocument();
+    expect(await screen.findByText(/No model requests with recorded usage/)).toBeInTheDocument();
     expect(screen.getByText(/never back-filled|Nothing is back-filled/)).toBeInTheDocument();
   });
 
@@ -269,7 +269,7 @@ describe("AI usage capture status", () => {
     const idle = { ...diagnostics, counters: { ...diagnostics.counters, providerCallsSeen: 0, aiRowsPersisted: 0 }, lastProviderCallAt: null, features: [] };
     authRequest.mockImplementation(async (url: string) => (url === "/admin/integrations" ? integrations : url === "/admin/costs/diagnostics" ? idle : { providers: [], refreshedAt: null }));
     mount(<IntegrationsPage />);
-    expect(await screen.findByText(/No AI request has run on this server since it started/)).toHaveTextContent(/never back-filled/);
+    expect(await screen.findByText(/No model request has run on this server since it started/)).toHaveTextContent(/never back-filled/);
     expect(screen.getByText(/OpenRouter price list: 456 models/)).toBeInTheDocument();
   });
 

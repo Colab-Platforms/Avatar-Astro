@@ -4,6 +4,26 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Lotus illustration: slow float, breathing scale and a soft golden glow. Off for reduced motion. */
+.lotus-live {
+  overflow: visible;
+  filter: drop-shadow(0 0 18px rgba(229, 138, 69, 0.45));
+  animation: lotus-float 7s ease-in-out infinite, lotus-glow 5s ease-in-out infinite;
+  transform-origin: 50% 80%;
+}
+@keyframes lotus-float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-8px) scale(1.035); }
+}
+@keyframes lotus-glow {
+  0%, 100% { filter: drop-shadow(0 0 14px rgba(229, 138, 69, 0.35)); }
+  50% { filter: drop-shadow(0 0 30px rgba(229, 138, 69, 0.7)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lotus-live { animation: none; }
+}
+
+
 @layer base {
   :root {
     /* MyBhagya brand palette: gerua #592209, beige #F5E9D6, orange #E58A45, brown #301607.
@@ -1338,3 +1358,4 @@ nav.navbar-gerua [role="menu"] a { border-color: var(--nav-menu-border) !importa
     transition: none; transform: none;
   }
 }
+

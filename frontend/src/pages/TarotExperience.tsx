@@ -1219,7 +1219,7 @@ const KarmaMirrorDisplay = ({
 
 const ReadingNote = () => (
   <p style={{ position: 'relative', zIndex: 10, maxWidth: 560, margin: '0 auto 32px', padding: '0 20px', textAlign: 'center', fontSize: 15, lineHeight: 1.7, fontStyle: 'italic', color: '#6B4A37', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-    This reading is AI-written reflection based on the cards you drew. It is not a prediction or professional advice.
+    This reading is a generated reflection based on the cards you drew. It is not a prediction or professional advice.
   </p>
 );
 

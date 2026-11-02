@@ -62,7 +62,7 @@ export default function CelebrityCarousel() {
       </h3>
       <p className="text-center text-muted-foreground max-w-2xl mx-auto mb-8 text-sm sm:text-base">
         Discover how several celebrities use a different professional name spelling in their credits.
-        Your AI report analyzes whether your own name spelling is aligned with your birth chart and
+        Your report analyzes whether your own name spelling is aligned with your birth chart and
         numerology.
       </p>
 

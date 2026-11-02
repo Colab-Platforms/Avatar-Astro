@@ -1,6 +1,6 @@
 import { forwardRef, type KeyboardEvent } from "react";
 import { motion } from "framer-motion";
-import { Sparkles, Smile, Mic, Paperclip, Send, CircleDot } from "lucide-react";
+import { Sparkles, Mic, Send, CircleDot } from "lucide-react";
 
 interface GuruChatInputProps {
   value: string;
@@ -61,19 +61,12 @@ const GuruChatInput = forwardRef<HTMLTextAreaElement, GuruChatInputProps>(
               ? "Your daily session has ended"
               : listening
                 ? "Listening… speak now"
-                : "Ask Pandit Ji anything…"
+                : "Ask Divya Margdarshak anything..."
           }
-          aria-label="Message Pandit Ji"
+          aria-label="Message Divya Margdarshak"
           className="min-h-[24px] max-h-[140px] flex-1 resize-none bg-transparent p-0 text-[15px] leading-6 text-foreground placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed"
         />
         <div className="flex shrink-0 items-center gap-1.5">
-          <button
-            type="button"
-            aria-label="Insert emoji"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-primary/10 hover:text-foreground"
-          >
-            <Smile className="h-[18px] w-[18px]" />
-          </button>
           <button
             type="button"
             onClick={onToggleVoice}
@@ -94,13 +87,6 @@ const GuruChatInput = forwardRef<HTMLTextAreaElement, GuruChatInputProps>(
             ) : (
               <Mic className="h-[18px] w-[18px]" />
             )}
-          </button>
-          <button
-            type="button"
-            aria-label="Attach file"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-primary/10 hover:text-foreground"
-          >
-            <Paperclip className="h-[18px] w-[18px]" />
           </button>
           <motion.button
             type="button"
@@ -124,7 +110,7 @@ const GuruChatInput = forwardRef<HTMLTextAreaElement, GuruChatInputProps>(
         </div>
       </motion.div>
       <p className="mt-2.5 text-center text-[11px] text-muted-foreground">
-        Press Enter to send · Shift + Enter for new line · 🎙️ for voice
+        Press Enter to send · Shift + Enter for a new line · use the microphone to speak
       </p>
     </>
   ),
