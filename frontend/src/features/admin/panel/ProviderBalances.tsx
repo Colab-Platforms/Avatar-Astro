@@ -11,7 +11,7 @@ export interface BalanceProvider {
   balance: { state: "available" | "unsupported" | "unavailable"; remainingUsd: number | null; unlimited: boolean; scope: "account" | "key" | null; note: string };
   usage: { totalUsd: number | null; dailyUsd: number | null; weeklyUsd: number | null; monthlyUsd: number | null; note: string | null };
   lastCheckedAt: string | null; lastSuccessAt: string | null; error: string | null;
-  credits?: { status: "ok" | "not_configured" | "error"; totalCredits: number | null; totalUsage: number | null; remaining: number | null; fetchedAt: string | null; stale: boolean; error: string | null };
+  keyUsage?: { status: "ok" | "not_configured" | "unauthorized" | "rate_limited" | "unavailable"; label: string | null; usage: number | null; limit: number | null; unlimited: boolean; remaining: number | null; usageDaily: number | null; usageWeekly: number | null; usageMonthly: number | null; limitReset: string | null; fetchedAt: string | null; stale: boolean; error: string | null; retryAt: string | null };
 }
 interface Snapshot { providers: BalanceProvider[]; refreshedAt: string | null; throttled?: boolean }
 

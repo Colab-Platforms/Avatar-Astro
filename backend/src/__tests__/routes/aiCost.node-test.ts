@@ -464,15 +464,15 @@ test("balance checks: OpenRouter key-level, account-level, rejected, failing, un
   assert.equal(r.balance.remainingUsd, null);
   assert.equal(r.balance.unlimited, true);
 
-  // management key gives the real account balance
-  const calls: string[] = [];
-  r = await pb.checkOpenRouter(env({ OPENROUTER_API_KEY: "sk-or-SECRET", OPENROUTER_MANAGEMENT_KEY: "sk-or-MGMT" }), (async (url: string) => {
-    calls.push(url);
-    return new Response(JSON.stringify({ data: url.endsWith("/credits") ? { total_credits: 20, total_usage: 7.5 } : { usage: 1, limit: null, limit_remaining: null } }), { status: 200 });
+  // a management key is never used: only /key is called, with the normal API key
+  const calls: { url: string; auth: string }[] = [];
+  r = await pb.checkOpenRouter(env({ OPENROUTER_API_KEY: "sk-or-SECRET", OPENROUTER_MANAGEMENT_KEY: "sk-or-MGMT" }), (async (url: string, init: any) => {
+    calls.push({ url, auth: init.headers.Authorization });
+    return new Response(JSON.stringify({ data: { usage: 1, limit: null, limit_remaining: null } }), { status: 200 });
   }) as any);
-  assert.equal(r.balance.scope, "account");
-  assert.equal(r.balance.remainingUsd, 12.5);
-  assert.equal(calls.length, 2);
+  assert.equal(r.balance.scope, "key");
+  assert.deepEqual(calls.map((c) => c.url), ["https://openrouter.ai/api/v1/key"]);
+  assert.equal(calls[0].auth, "Bearer sk-or-SECRET");
 
   r = await pb.checkOpenRouter(env({ OPENROUTER_API_KEY: "sk-or-SECRET" }), st(401) as any);
   assert.equal(r.connection, "rejected");

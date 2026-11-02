@@ -5,6 +5,7 @@ import { buildTodayPanchang } from "../modules/gemstone/panchang.today.js";
 import { getDailyChatStatus, consumeDailyChatSession } from "../utils/dailyChatSession.js";
 import { screenMessage, ESCALATION_REPLY, OFF_TOPIC_REPLY } from "../utils/chatScreening.js";
 import prisma from "@root/prisma.js";
+import { OPENROUTER_MODEL } from "../config/aiModels.js";
 
 const router = Router();
 // Life path readings and TTS are generated per user and spend provider credits.
@@ -91,7 +92,7 @@ export class ProviderError extends Error {
   }
 }
 
-async function callAI(apiKey: string, prompt: string, maxTokens = 1000): Promise<string> {
+async function callAI(apiKey: string, prompt: string, maxTokens = 1000, model: string = MODEL): Promise<string> {
   const res = await fetch(OPENROUTER_URL, {
     method: "POST",
     signal: AbortSignal.timeout(45_000),
@@ -102,12 +103,13 @@ async function callAI(apiKey: string, prompt: string, maxTokens = 1000): Promise
       "X-Title": "Spiritual AI Inner Voice",
     },
     body: JSON.stringify({
-      model: MODEL,
+      model,
       max_tokens: maxTokens,
       messages: [{ role: "user", content: prompt + HINGLISH_RULE }],
     }),
   });
-  const data = await res.json().catch(() => null) as any;
+  // A timeout while reading the body must stay a timeout, not look like an empty reply.
+  const data = await res.json().catch((e) => { if (e?.name === "TimeoutError" || e?.name === "AbortError") throw e; return null; }) as any;
   if (data?.error) throw new ProviderError(String(data.error.message ?? "Provider error"), Number(data.error.code) || res.status);
   if (!res.ok) throw new ProviderError("Provider returned an error status", res.status);
   return data?.choices?.[0]?.message?.content ?? "";
@@ -385,17 +387,18 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
     let raw: string;
     try {
       try {
-        raw = await callAI(apiKey, prompt, 1200);
+        // The shared free model is rate limited by its upstream; the app's standard model (OPENROUTER_MODEL) is used here. 3000 tokens: 1200 cut Hinglish replies off mid-JSON.
+        raw = await callAI(apiKey, prompt, 3000, OPENROUTER_MODEL);
       } catch (err: any) {
         if (!(err instanceof ProviderError && err.status === 429)) throw err;
         await sleep(LIFE_PATH_RETRY_DELAY_MS);
-        raw = await callAI(apiKey, prompt, 1200);
+        raw = await callAI(apiKey, prompt, 3000, OPENROUTER_MODEL);
       }
     } catch (err: any) {
       const timedOut = err?.name === "TimeoutError" || err?.name === "AbortError";
       const status = err instanceof ProviderError ? err.status : undefined;
       // Kind and status only: never the provider message (it can echo request details) and never the key.
-      console.error("Life path provider error:", timedOut ? "timeout" : `${err?.name} status=${status ?? "none"}`);
+      console.error(`Life path provider error: model=${OPENROUTER_MODEL} kind=${timedOut ? "timeout" : err?.name} providerStatus=${status ?? "none"}`);
       if (status === 429) {
         return res.status(503).json({ error: "The reading service is busy right now. Please try again in a minute.", code: "provider_busy" });
       }

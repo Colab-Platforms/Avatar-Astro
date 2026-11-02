@@ -2,7 +2,7 @@
 //
 // END-TO-END proof, through the REAL server (src/index.ts), a real local database and real JWT auth, of astrology tool management:
 // on/off switch, per-user rolling-24h limits (per tool), enforcement across sessions and under concurrency, reset after the window,
-// admin changes without a restart, analytics from real usage rows, admin-only access, and the OpenRouter credits states.
+// admin changes without a restart, analytics from real usage rows, admin-only access, and the OpenRouter key-usage states.
 // The AI provider is stubbed at the network layer (no real request, no real key).
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
@@ -293,31 +293,62 @@ test("analytics come from real usage rows: requests, failures, blocked (switch o
   assert.deepEqual([untouched.usage.total, untouched.usage.errors, untouched.usage.blocked, untouched.usage.lastAt], [0, 0, 0, null], "a tool nobody used shows zeros, not placeholders");
 });
 
-// ── OpenRouter credits (unit level, with a fake fetch: no real key, no network) ──
-test("OpenRouter credits: success, not configured, rejected key and API failure keep the last good snapshot", { skip }, async () => {
+// ── OpenRouter key usage (unit level, with a fake fetch: no real key, no network) ──
+const SECRET = "sk-or-v1-abcdef0123456789ZZZZ";
+const keyEnv = { OPENROUTER_API_KEY: SECRET, OPENROUTER_MANAGEMENT_KEY: "sk-or-MGMT" } as any;
+const reply = (status: number, data?: object, headers: Record<string, string> = {}) => (() => Promise.resolve(new Response(JSON.stringify(data ? { data } : {}), { status, headers }))) as any;
+
+test("OpenRouter key usage: limit, unlimited, remaining, label safety and not_configured", { skip }, async () => {
   const pb = await import("../../modules/admin/providerBalance.js");
-  const ok = (url: string) => Promise.resolve(new Response(JSON.stringify(/credits/.test(url) ? { data: { total_credits: 100, total_usage: 37.5 } } : { data: { usage: 1, limit: null } }), { status: 200 }));
-  let c = await pb.fetchOpenRouterCredits({ OPENROUTER_MANAGEMENT_KEY: "sk-or-MGMT" } as any, ok as any);
-  assert.deepEqual([c.status, c.totalCredits, c.totalUsage, c.remaining], ["ok", 100, 37.5, 62.5]);
-  assert.ok(c.fetchedAt);
+  let r = (await pb.checkOpenRouter(keyEnv, reply(200, { label: "Production backend", usage: 4.2, usage_daily: 0.1, usage_weekly: 0.7, usage_monthly: 2.5, limit: 10, limit_remaining: 5.8, limit_reset: "monthly" }))).keyUsage!;
+  assert.deepEqual([r.status, r.label, r.usage, r.limit, r.remaining, r.unlimited, r.limitReset], ["ok", "Production backend", 4.2, 10, 5.8, false, "monthly"]);
+  assert.ok(r.fetchedAt);
 
-  c = await pb.fetchOpenRouterCredits({} as any, ok as any);
-  assert.equal(c.status, "not_configured");
-  assert.equal(c.remaining, null, "no invented balance");
+  r = (await pb.checkOpenRouter(keyEnv, reply(200, { usage: 3, limit: 10 }))).keyUsage!;
+  assert.equal(r.remaining, 7, "limit minus usage when OpenRouter gives no remaining figure");
 
-  c = await pb.fetchOpenRouterCredits({ OPENROUTER_MANAGEMENT_KEY: "sk-or-MGMT" } as any, (() => Promise.resolve(new Response("{}", { status: 401 }))) as any);
-  assert.equal(c.status, "error");
-  assert.doesNotMatch(JSON.stringify(c), /sk-or-MGMT/);
+  r = (await pb.checkOpenRouter(keyEnv, reply(200, { usage: 3, limit: null, limit_remaining: null }))).keyUsage!;
+  assert.deepEqual([r.unlimited, r.limit, r.remaining], [true, null, null], "unlimited key: no invented remaining balance");
 
-  const good = await pb.checkOpenRouter({ OPENROUTER_API_KEY: "sk-or-KEY", OPENROUTER_MANAGEMENT_KEY: "sk-or-MGMT" } as any, ok as any);
-  assert.equal(good.credits?.status, "ok");
-  assert.equal(good.balance.remainingUsd, 62.5);
-  const down = await pb.checkOpenRouter({ OPENROUTER_API_KEY: "sk-or-KEY", OPENROUTER_MANAGEMENT_KEY: "sk-or-MGMT" } as any, (() => Promise.reject(new Error("network down sk-or-MGMT"))) as any);
-  assert.equal(down.credits?.status, "error");
-  const merged = pb.mergeWithPrevious([down], [good])[0];
-  assert.equal(merged.credits?.status, "error");
-  assert.equal(merged.credits?.stale, true);
-  assert.equal(merged.credits?.remaining, 62.5, "last successful numbers are kept, and marked stale");
-  assert.equal(merged.credits?.fetchedAt, good.credits?.fetchedAt);
-  assert.doesNotMatch(JSON.stringify(down), /sk-or-/);
+  for (const masked of ["sk-or-v1-abc...xyz", "sk-or-v1-abcdef0123456789ZZZZ", "abcdef0123456789", "key ***"]) {
+    r = (await pb.checkOpenRouter(keyEnv, reply(200, { label: masked, usage: 1, limit: null }))).keyUsage!;
+    assert.equal(r.label, null, `label "${masked}" must not be shown`);
+  }
+
+  const none = await pb.checkOpenRouter({ OPENROUTER_MANAGEMENT_KEY: "sk-or-MGMT" } as any, (() => { throw new Error("must not be called"); }) as any);
+  assert.equal(none.keyUsage?.status, "not_configured", "the management key alone does not configure this card");
+  assert.equal(none.keyUsage?.usage, null);
+});
+
+test("OpenRouter key usage: 401, 429, outage, no retry loops, stale snapshot kept, nothing secret stored", { skip }, async () => {
+  const pb = await import("../../modules/admin/providerBalance.js");
+  let calls = 0;
+  const counted = (status: number, data?: object, h: Record<string, string> = {}) => (() => { calls++; return reply(status, data, h)(); }) as any;
+
+  const good = await pb.checkOpenRouter(keyEnv, reply(200, { usage: 4, limit: 10, limit_remaining: 6 }));
+  const bad = await pb.checkOpenRouter(keyEnv, reply(401));
+  assert.equal(bad.keyUsage?.status, "unauthorized");
+  calls = 0;
+  assert.equal((await pb.checkOpenRouter(keyEnv, counted(200, { usage: 1 }), bad.keyUsage)).keyUsage?.status, "unauthorized");
+  assert.equal(calls, 0, "a refused key is not retried until the key changes");
+  const changed = await pb.checkOpenRouter({ OPENROUTER_API_KEY: "sk-or-v1-NEWKEY" } as any, counted(200, { usage: 1 }), bad.keyUsage);
+  assert.equal(changed.keyUsage?.status, "ok");
+
+  const limited = await pb.checkOpenRouter(keyEnv, reply(429, undefined, { "retry-after": "120" }));
+  assert.equal(limited.keyUsage?.status, "rate_limited");
+  const wait = Date.parse(limited.keyUsage!.retryAt!) - Date.now();
+  assert.ok(wait > 100_000 && wait <= 120_000, "uses OpenRouter's Retry-After");
+  calls = 0;
+  await pb.checkOpenRouter(keyEnv, counted(200, { usage: 1 }), limited.keyUsage);
+  assert.equal(calls, 0, "no call before the retry time");
+
+  const down = await pb.checkOpenRouter(keyEnv, (() => Promise.reject(new Error("network down " + SECRET))) as any);
+  assert.equal(down.keyUsage?.status, "unavailable");
+  for (const failed of [down, limited]) {
+    const kept = pb.mergeWithPrevious([failed], [good])[0].keyUsage!;
+    assert.equal(kept.stale, true);
+    assert.deepEqual([kept.usage, kept.limit, kept.remaining], [4, 10, 6], "last good numbers kept, never estimated");
+    assert.equal(kept.fetchedAt, good.keyUsage?.fetchedAt);
+  }
+  assert.doesNotMatch(JSON.stringify([good, bad, limited, down]), /sk-or|abcdef0123456789/, "no key or fragment is ever stored");
 });
