@@ -4,11 +4,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 
 const authRequest = vi.fn();
-vi.mock("@/lib/authClient", () => ({
-  authRequest: (...a: unknown[]) => authRequest(...a),
-  AUTH_API_BASE_URL: "http://x/api",
-  AuthApiError: class extends Error { status = 0; constructor(m: string, s: number) { super(m); this.status = s; } },
-}));
+vi.mock("@/lib/authClient", () => {
+  class AuthApiError extends Error { status = 0; constructor(m: string, s: number) { super(m); this.status = s; } }
+  return { authRequest: (...a: unknown[]) => authRequest(...a), AUTH_API_BASE_URL: "http://x/api", AuthApiError };
+});
 vi.mock("@/lib/authedFetch", () => ({ authedFetch: vi.fn() }));
 
 import ToolsPage from "./pages/ToolsPage";
@@ -19,7 +18,7 @@ const tools = {
   tools: [tool("tarot", { limit: 3, usage: { total: 12, errors: 2, rejected: 4, blocked: 3, lastAt: "2026-11-02T10:00:00Z" } }), tool("zodiac", { limitSupported: false, endpoints: ["/api/zodiac"] }), tool("ai-chat", { group: "inner-voice" })],
   unsupported: [],
 };
-const snap = (credits: object | undefined) => ({ providers: [{ id: "openrouter", name: "OpenRouter", connection: "connected", balance: { state: "unavailable", remainingUsd: null, unlimited: false, scope: null, note: "" }, usage: { monthlyUsd: null, totalUsd: null, dailyUsd: null, weeklyUsd: null, note: null }, lastCheckedAt: null, lastSuccessAt: null, error: null, credits }], refreshedAt: null });
+const snap = (keyUsage: object | undefined) => ({ providers: [{ id: "openrouter", name: "OpenRouter", connection: "connected", balance: { state: "unavailable", remainingUsd: null, unlimited: false, scope: null, note: "" }, usage: { monthlyUsd: null, totalUsd: null, dailyUsd: null, weeklyUsd: null, note: null }, lastCheckedAt: null, lastSuccessAt: null, error: null, keyUsage }], refreshedAt: null });
 
 function setup(snapshot: object) {
   authRequest.mockImplementation(async (url: string, opts?: { method?: string }) => {
@@ -73,36 +72,80 @@ describe("Astrology Tools page", () => {
   });
 });
 
-describe("OpenRouter API Usage card", () => {
-  it("shows purchased, used and remaining credits with the last successful refresh", async () => {
-    setup(snap({ status: "ok", totalCredits: 100, totalUsage: 37.5, remaining: 62.5, fetchedAt: "2026-11-02T10:00:00Z", stale: false, error: null }));
-    const nums = await screen.findByTestId("openrouter-numbers");
-    expect(nums).toHaveTextContent("100");
-    expect(nums).toHaveTextContent("37.5");
-    expect(nums).toHaveTextContent("62.5");
-    expect(screen.getByTestId("openrouter-status")).toHaveTextContent("Connected");
+const ku = (status: string, over: object = {}) => ({ status, label: null, usage: null, limit: null, unlimited: false, remaining: null, usageDaily: null, usageWeekly: null, usageMonthly: null, limitReset: null, fetchedAt: null, stale: false, error: null, retryAt: null, ...over });
+const okKu = (over: object = {}) => ku("ok", { label: "Production backend", usage: 4.2, limit: 10, remaining: 5.8, usageDaily: 0.1, usageWeekly: 0.7, usageMonthly: 2.5, limitReset: "monthly", fetchedAt: "2026-11-02T10:00:00Z", ...over });
+
+describe("OpenRouter API Usage card (configured API key only)", () => {
+  it("shows the key name, usage, limit, remaining, period and last update", async () => {
+    setup(snap(okKu()));
+    expect(await screen.findByTestId("openrouter-status")).toHaveTextContent("Connected");
+    expect(screen.getByTestId("openrouter-key-name")).toHaveTextContent("Production backend");
+    expect(screen.getByTestId("stat-usage")).toHaveTextContent("4.2");
+    expect(screen.getByTestId("stat-limit")).toHaveTextContent("10");
+    expect(screen.getByTestId("stat-remaining")).toHaveTextContent("5.8");
+    expect(screen.getByTestId("openrouter-period")).toHaveTextContent(/today.*this week.*this month/);
     expect(screen.getByTestId("openrouter-refreshed")).not.toHaveTextContent("Never");
   });
 
-  it("says Not Configured and shows no balance when there is no management key", async () => {
-    setup(snap({ status: "not_configured", totalCredits: null, totalUsage: null, remaining: null, fetchedAt: null, stale: false, error: null }));
+  it("shows Unlimited, not an invented balance, when the key has no spending limit", async () => {
+    setup(snap(okKu({ limit: null, unlimited: true, remaining: null })));
+    await screen.findByTestId("openrouter-numbers");
+    expect(screen.getByTestId("stat-limit")).toHaveTextContent("Unlimited");
+    expect(screen.getByTestId("stat-remaining")).toHaveTextContent("Unlimited");
+  });
+
+  it("never shows account-wide credits and omits the key name when it is not safe", async () => {
+    setup(snap(okKu({ label: null })));
+    await screen.findByTestId("openrouter-numbers");
+    expect(screen.queryByTestId("openrouter-key-name")).toBeNull();
+    expect(screen.getByTestId("openrouter-card")).not.toHaveTextContent(/credits purchased|OPENROUTER_MANAGEMENT_KEY/i);
+  });
+
+  it("says Not Configured and points at OPENROUTER_API_KEY, with no numbers", async () => {
+    setup(snap(ku("not_configured")));
     expect(await screen.findByTestId("openrouter-status")).toHaveTextContent("Not Configured");
+    expect(screen.getByTestId("openrouter-card")).toHaveTextContent("OPENROUTER_API_KEY");
     expect(screen.queryByTestId("openrouter-numbers")).toBeNull();
     expect(screen.getByTestId("openrouter-refreshed")).toHaveTextContent("Never");
   });
 
-  it("says Unable to fetch balance on failure and keeps the last successful snapshot, marked stale", async () => {
-    setup(snap({ status: "error", totalCredits: 100, totalUsage: 40, remaining: 60, fetchedAt: "2026-11-01T10:00:00Z", stale: true, error: "Could not reach the provider." }));
-    expect(await screen.findByTestId("openrouter-status")).toHaveTextContent("Unable to fetch balance");
-    expect(screen.getByRole("alert")).toHaveTextContent(/last successful snapshot/i);
-    expect(screen.getByTestId("openrouter-numbers")).toHaveTextContent("60");
+  it.each([
+    ["unauthorized", "Unauthorized"],
+    ["rate_limited", "Rate limited"],
+    ["unavailable", "Temporarily unavailable"],
+  ])("%s shows %s and 'Unable to fetch key usage', never account credits", async (status, label) => {
+    setup(snap(ku(status, { error: "msg" })));
+    const el = await screen.findByTestId("openrouter-status");
+    expect(el).toHaveTextContent(label);
+    expect(screen.getByRole("alert")).toHaveTextContent(/Unable to fetch key usage.*No earlier snapshot/);
+    expect(screen.queryByTestId("openrouter-numbers")).toBeNull();
+  });
+
+  it("keeps the last successful snapshot, marked stale, when a refresh fails, and says when a rate-limited check retries", async () => {
+    setup(snap(okKu({ status: "rate_limited", stale: true, error: "OpenRouter is rate limiting usage checks (429).", retryAt: "2026-11-02T10:05:00Z" })));
+    expect(await screen.findByTestId("openrouter-numbers")).toHaveTextContent("4.2");
+    expect(screen.getByRole("alert")).toHaveTextContent(/asked again after.*last successful snapshot/);
     expect(screen.getByTestId("openrouter-refreshed")).toHaveTextContent(/stale/);
   });
 
-  it("Refresh Balance calls the backend refresh endpoint (keys never reach the browser)", async () => {
-    setup(snap({ status: "ok", totalCredits: 1, totalUsage: 0, remaining: 1, fetchedAt: "2026-11-02T10:00:00Z", stale: false, error: null }));
-    fireEvent.click(await screen.findByRole("button", { name: /Refresh Balance/ }));
+  it("Refresh Usage calls the backend only (the key never reaches the browser)", async () => {
+    setup(snap(okKu()));
+    fireEvent.click(await screen.findByRole("button", { name: /Refresh Usage/ }));
     await waitFor(() => expect(authRequest).toHaveBeenCalledWith("/admin/providers/balance/refresh", { method: "POST", body: undefined }));
     expect(JSON.stringify(authRequest.mock.calls)).not.toMatch(/sk-or|Bearer/);
+  });
+
+  it("the dashboard's own refresh limit (429) shows a clear message and a cooldown, keeping Connected", async () => {
+    const { AuthApiError } = await import("@/lib/authClient");
+    setup(snap(okKu()));
+    const base = authRequest.getMockImplementation()!;
+    authRequest.mockImplementation(async (url: string, opts?: { method?: string }) => {
+      if (url === "/admin/providers/balance/refresh") throw new AuthApiError("Too many refreshes.", 429);
+      return base(url, opts);
+    });
+    fireEvent.click(await screen.findByRole("button", { name: /Refresh Usage/ }));
+    expect(await screen.findByText(/dashboard's own limit, not OpenRouter/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Retry in \d+s/ })).toBeDisabled();
+    expect(screen.getByTestId("openrouter-status")).toHaveTextContent("Connected");
   });
 });

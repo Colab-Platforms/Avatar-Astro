@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import AskDivyaSection from "@/features/guru/AskDivyaSection";
 import FeatureFaq from "@/components/FeatureFaq";
 import FullScreenLoader from "@/components/Loader/FullScreenLoader";
@@ -49,11 +49,16 @@ export default function FutureLifePath() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<LifePathResult | null>(null);
+  /** Set synchronously, so a double click or a sign-in resume can never send two requests. */
+  const inFlight = useRef(false);
+  /** Show Retry for temporary failures (busy, timeout, outage), not for input mistakes. */
+  const [retryable, setRetryable] = useState(false);
 
   const now = new Date();
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
   async function generate() {
+    if (inFlight.current) return;
     if (!dob) {
       setError("Please enter your date of birth.");
       return;
@@ -64,6 +69,8 @@ export default function FutureLifePath() {
     }
     if (!requireSignIn(() => { void generate(); })) return; // signed out: ask first, keep the form
     setError("");
+    setRetryable(false);
+    inFlight.current = true;
     setLoading(true);
     try {
       const res = await authedFetch(`${API_BASE_URL}/inner-voice/life-path`, {
@@ -72,11 +79,15 @@ export default function FutureLifePath() {
         body: JSON.stringify({ dob, tob: tob || undefined, pob: pob.trim() || undefined, focus }),
       });
       const data = await res.json().catch(() => ({}));
-      if (res.status === 429) {
-        setError("Too many readings requested. Please wait a minute and try again.");
+      if (!res.ok) {
+        // The server's own wording is meant for users (busy, timeout, unavailable, invalid input); a rate limiter's body has no such text.
+        const serverText = typeof data?.error === "string" ? data.error : "";
+        if (res.status === 429) setError(serverText || "Too many readings requested. Please wait a minute and try again.");
+        else if (res.status === 400) setError(serverText || "Please check your details and try again.");
+        else setError(serverText || "We couldn't generate your reading right now. Please try again in a moment.");
+        setRetryable(res.status !== 400);
         return;
       }
-      if (!res.ok) throw new Error(data?.error || "Request failed");
       if (!data || !data.lifePathOverview) throw new Error("Empty reading");
       setResult(data);
     } catch (e) {
@@ -86,7 +97,9 @@ export default function FutureLifePath() {
       }
       console.error("[Future Life Path Prediction] request failed:", e);
       setError("We couldn't generate your reading right now. Please try again in a moment.");
+      setRetryable(true);
     } finally {
+      inFlight.current = false;
       setLoading(false);
     }
   }
@@ -186,7 +199,7 @@ export default function FutureLifePath() {
                 className="mt-5 rounded-xl border border-red-400/30 bg-red-400/10 px-4 py-3 text-sm text-red-800"
               >
                 ⚠ {error}
-                {!loading && dob && error.startsWith("We couldn't") && (
+                {!loading && dob && retryable && (
                   <button type="button" onClick={generate} className="ml-3 underline underline-offset-2 hover:text-foreground">
                     Retry
                   </button>

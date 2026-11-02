@@ -4,6 +4,7 @@ import { auth } from "../middleware/authMiddleware.js";
 import { getDailyChatStatus, consumeDailyChatSession } from "../utils/dailyChatSession.js";
 import { screenMessage, ESCALATION_REPLY, OFF_TOPIC_REPLY } from "../utils/chatScreening.js";
 import prisma from "@root/prisma.js";
+import { OPENROUTER_MODEL } from "../config/aiModels.js";
 
 const router = Router();
 // Life path readings and TTS are generated per user and spend provider credits.
@@ -82,7 +83,15 @@ const MODEL = "google/gemma-4-31b-it:free";
 // Every AI reply defaults to Hinglish, which is how most users speak and write.
 export const HINGLISH_RULE = `\n\nLanguage: write every human-readable text value in natural Hinglish (Roman-script Hindi mixed with English, the way people actually speak). Keep JSON keys, fixed values and any Sanskrit verses or mantras exactly as specified. Only if the person wrote in Devanagari Hindi, answer in Hindi instead.`;
 
-async function callAI(apiKey: string, prompt: string, maxTokens = 1000): Promise<string> {
+/** A provider failure with the facts needed to diagnose it (never the prompt, the key or the user's details). */
+class ProviderError extends Error {
+  constructor(message: string, readonly httpStatus: number, readonly providerCode: string | number | null) {
+    super(message);
+    this.name = "ProviderError";
+  }
+}
+
+async function callAI(apiKey: string, prompt: string, maxTokens = 1000, model: string = MODEL): Promise<string> {
   const res = await fetch(OPENROUTER_URL, {
     method: "POST",
     signal: AbortSignal.timeout(45_000),
@@ -93,13 +102,15 @@ async function callAI(apiKey: string, prompt: string, maxTokens = 1000): Promise
       "X-Title": "Spiritual AI Inner Voice",
     },
     body: JSON.stringify({
-      model: MODEL,
+      model,
       max_tokens: maxTokens,
       messages: [{ role: "user", content: prompt + HINGLISH_RULE }],
     }),
   });
-  const data = await res.json() as any;
-  if (data.error) throw new Error(data.error.message);
+  // A timeout while reading the body must stay a timeout, not look like an empty reply.
+  const data = (await res.json().catch((e) => { if (e?.name === "TimeoutError" || e?.name === "AbortError") throw e; return {}; })) as any;
+  if (data.error) throw new ProviderError(data.error.message, res.status, data.error.code ?? null);
+  if (!res.ok) throw new ProviderError(`HTTP ${res.status}`, res.status, null);
   return data.choices?.[0]?.message?.content ?? "";
 }
 
@@ -275,6 +286,15 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
 // interpretation, and the prompt forbids inventing exact planetary positions.
 const LIFE_PATH_FOCUS = ["general", "career", "relationships", "personal-growth", "finance"] as const;
 
+/** Maps a provider failure to the status and wording the user sees. Nothing here falls back to invented readings. */
+export function lifePathFailure(err: any): { status: number; kind: string; message: string; retryAfter?: number } {
+  if (err?.name === "TimeoutError" || err?.name === "AbortError") return { status: 504, kind: "TIMEOUT", message: "The reading service took too long to respond. Please try again." };
+  const st = err?.httpStatus;
+  if (st === 429) return { status: 429, kind: "PROVIDER_BUSY", message: "The reading service is very busy right now. Please wait a minute and try again.", retryAfter: 60 };
+  if (st === 401 || st === 402 || st === 403) return { status: 503, kind: "PROVIDER_UNAVAILABLE", message: "The reading service is temporarily unavailable. Please try again later." };
+  return { status: 502, kind: "PROVIDER_ERROR", message: "The reading service is unavailable right now. Please try again in a moment." };
+}
+
 router.post("/life-path", createRateLimiter({ windowMs: 60_000, max: 10 }), async (req: Request, res: Response) => {
   try {
     const { dob, tob, pob, focus = "general" } = req.body ?? {};
@@ -330,25 +350,32 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
   "reflectionQuestions": ["a question for self-reflection", "another question"]
 }`;
 
-    let raw: string;
-    try {
-      raw = await callAI(apiKey, prompt, 1200);
-    } catch (err: any) {
-      const timedOut = err?.name === "TimeoutError" || err?.name === "AbortError";
-      console.error("Life path provider error:", timedOut ? "timeout" : err?.name);
-      return res
-        .status(timedOut ? 504 : 502)
-        .json({ error: timedOut ? "The reading service timed out" : "The reading service is unavailable" });
+    const startedAt = Date.now();
+    let result: any = null;
+    let lastKind = "INCOMPLETE_RESPONSE";
+    // One automatic regeneration if the model's reply is empty, garbled or incomplete; never a stand-in reading.
+    for (let attempt = 1; attempt <= 2 && !result; attempt++) {
+      let raw: string;
+      try {
+        raw = await callAI(apiKey, prompt, 3000, OPENROUTER_MODEL);
+      } catch (err: any) {
+        const failure = lifePathFailure(err);
+        // Safe diagnostics only: model, HTTP status, provider code and timing. No key, prompt, birth details or provider message text.
+        console.error(`Life path provider error: model=${OPENROUTER_MODEL} providerStatus=${err?.httpStatus ?? "none"} providerCode=${err?.providerCode ?? "none"} kind=${failure.kind} attempt=${attempt} ms=${Date.now() - startedAt}`);
+        if (failure.retryAfter) res.setHeader("Retry-After", failure.retryAfter);
+        return res.status(failure.status).json({ error: failure.message, code: failure.kind });
+      }
+      try {
+        const parsed = parseJSON(raw);
+        if (parsed && typeof parsed.lifePathOverview === "string" && parsed.lifePathOverview.trim()) result = parsed;
+        else lastKind = "INCOMPLETE_RESPONSE";
+      } catch {
+        lastKind = "UNREADABLE_RESPONSE";
+      }
+      if (!result) console.error(`Life path provider error: model=${OPENROUTER_MODEL} kind=${lastKind} chars=${raw.length} attempt=${attempt} ms=${Date.now() - startedAt}`);
     }
-
-    let result: any;
-    try {
-      result = parseJSON(raw);
-    } catch {
-      return res.status(502).json({ error: "The reading service returned an unreadable response" });
-    }
-    if (!result || typeof result.lifePathOverview !== "string" || !result.lifePathOverview.trim()) {
-      return res.status(502).json({ error: "The reading service returned an incomplete response" });
+    if (!result) {
+      return res.status(502).json({ error: "The reading came back incomplete. Please try again.", code: lastKind });
     }
     const str = (v: unknown) => (typeof v === "string" ? v : undefined);
     return res.json({

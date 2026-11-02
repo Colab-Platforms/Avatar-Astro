@@ -195,7 +195,7 @@ export function createCostsRouter(): Router {
 
   router.post(
     "/providers/balance/refresh",
-    createRateLimiter({ windowMs: 60_000, max: 6, message: "Too many refreshes. Please wait a minute." }),
+    createRateLimiter({ windowMs: 60_000, max: 6, envelope: true, message: "Refresh Balance was used too many times in a minute. Wait a minute and try again." }),
     wrap(async (req, res) => {
       const snap = await refreshSnapshot((req as MainAdminRequest).adminEmail ?? "admin");
       if (!snap.throttled) await writeAudit(req, { action: "providers.balance_refresh", entityType: "integration", summary: "Refreshed provider balances" });
