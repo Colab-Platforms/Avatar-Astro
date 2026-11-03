@@ -1587,7 +1587,7 @@ function Results({data,onReset}){
 
   const [dy,dm,dd]=dob.split("-");
   const dobFormatted=`${dd} ${MONTHS[+dm-1]} ${dy}`;
-  const heroDesc=`Your Western Sun sign, ${zodiac}, brings ${ZODIAC_HERO_TRAITS[zodiac]||"a distinctive presence"}. Life Path ${lifePath} adds ${LIFE_PATH_TRAITS[lifePath]||"its own blend of themes"}. Your Vedic Rashi, Lagna and Nakshatra are calculated below from your birth details.`;
+  const heroDesc=`Your Surya Rashi (Vedic Sun sign), ${rashiName}, brings ${ZODIAC_HERO_TRAITS[zodiac]||"a distinctive presence"}. Life Path ${lifePath} adds ${LIFE_PATH_TRAITS[lifePath]||"its own blend of themes"}. Your Vedic Rashi, Lagna and Nakshatra are calculated below from your birth details.`;
   const working=lifePathWorking(dob);
 
   const cardStyle:CSSProperties={background:"#FBF5EC",border:"1px solid rgba(89,34,9,0.2)",borderRadius:16,padding:28};
@@ -1607,7 +1607,7 @@ function Results({data,onReset}){
         <div>
           <div style={{color:"#6B4A37",fontWeight:700,fontSize:14,letterSpacing:"0.15em",marginBottom:12}}>{FEATURES.birthChart.name.toUpperCase()} · VEDIC RASHI &amp; LIFE PATH PROFILE</div>
           <h1 style={{fontFamily:"'DM Sans', system-ui, sans-serif",fontSize:"clamp(30px,5vw,52px)",color:"#301607",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.04em",marginBottom:16,lineHeight:1.1,wordBreak:"break-word"}}>{name}</h1>
-          <div style={{color:"#592209",fontWeight:700,fontSize:18,marginBottom:20}}>{kundali?.moon.rashi?`CHANDRA RASHI ${kundali.moon.rashi.name.toUpperCase()} (MOON SIGN)`:kundali?`CHANDRA RASHI: DEPENDS ON BIRTH TIME`:`WESTERN SUN SIGN ${zodiac.toUpperCase()}`} &nbsp;•&nbsp; LIFE PATH {lifePath}</div>
+          <div style={{color:"#592209",fontWeight:700,fontSize:18,marginBottom:20}}>{kundali?.moon.rashi?`CHANDRA RASHI ${kundali.moon.rashi.name.toUpperCase()} (MOON SIGN)`:kundali?`CHANDRA RASHI: DEPENDS ON BIRTH TIME`:`SURYA RASHI ${rashiName.toUpperCase()} (SUN SIGN)`} &nbsp;•&nbsp; LIFE PATH {lifePath}</div>
           <p style={{fontSize:18,fontStyle:"italic",lineHeight:1.7,color:"#301607",marginBottom:28}}>{heroDesc}</p>
           <div className="bcp-facts">
             <div style={{display:"flex",alignItems:"center",gap:12}}>
@@ -1646,10 +1646,10 @@ function Results({data,onReset}){
       {/* ── SUN SIGN + LIFE PATH ── */}
       <div className="r-sec bcp-two">
         <div className="r-hcard" style={cardStyle}>
-          <div style={smallLabel}>Your Western Sun sign (tropical zodiac)</div>
-          <div style={{color:"#301607",fontWeight:800,fontSize:26,marginBottom:4}}>{zodiac} {ZODIAC_SYMBOLS[zodiac]}</div>
+          <div style={smallLabel}>Your Surya Rashi (Vedic Sun sign, sidereal zodiac)</div>
+          <div style={{color:"#301607",fontWeight:800,fontSize:26,marginBottom:4}}>{rashiName} ({zodiac}) {ZODIAC_SYMBOLS[zodiac]}</div>
           {sign&&<>
-            <div style={{color:"rgba(48,22,7,0.85)",fontSize:15,marginBottom:14}}>{sign.dates} · {sign.element} · Ruler: {sign.traditionalRuling?`${sign.ruling} (modern), ${sign.traditionalRuling} (traditional)`:sign.ruling}</div>
+            <div style={{color:"rgba(48,22,7,0.85)",fontSize:15,marginBottom:14}}>{sign.element} · Ruler: {sign.traditionalRuling?`${sign.ruling} (modern), ${sign.traditionalRuling} (traditional)`:sign.ruling}</div>
             <p style={{fontSize:16,lineHeight:1.65,color:"#4A2E1F",marginBottom:16}}>{sign.description}</p>
             <div style={{marginBottom:12}}>{sign.traits.map(t=><span key={t} className="bcp-chip">{t}</span>)}</div>
             <div style={{fontSize:15,lineHeight:1.6,color:"#4A2E1F"}}><b style={{color:"#301607"}}>Strengths:</b> {sign.strengths.join(", ")}.<br/><b style={{color:"#301607"}}>Areas to watch:</b> {sign.weaknesses.join(", ")}.</div>
