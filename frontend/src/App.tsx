@@ -731,11 +731,9 @@ const App = () => {
               path="/dashboard"
               element={
                 <NavigationProvider>
-                  <Layout>
                     <Suspense fallback={<LazyFallback />}>
                       <DashboardLayout />
                     </Suspense>
-                  </Layout>
                 </NavigationProvider>
               }
             >
