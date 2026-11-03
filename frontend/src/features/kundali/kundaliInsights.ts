@@ -1,4 +1,5 @@
 import type { KundaliResult } from "./types";
+import { getTerm } from "@/lib/astroGlossary";
 
 // Plain-language reading of a calculated Janma Kundali. Every item has two parts that are kept apart on screen:
 //   fact    - read straight from the chart the server calculated (sign, house, lord, dignity, dasha). Never guessed.
@@ -217,15 +218,7 @@ export function buildKundaliGuide(k: KundaliResult): KundaliGuideData {
 }
 
 /** Plain-language meanings of the terms used on a Kundali page. */
+/** Terms listed under "Terms explained simply". Definitions come from the shared glossary so every tool says the same thing. */
 export const KUNDALI_TERMS: [string, string][] = [
-  ["Janma Kundali", "Your birth chart: a map of where the Sun, Moon and other grahas (planets) were at your exact moment and place of birth."],
-  ["Rashi", "A zodiac sign. Jyotish uses the sidereal zodiac, which is about 24 degrees behind the Western tropical one, so a Vedic sign is often one sign before the Western sign in newspapers."],
-  ["Chandra Rashi", "Your Moon sign. In Indian astrology this is the sign usually called your Rashi."],
-  ["Surya Rashi", "Your Sun sign in the sidereal zodiac."],
-  ["Lagna", "The rising sign, the sign on the eastern horizon when you were born. It needs your birth time and place."],
-  ["Bhava (house)", "One of 12 areas of life, such as career or marriage. Houses are counted from the Lagna."],
-  ["Graha", "A planet or point used in Jyotish: Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn, plus the shadow points Rahu and Ketu."],
-  ["Nakshatra", "One of 27 lunar mansions. Each has four parts called padas."],
-  ["Dasha", "A planetary period. The Vimshottari Dasha system divides life into periods ruled by different grahas, counted from the Moon's nakshatra."],
-  ["Panchang", "The Hindu calendar details of a moment: tithi (lunar day), nakshatra, yoga, karana and weekday."],
-];
+  "Janma Kundali", "Rashi", "Chandra Rashi", "Surya Rashi", "Lagna", "Bhava (house)", "Graha", "Nakshatra", "Navamsa (D9)", "Dasha", "Panchang",
+].flatMap((t) => { const e = getTerm(t); return e ? [[e.term, e.meaning] as [string, string]] : []; });

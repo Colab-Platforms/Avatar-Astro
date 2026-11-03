@@ -1,0 +1,825 @@
+{
+ "a": {
+  "birth": {
+   "dateOfBirth": "1992-08-15",
+   "timeOfBirth": "10:30",
+   "place": "Pune, Maharashtra, India",
+   "timeZone": "Asia/Kolkata",
+   "latitude": 18.5204,
+   "longitude": 73.8567,
+   "resolvedInstantUtc": "1992-08-15T05:00:00.000Z",
+   "utcOffsetMinutes": 330
+  },
+  "method": {
+   "zodiac": "Sidereal (Nirayana)",
+   "ayanamsa": "Lahiri (Chitrapaksha), mean",
+   "ayanamsaDegrees": 23.75,
+   "houses": "Whole sign (Lagna sign = 1st house)",
+   "nodes": "Mean lunar node",
+   "engine": "astronomy-engine ephemeris",
+   "dateOfBirthIsCivil": true
+  },
+  "sun": {
+   "rashi": {
+    "sign": "Cancer",
+    "name": "Karka",
+    "hindi": "कर्क"
+   },
+   "candidates": [
+    {
+     "sign": "Cancer",
+     "name": "Karka",
+     "hindi": "कर्क"
+    }
+   ],
+   "certain": true,
+   "degreeInSign": 28.9,
+   "nakshatra": {
+    "name": "Ashlesha",
+    "pada": 4,
+    "lord": "Mercury"
+   }
+  },
+  "moon": {
+   "rashi": {
+    "sign": "Aquarius",
+    "name": "Kumbha",
+    "hindi": "कुम्भ"
+   },
+   "candidates": [
+    {
+     "sign": "Aquarius",
+     "name": "Kumbha",
+     "hindi": "कुम्भ"
+    }
+   ],
+   "certain": true,
+   "degreeInSign": 18.2,
+   "nakshatra": {
+    "name": "Shatabhisha",
+    "pada": 4,
+    "lord": "Rahu"
+   }
+  },
+  "lagna": {
+   "rashi": {
+    "sign": "Virgo",
+    "name": "Kanya",
+    "hindi": "कन्या"
+   },
+   "degreeInSign": 27.8,
+   "nakshatra": {
+    "name": "Chitra",
+    "pada": 2,
+    "lord": "Mars"
+   }
+  },
+  "planets": [
+   {
+    "planet": "Sun",
+    "rashi": {
+     "sign": "Cancer",
+     "name": "Karka",
+     "hindi": "कर्क"
+    },
+    "degreeInSign": 28.9,
+    "house": 11,
+    "nakshatra": "Ashlesha",
+    "pada": 4
+   },
+   {
+    "planet": "Moon",
+    "rashi": {
+     "sign": "Aquarius",
+     "name": "Kumbha",
+     "hindi": "कुम्भ"
+    },
+    "degreeInSign": 18.2,
+    "house": 6,
+    "nakshatra": "Shatabhisha",
+    "pada": 4
+   },
+   {
+    "planet": "Mars",
+    "rashi": {
+     "sign": "Taurus",
+     "name": "Vrishabha",
+     "hindi": "वृषभ"
+    },
+    "degreeInSign": 19.1,
+    "house": 9,
+    "nakshatra": "Rohini",
+    "pada": 3
+   },
+   {
+    "planet": "Mercury",
+    "rashi": {
+     "sign": "Cancer",
+     "name": "Karka",
+     "hindi": "कर्क"
+    },
+    "degreeInSign": 12.5,
+    "house": 11,
+    "nakshatra": "Pushya",
+    "pada": 3
+   },
+   {
+    "planet": "Jupiter",
+    "rashi": {
+     "sign": "Leo",
+     "name": "Simha",
+     "hindi": "सिंह"
+    },
+    "degreeInSign": 24.2,
+    "house": 12,
+    "nakshatra": "Purva Phalguni",
+    "pada": 4
+   },
+   {
+    "planet": "Venus",
+    "rashi": {
+     "sign": "Leo",
+     "name": "Simha",
+     "hindi": "सिंह"
+    },
+    "degreeInSign": 16,
+    "house": 12,
+    "nakshatra": "Purva Phalguni",
+    "pada": 1
+   },
+   {
+    "planet": "Saturn",
+    "rashi": {
+     "sign": "Capricorn",
+     "name": "Makara",
+     "hindi": "मकर"
+    },
+    "degreeInSign": 20.8,
+    "house": 5,
+    "nakshatra": "Shravana",
+    "pada": 4
+   },
+   {
+    "planet": "Rahu",
+    "rashi": {
+     "sign": "Sagittarius",
+     "name": "Dhanu",
+     "hindi": "धनु"
+    },
+    "degreeInSign": 4,
+    "house": 4,
+    "nakshatra": "Mula",
+    "pada": 2
+   },
+   {
+    "planet": "Ketu",
+    "rashi": {
+     "sign": "Gemini",
+     "name": "Mithuna",
+     "hindi": "मिथुन"
+    },
+    "degreeInSign": 4,
+    "house": 10,
+    "nakshatra": "Mrigashira",
+    "pada": 4
+   }
+  ],
+  "navamsa": {
+   "lagna": {
+    "sign": "Virgo",
+    "name": "Kanya",
+    "hindi": "कन्या"
+   },
+   "planets": [
+    {
+     "planet": "Sun",
+     "rashi": {
+      "sign": "Pisces",
+      "name": "Meena",
+      "hindi": "मीन"
+     },
+     "house": 7
+    },
+    {
+     "planet": "Moon",
+     "rashi": {
+      "sign": "Pisces",
+      "name": "Meena",
+      "hindi": "मीन"
+     },
+     "house": 7
+    },
+    {
+     "planet": "Mars",
+     "rashi": {
+      "sign": "Gemini",
+      "name": "Mithuna",
+      "hindi": "मिथुन"
+     },
+     "house": 10
+    },
+    {
+     "planet": "Mercury",
+     "rashi": {
+      "sign": "Libra",
+      "name": "Tula",
+      "hindi": "तुला"
+     },
+     "house": 2
+    },
+    {
+     "planet": "Jupiter",
+     "rashi": {
+      "sign": "Scorpio",
+      "name": "Vrischika",
+      "hindi": "वृश्चिक"
+     },
+     "house": 3
+    },
+    {
+     "planet": "Venus",
+     "rashi": {
+      "sign": "Leo",
+      "name": "Simha",
+      "hindi": "सिंह"
+     },
+     "house": 12
+    },
+    {
+     "planet": "Saturn",
+     "rashi": {
+      "sign": "Cancer",
+      "name": "Karka",
+      "hindi": "कर्क"
+     },
+     "house": 11
+    },
+    {
+     "planet": "Rahu",
+     "rashi": {
+      "sign": "Taurus",
+      "name": "Vrishabha",
+      "hindi": "वृषभ"
+     },
+     "house": 9
+    },
+    {
+     "planet": "Ketu",
+     "rashi": {
+      "sign": "Scorpio",
+      "name": "Vrischika",
+      "hindi": "वृश्चिक"
+     },
+     "house": 3
+    }
+   ]
+  },
+  "stableSigns": [],
+  "dasha": {
+   "asOf": "2026-11-03",
+   "moonNakshatra": "Shatabhisha",
+   "mahadasha": {
+    "lord": "Saturn",
+    "start": "2011-01-15",
+    "end": "2030-01-15"
+   },
+   "antardasha": {
+    "lord": "Rahu",
+    "start": "2024-08-27",
+    "end": "2027-07-04"
+   }
+  },
+  "panchang": {
+   "convention": {
+    "id": "amanta-chaitradi",
+    "label": "Amanta months · Vikram Samvat (Chaitradi) · Lahiri sidereal",
+    "note": "Months run new moon to new moon and the year begins at Chaitra Shukla Pratipada (the Drik / Maharashtra-South convention). The Purnimanta month name is shown beside it."
+   },
+   "basis": "birth-time",
+   "reckonedAtUtc": "1992-08-15T05:00:00.000Z",
+   "vikramSamvat": 2049,
+   "masa": {
+    "name": "Shravana",
+    "hindi": "श्रावण",
+    "adhika": false
+   },
+   "purnimantaMasa": {
+    "name": "Bhadrapada",
+    "hindi": "भाद्रपद",
+    "adhika": false
+   },
+   "paksha": "krishna",
+   "tithi": {
+    "number": 17,
+    "numberInPaksha": 2,
+    "name": "Dwitiya",
+    "hindi": "द्वितीया",
+    "startLocal": "Fri, 14 Aug 1992, 18:23",
+    "endLocal": "Sat, 15 Aug 1992, 20:42",
+    "startUtc": "1992-08-14T12:53:26.056Z",
+    "endUtc": "1992-08-15T15:12:36.267Z"
+   },
+   "nakshatra": {
+    "name": "Shatabhisha",
+    "pada": 4,
+    "lord": "Rahu"
+   },
+   "moonRashi": "Aquarius",
+   "yoga": "Atiganda",
+   "karana": "Gara",
+   "vara": {
+    "name": "Saturday",
+    "note": null
+   },
+   "sunrise": "06:16",
+   "sunset": "19:01",
+   "uncertain": false,
+   "uncertainties": [],
+   "notes": []
+  },
+  "timeKnown": true,
+  "limitations": [
+   "Rahu and Ketu are the mean lunar nodes.",
+   "Only the main chart (D1) and the Navamsa (D9) are calculated; other divisional charts, Shadbala and Ashtakavarga are not.",
+   "An error of a few minutes in birth time can move the Lagna: it advances about 1° every 4 minutes."
+  ],
+  "basis": [
+   "Sidereal (Nirayana) zodiac with the 23.75° Lahiri ayanamsa for your birth year.",
+   "Your birth time 10:30 in Asia/Kolkata (UTC+5.5) was converted to the UTC instant 1992-08-15T05:00:00.000Z.",
+   "Planet positions come from a high-precision astronomical ephemeris; the Lagna from your birthplace's latitude and longitude.",
+   "Houses are whole-sign: the Lagna sign is the 1st house."
+  ]
+ },
+ "b": {
+  "birth": {
+   "dateOfBirth": "1991-11-22",
+   "timeOfBirth": "18:15",
+   "place": "Mumbai, Maharashtra, India",
+   "timeZone": "Asia/Kolkata",
+   "latitude": 19.076,
+   "longitude": 72.8777,
+   "resolvedInstantUtc": "1991-11-22T12:45:00.000Z",
+   "utcOffsetMinutes": 330
+  },
+  "method": {
+   "zodiac": "Sidereal (Nirayana)",
+   "ayanamsa": "Lahiri (Chitrapaksha), mean",
+   "ayanamsaDegrees": 23.7398,
+   "houses": "Whole sign (Lagna sign = 1st house)",
+   "nodes": "Mean lunar node",
+   "engine": "astronomy-engine ephemeris",
+   "dateOfBirthIsCivil": true
+  },
+  "sun": {
+   "rashi": {
+    "sign": "Scorpio",
+    "name": "Vrischika",
+    "hindi": "वृश्चिक"
+   },
+   "candidates": [
+    {
+     "sign": "Scorpio",
+     "name": "Vrischika",
+     "hindi": "वृश्चिक"
+    }
+   ],
+   "certain": true,
+   "degreeInSign": 6,
+   "nakshatra": {
+    "name": "Anuradha",
+    "pada": 1,
+    "lord": "Saturn"
+   }
+  },
+  "moon": {
+   "rashi": {
+    "sign": "Taurus",
+    "name": "Vrishabha",
+    "hindi": "वृषभ"
+   },
+   "candidates": [
+    {
+     "sign": "Taurus",
+     "name": "Vrishabha",
+     "hindi": "वृषभ"
+    }
+   ],
+   "certain": true,
+   "degreeInSign": 13.8,
+   "nakshatra": {
+    "name": "Rohini",
+    "pada": 2,
+    "lord": "Moon"
+   }
+  },
+  "lagna": {
+   "rashi": {
+    "sign": "Taurus",
+    "name": "Vrishabha",
+    "hindi": "वृषभ"
+   },
+   "degreeInSign": 11,
+   "nakshatra": {
+    "name": "Rohini",
+    "pada": 1,
+    "lord": "Moon"
+   }
+  },
+  "planets": [
+   {
+    "planet": "Sun",
+    "rashi": {
+     "sign": "Scorpio",
+     "name": "Vrischika",
+     "hindi": "वृश्चिक"
+    },
+    "degreeInSign": 6,
+    "house": 7,
+    "nakshatra": "Anuradha",
+    "pada": 1
+   },
+   {
+    "planet": "Moon",
+    "rashi": {
+     "sign": "Taurus",
+     "name": "Vrishabha",
+     "hindi": "वृषभ"
+    },
+    "degreeInSign": 13.8,
+    "house": 1,
+    "nakshatra": "Rohini",
+    "pada": 2
+   },
+   {
+    "planet": "Mars",
+    "rashi": {
+     "sign": "Scorpio",
+     "name": "Vrischika",
+     "hindi": "वृश्चिक"
+    },
+    "degreeInSign": 1.6,
+    "house": 7,
+    "nakshatra": "Vishakha",
+    "pada": 4
+   },
+   {
+    "planet": "Mercury",
+    "rashi": {
+     "sign": "Scorpio",
+     "name": "Vrischika",
+     "hindi": "वृश्चिक"
+    },
+    "degreeInSign": 27.8,
+    "house": 7,
+    "nakshatra": "Jyeshtha",
+    "pada": 4
+   },
+   {
+    "planet": "Jupiter",
+    "rashi": {
+     "sign": "Leo",
+     "name": "Simha",
+     "hindi": "सिंह"
+    },
+    "degreeInSign": 18.6,
+    "house": 4,
+    "nakshatra": "Purva Phalguni",
+    "pada": 2
+   },
+   {
+    "planet": "Venus",
+    "rashi": {
+     "sign": "Virgo",
+     "name": "Kanya",
+     "hindi": "कन्या"
+    },
+    "degreeInSign": 20.6,
+    "house": 5,
+    "nakshatra": "Hasta",
+    "pada": 4
+   },
+   {
+    "planet": "Saturn",
+    "rashi": {
+     "sign": "Capricorn",
+     "name": "Makara",
+     "hindi": "मकर"
+    },
+    "degreeInSign": 8.3,
+    "house": 9,
+    "nakshatra": "Uttara Ashadha",
+    "pada": 4
+   },
+   {
+    "planet": "Rahu",
+    "rashi": {
+     "sign": "Sagittarius",
+     "name": "Dhanu",
+     "hindi": "धनु"
+    },
+    "degreeInSign": 18.2,
+    "house": 8,
+    "nakshatra": "Purva Ashadha",
+    "pada": 2
+   },
+   {
+    "planet": "Ketu",
+    "rashi": {
+     "sign": "Gemini",
+     "name": "Mithuna",
+     "hindi": "मिथुन"
+    },
+    "degreeInSign": 18.2,
+    "house": 2,
+    "nakshatra": "Ardra",
+    "pada": 4
+   }
+  ],
+  "navamsa": {
+   "lagna": {
+    "sign": "Aries",
+    "name": "Mesha",
+    "hindi": "मेष"
+   },
+   "planets": [
+    {
+     "planet": "Sun",
+     "rashi": {
+      "sign": "Leo",
+      "name": "Simha",
+      "hindi": "सिंह"
+     },
+     "house": 5
+    },
+    {
+     "planet": "Moon",
+     "rashi": {
+      "sign": "Taurus",
+      "name": "Vrishabha",
+      "hindi": "वृषभ"
+     },
+     "house": 2
+    },
+    {
+     "planet": "Mars",
+     "rashi": {
+      "sign": "Cancer",
+      "name": "Karka",
+      "hindi": "कर्क"
+     },
+     "house": 4
+    },
+    {
+     "planet": "Mercury",
+     "rashi": {
+      "sign": "Pisces",
+      "name": "Meena",
+      "hindi": "मीन"
+     },
+     "house": 12
+    },
+    {
+     "planet": "Jupiter",
+     "rashi": {
+      "sign": "Virgo",
+      "name": "Kanya",
+      "hindi": "कन्या"
+     },
+     "house": 6
+    },
+    {
+     "planet": "Venus",
+     "rashi": {
+      "sign": "Cancer",
+      "name": "Karka",
+      "hindi": "कर्क"
+     },
+     "house": 4
+    },
+    {
+     "planet": "Saturn",
+     "rashi": {
+      "sign": "Pisces",
+      "name": "Meena",
+      "hindi": "मीन"
+     },
+     "house": 12
+    },
+    {
+     "planet": "Rahu",
+     "rashi": {
+      "sign": "Virgo",
+      "name": "Kanya",
+      "hindi": "कन्या"
+     },
+     "house": 6
+    },
+    {
+     "planet": "Ketu",
+     "rashi": {
+      "sign": "Pisces",
+      "name": "Meena",
+      "hindi": "मीन"
+     },
+     "house": 12
+    }
+   ]
+  },
+  "stableSigns": [],
+  "dasha": {
+   "asOf": "2026-11-03",
+   "moonNakshatra": "Rohini",
+   "mahadasha": {
+    "lord": "Jupiter",
+    "start": "2024-01-20",
+    "end": "2040-01-20"
+   },
+   "antardasha": {
+    "lord": "Saturn",
+    "start": "2026-03-09",
+    "end": "2028-09-19"
+   }
+  },
+  "panchang": {
+   "convention": {
+    "id": "amanta-chaitradi",
+    "label": "Amanta months · Vikram Samvat (Chaitradi) · Lahiri sidereal",
+    "note": "Months run new moon to new moon and the year begins at Chaitra Shukla Pratipada (the Drik / Maharashtra-South convention). The Purnimanta month name is shown beside it."
+   },
+   "basis": "birth-time",
+   "reckonedAtUtc": "1991-11-22T12:45:00.000Z",
+   "vikramSamvat": 2048,
+   "masa": {
+    "name": "Kartika",
+    "hindi": "कार्तिक",
+    "adhika": false
+   },
+   "purnimantaMasa": {
+    "name": "Margashirsha",
+    "hindi": "मार्गशीर्ष",
+    "adhika": false
+   },
+   "paksha": "krishna",
+   "tithi": {
+    "number": 16,
+    "numberInPaksha": 1,
+    "name": "Pratipada",
+    "hindi": "प्रतिपदा",
+    "startLocal": "Fri, 22 Nov 1991, 04:26",
+    "endLocal": "Sat, 23 Nov 1991, 01:37",
+    "startUtc": "1991-11-21T22:56:53.923Z",
+    "endUtc": "1991-11-22T20:07:12.126Z"
+   },
+   "nakshatra": {
+    "name": "Rohini",
+    "pada": 2,
+    "lord": "Moon"
+   },
+   "moonRashi": "Taurus",
+   "yoga": "Shiva",
+   "karana": "Kaulava",
+   "vara": {
+    "name": "Friday",
+    "note": null
+   },
+   "sunrise": "06:49",
+   "sunset": "17:59",
+   "uncertain": false,
+   "uncertainties": [],
+   "notes": []
+  },
+  "timeKnown": true,
+  "limitations": [
+   "Rahu and Ketu are the mean lunar nodes.",
+   "Only the main chart (D1) and the Navamsa (D9) are calculated; other divisional charts, Shadbala and Ashtakavarga are not.",
+   "An error of a few minutes in birth time can move the Lagna: it advances about 1° every 4 minutes."
+  ],
+  "basis": [
+   "Sidereal (Nirayana) zodiac with the 23.74° Lahiri ayanamsa for your birth year.",
+   "Your birth time 18:15 in Asia/Kolkata (UTC+5.5) was converted to the UTC instant 1991-11-22T12:45:00.000Z.",
+   "Planet positions come from a high-precision astronomical ephemeris; the Lagna from your birthplace's latitude and longitude.",
+   "Houses are whole-sign: the Lagna sign is the 1st house."
+  ]
+ },
+ "ashtakoota": {
+  "total": 25.5,
+  "max": 36,
+  "kootas": [
+   {
+    "koota": "Varna",
+    "max": 1,
+    "score": 0,
+    "a": "Shudra",
+    "b": "Vaishya",
+    "note": "First person's class is lower than the second's."
+   },
+   {
+    "koota": "Vashya",
+    "max": 2,
+    "score": 1,
+    "a": "Manava",
+    "b": "Chatushpada",
+    "note": "Group of each Moon sign and how well the two groups influence each other."
+   },
+   {
+    "koota": "Tara",
+    "max": 3,
+    "score": 1.5,
+    "a": "Shatabhisha",
+    "b": "Rohini",
+    "note": "Counting from the first person's star the relation is favourable; from the second's it is unfavourable."
+   },
+   {
+    "koota": "Yoni",
+    "max": 4,
+    "score": 3,
+    "a": "Horse",
+    "b": "Serpent",
+    "note": "Different animal symbols (3 of 4 in the traditional grid)."
+   },
+   {
+    "koota": "Graha Maitri",
+    "max": 5,
+    "score": 5,
+    "a": "Saturn (lord of Aquarius)",
+    "b": "Venus (lord of Taurus)",
+    "note": "Friendship between the rulers of the two Moon signs."
+   },
+   {
+    "koota": "Gana",
+    "max": 6,
+    "score": 0,
+    "a": "Rakshasa",
+    "b": "Manushya",
+    "note": "Temperament type of each Nakshatra."
+   },
+   {
+    "koota": "Bhakoot",
+    "max": 7,
+    "score": 7,
+    "a": "Aquarius",
+    "b": "Taurus",
+    "note": "Moon signs are in a favourable position to each other."
+   },
+   {
+    "koota": "Nadi",
+    "max": 8,
+    "score": 8,
+    "a": "Adi",
+    "b": "Antya",
+    "note": "The two Nadis differ."
+   }
+  ],
+  "doshas": [
+   {
+    "name": "Nadi Dosha",
+    "present": false,
+    "cancelled": false,
+    "note": "Not present: the two Nadis differ."
+   },
+   {
+    "name": "Bhakoot Dosha",
+    "present": false,
+    "cancelled": false,
+    "note": "Not present."
+   }
+  ],
+  "band": "Good (25 to 31)",
+  "method": [
+   "Scored from each person's Moon sign and Nakshatra using the standard Parashari (North Indian) Ashtakoota tables.",
+   "Varna, Vashya, Tara, Gana and Graha Maitri depend on who is counted first, so the pair is ordered groom first when genders are given as male and female, otherwise in the order entered.",
+   "Yoni uses the full 14-by-14 animal grid (0 to 4 points).",
+   "Tara gives 1.5 points for each direction whose count (remainder after dividing by 9) is not 3, 5 or 7, the classical Vipat, Pratyak and Vadha taras.",
+   "Varna uses the common element rule: water signs Brahmin, fire Kshatriya, earth Vaishya, air Shudra. Some software swaps Vaishya and Shudra.",
+   "Vashya and Gana have more than one published table. This calculation uses one widely published Vashya grid and gives Gana 6 when the first person is Deva and the second Manushya (5 the other way round); other sources reverse that pair.",
+   "Because published tables differ, this score can differ from other Guna Milan calculators. It is a MyBhagya calculation and is not claimed to match any particular calculator.",
+   "Sagittarius and Capricorn Vashya groups are split at 15 degrees of the sign.",
+   "Dosha cancellations shown are the commonly cited classical ones; a family astrologer may apply more."
+  ],
+  "moons": {
+   "a": {
+    "sign": "Aquarius",
+    "nakshatra": "Shatabhisha",
+    "pada": 4
+   },
+   "b": {
+    "sign": "Taurus",
+    "nakshatra": "Rohini",
+    "pada": 2
+   }
+  }
+ },
+ "mangal": {
+  "a": {
+   "present": false,
+   "marsHouse": 9,
+   "note": "Mars is in house 9 from the Lagna, which is not one of the Mangal Dosha houses (1, 2, 4, 7, 8, 12)."
+  },
+  "b": {
+   "present": true,
+   "marsHouse": 7,
+   "note": "Mars is in house 7 from the Lagna, one of the houses (1, 2, 4, 7, 8, 12) that tradition calls Mangal Dosha."
+  },
+  "verdict": "Only one chart shows Mangal Dosha. Tradition suggests consulting an astrologer about remedies and exceptions."
+ }
+}

@@ -1065,6 +1065,9 @@ import zodiacAquarius from "@/assets/zodiac-gold/aquarius.png";
 import zodiacPisces from "@/assets/zodiac-gold/pisces.png";
 import { authedFetch, requireSignIn, SignInRequiredError } from "@/lib/authedFetch";
 import { AUTH_API_BASE_URL } from "@/lib/authClient";
+import GunaMilanPanel from "@/features/kundali/GunaMilanPanel";
+import LocationPicker from "@/features/ratna/LocationPicker";
+import type { PlaceResult } from "@/features/ratna/types";
 
 const css = `
   :root {
@@ -1398,8 +1401,8 @@ const YEARS = Array.from({ length: 120 }, (_, i) => new Date().getFullYear() - i
 
 // Gender is collected separately for each partner. It is optional and is not used in the Sun-sign comparison.
 const GENDER_OPTIONS = ["Male", "Female", "Other", "Prefer not to say"] as const;
-type Person = { name: string; gender: string; day: string; month: string; year: string };
-const empty = (): Person => ({ name: "", gender: "", day: "", month: "", year: "" });
+type Person = { name: string; gender: string; day: string; month: string; year: string; time: string; place: PlaceResult | null };
+const empty = (): Person => ({ name: "", gender: "", day: "", month: "", year: "", time: "", place: null });
 
 function getZodiac(day: number, month: number) {
   const signs: [string, number, number][] = [
@@ -1531,7 +1534,7 @@ const formCss = `
 `;
 
 function PersonForm({ idp, title, accentColor, data, onChange }: { idp: string; title: string; accentColor: string; data: Person; onChange: (p: Person) => void }) {
-  const up = (k: keyof Person, v: string) => onChange({ ...data, [k]: v });
+  const up = <K extends keyof Person>(k: K, v: Person[K]) => onChange({ ...data, [k]: v });
   return (
     <div style={{background:"#FBF5EC", border:`1px solid ${accentColor}33`, borderRadius:20, padding:"28px 24px"}}>
       <div style={{display:"flex", alignItems:"center", gap:14, marginBottom:24}}>
@@ -1572,6 +1575,18 @@ function PersonForm({ idp, title, accentColor, data, onChange }: { idp: string; 
           </select>
         </div>
       </div>
+
+      <div style={{marginTop:20}}>
+        <label htmlFor={`${idp}-time`} style={ccLabelStyle}>Birth Time <span style={{opacity:0.7, fontWeight:400}}>(for Guna Milan)</span></label>
+        <input id={`${idp}-time`} type="time" value={data.time} onChange={e => up("time", e.target.value)} style={ccInputStyle} />
+      </div>
+      <div style={{marginTop:20}}>
+        <span style={ccLabelStyle}>Birth Place <span style={{opacity:0.7, fontWeight:400}}>(for Guna Milan)</span></span>
+        <LocationPicker value={data.place} onSelect={v => up("place", v)} />
+      </div>
+      <p style={{marginTop:14, fontSize:13, lineHeight:1.5, color:"#6B4A37"}}>
+        Why we ask: the traditional Vedic Guna Milan score uses the Moon's Nakshatra, which changes about every day, so it needs the exact birth time and place of both people. Leave both blank to get the Sun sign comparison only.
+      </p>
     </div>
   );
 }
@@ -1593,7 +1608,7 @@ function ZodiacPortrait({ zodiac, color }: { zodiac: string; color: string }) {
 
 type Result = { p1: Person & { zodiac: string }; p2: Person & { zodiac: string } };
 
-function Results({ result, onReset }: { result: Result; onReset: () => void }) {
+function Results({ result, onReset, onAddDetails }: { result: Result; onReset: () => void; onAddDetails: () => void }) {
   const { p1, p2 } = result;
   const c = comparePair(p1.zodiac, p2.zodiac);
   const info1 = zodiacSigns.find(z => z.name === p1.zodiac);
@@ -1621,6 +1636,8 @@ function Results({ result, onReset }: { result: Result; onReset: () => void }) {
         <div aria-hidden="true" style={{fontSize:32, color:"#592209"}}>✦</div>
         <ZodiacPortrait zodiac={p2.zodiac} color="#E58A45"/>
       </div>
+
+      <GunaMilanPanel people={[p1,p2]} onAddDetails={onAddDetails}/>
 
       <div className="r-note" style={{...cardStyle, marginBottom:40, borderColor:"rgba(89,34,9,0.35)"}}>
         <div style={{...label, color:"#592209"}}>How this comparison was made</div>
@@ -1769,6 +1786,7 @@ function checkPerson(p: Person, who: string): string | null {
   const dt = new Date(year, month - 1, day);
   if (dt.getFullYear() !== year || dt.getMonth() !== month - 1 || dt.getDate() !== day) return `${who}: that date of birth doesn't exist. Please check the day, month and year.`;
   if (dt > new Date()) return `${who}: the date of birth can't be in the future.`;
+  if ((p.time && !p.place) || (!p.time && p.place)) return `${who}: for Guna Milan please enter both the birth time and the birth place, or leave both blank.`;
   return null;
 }
 
@@ -1858,7 +1876,7 @@ export default function App() {
           </>
         )}
         {phase==="results" && result && (
-          <Results result={result} onReset={()=>{setPhase("form");setResult(null);setP1(empty());setP2(empty());}}/>
+          <Results result={result} onAddDetails={()=>{setPhase("form");setResult(null);}} onReset={()=>{setPhase("form");setResult(null);setP1(empty());setP2(empty());}}/>
         )}
         {(phase==="form" || phase==="results") && <CompatibilityEducation/>}
       </div>
