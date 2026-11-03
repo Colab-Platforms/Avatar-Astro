@@ -87,6 +87,8 @@ export interface KundaliResult {
         nakshatra: string;
         pada: number;
       }[];
+  /** Navamsa (D9) chart: each graha's sign in the 9th-part chart. Only with an exact birth time. */
+  navamsa: null | { lagna: RashiRef; planets: { planet: Planet; rashi: RashiRef; house: number }[] };
   /** Signs that stay fixed across the whole birth date (unknown-time reading only). */
   stableSigns: { planet: Planet; rashi: RashiRef }[];
   dasha: DashaResult | null;
@@ -98,6 +100,12 @@ export interface KundaliResult {
 }
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
+
+/** Navamsa (D9) sign index of a sidereal longitude: count of 3°20' steps from 0° Aries, wrapped around the 12 signs. */
+export const navamsaSignIndex = (longitude: number): number => {
+  const lon = ((longitude % 360) + 360) % 360;
+  return Math.floor((lon * 9) / 30) % 12;
+};
 
 const uniqueSigns = (signs: Sign[]): Sign[] => SIGNS.filter((s) => signs.includes(s));
 
@@ -150,13 +158,23 @@ export const buildKundali = (input: CalculateInput, now: Date = new Date()): Kun
           pada: n.pada,
         };
       }),
+      navamsa: (() => {
+        const lagnaIdx = navamsaSignIndex(chart.ascendant.longitude);
+        return {
+          lagna: rashi(SIGNS[lagnaIdx]),
+          planets: PLANETS.map((p) => {
+            const idx = navamsaSignIndex(chart.planets[p].longitude);
+            return { planet: p, rashi: rashi(SIGNS[idx]), house: wholeSignHouse(lagnaIdx, idx) };
+          }),
+        };
+      })(),
       stableSigns: [],
       dasha: vimshottari(moon.longitude, inst.utc, now),
       panchang,
       timeKnown: true,
       limitations: [
         "Rahu and Ketu are the mean lunar nodes.",
-        "Divisional charts (such as Navamsa), Shadbala and Ashtakavarga are not calculated.",
+        "Only the main chart (D1) and the Navamsa (D9) are calculated; other divisional charts, Shadbala and Ashtakavarga are not.",
         "An error of a few minutes in birth time can move the Lagna: it advances about 1° every 4 minutes.",
       ],
       basis: [
@@ -212,6 +230,7 @@ export const buildKundali = (input: CalculateInput, now: Date = new Date()): Kun
     moon,
     lagna: null,
     planets: null,
+    navamsa: null,
     stableSigns: stableSignsForDate(date, timezone).map((s) => ({ planet: s.planet, rashi: rashi(s.sign) })),
     dasha: null,
     panchang: computePanchang({ localDate: input.dateOfBirth, time: null, place: input.place }),

@@ -20,6 +20,7 @@ const chart = (over: Partial<KundaliResult> = {}): KundaliResult => ({
     { planet: "Saturn", rashi: rashi("Capricorn", "Makara"), degreeInSign: 5, house: 7, nakshatra: "x", pada: 1 },
     { planet: "Jupiter", rashi: rashi("Capricorn", "Makara"), degreeInSign: 5, house: 7, nakshatra: "x", pada: 1 },
   ],
+  navamsa: null,
   stableSigns: [],
   dasha: { asOf: "2026-11-02", moonNakshatra: "Uttara Ashadha", mahadasha: { lord: "Venus", start: "2020-01-01", end: "2040-01-01" }, antardasha: { lord: "Saturn", start: "2026-01-01", end: "2028-01-01" } },
   panchang: {} as never,

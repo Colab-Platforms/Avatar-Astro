@@ -1,0 +1,195 @@
+{
+ "birth": {
+  "dateOfBirth": "2025-04-14",
+  "timeOfBirth": null,
+  "place": "Pune, Maharashtra, India",
+  "timeZone": "Asia/Kolkata",
+  "latitude": 18.5204,
+  "longitude": 73.8567,
+  "resolvedInstantUtc": null,
+  "utcOffsetMinutes": null
+ },
+ "method": {
+  "zodiac": "Sidereal (Nirayana)",
+  "ayanamsa": "Lahiri (Chitrapaksha), mean",
+  "ayanamsaDegrees": null,
+  "houses": "Not calculated: houses need an exact birth time",
+  "nodes": "Mean lunar node",
+  "engine": "astronomy-engine ephemeris",
+  "dateOfBirthIsCivil": true
+ },
+ "sun": {
+  "rashi": null,
+  "candidates": [
+   {
+    "sign": "Aries",
+    "name": "Mesha",
+    "hindi": "मेष"
+   },
+   {
+    "sign": "Pisces",
+    "name": "Meena",
+    "hindi": "मीन"
+   }
+  ],
+  "certain": false,
+  "degreeInSign": null,
+  "nakshatra": null
+ },
+ "moon": {
+  "rashi": {
+   "sign": "Libra",
+   "name": "Tula",
+   "hindi": "तुला"
+  },
+  "candidates": [
+   {
+    "sign": "Libra",
+    "name": "Tula",
+    "hindi": "तुला"
+   }
+  ],
+  "certain": true,
+  "degreeInSign": null,
+  "nakshatra": {
+   "name": "Swati",
+   "pada": null,
+   "lord": "Rahu"
+  }
+ },
+ "lagna": null,
+ "planets": null,
+ "navamsa": null,
+ "stableSigns": [
+  {
+   "planet": "Moon",
+   "rashi": {
+    "sign": "Libra",
+    "name": "Tula",
+    "hindi": "तुला"
+   }
+  },
+  {
+   "planet": "Mars",
+   "rashi": {
+    "sign": "Cancer",
+    "name": "Karka",
+    "hindi": "कर्क"
+   }
+  },
+  {
+   "planet": "Mercury",
+   "rashi": {
+    "sign": "Pisces",
+    "name": "Meena",
+    "hindi": "मीन"
+   }
+  },
+  {
+   "planet": "Jupiter",
+   "rashi": {
+    "sign": "Taurus",
+    "name": "Vrishabha",
+    "hindi": "वृषभ"
+   }
+  },
+  {
+   "planet": "Venus",
+   "rashi": {
+    "sign": "Pisces",
+    "name": "Meena",
+    "hindi": "मीन"
+   }
+  },
+  {
+   "planet": "Saturn",
+   "rashi": {
+    "sign": "Pisces",
+    "name": "Meena",
+    "hindi": "मीन"
+   }
+  },
+  {
+   "planet": "Rahu",
+   "rashi": {
+    "sign": "Pisces",
+    "name": "Meena",
+    "hindi": "मीन"
+   }
+  },
+  {
+   "planet": "Ketu",
+   "rashi": {
+    "sign": "Virgo",
+    "name": "Kanya",
+    "hindi": "कन्या"
+   }
+  }
+ ],
+ "dasha": null,
+ "panchang": {
+  "convention": {
+   "id": "amanta-chaitradi",
+   "label": "Amanta months · Vikram Samvat (Chaitradi) · Lahiri sidereal",
+   "note": "Months run new moon to new moon and the year begins at Chaitra Shukla Pratipada (the Drik / Maharashtra-South convention). The Purnimanta month name is shown beside it."
+  },
+  "basis": "sunrise",
+  "reckonedAtUtc": "2025-04-14T00:48:33.794Z",
+  "vikramSamvat": 2082,
+  "masa": {
+   "name": "Chaitra",
+   "hindi": "चैत्र",
+   "adhika": false
+  },
+  "purnimantaMasa": {
+   "name": "Vaishakha",
+   "hindi": "वैशाख",
+   "adhika": false
+  },
+  "paksha": "krishna",
+  "tithi": {
+   "number": 16,
+   "numberInPaksha": 1,
+   "name": "Pratipada",
+   "hindi": "प्रतिपदा",
+   "startLocal": "Sun, 13 Apr 2025, 05:52",
+   "endLocal": "Mon, 14 Apr 2025, 08:26",
+   "startUtc": "2025-04-13T00:22:55.612Z",
+   "endUtc": "2025-04-14T02:56:10.254Z"
+  },
+  "nakshatra": {
+   "name": "Swati",
+   "pada": 2,
+   "lord": "Rahu"
+  },
+  "moonRashi": "Libra",
+  "yoga": "Vajra",
+  "karana": "Kaulava",
+  "vara": {
+   "name": "Monday",
+   "note": "Reckoned from sunrise on the birth date. A birth before sunrise would belong to the previous weekday."
+  },
+  "sunrise": "06:18",
+  "sunset": "18:51",
+  "uncertain": true,
+  "uncertainties": [
+   "Tithi changes during this date (krishna 16 to krishna 17); the exact value needs your birth time.",
+   "Nakshatra pada changes during this date; the exact pada needs your birth time.",
+   "Yoga changes during this date (Vajra to Siddhi); the exact value needs your birth time.",
+   "Karana changes during this date (Kaulava to Gara); the exact value needs your birth time."
+  ],
+  "notes": [
+   "Birth time is unknown, so the Panchang is reckoned at local sunrise on your birth date (the traditional udaya reckoning)."
+  ]
+ },
+ "timeKnown": false,
+ "limitations": [
+  "Without an exact birth time the Lagna (ascendant), the twelve houses and planetary house placements are not calculated, and none is assumed.",
+  "The Moon stays in one sign on your birth date, so Chandra Rashi is certain, but the Moon's pada and the Vimshottari dasha start point need your birth time.",
+  "The Sun changes sign (Sankranti) on your birth date, so Surya Rashi depends on your birth time."
+ ],
+ "basis": [
+  "Sidereal (Nirayana) zodiac with the Lahiri ayanamsa.",
+  "The Sun and Moon were calculated at the start and end of 2025-04-14 at your birthplace (Asia/Kolkata); a sign is stated only if it is the same at both."
+ ]
+}

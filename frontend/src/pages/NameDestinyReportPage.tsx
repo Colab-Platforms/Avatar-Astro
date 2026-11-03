@@ -3,7 +3,6 @@ import AskDivyaSection from "@/features/guru/AskDivyaSection";
 import { FEATURES } from "@/data/featureCatalog";
 import { useFeatureTitle } from "@/hooks/useFeatureTitle";
 import NameDestinyReport from "@/components/NameDestinyReport";
-import FeatureIntro from "@/components/FeatureIntro";
 import NameNumerologyEducation from "@/components/NameNumerologyEducation";
 import { buildProfile, checkName, type NameProfile } from "@/lib/numerology";
 import { authedFetch, requireSignIn, SignInRequiredError } from "@/lib/authedFetch";
@@ -97,16 +96,9 @@ export default function NameDestinyReportPage() {
             <p className="mx-auto max-w-2xl text-base leading-relaxed text-[#4A2E1F] sm:text-lg">{FEATURES.numerology.subtitle}</p>
           </header>
 
-          <FeatureIntro
-            className="mb-4"
-            description="Explore what the letters of your name and the digits of your birth date add up to in numerology. Naamank Jyotish calculates your Destiny, Soul Urge, Personality, Chaldean, Life Path and Birth numbers, shows every step of the working, and gives the traditional meaning of each."
-            steps={[
-              { title: "Enter Your Details", text: "Provide your name in English letters and your date of birth. Your last name is optional." },
-              { title: "See the Calculations", text: "Each number is worked out from your letters or birth digits, with the arithmetic shown step by step." },
-              { title: "Explore the Meanings", text: "Read the traditional theme for each number, and try other spellings to see how the name numbers change." },
-            ]}
-            disclaimer="Numerology is a traditional belief system and is not scientifically proven. Readings are for reflection, not predictions or advice."
-          />
+          <p className="mx-auto mb-4 max-w-2xl px-4 text-center text-base leading-relaxed text-foreground/75 sm:text-lg">
+            Explore what the letters of your name and the digits of your birth date add up to in numerology. Naamank Jyotish calculates your Destiny, Soul Urge, Personality, Chaldean, Life Path and Birth numbers, shows every step of the working, and gives the traditional meaning of each.
+          </p>
 
           <form id="destiny-form" onSubmit={handleSubmit} noValidate style={{ maxWidth: 600, margin: "0 auto", padding: "32px 0 20px", scrollMarginTop: 100 }}>
             <div style={{ textAlign: "center", marginBottom: 36 }}>

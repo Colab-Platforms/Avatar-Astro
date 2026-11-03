@@ -47,6 +47,7 @@ export interface KundaliResult {
   planets:
     | null
     | { planet: string; rashi: RashiRef; degreeInSign: number; house: number; nakshatra: string; pada: number }[];
+  navamsa: null | { lagna: RashiRef; planets: { planet: string; rashi: RashiRef; house: number }[] };
   stableSigns: { planet: string; rashi: RashiRef }[];
   dasha: null | {
     asOf: string;
@@ -66,3 +67,16 @@ export interface KundaliRequest {
   timeUnknown: boolean;
   place: Pick<PlaceResult, "name" | "admin1" | "country" | "latitude" | "longitude" | "timezone">;
 }
+
+export interface KootaScore { koota: string; max: number; score: number; a: string; b: string; note: string }
+export interface MatchDosha { name: "Nadi Dosha" | "Bhakoot Dosha"; present: boolean; cancelled: boolean; note: string }
+export interface MatchResult {
+  a: KundaliResult;
+  b: KundaliResult;
+  ashtakoota: {
+    total: number; max: 36; kootas: KootaScore[]; doshas: MatchDosha[]; band: string; method: string[];
+    moons: { a: { sign: string; nakshatra: string; pada: number }; b: { sign: string; nakshatra: string; pada: number } };
+  };
+  mangal: { a: { present: boolean; marsHouse: number; note: string }; b: { present: boolean; marsHouse: number; note: string }; verdict: string };
+}
+export type MatchPerson = KundaliRequest;
