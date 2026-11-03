@@ -236,7 +236,7 @@ test("life-path: valid request -> short structured reading, prompt is guarded", 
   assert.match(prompt, /interested in: career/);
   assert.equal(upstreamCalls[0].init.headers.Authorization, `Bearer ${SECRET}`);
   const sent = JSON.parse(upstreamCalls[0].init.body);
-  assert.equal(sent.max_tokens, 900); // a ceiling that leaves room for models that think first
+  assert.equal(sent.max_tokens, 3000); // a ceiling that leaves room for models that think first
   assert.ok(!/Hinglish/.test(sent.messages[0].content)); // plain English was asked for
 });
 

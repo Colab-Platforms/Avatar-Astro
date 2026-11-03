@@ -127,7 +127,7 @@ export function featureGate(feature: string) {
     try {
       if (!(await isFeatureEnabled(featureSettingKey(feature)))) {
         res.locals.__rejectReason = "disabled";
-        const message = "This tool is temporarily unavailable. Please try again later.";
+        const message = "This feature is temporarily unavailable. Please try again later.";
         return res.status(503).json({ success: false, status: false, error: message, message, code: "FEATURE_DISABLED" });
       }
     } catch {

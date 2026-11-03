@@ -1804,7 +1804,7 @@ export default function App() {
         const body = await checkRes.json().catch(() => null);
         if (run !== runRef.current) return;
         setPhase("form");
-        setError(body?.message || "This tool is temporarily unavailable. Please try again later.");
+        setError(body?.message || "This feature is temporarily unavailable. Please try again later.");
         return;
       }
     } catch (err) {
