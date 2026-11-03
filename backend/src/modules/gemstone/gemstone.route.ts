@@ -1,3 +1,4 @@
+import { buildMatch } from "./match.js";
 import { Router, type Request, type Response, type NextFunction } from "express";
 import { sendResponse } from "@/utils/responseUtils.js";
 import STATUS_CODES from "@/utils/statusCodes.js";
@@ -102,6 +103,21 @@ router.post("/kundali", auth("USER"), limiter(20), (req, res) => {
       return;
     }
     console.error("Kundali calculation failed:", e);
+    sendResponse(res, false, null, "We could not complete the calculation. Please try again.", STATUS_CODES.SERVER_ERROR);
+  }
+});
+
+/** Jodi Jyotish: Ashtakoota (Guna Milan) + Mangal Dosha for two people. Needs both birth times; never estimates a score. */
+router.post("/match", auth("USER"), limiter(20), (req, res) => {
+  try {
+    const { a, b } = (req.body ?? {}) as { a?: unknown; b?: unknown };
+    sendResponse(res, true, buildMatch(a, b), "Calculated");
+  } catch (e) {
+    if (e instanceof ValidationError || e instanceof BirthTimeError || (e instanceof Error && /coordinates|latitude/i.test(e.message))) {
+      sendResponse(res, false, null, (e as Error).message, STATUS_CODES.BAD_REQUEST);
+      return;
+    }
+    console.error("Match calculation failed:", e);
     sendResponse(res, false, null, "We could not complete the calculation. Please try again.", STATUS_CODES.SERVER_ERROR);
   }
 });

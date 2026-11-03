@@ -120,3 +120,44 @@ describe("validation", () => {
     }
   });
 });
+
+describe("Navamsa (D9)", () => {
+  test("has a sign for every graha and a lagna, and 3°20' steps advance one sign", async () => {
+    const { navamsaSignIndex } = await import("../kundali.js");
+    assert.equal(navamsaSignIndex(0), 0); // 0° Aries -> Aries
+    assert.equal(navamsaSignIndex(3.4), 1); // second navamsa of Aries -> Taurus
+    assert.equal(navamsaSignIndex(30), 9); // 0° Taurus -> Capricorn
+    assert.equal(navamsaSignIndex(359.9), 11); // last navamsa of Pisces -> Pisces
+    const k = run("1990-05-15", "10:30");
+    assert.equal(k.navamsa?.planets.length, 9);
+    assert.ok(k.navamsa?.lagna.sign);
+    assert.equal(run("1990-05-15", null).navamsa, null);
+  });
+});
+
+describe("D1 and D9 are consistent with the calculated longitudes", () => {
+  test("Navamsa sign equals the classical start-sign rule (movable: same sign, fixed: 9th, dual: 5th) for every 3°20' step", async () => {
+    const { navamsaSignIndex } = await import("../kundali.js");
+    for (let lon = 0.01; lon < 360; lon += 0.37) {
+      const sign = Math.floor(lon / 30);
+      const within = (lon % 30) / (30 / 9);
+      if (Math.abs(within - Math.round(within)) < 1e-6) continue; // exactly on a step boundary: float noise
+      const step = Math.floor(within); // 0..8 inside the sign
+      const start = [0, 8, 4][sign % 3 === 0 ? 0 : sign % 3 === 1 ? 1 : 2] // movable, fixed, dual
+      const classical = (sign + start + step) % 12;
+      assert.equal(navamsaSignIndex(lon), classical, `lon ${lon}`);
+    }
+  });
+
+  test("every graha's house equals its sign counted from the Lagna, in both D1 and D9 (1947 Delhi chart)", () => {
+    const k = run("1947-08-15", "00:00");
+    const idx = (s: string) => SIGNS.indexOf(s as (typeof SIGNS)[number]);
+    const lagna = idx(k.lagna!.rashi.sign);
+    for (const p of k.planets!) assert.equal(p.house, ((idx(p.rashi.sign) - lagna + 12) % 12) + 1, `D1 ${p.planet}`);
+    const nLagna = idx(k.navamsa!.lagna.sign);
+    for (const p of k.navamsa!.planets) assert.equal(p.house, ((idx(p.rashi.sign) - nLagna + 12) % 12) + 1, `D9 ${p.planet}`);
+    // Rahu and Ketu are always 7 houses apart
+    const r = k.planets!.find((p) => p.planet === "Rahu")!, ke = k.planets!.find((p) => p.planet === "Ketu")!;
+    assert.equal(((ke.house - r.house + 12) % 12), 6);
+  });
+});

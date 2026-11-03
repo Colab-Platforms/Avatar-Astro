@@ -1,0 +1,351 @@
+{
+ "birth": {
+  "dateOfBirth": "1990-05-15",
+  "timeOfBirth": "10:30",
+  "place": "Pune, Maharashtra, India",
+  "timeZone": "Asia/Kolkata",
+  "latitude": 18.5204,
+  "longitude": 73.8567,
+  "resolvedInstantUtc": "1990-05-15T05:00:00.000Z",
+  "utcOffsetMinutes": 330
+ },
+ "method": {
+  "zodiac": "Sidereal (Nirayana)",
+  "ayanamsa": "Lahiri (Chitrapaksha), mean",
+  "ayanamsaDegrees": 23.7185,
+  "houses": "Whole sign (Lagna sign = 1st house)",
+  "nodes": "Mean lunar node",
+  "engine": "astronomy-engine ephemeris",
+  "dateOfBirthIsCivil": true
+ },
+ "sun": {
+  "rashi": {
+   "sign": "Taurus",
+   "name": "Vrishabha",
+   "hindi": "वृषभ"
+  },
+  "candidates": [
+   {
+    "sign": "Taurus",
+    "name": "Vrishabha",
+    "hindi": "वृषभ"
+   }
+  ],
+  "certain": true,
+  "degreeInSign": 0.4,
+  "nakshatra": {
+   "name": "Krittika",
+   "pada": 2,
+   "lord": "Sun"
+  }
+ },
+ "moon": {
+  "rashi": {
+   "sign": "Sagittarius",
+   "name": "Dhanu",
+   "hindi": "धनु"
+  },
+  "candidates": [
+   {
+    "sign": "Sagittarius",
+    "name": "Dhanu",
+    "hindi": "धनु"
+   }
+  ],
+  "certain": true,
+  "degreeInSign": 29.8,
+  "nakshatra": {
+   "name": "Uttara Ashadha",
+   "pada": 1,
+   "lord": "Sun"
+  }
+ },
+ "lagna": {
+  "rashi": {
+   "sign": "Cancer",
+   "name": "Karka",
+   "hindi": "कर्क"
+  },
+  "degreeInSign": 3.1,
+  "nakshatra": {
+   "name": "Punarvasu",
+   "pada": 4,
+   "lord": "Jupiter"
+  }
+ },
+ "planets": [
+  {
+   "planet": "Sun",
+   "rashi": {
+    "sign": "Taurus",
+    "name": "Vrishabha",
+    "hindi": "वृषभ"
+   },
+   "degreeInSign": 0.4,
+   "house": 11,
+   "nakshatra": "Krittika",
+   "pada": 2
+  },
+  {
+   "planet": "Moon",
+   "rashi": {
+    "sign": "Sagittarius",
+    "name": "Dhanu",
+    "hindi": "धनु"
+   },
+   "degreeInSign": 29.8,
+   "house": 6,
+   "nakshatra": "Uttara Ashadha",
+   "pada": 1
+  },
+  {
+   "planet": "Mars",
+   "rashi": {
+    "sign": "Aquarius",
+    "name": "Kumbha",
+    "hindi": "कुम्भ"
+   },
+   "degreeInSign": 24.4,
+   "house": 8,
+   "nakshatra": "Purva Bhadrapada",
+   "pada": 2
+  },
+  {
+   "planet": "Mercury",
+   "rashi": {
+    "sign": "Aries",
+    "name": "Mesha",
+    "hindi": "मेष"
+   },
+   "degreeInSign": 14.3,
+   "house": 10,
+   "nakshatra": "Bharani",
+   "pada": 1
+  },
+  {
+   "planet": "Jupiter",
+   "rashi": {
+    "sign": "Gemini",
+    "name": "Mithuna",
+    "hindi": "मिथुन"
+   },
+   "degreeInSign": 15.8,
+   "house": 12,
+   "nakshatra": "Ardra",
+   "pada": 3
+  },
+  {
+   "planet": "Venus",
+   "rashi": {
+    "sign": "Pisces",
+    "name": "Meena",
+    "hindi": "मीन"
+   },
+   "degreeInSign": 18.8,
+   "house": 9,
+   "nakshatra": "Revati",
+   "pada": 1
+  },
+  {
+   "planet": "Saturn",
+   "rashi": {
+    "sign": "Capricorn",
+    "name": "Makara",
+    "hindi": "मकर"
+   },
+   "degreeInSign": 1.5,
+   "house": 7,
+   "nakshatra": "Uttara Ashadha",
+   "pada": 2
+  },
+  {
+   "planet": "Rahu",
+   "rashi": {
+    "sign": "Capricorn",
+    "name": "Makara",
+    "hindi": "मकर"
+   },
+   "degreeInSign": 17.6,
+   "house": 7,
+   "nakshatra": "Shravana",
+   "pada": 3
+  },
+  {
+   "planet": "Ketu",
+   "rashi": {
+    "sign": "Cancer",
+    "name": "Karka",
+    "hindi": "कर्क"
+   },
+   "degreeInSign": 17.6,
+   "house": 1,
+   "nakshatra": "Ashlesha",
+   "pada": 1
+  }
+ ],
+ "navamsa": {
+  "lagna": {
+   "sign": "Cancer",
+   "name": "Karka",
+   "hindi": "कर्क"
+  },
+  "planets": [
+   {
+    "planet": "Sun",
+    "rashi": {
+     "sign": "Capricorn",
+     "name": "Makara",
+     "hindi": "मकर"
+    },
+    "house": 7
+   },
+   {
+    "planet": "Moon",
+    "rashi": {
+     "sign": "Sagittarius",
+     "name": "Dhanu",
+     "hindi": "धनु"
+    },
+    "house": 6
+   },
+   {
+    "planet": "Mars",
+    "rashi": {
+     "sign": "Taurus",
+     "name": "Vrishabha",
+     "hindi": "वृषभ"
+    },
+    "house": 11
+   },
+   {
+    "planet": "Mercury",
+    "rashi": {
+     "sign": "Leo",
+     "name": "Simha",
+     "hindi": "सिंह"
+    },
+    "house": 2
+   },
+   {
+    "planet": "Jupiter",
+    "rashi": {
+     "sign": "Aquarius",
+     "name": "Kumbha",
+     "hindi": "कुम्भ"
+    },
+    "house": 8
+   },
+   {
+    "planet": "Venus",
+    "rashi": {
+     "sign": "Sagittarius",
+     "name": "Dhanu",
+     "hindi": "धनु"
+    },
+    "house": 6
+   },
+   {
+    "planet": "Saturn",
+    "rashi": {
+     "sign": "Capricorn",
+     "name": "Makara",
+     "hindi": "मकर"
+    },
+    "house": 7
+   },
+   {
+    "planet": "Rahu",
+    "rashi": {
+     "sign": "Gemini",
+     "name": "Mithuna",
+     "hindi": "मिथुन"
+    },
+    "house": 12
+   },
+   {
+    "planet": "Ketu",
+    "rashi": {
+     "sign": "Sagittarius",
+     "name": "Dhanu",
+     "hindi": "धनु"
+    },
+    "house": 6
+   }
+  ]
+ },
+ "stableSigns": [],
+ "dasha": {
+  "asOf": "2026-11-03",
+  "moonNakshatra": "Uttara Ashadha",
+  "mahadasha": {
+   "lord": "Rahu",
+   "start": "2011-12-08",
+   "end": "2029-12-08"
+  },
+  "antardasha": {
+   "lord": "Sun",
+   "start": "2026-06-27",
+   "end": "2027-05-21"
+  }
+ },
+ "panchang": {
+  "convention": {
+   "id": "amanta-chaitradi",
+   "label": "Amanta months · Vikram Samvat (Chaitradi) · Lahiri sidereal",
+   "note": "Months run new moon to new moon and the year begins at Chaitra Shukla Pratipada (the Drik / Maharashtra-South convention). The Purnimanta month name is shown beside it."
+  },
+  "basis": "birth-time",
+  "reckonedAtUtc": "1990-05-15T05:00:00.000Z",
+  "vikramSamvat": 2047,
+  "masa": {
+   "name": "Vaishakha",
+   "hindi": "वैशाख",
+   "adhika": false
+  },
+  "purnimantaMasa": {
+   "name": "Jyeshtha",
+   "hindi": "ज्येष्ठ",
+   "adhika": false
+  },
+  "paksha": "krishna",
+  "tithi": {
+   "number": 20,
+   "numberInPaksha": 5,
+   "name": "Panchami",
+   "hindi": "पंचमी",
+   "startLocal": "Mon, 14 May 1990, 10:01",
+   "endLocal": "Tue, 15 May 1990, 11:40",
+   "startUtc": "1990-05-14T04:31:55.434Z",
+   "endUtc": "1990-05-15T06:10:08.664Z"
+  },
+  "nakshatra": {
+   "name": "Uttara Ashadha",
+   "pada": 1,
+   "lord": "Sun"
+  },
+  "moonRashi": "Sagittarius",
+  "yoga": "Shubha",
+  "karana": "Taitila",
+  "vara": {
+   "name": "Tuesday",
+   "note": null
+  },
+  "sunrise": "06:01",
+  "sunset": "19:00",
+  "uncertain": false,
+  "uncertainties": [],
+  "notes": []
+ },
+ "timeKnown": true,
+ "limitations": [
+  "Rahu and Ketu are the mean lunar nodes.",
+  "Only the main chart (D1) and the Navamsa (D9) are calculated; other divisional charts, Shadbala and Ashtakavarga are not.",
+  "An error of a few minutes in birth time can move the Lagna: it advances about 1° every 4 minutes."
+ ],
+ "basis": [
+  "Sidereal (Nirayana) zodiac with the 23.72° Lahiri ayanamsa for your birth year.",
+  "Your birth time 10:30 in Asia/Kolkata (UTC+5.5) was converted to the UTC instant 1990-05-15T05:00:00.000Z.",
+  "Planet positions come from a high-precision astronomical ephemeris; the Lagna from your birthplace's latitude and longitude.",
+  "Houses are whole-sign: the Lagna sign is the 1st house."
+ ]
+}

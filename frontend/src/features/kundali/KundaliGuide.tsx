@@ -1,5 +1,7 @@
 import type { KundaliResult } from "./types";
 import { buildKundaliGuide, KUNDALI_TERMS, type Insight } from "./kundaliInsights";
+import { ExplainTerms } from "@/components/astrology/TermInfo";
+import { findTerms } from "@/lib/astroGlossary";
 
 // "Your chart in plain words": sections built from the calculated chart. Each point shows the calculated FACT first and the
 // traditional MEANING second, so a reader can always tell what the chart says from what tradition says about it.
@@ -21,6 +23,7 @@ const Block = ({ title, question, items, testId }: { title: string; question: st
         ))}
       </ul>
     )}
+    <ExplainTerms terms={findTerms([title, question, ...items.flatMap((i) => [i.title, i.fact, i.meaning])].join(" "))} />
   </section>
 );
 
@@ -34,6 +37,7 @@ export const KundaliGuide = ({ k }: { k: KundaliResult }) => {
           A Janma Kundali is a map of the sky at your exact time and place of birth. Jyotish reads it to describe your temperament, the areas of life that get more attention, and the periods you are passing through.
           It shows tendencies for reflection. It does not promise outcomes.
         </p>
+        <ExplainTerms terms={["Janma Kundali", "Graha", "Bhava (house)"]} />
         <p className="mt-2 text-sm leading-relaxed text-[#4A2E1F]">
           Each point below has two parts: <strong>In your chart</strong> is calculated from your birth details, and <strong>Traditionally</strong> is what Jyotish says about it in general.
         </p>
@@ -49,6 +53,7 @@ export const KundaliGuide = ({ k }: { k: KundaliResult }) => {
       {g.notes.length > 0 && (
         <ul className="list-disc space-y-1 rounded-2xl border border-[#592209]/20 bg-[#FBF5EC] p-4 pl-8 text-[15.5px] text-[#301607]" data-testid="kundali-guide-notes">
           {g.notes.map((n) => <li key={n}>{n}</li>)}
+          <li className="list-none"><ExplainTerms terms={findTerms(g.notes.join(" "))} /></li>
         </ul>
       )}
 
