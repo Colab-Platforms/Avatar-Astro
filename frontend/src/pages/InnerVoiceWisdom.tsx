@@ -6,7 +6,6 @@ import { useFeatureTitle } from "@/hooks/useFeatureTitle";
 import { Link } from "react-router-dom";
 import { BookOpen, Bookmark, Check, Compass, Copy, Leaf, Lightbulb, Link2, RotateCcw, Sparkles, type LucideIcon } from "lucide-react";
 import LotusOm from "@/components/ai-guru/LotusOm";
-import FeatureIntro from "@/components/FeatureIntro";
 import { useAuthStore } from "@/store/authStore";
 import { requireSignIn } from "@/lib/authedFetch";
 import { fetchWisdom as requestWisdom, ShlokaError, shareText, MAX_SITUATION_CHARS } from "@/lib/shlokaWisdom";
@@ -15,12 +14,18 @@ import { fetchWisdom as requestWisdom, ShlokaError, shareText, MAX_SITUATION_CHA
 
 const CSS = `
 *{box-sizing:border-box;}
-.ivw-app{min-height:100vh;background:#FBF5EC;color:#301607;font-family:'DM Sans', system-ui, sans-serif;overflow-x:hidden;position:relative;}
+.ivw-app{min-height:100vh;background:linear-gradient(180deg,#FBF5EC 0%,#FAF1E1 55%,#F4E2C0 100%);color:#301607;font-family:'DM Sans', system-ui, sans-serif;overflow-x:hidden;position:relative;}
 .ivw-stars{position:fixed;inset:0;pointer-events:none;z-index:0;}
 .ivw-star{position:absolute;border-radius:50%;background:rgba(89,34,9,0.25);animation:twk var(--d,3s) ease-in-out infinite var(--dl,0s);opacity:var(--op,.4);}
 @keyframes twk{0%,100%{opacity:var(--op);transform:scale(1);}50%{opacity:.05;transform:scale(.2);}}
 .ivw-nb{position:fixed;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:0;}
-.ivw-wrap{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:70px 24px 100px;}
+.ivw-wrap{position:relative;max-width:1180px;margin:0 auto;padding:78px 32px 100px;}
+@media(max-width:600px){.ivw-wrap{padding:72px 16px 90px;}}
+.ivw-formwrap{max-width:860px;margin:0 auto;}
+.ivw-faq{max-width:760px;margin:36px auto 0;}
+.ivw-deco{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
+.ivw-glow{position:absolute;border-radius:50%;filter:blur(64px);}
+.ivw-ring{position:absolute;border-radius:50%;border:1px solid rgba(184,137,43,.2);}
 
 /* Back */
 .ivw-back{display:inline-flex;align-items:center;gap:6px;font-family:'DM Sans', system-ui, sans-serif;font-size:10px;letter-spacing:2px;color:#592209;text-transform:uppercase;text-decoration:none;margin-bottom:32px;transition:color .3s;}
@@ -34,23 +39,23 @@ const CSS = `
 
 /* Scripture pills */
 .ivw-pills{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:28px;}
-.ivw-pill{background:rgba(89,34,9,0.05);border:1px solid rgba(89,34,9,0.05);border-radius:50px;padding:8px 20px;font-family:'DM Sans', system-ui, sans-serif;font-size:10px;letter-spacing:2px;color:rgba(48,22,7,0.75);text-transform:uppercase;cursor:pointer;transition:all .3s;}
-.ivw-pill:hover{border-color:rgba(89,34,9,.4);}
-.ivw-pill.on{background:rgba(89,34,9,.14);border-color:rgba(89,34,9,.5);color:#592209;}
+.ivw-pill{background:#FFFBF3;border:1px solid rgba(184,137,43,.45);border-radius:50px;padding:8px 20px;font-family:'DM Sans', system-ui, sans-serif;font-size:10px;letter-spacing:2px;color:rgba(48,22,7,0.75);text-transform:uppercase;cursor:pointer;transition:all .3s;}
+.ivw-pill:hover{border-color:#B8892B;background:#FFF3D6;}
+.ivw-pill.on{background:linear-gradient(90deg,#592209,#7A3515);border-color:#592209;color:#FBF1DC;}
 
 /* Form card */
-.ivw-form{background:rgba(89,34,9,0.2);border:1px solid rgba(89,34,9,0.2);border-radius:24px;padding:32px;}
-.ivw-flabel{font-family:'DM Sans', system-ui, sans-serif;font-size:10px;letter-spacing:3px;color:#301607;text-transform:uppercase;display:block;margin-bottom:12px;}
-.ivw-ta{width:100%;background:rgba(89,34,9,0.05);border:1px solid rgba(89,34,9,0.05);border-radius:14px;padding:18px;color:#301607;font-family:'DM Sans', system-ui, sans-serif;font-size:16px;line-height:1.7;resize:vertical;min-height:130px;outline:none;transition:border .3s;margin-bottom:20px;}
-.ivw-ta:focus{border-color:#592209;box-shadow:0 0 0 3px rgba(89,34,9,.1);}
-.ivw-ta::placeholder{color:rgba(48,22,7,0.75);font-size:14px;}
+.ivw-form{background:linear-gradient(165deg,#FFFBF3 0%,#F8EBD6 100%);border:1px solid rgba(184,137,43,.45);border-radius:28px;padding:32px;box-shadow:0 24px 54px -32px rgba(89,34,9,.5),inset 0 0 0 6px rgba(255,251,243,.9),inset 0 0 0 7px rgba(229,138,69,.2);}
+.ivw-flabel{font-family:'DM Sans', system-ui, sans-serif;font-size:11px;font-weight:600;letter-spacing:3px;color:#592209;text-transform:uppercase;display:block;margin-bottom:12px;}
+.ivw-ta{width:100%;background:#fff;border:1px solid rgba(89,34,9,.2);border-radius:14px;padding:18px;color:#301607;font-family:'DM Sans', system-ui, sans-serif;font-size:16px;line-height:1.7;resize:vertical;min-height:130px;outline:none;transition:border .3s;margin-bottom:20px;}
+.ivw-ta:focus{border-color:#B8892B;box-shadow:0 0 0 3px rgba(184,137,43,.25);}
+.ivw-ta::placeholder{color:rgba(48,22,7,.6);font-size:14px;}
 
 /* Quick prompts */
 .ivw-qps{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px;}
-.ivw-qp{background:rgba(89,34,9,.07);border:1px solid rgba(89,34,9,.2);border-radius:50px;padding:8px 16px;font-family:'DM Sans', system-ui, sans-serif;font-style:italic;font-size:15px;color:rgba(48,22,7,0.75);cursor:pointer;transition:all .3s;}
-.ivw-qp:hover{background:rgba(89,34,9,.16);color:#301607;border-color:rgba(89,34,9,.4);}
+.ivw-qp{background:#FFFBF3;border:1px solid rgba(184,137,43,.5);border-radius:50px;padding:8px 16px;font-family:'DM Sans', system-ui, sans-serif;font-style:italic;font-size:15px;color:#4A2E1F;cursor:pointer;transition:all .3s;}
+.ivw-qp:hover{background:#FFF3D6;color:#301607;border-color:#B8892B;transform:translateY(-1px);}
 
-.ivw-btn{width:100%;background:#592209;color:#F5E9D6;border:none;border-radius:14px;padding:18px;font-family:'DM Sans', system-ui, sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;font-weight:700;transition:all .3s;}
+.ivw-btn{width:100%;background:linear-gradient(90deg,#592209,#7A3515);box-shadow:0 12px 26px -14px rgba(89,34,9,.7);font-size:11px;color:#F5E9D6;border:none;border-radius:14px;padding:18px;font-family:'DM Sans', system-ui, sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;font-weight:700;transition:all .3s;}
 .ivw-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 12px 40px rgba(89,34,9,.4);}
 .ivw-btn:disabled{opacity:.55;cursor:not-allowed;}
 .ivw-err{background:rgba(89,34,9,.08);border:1px solid rgba(89,34,9,.25);border-radius:12px;padding:16px;color:#592209;font-family:'DM Sans', system-ui, sans-serif;font-size:10px;text-align:center;margin-top:16px;}
@@ -84,9 +89,21 @@ const CSS = `
 .ivw-wbw{font-family:'DM Sans', system-ui, sans-serif;font-size:13px;color:#4A2E1F;line-height:1.9;max-width:660px;margin:0 auto;}
 
 /* Info sections: small boxes side by side */
-.ivw-sections{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:22px;}
-@media (max-width:640px){.ivw-sections{grid-template-columns:1fr;}}
-.ivw-sections > .ivw-sec:last-child:nth-child(odd){grid-column:1/-1;}
+.ivw-sections{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:16px;margin-bottom:22px;}
+.ivw-sections>.ivw-sec{grid-column:span 2;}
+/* a short last row stretches to fill the width instead of leaving a gap */
+.ivw-sections>.ivw-sec:last-child:nth-child(3n+1){grid-column:span 6;}
+.ivw-sections>.ivw-sec:nth-last-child(2):nth-child(3n+1),.ivw-sections>.ivw-sec:last-child:nth-child(3n+2){grid-column:span 3;}
+@media (max-width:900px){
+  .ivw-sections{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .ivw-sections>.ivw-sec,.ivw-sections>.ivw-sec:nth-last-child(2):nth-child(3n+1),.ivw-sections>.ivw-sec:last-child:nth-child(3n+2){grid-column:auto;}
+  .ivw-sections>.ivw-sec:last-child:nth-child(odd){grid-column:1/-1;}
+}
+.ivw-shloka{max-width:1000px;margin-left:auto;margin-right:auto;}
+.ivw-mantra{max-width:780px;margin-left:auto;margin-right:auto;}
+.ivw-btns{justify-content:center;}
+@media (max-width:640px){.ivw-sections{grid-template-columns:1fr;}.ivw-sections>.ivw-sec:last-child:nth-child(odd){grid-column:auto;}}
+
 
 .ivw-sec{--tint:#F5E9D6;--accent:#592209;position:relative;border-radius:20px;padding:22px 22px 24px;background:var(--tint);border:1px solid rgba(229,138,69,.38);box-shadow:0 8px 24px -18px rgba(89,34,9,.45);transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease;}
 .ivw-sec::before{content:"";position:absolute;left:22px;right:22px;top:0;height:3px;border-radius:0 0 4px 4px;background:var(--accent);opacity:.55;}
@@ -124,7 +141,7 @@ const CSS = `
 
 /* Saved */
 .ivw-saved-hdr{font-family:'DM Sans', system-ui, sans-serif;font-size:10px;letter-spacing:3px;color:#301607;text-transform:uppercase;margin:32px 0 14px;}
-.ivw-saved-card{background:rgba(89,34,9,0.2);border:1px solid rgba(89,34,9,0.2);border-radius:14px;padding:16px 20px;margin-bottom:10px;cursor:pointer;transition:border .3s;}
+.ivw-saved-card{background:#FFFBF3;border:1px solid rgba(184,137,43,.4);box-shadow:0 8px 22px -18px rgba(89,34,9,.5);border-radius:16px;padding:16px 20px;margin-bottom:10px;cursor:pointer;transition:border .3s;}
 .ivw-saved-card:hover{border-color:rgba(89,34,9,.25);}
 .ivw-saved-src{font-family:'DM Sans', system-ui, sans-serif;font-size:10px;letter-spacing:2px;color:#592209;margin-bottom:5px;}
 .ivw-saved-prev{font-size:15px;color:#301607;font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -242,29 +259,48 @@ export default function InnerVoiceWisdom() {
     <div className="ivw-app">
       <style>{CSS}</style>
       <StarCanvas />
+      {/* Soft light and rings in the corners; purely decorative. */}
+      <div className="ivw-deco" aria-hidden="true">
+        <div className="ivw-glow" style={{ left: -160, top: -120, width: 440, height: 440, background: "rgba(233,196,106,.32)" }} />
+        <div className="ivw-glow" style={{ right: -160, top: 40, width: 420, height: 420, background: "rgba(217,137,95,.22)" }} />
+        <div className="ivw-glow" style={{ left: -140, bottom: -160, width: 460, height: 460, background: "rgba(217,137,95,.2)" }} />
+        <div className="ivw-glow" style={{ right: -140, bottom: -140, width: 460, height: 460, background: "rgba(233,196,106,.32)" }} />
+        {[0, 1, 2].map((i) => (<div key={"l" + i} className="ivw-ring" style={{ left: -110 - i * 45, top: 260 - i * 45, width: 220 + i * 90, height: 220 + i * 90 }} />))}
+        {[0, 1, 2].map((i) => (<div key={"r" + i} className="ivw-ring" style={{ right: -110 - i * 45, bottom: 220 - i * 45, width: 220 + i * 90, height: 220 + i * 90 }} />))}
+      </div>
       <div className="ivw-wrap">
 
         <div className="ivw-hdr">
+          {/* The logo's own peach background and edge marks are faded out with a soft mask so only the lotus shows. */}
+          <img
+            src="/images/tools/divya-shloka-logo.png"
+            alt=""
+            aria-hidden="true"
+            width={285}
+            height={197}
+            className="mx-auto mb-3 h-24 w-auto select-none mix-blend-multiply sm:h-28"
+            style={{ WebkitMaskImage: "radial-gradient(ellipse 62% 60% at 50% 52%, #000 62%, transparent 100%)", maskImage: "radial-gradient(ellipse 62% 60% at 50% 52%, #000 62%, transparent 100%)" }}
+            draggable={false}
+          />
           <div className="ivw-eyebrow">Ancient Vedic Scripture</div>
           <h1 className="ivw-h1">{FEATURES.shloka.name}</h1>
-          <p className="ivw-sub" style={{ maxWidth: 560, margin: "12px auto 0", color: "rgba(48,22,7,0.78)", lineHeight: 1.6 }}>{FEATURES.shloka.subtitle}</p>
+          {/* A quote in place of the plain subtitle. The catalog subtitle itself (used elsewhere) is not changed. */}
+          <blockquote data-testid="ivw-quote" className="relative mx-auto mt-5 max-w-xl px-6 sm:px-10">
+            <span aria-hidden="true" className="absolute -top-3 left-0 select-none font-serif text-6xl leading-none text-[#B8892B]/45">“</span>
+            <p className="font-serif text-xl italic leading-relaxed text-[#592209] sm:text-2xl">
+              A single verse, read with a calm mind, can light the next step of your day.
+            </p>
+            <span aria-hidden="true" className="absolute -bottom-7 right-0 select-none font-serif text-6xl leading-none text-[#B8892B]/45">”</span>
+            <footer className="mt-4 flex items-center justify-center gap-3 text-xs uppercase tracking-[0.2em] text-[#8A6414]">
+              <span aria-hidden="true" className="h-px w-8 bg-[#B8892B]/50" />
+              Sacred wisdom
+              <span aria-hidden="true" className="h-px w-8 bg-[#B8892B]/50" />
+            </footer>
+          </blockquote>
         </div>
 
-        {!display && (
-          <FeatureIntro
-            className="mb-10"
-            description="Discover timeless wisdom from sacred Sanskrit verses and traditional Indian scriptures. Divya Shloka helps you explore the meaning, context, and practical lessons behind each verse so you can connect ancient teachings with everyday life."
-            steps={[
-              { title: "Share Your Situation", text: "Describe what you are going through, or pick a quick situation. You may also choose a scripture." },
-              { title: "Understand Its Meaning", text: "Read the Sanskrit verse, its transliteration, word meanings and the English meaning." },
-              { title: "Apply the Wisdom", text: "Explore how the verse applies to you and the practical action it suggests." },
-            ]}
-            disclaimer="The verse is chosen from a curated list and the personal reflection is generated. Please check any verse against an authentic edition before quoting or relying on it or relying on it."
-          />
-        )}
-
         {!display ? (
-          <>
+          <div className="ivw-formwrap">
             {/* Scripture filter */}
             <div className="ivw-pills">
               <div className={`ivw-pill${scripture===""?" on":""}`} onClick={()=>setScripture("")}>Any Scripture</div>
@@ -312,7 +348,7 @@ export default function InnerVoiceWisdom() {
                 ))}
               </>
             )}
-          </>
+          </div>
         ) : (
           <div className="ivw-result">
 
@@ -375,7 +411,7 @@ export default function InnerVoiceWisdom() {
 
           </div>
         )}
-        <FeatureFaq feature="shloka" />
+        <div className="ivw-faq"><FeatureFaq feature="shloka" /></div>
       </div>
     </div>
   );

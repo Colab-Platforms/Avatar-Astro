@@ -135,7 +135,7 @@ const CASES: Case[] = [
   { name: "Sacred Shloka (AI chat proxy)", feature: "shloka", says: { shloka: "karmanye vadhikaraste", meaning: "Act without attachment" }, run: (k) => call("POST", "/api/ai/chat", k, { messages: [{ role: "user", content: "guide me" }], library: { feature: "shloka" } }), expected: () => ({ shloka: "karmanye vadhikaraste", meaning: "Act without attachment" }) },
   { name: "Karma diagnosis (Inner Voice)", feature: "karma", says: { karmicPattern: "A pattern of avoidance", suggestedAction: "Face one task today" }, run: (k) => call("POST", "/api/inner-voice/diagnose", k, { text: "I feel stuck at work and tired of it" }), expected: (b) => b },
   { name: "Shloka wisdom (Inner Voice)", feature: "shloka", says: { shloka: "yogah karmasu kaushalam", meaning: "Skill in action" }, run: (k) => call("POST", "/api/inner-voice/wisdom", k, { situation: "need focus", mood: "calm", domain: "work" }), expected: (b) => b },
-  { name: "Future life path", feature: "life-path", says: { lifePathOverview: "The coming months favour steady growth", nextSteps: ["Plan", "Act"] }, run: (k) => call("POST", "/api/inner-voice/life-path", k, { dob: "1990-05-15", tob: "10:30", pob: "Delhi", focus: "general" }), expected: (b) => b },
+  { name: "Future life path", feature: "life-path", says: { meaning: "Your day has a calm feel.", guidance: "Steady growth may come to you.", step: "Plan one small task.", thought: "Small steps matter." }, run: (k) => call("POST", "/api/inner-voice/life-path", k, { dob: "1990-05-15", tob: "10:30", pob: "Delhi", focus: "general" }), expected: (b) => b },
 ];
 
 test("every supported AI feature saves its ORIGINAL output for the signed-in user and reopens it without calling the provider again", { skip }, async () => {

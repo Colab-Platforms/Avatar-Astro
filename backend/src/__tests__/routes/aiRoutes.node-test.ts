@@ -213,37 +213,112 @@ test("panchang: the local date follows the place's time zone, not UTC", () => {
 
 // ── /api/inner-voice/life-path ──────────────────────────────────────────────
 const validReading = {
-  lifePathOverview: "A reflective path.",
-  careerAndGrowth: "Growth themes.",
-  relationships: "Communication.",
-  personalDevelopment: "Patience.",
-  focusInsight: "Focus.",
-  upcomingPeriods: [{ period: "Next year", theme: "Consolidation" }, { bad: true }],
-  reflectionQuestions: ["What matters?", 5],
+  guidance: "You may do well when you go step by step. Patience can help your work grow.",
+  step: "Write down one small goal each morning.",
+  thought: "Small steps can take you far.",
 };
 const LP = "/api/inner-voice/life-path";
+const PUNE = { latitude: 18.5204, longitude: 73.8567, timezone: "Asia/Kolkata" };
+const promptOf = () => JSON.parse(upstreamCalls[0].init.body).messages[0].content as string;
 
-test("life-path: valid request -> prompt is guarded, result sanitised", async () => {
+test("life-path: valid request -> short structured reading, prompt is guarded", async () => {
   upstream = async () => completion("```json\n" + JSON.stringify(validReading) + "\n```");
-  const r = await post(LP, { dob: "1990-05-17", tob: "06:30", pob: "Pune, India", focus: "career" });
+  const r = await post(LP, { dob: "1990-05-17", tob: "06:30", pob: "Pune, India", place: PUNE, focus: "career" });
   assert.equal(r.status, 200);
-  assert.equal(r.data.lifePathOverview, "A reflective path.");
-  assert.deepEqual(r.data.upcomingPeriods, [{ period: "Next year", theme: "Consolidation" }]);
-  assert.deepEqual(r.data.reflectionQuestions, ["What matters?"]);
-  const prompt = JSON.parse(upstreamCalls[0].init.body).messages[0].content as string;
-  assert.match(prompt, /1990-05-17/);
-  assert.match(prompt, /Do NOT state exact planetary degrees/);
-  assert.match(prompt, /not certain knowledge of the future/);
-  assert.match(prompt, /have not computed a chart/);
+  assert.equal(r.data.lifePathOverview, validReading.guidance); // the old field name is kept for saved readings
+  assert.match(r.data.meaning, /^You were born in the (bright|dark) half \((Shukla|Krishna) Paksha\), when the Moon grows (bigger|smaller) each night\. \w+ is the \d+(st|nd|rd|th) day of that half\. Today is \w+: \w+, the \d+(st|nd|rd|th) day of the (bright|dark) half\.$/);
+  assert.equal(r.data.oneGoodStep, validReading.step);
+  assert.equal(r.data.thought, validReading.thought);
+  const prompt = promptOf();
+  assert.match(prompt, /do not name any tithi, nakshatra/);
+  assert.match(prompt, /Do not quote scripture/);
+  assert.match(prompt, /child can follow/);
+  assert.match(prompt, /interested in: career/);
   assert.equal(upstreamCalls[0].init.headers.Authorization, `Bearer ${SECRET}`);
+  const sent = JSON.parse(upstreamCalls[0].init.body);
+  assert.equal(sent.max_tokens, 900); // a ceiling that leaves room for models that think first
+  assert.ok(!/Hinglish/.test(sent.messages[0].content)); // plain English was asked for
 });
 
-test("life-path: omitted time/place are described as not provided", async () => {
+test("life-path: the birth Panchang is calculated by the engine (not written by the model) and handed to the model", async () => {
   upstream = async () => completion(JSON.stringify(validReading));
-  await post(LP, { dob: "1990-05-17" });
-  const prompt = JSON.parse(upstreamCalls[0].init.body).messages[0].content as string;
-  assert.match(prompt, /Time of birth: not provided/);
-  assert.match(prompt, /Place of birth: not provided/);
+  const r = await post(LP, { dob: "1990-05-17", tob: "06:30", pob: "Pune, India", place: PUNE });
+  const engine = computePanchang({ localDate: "1990-05-17", time: { hour: 6, minute: 30 }, place: PUNE });
+  const birth = r.data.panchang.birth;
+  const fact = (l: string) => birth.facts.find((f: any) => f.label === l)?.value;
+  assert.equal(fact("Tithi"), engine.tithi.name);
+  assert.equal(fact("Yoga"), engine.yoga);
+  assert.equal(fact("Karana"), engine.karana);
+  assert.match(fact("Nakshatra"), new RegExp(`^${engine.nakshatra.name}, pada ${engine.nakshatra.pada}$`));
+  assert.equal(fact("Vedic weekday"), engine.vara.name);
+  assert.equal(r.data.panchangBased, true);
+  // "What it means" is built in code from the engine's values, so it is exact; the model is never given a tithi to restate.
+  assert.ok(r.data.meaning.includes(`${engine.tithi.name} is the ${engine.tithi.numberInPaksha}`), r.data.meaning);
+  assert.ok(r.data.meaning.includes(engine.paksha === "shukla" ? "bright half (Shukla Paksha)" : "dark half (Krishna Paksha)"));
+  assert.ok(!promptOf().includes(engine.tithi.name));
+  assert.ok(!promptOf().includes(engine.nakshatra.name));
+  assert.match(promptOf(), /Life path number 5: change, freedom/); // 1990-05-17 -> 5
+  // The engine's own value is the source of truth for the half of the month.
+  assert.equal(engine.paksha === "shukla" ? "Shukla (bright half)" : "Krishna (dark half)", fact("Paksha"));
+  assert.equal(r.data.panchang.today.title, "Today's Panchang");
+});
+
+test("life-path: without a birth time the values are for sunrise, labelled, and the ones that change during the date are marked or left out", async () => {
+  upstream = async () => completion(JSON.stringify(validReading));
+  const r = await post(LP, { dob: "1990-05-17", pob: "Pune, India", place: PUNE });
+  const birth = r.data.panchang.birth;
+  assert.ok(birth.reckoned.startsWith("Sunrise on 1990-05-17"));
+  assert.ok(birth.notes.some((n: string) => /No birth time was given/.test(n)));
+  assert.ok(!birth.facts.some((f: any) => f.label === "Vedic weekday")); // needs the time
+  for (const f of birth.facts) assert.ok(f.value && f.value.trim()); // no empty fact is listed
+  const engine = computePanchang({ localDate: "1990-05-17", time: null, place: PUNE });
+  const changes = (label: string) => engine.uncertainties.some((u) => u.startsWith(label));
+  for (const label of ["Tithi", "Nakshatra", "Yoga"]) {
+    const exact = birth.facts.some((f: any) => f.label === label);
+    const marked = birth.facts.some((f: any) => f.label === `${label} (at sunrise)`);
+    assert.equal(exact, !changes(label), `${label} is exact only when it does not change`);
+    assert.equal(marked, changes(label), `${label} is marked when it changes`);
+  }
+  // Karana changes twice a day, so it is never given without a birth time.
+  assert.equal(birth.facts.some((f: any) => f.label === "Karana"), !changes("Karana"));
+});
+
+test("life-path: without a birthplace the birth Panchang is not calculated, said so, and the model is told not to mention it", async () => {
+  upstream = async () => completion(JSON.stringify(validReading));
+  const r = await post(LP, { dob: "1990-05-17", tob: "06:30" });
+  assert.equal(r.data.panchang.birth, null);
+  assert.equal(r.data.panchang.birthNeedsPlace, true);
+  assert.equal(r.data.panchangBased, false); // never claimed
+  assert.ok(r.data.basis.limits.some((l: string) => /needs your birthplace/.test(l)));
+  assert.ok(!/Moon half at birth/.test(promptOf())); // nothing about the birth Moon half is offered
+  assert.ok(!/You were born/.test(r.data.meaning)); // and the meaning speaks only of today
+  assert.ok(r.data.panchang.today); // today's calendar is still real and labelled
+});
+
+test("life-path: a bad birthplace record is refused, not ignored", async () => {
+  for (const place of [{ latitude: 999, longitude: 0, timezone: "Asia/Kolkata" }, { latitude: 1, longitude: 1, timezone: "Not/AZone" }, { latitude: "1", longitude: 1, timezone: "UTC" }, "Pune"]) {
+    const r = await post(LP, { dob: "1990-05-17", place });
+    assert.equal(r.status, 400);
+  }
+  assert.equal(upstreamCalls.length, 0);
+});
+
+test("life-path: omitted time/place are not invented", async () => {
+  upstream = async () => completion(JSON.stringify(validReading));
+  const r = await post(LP, { dob: "1990-05-17" });
+  assert.deepEqual(r.data.basis.notProvided, ["Time of birth", "Place of birth"]);
+  assert.ok(!r.data.basis.used.some((u: any) => /Time|Place/.test(u.label)));
+});
+
+test("life-path: the selected area of interest is kept", async () => {
+  upstream = async () => completion(JSON.stringify(validReading));
+  for (const focus of ["general", "career", "relationships", "personal-growth", "finance"]) {
+    upstreamCalls = [];
+    const r = await post(LP, { dob: "1990-05-17", focus });
+    assert.equal(r.status, 200);
+    assert.match(promptOf(), new RegExp(`interested in: ${focus}`));
+    assert.ok(r.data.basis.used.some((u: any) => u.label === "Area of interest" && u.value === focus));
+  }
 });
 
 const badLifePathBodies: [string, unknown][] = [
@@ -286,7 +361,7 @@ test("life-path: a leap day is accepted", async () => {
 
 test("life-path: the response explains what was used, what was calculated and what was not", async () => {
   upstream = async () => completion(JSON.stringify(validReading));
-  const full = await post(LP, { dob: "1990-05-17", tob: "06:30", pob: "Pune, India", focus: "career" });
+  const full = await post(LP, { dob: "1990-05-17", tob: "06:30", pob: "Pune, India", place: PUNE, focus: "career" });
   const b = full.data.basis;
   assert.deepEqual(b.used.map((u: any) => u.label), ["Date of birth", "Area of interest", "Time of birth", "Place of birth"]);
   assert.deepEqual(b.notProvided, []);
@@ -294,12 +369,13 @@ test("life-path: the response explains what was used, what was calculated and wh
   const lp = b.calculated.find((c: any) => c.label.startsWith("Life path number"));
   assert.equal(lp.value, "5"); // 1+9+9+0 + 5 + 1+7 = 32 -> 5
   assert.match(lp.how, /= 32 → 5/);
+  assert.ok(b.calculated.some((c: any) => c.label === "Birth Panchang"));
   assert.ok(b.limits.some((l: string) => /No birth chart/.test(l)));
+  assert.ok(b.limits.some((l: string) => /Festivals are not calculated/.test(l)));
 
   const minimal = await post(LP, { dob: "1990-05-17" });
   assert.deepEqual(minimal.data.basis.notProvided, ["Time of birth", "Place of birth"]);
-  assert.ok(minimal.data.basis.limits.some((l: string) => /Without a birth time and place/.test(l)));
-  assert.ok(!minimal.data.basis.used.some((u: any) => /Time|Place/.test(u.label))); // nothing is invented
+  assert.ok(!minimal.data.basis.calculated.some((c: any) => c.label === "Birth Panchang")); // not claimed when not calculated
 });
 
 test("life-path: master numbers are kept", async () => {
@@ -307,6 +383,64 @@ test("life-path: master numbers are kept", async () => {
   // 2+0+0+0 + 2 + 7 = 11
   const r = await post(LP, { dob: "2000-02-07" });
   assert.equal(r.data.basis.calculated.find((c: any) => c.label.startsWith("Life path number")).value, "11");
+});
+
+test("life-path: the reading is short and each part is cut at a full sentence", async () => {
+  const long = "This is a sentence that goes on. ".repeat(40);
+  upstream = async () => completion(JSON.stringify({ guidance: long, step: long, thought: long }));
+  const r = await post(LP, { dob: "1990-05-17", tob: "06:30", place: PUNE });
+  assert.equal(r.status, 200);
+  assert.ok(r.data.lifePathOverview.length <= 200 && r.data.lifePathOverview.endsWith("."));
+  assert.ok(r.data.oneGoodStep.length <= 110 && r.data.thought.length <= 80);
+  const words = [r.data.meaning, r.data.lifePathOverview, r.data.oneGoodStep, r.data.thought].join(" ").split(/\s+/).length;
+  assert.ok(words <= 115, `reading has ${words} words`); // the cap is in characters; this test text uses very short words
+});
+
+test("life-path: a reply that names a calendar term, a weekday or another life path number is refused after one more try, never shown", async () => {
+  for (const guidance of ["Ekadashi under Rohini is a very lucky time for you.", "Magha nakshatra is linked with leadership.", "On a Tuesday you may lead.", "With life path number 9 you may lead."]) {
+    upstreamCalls = [];
+    upstream = async () => completion(JSON.stringify({ ...validReading, guidance }));
+    const r = await post(LP, { dob: "1990-05-17", tob: "06:30", place: PUNE });
+    assert.equal(r.status, 502, guidance);
+    assert.equal(r.data.panchang, undefined);
+    assert.equal(upstreamCalls.length, 2, "the model is asked once more, then refused");
+  }
+});
+
+test("life-path: a bad first reply is replaced by a good second one", async () => {
+  let n = 0;
+  upstream = async () => completion(JSON.stringify(++n === 1 ? { ...validReading, guidance: "Rohini brings luck." } : validReading));
+  const r = await post(LP, { dob: "1990-05-17" });
+  assert.equal(r.status, 200);
+  assert.equal(r.data.lifePathOverview, validReading.guidance);
+  assert.equal(upstreamCalls.length, 2);
+});
+
+test("life-path: the meaning sentence is exact for known dates (ordinals and halves)", async () => {
+  upstream = async () => completion(JSON.stringify(validReading));
+  // 22 Oct 2005 05:05 in Vasai: the engine's own values decide; the sentence must agree with them.
+  const vasai = { latitude: 19.3919, longitude: 72.8397, timezone: "Asia/Kolkata" };
+  const r = await post(LP, { dob: "2005-10-22", tob: "05:05", pob: "Vasai, India", place: vasai });
+  const e = computePanchang({ localDate: "2005-10-22", time: { hour: 5, minute: 5 }, place: vasai });
+  assert.ok(r.data.meaning.startsWith("You were born in the " + (e.paksha === "shukla" ? "bright half" : "dark half")));
+  assert.ok(r.data.meaning.includes(`${e.tithi.name} is the ${e.tithi.numberInPaksha}`));
+  const birth = r.data.panchang.birth;
+  assert.ok(birth.notes.every((n: string) => n.length < 90)); // short notes
+  if (e.vara.note) assert.ok(birth.notes.some((n: string) => /^Born before sunrise \(\d\d:\d\d\), so the Vedic weekday is \w+day\.$/.test(n)));
+});
+
+test("life-path: a reading that quotes scripture is refused (verified verses are added separately)", async () => {
+  for (const guidance of ["As the Gita says in Chapter 2, Verse 47, act well.", "See Bhagavad Gita 2.47 for help.", "The Bhagavata Purana tells us to be calm."]) {
+    upstream = async () => completion(JSON.stringify({ ...validReading, guidance }));
+    assert.equal((await post(LP, { dob: "1990-05-17" })).status, 502, guidance);
+  }
+});
+
+test("life-path: a reading with a missing step or guidance is incomplete, not shown", async () => {
+  upstream = async () => completion(JSON.stringify({ meaning: "Calm.", guidance: "Be steady.", thought: "Go on." }));
+  const r = await post(LP, { dob: "1990-05-17" });
+  assert.equal(r.status, 502);
+  assert.match(r.data.error, /incomplete/);
 });
 
 test("life-path: a rate-limited provider is retried once and then succeeds", async () => {
@@ -324,7 +458,7 @@ test("life-path: a provider that stays rate limited -> controlled 503, not a bar
   assert.equal(r.data.code, "provider_busy");
   assert.match(r.data.error, /busy right now/);
   assert.ok(!r.text.includes(SECRET));
-  assert.equal(upstreamCalls.length, 2); // one retry, no more
+  assert.equal(upstreamCalls.length, 3); // two retries, no more
 });
 
 test("life-path: provider 500 -> 502 and no retry", async () => {
@@ -358,6 +492,7 @@ test("life-path: provider error object containing the key -> 502, key not echoed
   upstream = async () => json({ error: { message: `Invalid key ${SECRET}` } }, 401);
   const r = await post(LP, { dob: "1990-05-17" });
   assert.equal(r.status, 502);
+  assert.ok(!r.text.includes(SECRET));
 });
 
 test("life-path: malformed AI output -> 502 unreadable", async () => {
@@ -368,12 +503,12 @@ test("life-path: malformed AI output -> 502 unreadable", async () => {
 });
 
 test("life-path: truncated JSON -> 502", async () => {
-  upstream = async () => completion('{"lifePathOverview": "abc", ');
+  upstream = async () => completion('{"guidance": "abc", ');
   assert.equal((await post(LP, { dob: "1990-05-17" })).status, 502);
 });
 
-test("life-path: JSON missing overview -> 502 incomplete", async () => {
-  upstream = async () => completion(JSON.stringify({ careerAndGrowth: "x" }));
+test("life-path: JSON missing guidance -> 502 incomplete", async () => {
+  upstream = async () => completion(JSON.stringify({ meaning: "x" }));
   const r = await post(LP, { dob: "1990-05-17" });
   assert.equal(r.status, 502);
   assert.match(r.data.error, /incomplete/);

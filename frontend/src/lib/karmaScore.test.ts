@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ACTIONS, MAX_POINTS, computeDailyScore, pointsFor, localDateKey, recentAverage, scoreMessage } from "./karmaScore";
+import { ACTIONS, ALL_ACTIONS, EXTRA_ACTIONS, MAX_POINTS, computeDailyScore, pointsFor, localDateKey, recentAverage, scoreMessage } from "./karmaScore";
 
 describe("karma score (rule-based)", () => {
   it("is 0 with nothing done and 100 with everything done", () => {
@@ -87,5 +87,32 @@ describe("levels, suggestions and streaks", () => {
     expect(w[0].date).toBe("2026-10-27");
     expect(w[6]).toMatchObject({ date: "2026-11-02", isToday: true, score: null });
     expect(w[5].score).toBe(40);
+  });
+});
+
+describe("extra practices", () => {
+  it("are extra choices: a full score is still the eight everyday practices (68 points), ids are unique and points are positive", () => {
+    expect(MAX_POINTS).toBe(68);
+    expect(EXTRA_ACTIONS.length).toBeGreaterThanOrEqual(10);
+    const ids = ALL_ACTIONS.map((a) => a.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const a of EXTRA_ACTIONS) { expect(a.pts).toBeGreaterThan(0); expect(a.core).toBeFalsy(); expect(a.name.length).toBeGreaterThan(5); }
+  });
+  it("add their own points, the score is capped at 100, and unknown or repeated ids are ignored", () => {
+    expect(pointsFor(["gratitude"])).toBe(5);
+    expect(computeDailyScore(["gratitude"])).toBe(Math.round((5 / 68) * 100));
+    expect(computeDailyScore(ALL_ACTIONS.map((a) => a.id))).toBe(100);
+    expect(computeDailyScore([...ACTIONS.map((a) => a.id), "forgive", "nature"])).toBe(100);
+    expect(pointsFor(["gratitude", "gratitude", "not-a-practice"])).toBe(5);
+  });
+  it("are never suggested: only the always-visible everyday practices are", () => {
+    const ids = suggestNext([], 20).map((s) => s.id);
+    expect(ids.sort()).toEqual(ACTIONS.map((a) => a.id).sort());
+    expect(pathToNextLevel([])!.steps.every((s) => ACTIONS.some((a) => a.id === s.id))).toBe(true);
+  });
+  it("ticking extras does not hide the way to the next level, and the target is still reachable", () => {
+    const p = pathToNextLevel(["gratitude", "forgive", "nature"])!;
+    expect(p.scoreAfter).toBeGreaterThanOrEqual(p.target.min);
+    expect(p.scoreAfter).toBeLessThanOrEqual(100);
   });
 });

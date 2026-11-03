@@ -4,12 +4,18 @@ import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 vi.mock("@/lib/guruChat", async (orig) => ({ ...(await orig<object>()), askGuru: vi.fn() }));
+// The server-side checks around every message (screening and the free daily session) are MOCKED so the chat can be tested without a server.
+vi.mock("@/lib/chatScreen", () => ({ screenChatMessage: vi.fn() }));
+vi.mock("@/lib/dailyChatLimit", async (orig) => ({ ...(await orig<object>()), fetchDailyChatStatus: vi.fn(), consumeDailyChatSession: vi.fn() }));
 vi.mock("@/features/auth/components/GoogleAuthButton", () => ({ GoogleAuthButton: () => <button type="button">Google</button> }));
 
 import InnerVoiceChat from "@/pages/InnerVoiceChat";
 import SignInPrompt from "@/components/SignInPrompt";
 import AskDivyaSection from "@/features/guru/AskDivyaSection";
 import { askGuru } from "@/lib/guruChat";
+import { screenChatMessage } from "@/lib/chatScreen";
+import { fetchDailyChatStatus, consumeDailyChatSession } from "@/lib/dailyChatLimit";
+import { useDailyChatLimitStore } from "@/store/dailyChatLimitStore";
 import { useAuthStore } from "@/store/authStore";
 import { useSignInPrompt } from "@/lib/authedFetch";
 import { saveHandoff, takeHandoff } from "@/lib/guruHandoff";
@@ -48,6 +54,10 @@ beforeEach(() => {
   useSignInPrompt.setState({ open: false, pending: null });
   signOut();
   vi.mocked(askGuru).mockResolvedValue(reply);
+  vi.mocked(screenChatMessage).mockResolvedValue({ action: "ALLOW" });
+  vi.mocked(fetchDailyChatStatus).mockResolvedValue({ status: "NOT_STARTED", allowed: true, remainingSeconds: 0, startedAt: null, expiresAt: null, nextAvailableAt: null });
+  vi.mocked(consumeDailyChatSession).mockResolvedValue({ status: "ACTIVE", allowed: true, remainingSeconds: 300, startedAt: new Date().toISOString(), expiresAt: new Date(Date.now() + 300_000).toISOString(), nextAvailableAt: null });
+  useDailyChatLimitStore.getState().setSession({ status: "NOT_STARTED", allowed: true, remainingSeconds: 0, startedAt: null, expiresAt: null, nextAvailableAt: null });
 });
 
 describe("persona assignment", () => {
@@ -181,6 +191,7 @@ describe("Divya Margdarshak conversation", () => {
 
   it("has no hardcoded human identity or invented statistics", async () => {
     signIn();
+    guruTiming.searchMinMs = 600; // keep the search screen up so the state before assignment can be checked
     await mountChat();
     const text = document.body.textContent ?? "";
     expect(text).not.toMatch(/Rameshwar|Pandit Ji|40\+|120K|12K\+ Reviews|Online · Available/);
@@ -314,6 +325,7 @@ describe("active guru search on entry", () => {
   beforeEach(() => signIn());
 
   it("starts searching on entry, then opens with the assigned profile's real name and avatar, without sending anything", async () => {
+    guruTiming.searchMinMs = 600;
     await mountChat();
     expect(screen.getByTestId("searching-guru")).toHaveTextContent("Searching for an available Guru...");
     const header = await screen.findByTestId("persona-header", {}, { timeout: 4000 });

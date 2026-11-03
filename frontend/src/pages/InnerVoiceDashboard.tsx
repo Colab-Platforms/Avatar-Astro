@@ -6,9 +6,12 @@ import { useFeatureTitle } from "@/hooks/useFeatureTitle";
 import { Link } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import { requireSignIn } from "@/lib/authedFetch";
+import LocationPicker from "@/features/ratna/LocationPicker";
+import type { PlaceResult } from "@/features/ratna/types";
+import "@/features/ratna/ratna.css";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from "recharts";
-import { Activity, Bookmark, CalendarDays, Check, Flame, HandHeart, HeartHandshake, Lightbulb, Moon, Plus, Scale, Sparkles, Sun, Target, Timer, Utensils, type LucideIcon } from "lucide-react";
-import { ACTIONS, MAX_POINTS, bestStreak, computeDailyScore, currentStreak, lastSevenDays, localDateKey, pathToNextLevel, pointsFor, practicedDaysThisWeek, recentAverage, scoreMessage, suggestNext, tierFor, type ScoreEntry } from "@/lib/karmaScore";
+import { Activity, Bird, BookOpen, Bookmark, CalendarDays, Check, ChevronDown, Flame, HandHeart, Heart, HeartHandshake, Leaf, Lightbulb, MessageCircle, Moon, Music, Scale, Smile, Sparkles, Sun, Sunrise, Target, Timer, TreePine, Users, Utensils, VolumeX, Wind, type LucideIcon } from "lucide-react";
+import { ACTIONS, EXTRA_ACTIONS, MAX_POINTS, bestStreak, computeDailyScore, currentStreak, lastSevenDays, localDateKey, pathToNextLevel, pointsFor, practicedDaysThisWeek, recentAverage, scoreMessage, tierFor, type ScoreEntry } from "@/lib/karmaScore";
 
 /** An icon for each practice; purely visual. */
 const ACTION_ICON: Record<string, LucideIcon> = {
@@ -20,6 +23,9 @@ const ACTION_ICON: Record<string, LucideIcon> = {
   pooja: Sun,
   anger: Activity,
   charity: HandHeart,
+  // extra practices
+  surya: Sunrise, tulsi: Leaf, scripture: BookOpen, bhajan: Music, elders: Users, gratitude: Heart,
+  kindword: MessageCircle, forgive: Smile, yoga: Wind, silence: VolumeX, birds: Bird, nature: TreePine,
 };
 
 
@@ -195,6 +201,113 @@ const CSS = `
 .ivd-h-acts{color:#6B4A37;}
 .ivd-empty{color:#6B4A37;}
 
+/* ── Premium look: warm parchment page, deep-brown hero, two-column layout, soft entrance ── */
+.ivd-app{background:radial-gradient(900px 520px at 0% 0%,rgba(233,196,106,.30),transparent 62%),radial-gradient(820px 520px at 100% 8%,rgba(217,137,95,.20),transparent 62%),radial-gradient(900px 620px at 50% 100%,rgba(233,196,106,.24),transparent 62%),#FBF5EC;}
+.ivd-wrap{max-width:1180px;padding:84px 32px 110px;}
+@media(max-width:600px){.ivd-wrap{padding:76px 16px 90px;}}
+.ivd-hdr{margin-bottom:34px;}
+.ivd-eyebrow{display:inline-flex;align-items:center;gap:12px;color:#8A6414;font-weight:600;}
+.ivd-eyebrow::before,.ivd-eyebrow::after{content:"";width:34px;height:1px;background:linear-gradient(90deg,transparent,#B8892B);}
+.ivd-eyebrow::after{transform:scaleX(-1);}
+.ivd-title{text-shadow:none;letter-spacing:.5px;}
+.ivd-orn{display:flex;align-items:center;justify-content:center;gap:10px;margin:10px auto 14px;}
+.ivd-orn span{width:70px;height:1px;background:linear-gradient(90deg,transparent,#B8892B);}
+.ivd-orn span:last-child{transform:scaleX(-1);}
+.ivd-orn i{width:9px;height:9px;transform:rotate(45deg);background:linear-gradient(135deg,#E9C46A,#B8892B);box-shadow:0 0 0 3px rgba(233,196,106,.28);}
+.ivd-avatar{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;margin-right:10px;border-radius:50%;font-style:normal;font-size:14px;font-weight:700;color:#FBF1DC;background:linear-gradient(135deg,#7A3515,#592209);box-shadow:0 0 0 2px #fff,0 0 0 3px rgba(184,137,43,.6);vertical-align:middle;}
+
+/* setup / profile card */
+.ivd-setup{max-width:820px;margin:0 auto 32px;background:linear-gradient(165deg,#FFFBF3 0%,#F8EBD6 100%);border:1px solid rgba(184,137,43,.45);border-radius:28px;box-shadow:0 24px 54px -32px rgba(89,34,9,.5),inset 0 0 0 6px rgba(255,251,243,.9),inset 0 0 0 7px rgba(229,138,69,.2);}
+.ivd-setup-sub{color:#6B4A37;letter-spacing:1.5px;}
+.ivd-input,.ivd-select{background:#fff;border:1px solid rgba(89,34,9,.18);font-size:17px;box-shadow:0 1px 0 rgba(89,34,9,.04);}
+.ivd-input:focus,.ivd-select:focus{border-color:#B8892B;box-shadow:0 0 0 3px rgba(184,137,43,.22);}
+.ivd-setup-btn,.ivd-save-btn{background:linear-gradient(90deg,#592209,#7A3515);box-shadow:0 12px 26px -14px rgba(89,34,9,.7);}
+
+/* hero */
+.ivd-hero{padding:36px 40px;border-radius:30px;overflow:hidden;color:#F5E9D6;background:radial-gradient(120% 150% at 0% 0%,#8A3F18 0%,#592209 46%,#3A1406 100%);border:1px solid rgba(233,196,106,.5);box-shadow:0 34px 64px -34px rgba(58,20,6,.85),inset 0 0 0 1px rgba(255,255,255,.07);}
+.ivd-hero::before{content:"";position:absolute;right:-90px;top:-90px;width:300px;height:300px;border-radius:50%;border:1px solid rgba(233,196,106,.28);box-shadow:0 0 0 40px rgba(233,196,106,.05),0 0 0 80px rgba(233,196,106,.04);pointer-events:none;}
+.ivd-hero::after{content:"";position:absolute;left:-70px;bottom:-110px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(233,196,106,.28),transparent 70%);pointer-events:none;}
+.ivd-hero .ivd-score-section{position:relative;z-index:1;gap:44px;}
+.ivd-ring-wrap,.ivd-ring-svg{width:196px;height:196px;}
+.ivd-hero .ivd-ring-bg{stroke:rgba(255,255,255,.16);}
+.ivd-hero .ivd-ring-fill{filter:drop-shadow(0 0 8px rgba(233,196,106,.5));}
+.ivd-hero .ivd-ring-num{font-size:52px;font-weight:600;color:#FFF3D6;}
+.ivd-hero .ivd-ring-den{color:rgba(245,233,214,.75);}
+.ivd-hero-date{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#E9C46A;margin-bottom:10px;}
+.ivd-hero .ivd-score-meta{max-width:420px;}
+.ivd-hero .ivd-tier{background:rgba(255,255,255,.12);border-color:rgba(233,196,106,.6);color:#FFE9B8;}
+.ivd-hero .ivd-score-name{font-size:22px;color:#FFF7E3;}
+.ivd-hero .ivd-score-msg{color:rgba(255,247,227,.92);font-size:17px;}
+.ivd-hero .ivd-score-dasha{color:#F1D9A0;font-size:12px;letter-spacing:1px;}
+.ivd-hero .ivd-progress{max-width:100%;}
+.ivd-hero .ivd-progress-bar{background:rgba(255,255,255,.16);height:9px;}
+.ivd-hero .ivd-progress-fill{background:linear-gradient(90deg,#F7DC8A,#E58A45);box-shadow:0 0 12px rgba(233,196,106,.6);}
+.ivd-hero .ivd-progress-lbl{color:rgba(245,233,214,.85);}
+@media(max-width:600px){.ivd-hero{padding:28px 20px;}.ivd-ring-wrap,.ivd-ring-svg{width:170px;height:170px;}}
+
+/* stats */
+.ivd-stat{position:relative;overflow:hidden;}
+.ivd-stat::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,#E9C46A,#D9895F);}
+.ivd-stat-ico{background:linear-gradient(135deg,#FFF1CC,#F3D68E);color:#592209;box-shadow:inset 0 0 0 1px rgba(184,137,43,.35);}
+
+/* two columns on wide screens */
+.ivd-main{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:22px;align-items:start;margin-bottom:22px;}
+.ivd-col{display:flex;flex-direction:column;gap:22px;min-width:0;}
+.ivd-col>*{margin-bottom:0 !important;}
+.ivd-main .ivd-actions-list{grid-template-columns:1fr;}
+.ivd-main .ivd-sugg{grid-template-columns:1fr;}
+@media(max-width:980px){.ivd-main{grid-template-columns:1fr;}}
+.ivd-lower{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;margin-bottom:22px;}
+.ivd-lower>*{margin-bottom:0 !important;}
+.ivd-lower>*:only-child{grid-column:1/-1;}
+@media(max-width:860px){.ivd-lower{grid-template-columns:1fr;}}
+
+/* section headers with an icon */
+.ivd-sec{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+.ivd-sec .ivd-card-title,.ivd-sec .ivd-card-sub{margin:0 !important;}
+.ivd-sec-ico{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:12px;flex:none;color:#592209;background:linear-gradient(135deg,#FFF1CC,#F3D68E);box-shadow:inset 0 0 0 1px rgba(184,137,43,.4);}
+.ivd-actions-card,.ivd-week,.ivd-chart,.ivd-history{border-radius:24px;}
+.ivd-actions-card{background:linear-gradient(180deg,#FFFDF8,#FFF8EA);}
+.ivd-action-row{padding:15px 16px;}
+.ivd-action-row:hover{box-shadow:0 12px 24px -18px rgba(89,34,9,.6);}
+.ivd-action-check{border:2px solid #B9722F;background:#fff;}
+.ivd-action-check:not(.done){color:transparent;}
+.ivd-action-row.done{background:linear-gradient(135deg,#F3F7EC,#E9F1DE);}
+.ivd-action-name{font-size:15px;font-weight:500;}
+.ivd-day-dot{border-color:rgba(184,137,43,.5);}
+.ivd-day-dot.on{background:linear-gradient(135deg,#F2B35E,#7A3515);box-shadow:0 6px 14px -8px rgba(89,34,9,.8);}
+.ivd-advice{background:linear-gradient(160deg,#FFF6E0 0%,#F7E2B4 100%);border-color:rgba(184,137,43,.65);}
+.ivd-goal{border-style:solid;border-color:rgba(184,137,43,.5);background:#FFFDF7;}
+.ivd-sg{transition:transform .2s,box-shadow .2s;}
+.ivd-sg:hover{transform:translateY(-2px);box-shadow:0 12px 22px -18px rgba(89,34,9,.7);}
+.ivd-sg-btn{background:linear-gradient(90deg,#592209,#7A3515);}
+.ivd-h-row:hover{background:rgba(233,196,106,.12);border-radius:10px;}
+
+/* extra practices and the suggested tag */
+.ivd-more-btn{display:flex;width:100%;align-items:center;justify-content:center;gap:8px;margin-top:14px;padding:11px 14px;border-radius:14px;border:1px dashed rgba(184,137,43,.7);background:#FFF8E6;color:#592209;font-size:13px;font-weight:600;cursor:pointer;transition:background .2s,border-color .2s;}
+.ivd-more-btn:hover{background:#FFF1CC;border-color:#B8892B;}
+.ivd-more-btn svg{transition:transform .25s;}
+.ivd-more-btn svg.open{transform:rotate(180deg);}
+.ivd-more-count{margin-left:4px;padding:1px 9px;border-radius:50px;background:#E1EBD8;color:#3F6636;font-size:11px;}
+.ivd-extra{margin-top:16px;animation:ivd-rise .35s ease both;}
+/* the optional practices are shown two across and a little more compact, so the list stays short */
+.ivd-main .ivd-extra .ivd-actions-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+.ivd-extra .ivd-action-row{padding:11px 12px;gap:9px;}
+.ivd-extra .ivd-action-ico{display:none;}
+.ivd-extra .ivd-action-name{font-size:14px;}
+.ivd-extra .ivd-action-check{width:24px;height:24px;}
+@media(max-width:520px){.ivd-main .ivd-extra .ivd-actions-list{grid-template-columns:1fr;}}
+.ivd-action-row.suggested{border-color:#B8892B;background:linear-gradient(135deg,#FFF8E2,#FDEFC6);box-shadow:0 10px 22px -18px rgba(138,100,20,.8);}
+.ivd-chip.suggested{background:linear-gradient(90deg,#F7DC8A,#EBB660);border-color:#B8892B;color:#592209;}
+@media(prefers-reduced-motion:reduce){.ivd-extra{animation:none;}.ivd-more-btn svg{transition:none;}}
+
+/* soft entrance; nothing waits on it */
+@keyframes ivd-rise{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+.ivd-wrap>*{animation:ivd-rise .6s ease both;}
+.ivd-wrap>*:nth-child(2){animation-delay:.05s;}.ivd-wrap>*:nth-child(3){animation-delay:.1s;}.ivd-wrap>*:nth-child(4){animation-delay:.15s;}
+.ivd-wrap>*:nth-child(5){animation-delay:.2s;}.ivd-wrap>*:nth-child(6){animation-delay:.25s;}.ivd-wrap>*:nth-child(7){animation-delay:.3s;}
+@media(prefers-reduced-motion:reduce){.ivd-wrap>*{animation:none;}.ivd-sg,.ivd-stat,.ivd-action-row{transition:none;}}
+
 /* Loading */
 .ivd-loader-wrap{display:flex;align-items:center;justify-content:center;min-height:60vh;flex-direction:column;gap:18px;}
 .ivd-spin{width:52px;height:52px;border:2px solid rgba(89,34,9,.15);border-top-color:#592209;border-radius:50%;animation:spin 1s linear infinite;}
@@ -235,7 +348,7 @@ function ScoreRing({ score }: { score: number }) {
     <div className="ivd-ring-wrap" role="img" aria-label={`Today's score ${score} out of 100`}>
       <svg className="ivd-ring-svg" viewBox="0 0 168 168">
         <defs>
-          <linearGradient id="ivd-ring-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#E58A45"/><stop offset="100%" stopColor="#592209"/></linearGradient>
+          <linearGradient id="ivd-ring-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#F7DC8A"/><stop offset="100%" stopColor="#E58A45"/></linearGradient>
         </defs>
         <circle className="ivd-ring-bg" cx="84" cy="84" r={r}/>
         <circle className="ivd-ring-fill" cx="84" cy="84" r={r} stroke="url(#ivd-ring-grad)" strokeDasharray={circ} strokeDashoffset={offset}/>
@@ -252,12 +365,14 @@ export default function InnerVoiceDashboard() {
   useFeatureTitle(FEATURES.karmaScore);
   const signedIn = useAuthStore((s) => s.isAuthenticated);
   const [profile, setProfile] = useState(()=>{ try{return JSON.parse(localStorage.getItem("iv_profile")||"null")}catch{return null} });
-  const [form, setForm] = useState({name:"",dob:"",pob:"",reason:"",sign:"",nakshatra:"",dasha:""});
+  // `place` is the real place chosen from the searchable list; `pob` keeps its name (and any older typed text).
+  const [form, setForm] = useState<{name:string;dob:string;pob:string;place:PlaceResult|null;reason:string;sign:string;nakshatra:string;dasha:string}>({name:"",dob:"",pob:"",place:null,reason:"",sign:"",nakshatra:"",dasha:""});
   const [editing, setEditing] = useState(false); // reopen the profile form after it has been saved once
   const [history, setHistory] = useState<ScoreEntry[]>(()=>{ try{return JSON.parse(localStorage.getItem("iv_karma_v2")||"[]")}catch{return[]} });
   const [today,setToday]=useState(()=>localDateKey());
   const [done, setDone] = useState<string[]>(()=>{ try{return JSON.parse(localStorage.getItem(`iv_done_${localDateKey()}`)||"[]")}catch{return[]} });
   const [saved, setSaved] = useState(false);
+  const [showMore, setShowMore] = useState(()=>{ try{ const d=JSON.parse(localStorage.getItem(`iv_done_${localDateKey()}`)||"[]") as string[]; return EXTRA_ACTIONS.some(a=>d.includes(a.id)); }catch{ return false; } });
 
   // The page can stay open past midnight: when the date changes, start the new day with that day's own ticks
   // instead of carrying yesterday's over.
@@ -268,8 +383,8 @@ export default function InnerVoiceDashboard() {
 
   useEffect(()=>{ const s=document.createElement("style"); s.textContent=CSS; document.head.appendChild(s); return()=>{ document.head.removeChild(s); }; },[]);
 
-  const saveProfile=()=>{ if(!form.name.trim()) return; const p={...form,name:form.name.trim(),pob:form.pob.trim(),reason:form.reason.trim()}; try{localStorage.setItem("iv_profile",JSON.stringify(p));}catch{/* storage unavailable */} setProfile(p); setEditing(false); };
-  const openEditor=()=>{ setForm({name:"",dob:"",pob:"",reason:"",sign:"",nakshatra:"",dasha:"",...(profile||{})}); setEditing(true); };
+  const saveProfile=()=>{ if(!form.name.trim()) return; const p={...form,name:form.name.trim(),pob:(form.place?form.place.label:form.pob).trim(),reason:form.reason.trim()}; try{localStorage.setItem("iv_profile",JSON.stringify(p));}catch{/* storage unavailable */} setProfile(p); setEditing(false); };
+  const openEditor=()=>{ setForm({name:"",dob:"",pob:"",place:null,reason:"",sign:"",nakshatra:"",dasha:"",...(profile||{})}); setEditing(true); };
 
   const toggleAction=(id:string)=>{ if(!requireSignIn()) return; const key=localDateKey(); const next=done.includes(id)?done.filter(d=>d!==id):[...done,id]; setDone(next); setSaved(false); try{localStorage.setItem(`iv_done_${key}`,JSON.stringify(next));}catch{/* storage unavailable */} };
 
@@ -285,17 +400,35 @@ export default function InnerVoiceDashboard() {
   const weekSaved=week.filter(d=>d.score!==null).length;
   const tier=tierFor(composite);
   const path=pathToNextLevel(done);
-  const suggestions=suggestNext(done,3);
+  const longDate=new Date(today+"T00:00:00").toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long"});
+  // The practices named in the goal are tagged in the list itself, so there is one place to tick them.
+  const suggestedIds=new Set(path?path.steps.map(x=>x.id):[]);
+  const extrasDone=EXTRA_ACTIONS.filter(a=>done.includes(a.id)).length;
   const tierProgress=tier.next?Math.round(((composite-tier.min)/(tier.next.min-tier.min))*100):100;
 
   const saveToday=()=>{ if(!requireSignIn()) return; const entry={date:localDateKey(),composite,behaviorPts,actionsCompleted:done.length}; const updated=[entry,...history.filter(e=>e.date!==entry.date)].slice(0,60); setHistory(updated); try{localStorage.setItem("iv_karma_v2",JSON.stringify(updated));}catch{/* storage unavailable */} setSaved(true); };
+
+  const renderRow=(a:(typeof ACTIONS)[number])=>{ const Icon=ACTION_ICON[a.id]??Sparkles; const on=done.includes(a.id); const sug=!on&&suggestedIds.has(a.id); return (
+              <div key={a.id} className={`ivd-action-row${on?" done":""}${sug?" suggested":""}`} onClick={()=>toggleAction(a.id)}>
+                <span className="ivd-action-ico"><Icon size={18} aria-hidden="true" /></span>
+                <div style={{flex:1,minWidth:0}}>
+                  <div className="ivd-action-name">{a.name}</div>
+                  <div className="ivd-action-meta">
+                    <span className="ivd-chip">+{a.pts} pts</span>
+                    <span className="ivd-chip soft"><Timer size={11} aria-hidden="true" /> {a.minutes===0?"through the day":`~${a.minutes} min`}</span>
+                    {sug&&<span className="ivd-chip suggested"><Sparkles size={11} aria-hidden="true" /> Suggested</span>}
+                  </div>
+                </div>
+                <div role="checkbox" aria-checked={on} aria-label={a.name} tabIndex={0} className={`ivd-action-check${on?" done":""}`} onClick={e=>{ e.stopPropagation(); toggleAction(a.id); }} onKeyDown={e=>{ if(e.key===" "||e.key==="Enter"){ e.preventDefault(); toggleAction(a.id); } }}>{on&&<Check size={14} aria-hidden="true" />}</div>
+              </div>
+  ); };
 
   const lineData=[...history].reverse().slice(-14).map(e=>({date:e.date.slice(5),score:e.composite}));
 
   if(!signedIn) return (
     <div className="ivd-app"><style>{CSS}</style><StarCanvas />
       <div className="ivd-wrap">
-        <div className="ivd-hdr"><div className="ivd-eyebrow">Daily Karma Sankhya</div><h1 className="ivd-title">{FEATURES.karmaScore.name}</h1><p className="ivd-sub">A simple daily score based on the mindful practices you complete. It is symbolic, meant to encourage consistency.</p></div>
+        <div className="ivd-hdr"><div className="ivd-eyebrow">Daily Karma Sankhya</div><h1 className="ivd-title">{FEATURES.karmaScore.name}</h1><div className="ivd-orn" aria-hidden="true"><span/><i/><span/></div><p className="ivd-sub">A simple daily score based on the mindful practices you complete. It is symbolic, meant to encourage consistency.</p></div>
         <div className="ivd-setup">
           <div className="ivd-setup-title">Sign in to track your score</div>
           <div className="ivd-setup-sub">Your practices and score history are personal, so they are kept for signed-in members only.</div>
@@ -308,14 +441,17 @@ export default function InnerVoiceDashboard() {
   if(!profile||editing) return (
     <div className="ivd-app"><style>{CSS}</style><StarCanvas />
       <div className="ivd-wrap">
-        <div className="ivd-hdr"><div className="ivd-eyebrow">One-time Setup</div><h1 className="ivd-title">{FEATURES.karmaScore.name}</h1><p className="ivd-sub">A simple daily score based on the mindful practices you complete. It is symbolic, meant to encourage consistency.</p></div>
+        <div className="ivd-hdr"><div className="ivd-eyebrow">One-time Setup</div><h1 className="ivd-title">{FEATURES.karmaScore.name}</h1><div className="ivd-orn" aria-hidden="true"><span/><i/><span/></div><p className="ivd-sub">A simple daily score based on the mindful practices you complete. It is symbolic, meant to encourage consistency.</p></div>
         <div className="ivd-setup">
           <div className="ivd-setup-title">Your Profile</div>
           <div className="ivd-setup-sub">Only your name is needed. The other details are optional, are kept on this device, and are not used in the score.</div>
           <div className="ivd-grid2">
             <div className="ivd-field"><label>Your Name</label><input className="ivd-input" placeholder="Enter your name" maxLength={60} value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))}/></div>
             <div className="ivd-field"><label>Date of Birth (optional)</label><input className="ivd-input" type="date" value={form.dob} onChange={e=>setForm(f=>({...f,dob:e.target.value}))}/></div>
-            <div className="ivd-field"><label>Place of Birth (optional)</label><input className="ivd-input" placeholder="City, country" maxLength={100} value={form.pob} onChange={e=>setForm(f=>({...f,pob:e.target.value}))}/></div>
+            <div className="ivd-field"><label id="ivd-pob-label">Place of Birth (optional)</label>
+              <LocationPicker value={form.place} onSelect={(place)=>setForm(f=>({...f,place,pob:place?place.label:f.pob}))}/>
+              {!form.place&&form.pob&&<p style={{fontSize:12,color:"#6B4A37",margin:"6px 2px 0"}}>Saved as: {form.pob}. Search and choose your place from the list to update it.</p>}
+            </div>
             <div className="ivd-field"><label>Chandra Rashi (Moon sign, optional)</label><select className="ivd-select" value={form.sign} onChange={e=>setForm(f=>({...f,sign:e.target.value}))}><option value="">Select...</option>{ZODIAC.map(s=><option key={s} value={s}>{s}</option>)}</select></div>
             <div className="ivd-field"><label>Nakshatra (optional)</label><select className="ivd-select" value={form.nakshatra} onChange={e=>setForm(f=>({...f,nakshatra:e.target.value}))}><option value="">Select...</option>{NAKSHATRA.map(n=><option key={n} value={n}>{n}</option>)}</select></div>
           </div>
@@ -330,7 +466,7 @@ export default function InnerVoiceDashboard() {
   return (
     <div className="ivd-app"><style>{CSS}</style><StarCanvas />
       <div className="ivd-wrap">
-        <div className="ivd-hdr"><div className="ivd-eyebrow">Daily Karma Sankhya</div><h1 className="ivd-title">{FEATURES.karmaScore.name}</h1><p className="ivd-sub">{profile.name}{profile.sign ? ` · ${profile.sign}`:""}</p>
+        <div className="ivd-hdr"><div className="ivd-eyebrow">Daily Karma Sankhya</div><h1 className="ivd-title">{FEATURES.karmaScore.name}</h1><div className="ivd-orn" aria-hidden="true"><span/><i/><span/></div><p className="ivd-sub"><span className="ivd-avatar" aria-hidden="true">{profile.name.trim().charAt(0).toUpperCase()}</span>{profile.name}{profile.sign ? ` · ${profile.sign}`:""}</p>
           {profile.reason&&<p className="ivd-sub" style={{fontSize:15,marginTop:4}}>Intention: {profile.reason}</p>}
           <button type="button" className="ivd-chip" style={{marginTop:12,cursor:"pointer"}} onClick={openEditor}>Edit profile</button></div>
 
@@ -338,10 +474,11 @@ export default function InnerVoiceDashboard() {
           <div className="ivd-score-section">
             <ScoreRing score={composite}/>
             <div className="ivd-score-meta">
+              <div className="ivd-hero-date">{longDate}</div>
               <span className="ivd-tier"><Sparkles size={13} aria-hidden="true" /> {tier.label}</span>
               <div className="ivd-score-name">Today's Practice Score</div>
               <div className="ivd-score-msg">{scoreMessage(composite,done.length)}</div>
-              <div className="ivd-score-dasha">{behaviorPts} of {MAX_POINTS} points · {done.length} of {ACTIONS.length} practices</div>
+              <div className="ivd-score-dasha">{behaviorPts} of {MAX_POINTS} points for a full score · {done.length} {done.length===1?"practice":"practices"} done</div>
               {tier.next ? (
                 <div className="ivd-progress">
                   <div className="ivd-progress-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={tierProgress} aria-label={`Progress to ${tier.next.label}`}><div className="ivd-progress-fill" style={{width:`${tierProgress}%`}}/></div>
@@ -361,9 +498,41 @@ export default function InnerVoiceDashboard() {
           <div className="ivd-stat"><span className="ivd-stat-ico"><Bookmark size={18} aria-hidden="true" /></span><div className="ivd-stat-val">{history.length}</div><div className="ivd-stat-lbl">Days Saved</div></div>
         </div>
 
+        <div className="ivd-main">
+          <div className="ivd-col">
+        <div className="ivd-actions-card">
+          <div className="ivd-sec"><span className="ivd-sec-ico"><Sparkles size={18} aria-hidden="true" /></span><div><div className="ivd-card-title">Today's Practices</div>
+          <div className="ivd-card-sub">Tick what you have done today. Each practice carries the points shown.</div></div></div>
+          <div className="ivd-actions-list">
+            {ACTIONS.map(renderRow)}
+          </div>
+
+          <button type="button" className="ivd-more-btn" aria-expanded={showMore} aria-controls="ivd-extra" onClick={()=>setShowMore(v=>!v)}>
+            <ChevronDown size={16} aria-hidden="true" className={showMore?"open":""} />
+            {showMore?"Show fewer practices":`Show ${EXTRA_ACTIONS.length} more practices`}
+            {!showMore&&extrasDone>0&&<span className="ivd-more-count">{extrasDone} done</span>}
+          </button>
+          {showMore&&(
+            <div id="ivd-extra" className="ivd-extra">
+              <div className="ivd-card-sub" style={{margin:"4px 0 10px"}}>More good deeds · optional, they add to the same score</div>
+              <div className="ivd-actions-list">
+                {EXTRA_ACTIONS.map(renderRow)}
+              </div>
+            </div>
+          )}
+          <div className="ivd-save-row">
+            <button className="ivd-save-btn" onClick={saveToday}><Bookmark size={15} aria-hidden="true" /> Save Today's Score</button>
+            {saved||!unsaved
+              ? <span className="ivd-save-state ok" role="status">Saved: {savedToday?.composite ?? composite}/100</span>
+              : <span className="ivd-save-state" role="status">{savedToday?`Changed since you saved (${savedToday.composite}/100). Save to update.`:"Not saved yet. Save to add today to your history and streak."}</span>}
+          </div>
+        </div>
+
+          </div>
+          <div className="ivd-col">
         <div className="ivd-week" aria-label="Your last seven days">
-          <div className="ivd-card-title" style={{marginBottom:2}}>Your Week</div>
-          <div className="ivd-card-sub" style={{marginBottom:0}}>{practiced} of the last 7 days practiced · only saved days are counted</div>
+          <div className="ivd-sec" style={{marginBottom:4}}><span className="ivd-sec-ico"><CalendarDays size={18} aria-hidden="true" /></span><div><div className="ivd-card-title">Your Week</div>
+          <div className="ivd-card-sub">{practiced} of the last 7 days practiced · only saved days are counted</div></div></div>
           <div className="ivd-week-row">
             {week.map(d=>(
               <div key={d.date} className={`ivd-day${d.isToday?" today":""}`}>
@@ -371,32 +540,6 @@ export default function InnerVoiceDashboard() {
                 <div className="ivd-day-lbl">{new Date(d.date+"T00:00:00").toLocaleDateString("en-IN",{weekday:"short"})}</div>
               </div>
             ))}
-          </div>
-        </div>
-
-        <div className="ivd-actions-card">
-          <div className="ivd-card-title">Today's Practices</div>
-          <div className="ivd-card-sub">Tick what you have done today. Each practice carries the points shown.</div>
-          <div className="ivd-actions-list">
-            {ACTIONS.map(a=>{ const Icon=ACTION_ICON[a.id]??Sparkles; const on=done.includes(a.id); return (
-              <div key={a.id} className={`ivd-action-row${on?" done":""}`} onClick={()=>toggleAction(a.id)}>
-                <span className="ivd-action-ico"><Icon size={18} aria-hidden="true" /></span>
-                <div style={{flex:1,minWidth:0}}>
-                  <div className="ivd-action-name">{a.name}</div>
-                  <div className="ivd-action-meta">
-                    <span className="ivd-chip">+{a.pts} pts</span>
-                    <span className="ivd-chip soft"><Timer size={11} aria-hidden="true" /> {a.minutes===0?"through the day":`~${a.minutes} min`}</span>
-                  </div>
-                </div>
-                <div role="checkbox" aria-checked={on} aria-label={a.name} tabIndex={0} className={`ivd-action-check${on?" done":""}`} onClick={e=>{ e.stopPropagation(); toggleAction(a.id); }} onKeyDown={e=>{ if(e.key===" "||e.key==="Enter"){ e.preventDefault(); toggleAction(a.id); } }}>{on&&<Check size={14} aria-hidden="true" />}</div>
-              </div>
-            ); })}
-          </div>
-          <div className="ivd-save-row">
-            <button className="ivd-save-btn" onClick={saveToday}><Bookmark size={15} aria-hidden="true" /> Save Today's Score</button>
-            {saved||!unsaved
-              ? <span className="ivd-save-state ok" role="status">Saved: {savedToday?.composite ?? composite}/100</span>
-              : <span className="ivd-save-state" role="status">{savedToday?`Changed since you saved (${savedToday.composite}/100). Save to update.`:"Not saved yet. Save to add today to your history and streak."}</span>}
           </div>
         </div>
 
@@ -408,42 +551,29 @@ export default function InnerVoiceDashboard() {
 
           {path ? (
             <div className="ivd-goal" data-testid="karma-goal">
-              To reach <strong>{path.target.label}</strong> ({path.target.min}+) today, add {path.steps.map((s,i)=>(<span key={s.id}>{i>0?(i===path.steps.length-1?" and ":", "):""}<strong>{s.name}</strong> (+{s.gain})</span>))}. That brings you to <strong>{path.scoreAfter}</strong>.
+              To reach <strong>{path.target.label}</strong> ({path.target.min}+) today, add {path.steps.map((s,i)=>(<span key={s.id}>{i>0?(i===path.steps.length-1?" and ":", "):""}<strong>{s.name}</strong> (+{s.gain})</span>))}. That brings you to <strong>{path.scoreAfter}</strong>. They are tagged <strong>Suggested</strong> in your list.
             </div>
           ) : composite>=85 ? (
-            <div className="ivd-goal">You have completed almost everything today. Save your score, and keep the same routine tomorrow: steadiness counts for more than one perfect day.</div>
+            <div className="ivd-goal">You have done almost everything today. Keep the same routine tomorrow: steadiness counts for more than one perfect day.</div>
           ) : null}
-
-          {suggestions.length>0 && (
-            <>
-              <div className="ivd-card-sub" style={{margin:"10px 0 8px"}}>Easiest next steps</div>
-              <div className="ivd-sugg">
-                {suggestions.map(sg=>(
-                  <div key={sg.id} className="ivd-sg">
-                    <div className="ivd-sg-name">{sg.name}</div>
-                    <div className="ivd-sg-why">{sg.reason}</div>
-                    <div className="ivd-sg-gain">+{sg.gain} pts · score {sg.scoreAfter}</div>
-                    <button type="button" className="ivd-sg-btn" onClick={()=>toggleAction(sg.id)} aria-label={`Mark done: ${sg.name}`}><Plus size={13} aria-hidden="true" /> Mark as done</button>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
 
           <ul className="ivd-tips">
             {done.length===0 && <li><Sparkles size={15} aria-hidden="true" /><span>Start with one small practice. A single tick already moves the score, and the aim is a habit, not a perfect day.</span></li>}
-            {streak===0 && done.length>0 && <li><Flame size={15} aria-hidden="true" /><span>Save today's score to begin a streak. A streak counts every day with at least one saved practice.</span></li>}
-            {streak>0 && <li><Flame size={15} aria-hidden="true" /><span>You are on a {streak}-day streak{streak<best?` (your best is ${best})`:""}. Save today's score to keep it going.</span></li>}
+            {streak===0 && done.length>0 && <li><Flame size={15} aria-hidden="true" /><span>A streak counts every day with at least one saved practice.</span></li>}
+            {streak>0 && <li><Flame size={15} aria-hidden="true" /><span>You are on a {streak}-day streak{streak<best?` (your best is ${best})`:""}.</span></li>}
             {practiced<7 && weekSaved>0 && <li><CalendarDays size={15} aria-hidden="true" /><span>You practiced on {practiced} of the last 7 days. Even a short mantra on the other days keeps your weekly average up.</span></li>}
-            {unsaved && done.length>0 && <li><Bookmark size={15} aria-hidden="true" /><span>Your latest ticks are not saved yet, so they will not count toward your streak or average until you save.</span></li>}
           </ul>
         </div>
 
+          </div>
+        </div>
+
+        <div className="ivd-lower">
         {lineData.length>1 && (
           <div className="ivd-chart">
-            <div className="ivd-card-title" style={{marginBottom:4}}>Trend</div>
-            <div className="ivd-card-sub" style={{marginBottom:18}}>Your saved scores over the last 14 entries</div>
-            <ResponsiveContainer width="100%" height={180}>
+            <div className="ivd-sec"><span className="ivd-sec-ico"><Activity size={18} aria-hidden="true" /></span><div><div className="ivd-card-title">Trend</div>
+            <div className="ivd-card-sub">Your saved scores over the last 14 entries</div></div></div>
+            <ResponsiveContainer width="100%" height={230}>
               <LineChart data={lineData}>
                 <XAxis dataKey="date" tick={{fill:"#6B4A37",fontSize:11,fontFamily:"'DM Sans', system-ui, sans-serif"}} axisLine={false} tickLine={false}/>
                 <YAxis domain={[0,100]} tick={{fill:"#6B4A37",fontSize:11}} axisLine={false} tickLine={false}/>
@@ -455,8 +585,8 @@ export default function InnerVoiceDashboard() {
         )}
 
         <div className="ivd-history">
-          <div className="ivd-card-title" style={{marginBottom:4}}>Score History</div>
-          <div className="ivd-card-sub" style={{marginBottom:18}}>Your most recent saved days</div>
+          <div className="ivd-sec"><span className="ivd-sec-ico"><Bookmark size={18} aria-hidden="true" /></span><div><div className="ivd-card-title">Score History</div>
+          <div className="ivd-card-sub">Your most recent saved days</div></div></div>
           {history.length===0 ? <div className="ivd-empty">No history yet. Tick today's practices and save your first score above.</div> :
             history.slice(0,15).map(e=>(
               <div key={e.date} className="ivd-h-row">
@@ -466,7 +596,8 @@ export default function InnerVoiceDashboard() {
               </div>
             ))}
         </div>
-      <AskDivyaSection feature="karmaScore" context={`Today's Karma Sankhya: ${composite}/100 from ${done.length} of ${ACTIONS.length} practices (${behaviorPts} of ${MAX_POINTS} points).`} />
+        </div>
+      <AskDivyaSection feature="karmaScore" context={`Today's Karma Sankhya: ${composite}/100 from ${done.length} practices (${behaviorPts} points; ${MAX_POINTS} is a full score).`} />
       <FeatureFaq feature="karmaScore" />
       </div>
     </div>

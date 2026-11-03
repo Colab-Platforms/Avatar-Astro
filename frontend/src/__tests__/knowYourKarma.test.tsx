@@ -21,7 +21,7 @@ const calendar: TodayCalendar = {
   tithi: { name: "Navami", numberInPaksha: 9, endsAtLocal: "Tue, 3 Nov 2026, 11:55" },
   nakshatra: { name: "Ashlesha", pada: 3 }, yoga: "Shukla", karana: "Taitila", sunrise: "06:33", sunset: "17:35", festivals: null, notes: [],
 };
-const reply = { meaning: "Today is a dark-moon day, the ninth day. It is a good day to slow down.", thought: "Small habits shape how we feel.", action: "Say thank you to one person today.", remember: "You can begin again any time." };
+const reply = { thought: "Small habits shape how we feel.", action: "Say thank you to one person today.", remember: "You can begin again any time." };
 const ok = (obj: object) => Promise.resolve(new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify(obj) } }] }), { status: 200 }));
 
 beforeAll(() => {
@@ -49,13 +49,14 @@ describe("Inner Voice page", () => {
     }
   });
 
-  it("shows a larger, animated lotus, then the heading, the sub-heading and a quote, with no 'MyBhagya' label above", () => {
+  it("shows the logo (still, not floating), then the heading, the sub-heading and a quote, with no 'MyBhagya' label above", () => {
     mount();
-    const hero = document.querySelector(".iv-hero svg[aria-label='Lotus with Om']")!;
+    const hero = screen.getByTestId("inner-voice-logo");
+    expect(hero.getAttribute("src")).toBe("/images/tools/inner-voice-logo.png");
     const width = Number(hero.getAttribute("width"));
-    expect(width).toBeGreaterThan(84); // larger than the original
+    expect(width).toBeGreaterThan(84); // large enough to read
     expect(width).toBeLessThanOrEqual(150); // but not oversized
-    expect(hero.getAttribute("class")).toContain("lotus-live");
+    expect(hero.getAttribute("class") ?? "").not.toContain("lotus-live"); // it does not float
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Inner Voice");
     expect(screen.getByRole("heading", { level: 2, name: "Know Your Karma for a Better Life" })).toBeInTheDocument();
     expect(screen.getByTestId("inner-voice-quote")).toHaveTextContent("Every kind thought and small good deed plants a seed for a better tomorrow.");
@@ -133,9 +134,12 @@ describe("Know Your Karma guide", () => {
     fireEvent.click(q);
     const answer = await screen.findByTestId("karma-answer");
     expect(aiChat).toHaveBeenCalledTimes(1);
-    for (const h of ["What it means", "Your Karma Thought", "One Good Action", "Remember"]) {
+    for (const h of ["Your Karma Thought", "One Good Action", "Remember"]) {
       expect(within(answer).getByText(h)).toBeInTheDocument();
     }
+    // "What it means" is the calendar's explanation: it is shown once, above the chat, not in every answer
+    expect(within(answer).queryByText("What it means")).toBeNull();
+    expect(screen.getAllByText("What it means")).toHaveLength(1);
     // the calendar is shown once, at the top of the chat, and is not repeated in each answer
     expect(within(answer).queryByText("Today's Calendar")).toBeNull();
     expect(screen.getAllByText("Navami")).toHaveLength(1);
@@ -166,8 +170,10 @@ describe("Know Your Karma guide", () => {
     expect(answer).toHaveTextContent("general reflection");
   });
 
-  it("an answer that invents a calendar fact is refused with a friendly error and Try again works", async () => {
-    vi.mocked(aiChat).mockImplementationOnce(() => ok({ ...reply, meaning: "Today is Ekadashi, a day to fast." }));
+  it("an answer that names a calendar fact is asked for again, then refused with a friendly error, and Try again works", async () => {
+    // both attempts for the first question are bad
+    vi.mocked(aiChat).mockImplementationOnce(() => ok({ ...reply, thought: "Today is Ekadashi, a day to fast." }));
+    vi.mocked(aiChat).mockImplementationOnce(() => ok({ ...reply, thought: "Today is Ekadashi, a day to fast." }));
     mount();
     await screen.findByText("Navami");
     fireEvent.click(screen.getByRole("button", { name: "What should I focus on today?" }));
@@ -176,6 +182,54 @@ describe("Know Your Karma guide", () => {
     expect(screen.queryByTestId("karma-answer")).toBeNull();
     fireEvent.click(within(alert).getByRole("button", { name: /Try again/ }));
     expect(await screen.findByTestId("karma-answer")).toBeInTheDocument();
+    expect(aiChat).toHaveBeenCalledTimes(3);
+  });
+
+  it("explains today's calendar in simple words, once, built from the verified values", async () => {
+    mount();
+    const box = await screen.findByTestId("karma-calendar-meaning");
+    expect(box).toHaveTextContent("Today is Monday. Navami is the 9th day of the dark half (Krishna Paksha), when the Moon grows smaller each night. The Moon is in Ashlesha nakshatra (a group of stars).");
+  });
+
+  it("has an English / Hindi / Hinglish switch; it changes the labels, the calendar and the explanation, and is remembered", async () => {
+    mount();
+    await screen.findByText("Navami");
+    const group = screen.getByRole("radiogroup", { name: "Language" });
+    expect(within(group).getAllByRole("radio").map((r) => r.textContent)).toEqual(["English", "हिंदी", "Hinglish"]);
+    expect(within(group).getByRole("radio", { name: "English" })).toHaveAttribute("aria-checked", "true");
+
+    fireEvent.click(within(group).getByRole("radio", { name: "हिंदी" }));
+    expect(screen.getByText("आज का पंचांग")).toBeInTheDocument();
+    expect(screen.getByText("नवमी")).toBeInTheDocument(); // tithi, in Devanagari
+    expect(screen.getByText("सोमवार")).toBeInTheDocument(); // weekday
+    expect(screen.getByTestId("karma-calendar-meaning")).toHaveTextContent("आज सोमवार है। नवमी कृष्ण पक्ष (अँधेरा पक्ष) का नौवाँ दिन है, जब चाँद हर रात थोड़ा छोटा होता है। चाँद आश्लेषा नक्षत्र (तारों के समूह) में है।");
+    expect(screen.getByText("अपने कर्म के बारे में मुझसे कुछ भी पूछिए। मैं जवाब छोटे और आसान रखूँगा।")).toBeInTheDocument();
+    expect(localStorage.getItem("karma_lang")).toBe("hi");
+
+    fireEvent.click(screen.getByRole("radio", { name: "Hinglish" }));
+    expect(screen.getByText("Aaj ka Panchang")).toBeInTheDocument();
+    expect(screen.getByText("Somvar")).toBeInTheDocument();
+    expect(screen.getByTestId("karma-calendar-meaning")).toHaveTextContent("Aaj Somvar hai. Navami Krishna Paksha (andhera paksh) ka 9th din hai, jab chaand har raat thoda chhota hota hai. Chaand Ashlesha nakshatra (taaron ke samooh) mein hai.");
+  });
+
+  it("the chosen language is sent to the model and the answer headings follow it", async () => {
+    localStorage.setItem("karma_lang", "hi");
+    vi.mocked(aiChat).mockImplementation(() => ok({ thought: "छोटी आदतें हमारे मन को शांत करती हैं।", action: "आज किसी एक व्यक्ति को धन्यवाद कहें।", remember: "आप फिर से शुरू कर सकते हैं।" }));
+    mount();
+    await screen.findByText("नवमी");
+    fireEvent.click(screen.getByRole("button", { name: "आज मुझे किस बात पर ध्यान देना चाहिए?" }));
+    const answer = await screen.findByTestId("karma-answer");
+    expect(vi.mocked(aiChat).mock.calls[0][0].messages[0].content).toContain("Devanagari script");
+    for (const h of ["आपका कर्म-विचार", "एक अच्छा काम", "याद रखिए"]) expect(within(answer).getByText(h)).toBeInTheDocument();
+    expect(within(answer).getByText("पंचांग की बातें गणना से निकाली गई हैं। बाकी सोचने के लिए एक विचार है, भविष्यवाणी नहीं।")).toBeInTheDocument();
+  });
+
+  it("a Hindi request answered in Roman letters is refused (twice), in Hindi", async () => {
+    localStorage.setItem("karma_lang", "hi");
+    mount();
+    await screen.findByText("नवमी");
+    fireEvent.click(screen.getByRole("button", { name: "आज मुझे किस बात पर ध्यान देना चाहिए?" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("जवाब ठीक से नहीं बन पाया");
     expect(aiChat).toHaveBeenCalledTimes(2);
   });
 

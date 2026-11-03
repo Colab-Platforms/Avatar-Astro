@@ -3,26 +3,28 @@ import AskDivyaSection from "@/features/guru/AskDivyaSection";
 import FeatureFaq from "@/components/FeatureFaq";
 import { FEATURES } from "@/data/featureCatalog";
 import { useFeatureTitle } from "@/hooks/useFeatureTitle";
-import LotusOm from "@/components/ai-guru/LotusOm";
 import KarmaBot from "@/components/karma/KarmaBot";
 
 
 
 const CSS = `
 *{box-sizing:border-box;margin:0;padding:0;}
-.iv-app{min-height:100vh;background:#FBF5EC;color:#301607;font-family:'DM Sans', system-ui, sans-serif;overflow-x:hidden;position:relative;}
+.iv-app{min-height:100vh;background:linear-gradient(180deg,#FBF5EC 0%,#FAF1E1 55%,#F4E2C0 100%);color:#301607;font-family:'DM Sans', system-ui, sans-serif;overflow-x:hidden;position:relative;}
 
 /* ── STARFIELD ── */
 .iv-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
 
 /* ── PAGE ── */
 .iv-page{position:relative;z-index:1;}
+.iv-deco{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
+.iv-glow{position:absolute;border-radius:50%;filter:blur(64px);}
+.iv-ring{position:absolute;border-radius:50%;border:1px solid rgba(184,137,43,.2);}
 .iv-container{width:100%;max-width:1440px;margin:0 auto;padding:0 48px;}
 @media(max-width:768px){.iv-container{padding:0 20px;}}
 
 /* ── HERO ── */
-.iv-hero{padding:100px 48px 80px;text-align:center;}
-@media(max-width:768px){.iv-hero{padding:80px 20px 60px;}}
+.iv-hero{padding:100px 48px 64px;text-align:center;}
+@media(max-width:768px){.iv-hero{padding:92px 20px 48px;}}
 .iv-hero-eyebrow{font-family:'DM Sans', system-ui, sans-serif;font-size:14px;letter-spacing:7px;color:#592209;text-transform:uppercase;margin-bottom:22px;}
 .iv-hero-om{font-size:60px;display:block;margin-bottom:22px;filter:drop-shadow(0 0 28px rgba(89,34,9,.65));}
 .iv-hero-title{font-family:'DM Sans', system-ui, sans-serif;font-size:clamp(48px,8vw,80px);font-weight:900;line-height:1.0;margin-bottom:18px;background:linear-gradient(135deg,#592209 0%,#592209 50%,#592209 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:2px;}
@@ -308,11 +310,23 @@ export default function InnerVoice() {
     <div className="iv-app">
       <style>{CSS}</style>
       <StarCanvas />
+      {/* Soft light and rings in the corners; purely decorative. */}
+      <div className="iv-deco" aria-hidden="true">
+        <div className="iv-glow" style={{ left: -160, top: -100, width: 440, height: 440, background: "rgba(233,196,106,.32)" }} />
+        <div className="iv-glow" style={{ right: -160, top: 60, width: 420, height: 420, background: "rgba(217,137,95,.22)" }} />
+        <div className="iv-glow" style={{ left: -140, bottom: -160, width: 460, height: 460, background: "rgba(217,137,95,.2)" }} />
+        <div className="iv-glow" style={{ right: -140, bottom: -140, width: 460, height: 460, background: "rgba(233,196,106,.32)" }} />
+        {[0, 1, 2].map((i) => (<div key={"l" + i} className="iv-ring" style={{ left: -110 - i * 45, top: 300 - i * 45, width: 220 + i * 90, height: 220 + i * 90 }} />))}
+        {[0, 1, 2].map((i) => (<div key={"r" + i} className="iv-ring" style={{ right: -110 - i * 45, top: 560 - i * 45, width: 220 + i * 90, height: 220 + i * 90 }} />))}
+      </div>
       <div className="iv-page">
 
         {/* Hero: a softly glowing lotus, the heading, a sub-heading and a quote */}
         <div className="iv-hero" style={{ paddingBottom: 36 }}>
-          <span className="iv-hero-om" style={{ filter: "none", marginBottom: 12 }}><LotusOm size={140} className="mx-auto" animated /></span>
+          {/* The Inner Voice logo: light-brown line art on a transparent background. It stays still. */}
+          <span className="iv-hero-om" style={{ filter: "none", marginBottom: 10 }}>
+            <img src="/images/tools/inner-voice-logo.png" alt="" aria-hidden="true" data-testid="inner-voice-logo" width={104} height={118} className="mx-auto select-none" draggable={false} />
+          </span>
           <h1 className="iv-hero-title" style={{ marginBottom: 10 }}>Inner Voice</h1>
           <h2 className="iv-hero-tagline" style={{ marginBottom: 22, letterSpacing: 3, fontSize: 15 }}>Know Your Karma for a Better Life</h2>
           <figure className="mx-auto max-w-xl" data-testid="inner-voice-quote">
