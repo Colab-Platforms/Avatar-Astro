@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 
 /**
- * Minimal in-memory fixed-window rate limiter keyed by client IP.
+ * Minimal in-memory fixed-window rate limiter keyed by user id when signed in, otherwise client IP.
  * Per-process only: with multiple instances each keeps its own counters.
  */
 export function createRateLimiter(opts: { windowMs: number; max: number; message?: string; envelope?: boolean }) {
@@ -14,7 +14,9 @@ export function createRateLimiter(opts: { windowMs: number; max: number; message
   timer.unref();
 
   return (req: Request, res: Response, next: NextFunction) => {
-    const key = req.ip || req.socket.remoteAddress || "unknown";
+    // Signed-in requests are counted per user, so people sharing one IP (office, campus, mobile carrier) do not share a budget.
+    const userId = (req as Request & { user?: { id?: string } }).user?.id;
+    const key = userId ? `u:${userId}` : req.ip || req.socket.remoteAddress || "unknown";
     const now = Date.now();
     const entry = hits.get(key);
     if (!entry || entry.resetAt <= now) {
