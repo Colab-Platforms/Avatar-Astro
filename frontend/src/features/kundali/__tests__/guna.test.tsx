@@ -41,10 +41,10 @@ describe("TermInfo", () => {
 describe("BirthChartDiagram", () => {
   it("places grahas in their calculated houses and numbers signs from the Lagna", () => {
     const { container } = render(<BirthChartDiagram title="Rashi chart (D1)" lagnaSign="Cancer" grahas={[{ planet: "Moon", sign: "Sagittarius", house: 6 }, { planet: "Sun", sign: "Aries", house: 10 }]} />);
-    expect(container.querySelector("svg")).toHaveAttribute("aria-label", expect.stringContaining("Moon in house 6"));
+    expect(container.querySelector("svg")).toHaveAttribute("aria-label", expect.stringContaining("Chandra (Moon) in house 6"));
     const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent);
-    expect(texts).toContain("Mo");
-    expect(texts).toContain("Su");
+    expect(texts).toContain("Chandra");
+    expect(texts).toContain("Surya");
     expect(texts[0]).toBe("4"); // Cancer is sign 4, house 1
   });
 });
