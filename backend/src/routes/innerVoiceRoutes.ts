@@ -6,6 +6,7 @@ import { buildBirthPanchang, buildTodayBlock, parseBirthPlace, namesCalendarTerm
 import { getDailyChatStatus, consumeDailyChatSession } from "../utils/dailyChatSession.js";
 import { screenMessage, ESCALATION_REPLY, OFF_TOPIC_REPLY } from "../utils/chatScreening.js";
 import prisma from "@root/prisma.js";
+import { OPENROUTER_MODEL } from "../config/aiModels.js";
 
 const router = Router();
 // Life path readings and TTS are generated per user and spend provider credits.
@@ -96,7 +97,7 @@ export class ProviderError extends Error {
   }
 }
 
-async function callAI(apiKey: string, prompt: string, maxTokens = 1000, languageRule = HINGLISH_RULE): Promise<string> {
+async function callAI(apiKey: string, prompt: string, maxTokens = 1000, model: string = currentModel(), languageRule = HINGLISH_RULE): Promise<string> {
   const res = await fetch(OPENROUTER_URL, {
     method: "POST",
     signal: AbortSignal.timeout(45_000),
@@ -107,12 +108,13 @@ async function callAI(apiKey: string, prompt: string, maxTokens = 1000, language
       "X-Title": "Spiritual AI Inner Voice",
     },
     body: JSON.stringify({
-      model: currentModel(),
+      model,
       max_tokens: maxTokens,
       messages: [{ role: "user", content: prompt + languageRule }],
     }),
   });
-  const data = await res.json().catch(() => null) as any;
+  // A timeout while reading the body must stay a timeout, not look like an empty reply.
+  const data = await res.json().catch((e) => { if (e?.name === "TimeoutError" || e?.name === "AbortError") throw e; return null; }) as any;
   if (data?.error) throw new ProviderError(String(data.error.message ?? "Provider error"), Number(data.error.code) || res.status);
   if (!res.ok) throw new ProviderError("Provider returned an error status", res.status);
   return data?.choices?.[0]?.message?.content ?? "";
@@ -321,7 +323,7 @@ router.get("/panchang", createRateLimiter({ windowMs: 60_000, max: 30 }), (_req:
 // handed to the model, which only explains them in a few simple sentences. A reply that names a calendar fact
 // it was not given, or quotes scripture, is refused.
 // Short, simple readings: each part has a hard length limit, and a longer text is cut at a full sentence.
-const LIFE_PATH_MAX_TOKENS = 900; // a ceiling only: some models spend part of it thinking; the reading itself is capped below
+const LIFE_PATH_MAX_TOKENS = 3000; // a ceiling only: some models spend much of it thinking (1200 cut replies off mid-JSON); the reading itself is capped below
 const LIFE_PATH_LIMITS = { guidance: 200, step: 110, thought: 80 } as const;
 // Standard numerology keywords for each life path number: the model may use only these ideas, so it does not
 // recall meanings of its own.
@@ -414,7 +416,7 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
     const askModel = async (): Promise<string> => {
       for (let attempt = 0; ; attempt++) {
         try {
-          return await callAI(apiKey, prompt, LIFE_PATH_MAX_TOKENS, PLAIN_ENGLISH_RULE);
+          return await callAI(apiKey, prompt, LIFE_PATH_MAX_TOKENS, OPENROUTER_MODEL, PLAIN_ENGLISH_RULE);
         } catch (err: any) {
           if (!(err instanceof ProviderError && err.status === 429) || attempt >= 2) throw err;
           await sleep(LIFE_PATH_RETRY_DELAY_MS * 2 * (attempt + 1));
@@ -448,7 +450,7 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
       const timedOut = err?.name === "TimeoutError" || err?.name === "AbortError";
       const status = err instanceof ProviderError ? err.status : undefined;
       // Kind and status only: never the provider message (it can echo request details) and never the key.
-      console.error("Life path provider error:", timedOut ? "timeout" : `${err?.name} status=${status ?? "none"}`);
+      console.error(`Life path provider error: model=${OPENROUTER_MODEL} kind=${timedOut ? "timeout" : err?.name} providerStatus=${status ?? "none"}`);
       if (status === 429) {
         return res.status(503).json({ error: "The reading service is busy right now. Please try again in a minute.", code: "provider_busy" });
       }

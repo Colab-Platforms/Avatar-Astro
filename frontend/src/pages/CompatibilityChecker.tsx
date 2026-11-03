@@ -1063,7 +1063,8 @@ import zodiacSagittarius from "@/assets/zodiac-gold/sagittarius.png";
 import zodiacCapricorn from "@/assets/zodiac-gold/capricorn.png";
 import zodiacAquarius from "@/assets/zodiac-gold/aquarius.png";
 import zodiacPisces from "@/assets/zodiac-gold/pisces.png";
-import { requireSignIn } from "@/lib/authedFetch";
+import { authedFetch, requireSignIn, SignInRequiredError } from "@/lib/authedFetch";
+import { AUTH_API_BASE_URL } from "@/lib/authClient";
 
 const css = `
   :root {
@@ -1797,6 +1798,21 @@ export default function App() {
     if (problem) { setError(problem); return; }
     const run = ++runRef.current;
     setPhase("loading");
+    try {
+      const checkRes = await authedFetch(`${AUTH_API_BASE_URL}/compatibility/check`, { method: "POST" });
+      if (!checkRes.ok) {
+        const body = await checkRes.json().catch(() => null);
+        if (run !== runRef.current) return;
+        setPhase("form");
+        setError(body?.message || "This tool is temporarily unavailable. Please try again later.");
+        return;
+      }
+    } catch (err) {
+      if (run !== runRef.current) return;
+      setPhase("form");
+      if (!(err instanceof SignInRequiredError)) setError("Couldn't verify usage limit. Please check your connection and try again.");
+      return;
+    }
     const z1 = getZodiac(+p1.day, +p1.month), z2 = getZodiac(+p2.day, +p2.month);
     // Short pause so the progress steps can be read; the comparison itself is computed instantly.
     await new Promise(r => setTimeout(r, 1300));

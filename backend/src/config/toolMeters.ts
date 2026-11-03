@@ -12,22 +12,37 @@ export interface MeteredRoute {
 
 export const METERED: Record<string, MeteredRoute[]> = {
   tarot: [{ method: "POST", path: /^\/api\/tarot\/reading$/, label: "POST /api/tarot/reading" }],
+  // The live Birth Chart page generates its chart via POST /api/gemstone-calculator/kundali (see index.ts), not the
+  // legacy /api/birthchart/* routes below (kept metered in case anything still calls them).
   "birth-chart": [
+    { method: "POST", path: /^\/api\/gemstone-calculator\/kundali$/, label: "POST /api/gemstone-calculator/kundali" },
     { method: "POST", path: /^\/api\/birthchart\/analyze$/, label: "POST /api/birthchart/analyze" },
     { method: "POST", path: /^\/api\/birthchart\/chat$/, label: "POST /api/birthchart/chat" },
   ],
-  compatibility: [{ method: "POST", path: /^\/api\/compatibility\/analyze$/, label: "POST /api/compatibility/analyze" }],
-  "name-analysis": [{ method: "POST", path: /^\/api\/name-analysis\/narrative$/, label: "POST /api/name-analysis/narrative" }],
+  // The live Compatibility, Name Destiny Report and Palm Reading pages compute their result in the browser and
+  // never call their AI endpoints below (kept locked down so they can't be used as an open relay). Each page instead
+  // calls the paired /check endpoint purely to consume one use of the admin's per-24h limit before showing a result.
+  compatibility: [
+    { method: "POST", path: /^\/api\/compatibility\/analyze$/, label: "POST /api/compatibility/analyze" },
+    { method: "POST", path: /^\/api\/compatibility\/check$/, label: "POST /api/compatibility/check" },
+  ],
+  "name-analysis": [
+    { method: "POST", path: /^\/api\/name-analysis\/narrative$/, label: "POST /api/name-analysis/narrative" },
+    { method: "POST", path: /^\/api\/name-analysis\/check$/, label: "POST /api/name-analysis/check" },
+  ],
   interpretation: [
     { method: "GET", path: /^\/api\/interpretation\/horoscope\/[^/]+$/, label: "GET /api/interpretation/horoscope/:sign" },
     { method: "POST", path: /^\/api\/interpretation\/birth-chart$/, label: "POST /api/interpretation/birth-chart" },
     { method: "GET", path: /^\/api\/interpretation\/compatibility$/, label: "GET /api/interpretation/compatibility" },
     { method: "POST", path: /^\/api\/interpretation\/chart-chat$/, label: "POST /api/interpretation/chart-chat" },
   ],
-  "palm-reading": [{ method: "POST", path: /^\/api\/palm-reading$/, label: "POST /api/palm-reading" }],
+  "palm-reading": [
+    { method: "POST", path: /^\/api\/palm-reading$/, label: "POST /api/palm-reading" },
+    { method: "POST", path: /^\/api\/palm-reading\/check$/, label: "POST /api/palm-reading/check" },
+  ],
+  // kundali moved to "birth-chart" above: it is the Birth Chart feature, not the gemstone calculator.
   gemstone: [
     { method: "POST", path: /^\/api\/gemstone-calculator\/calculate$/, label: "POST /api/gemstone-calculator/calculate" },
-    { method: "POST", path: /^\/api\/gemstone-calculator\/kundali$/, label: "POST /api/gemstone-calculator/kundali" },
   ],
 };
 

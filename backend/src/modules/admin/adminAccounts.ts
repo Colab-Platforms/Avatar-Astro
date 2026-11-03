@@ -10,10 +10,13 @@ import { sendPasswordResetEmail } from "@/utils/mailer.js";
 import { invalidateAccountStatus } from "@/middleware/authMiddleware.js";
 import { EVENT_TYPES, EVENT_LABELS } from "@/config/events.js";
 import { featureName } from "@/config/readingFeatures.js";
+import { featureLabel } from "@/config/features.js";
 import type { MainAdminRequest } from "@/middleware/mainAdmin.js";
 import { wrap } from "./adminPanel.route.js";
 import { writeAudit } from "./audit.js";
 import { parsePage } from "./adminPanel.validation.js";
+import { METERED } from "@/config/toolMeters.js";
+import { getToolLimit, usedInWindow, WINDOW_MS } from "@/services/toolLimits.js";
 
 /**
  * Customer and administrator account management. The two account kinds are kept strictly apart:
@@ -274,7 +277,7 @@ export function createAccountsRouter(): Router {
         if (!user) throw notFound(word);
         const since = new Date(Date.now() - 30 * DAY_MS);
         const mine = { userId: user.id };
-        const [usage30, usageAll, lastActive, lastLogin, logins, recent, totals, createdBy, library, history, actions] = await Promise.all([
+        const [usage30, usageAll, lastActive, lastLogin, logins, recent, totals, createdBy, library, history, actions, rateLimits] = await Promise.all([
           prisma.usageEvent.groupBy({ by: ["feature"], where: { ...mine, eventType: EVENT_TYPES.featureRequest, createdAt: { gte: since } }, _count: { _all: true } }),
           prisma.usageEvent.groupBy({ by: ["feature", "status"], where: { ...mine, eventType: EVENT_TYPES.featureRequest }, _count: { _all: true } }),
           prisma.usageEvent.aggregate({ where: mine, _max: { createdAt: true } }),
@@ -286,6 +289,12 @@ export function createAccountsRouter(): Router {
           Promise.all([prisma.generatedReading.count({ where: mine }), prisma.generatedReading.count({ where: { ...mine, isSaved: true } }), prisma.conversation.count({ where: mine })]),
           prisma.adminAuditLog.findMany({ where: { entityId: user.id }, orderBy: { createdAt: "desc" }, take: 25, select: { id: true, actorEmail: true, action: true, summary: true, metadata: true, createdAt: true } }),
           kind === "admin" ? prisma.adminAuditLog.findMany({ where: { actorId: user.id }, orderBy: { createdAt: "desc" }, take: 15, select: { id: true, action: true, summary: true, createdAt: true } }) : Promise.resolve([]),
+          Promise.all(Object.keys(METERED).map(async (tool) => {
+            const limit = await getToolLimit(tool);
+            if (limit == null) return { tool, limit: null, used: 0 };
+            const used = await usedInWindow(tool, user.id);
+            return { tool, limit, used };
+          })),
         ]);
         const { userRoleMappings, _count, password, googleId, createdById: _c, ...rest } = user;
         const byFeature = new Map<string, { feature: string; total: number; success: number; failed: number }>();
@@ -314,6 +323,7 @@ export function createAccountsRouter(): Router {
           library: { readings: library[0], saved: library[1], conversations: library[2] },
           auditHistory: history,
           recentAdminActions: actions,
+          rateLimits: rateLimits.filter((r) => r.limit != null).map((r) => ({ ...r, label: featureLabel(r.tool), windowHours: WINDOW_MS / 3_600_000 })),
           notStored: ["Orders, bookings and payments do not exist yet."],
         });
       }),

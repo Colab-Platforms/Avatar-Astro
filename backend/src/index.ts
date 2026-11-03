@@ -302,6 +302,9 @@ app.use("/api/shop", publicShopRoutes);
 
 // Ratna Jyotish (stateless gemstone calculator)
 // Public calculator: optionalAuth only identifies a signed-in caller for usage attribution; it never blocks or grants anything.
+// /kundali is the live Birth Chart feature (see frontend/src/features/kundali/api.ts), so it is gated under the
+// "birth-chart" admin limit before falling through to the gemstone module's own "gemstone" gate below.
+app.use("/api/gemstone-calculator/kundali", ...feature("birth-chart"));
 app.use("/api/gemstone-calculator", ...feature("gemstone"), optionalAuth(), gemstoneRoutes);
 
 // AI routes
@@ -366,6 +369,11 @@ app.post("/api/tts", ...feature("tts"), auth("USER"), async (req: Request, res: 
 // ── Palm Reading ────────────────────────────────────────────────────────────
 // Note: the current Palm Reading page analyses the photo in the browser and does not call this endpoint.
 // It is kept (and locked down) because it forwards an image to a paid vision model.
+// /check carries no image and does no analysis: the page calls it first purely to consume one use of the
+// admin's per-24h "palm-reading" limit before running the (free, client-side) analysis.
+app.post("/api/palm-reading/check", ...feature("palm-reading"), auth("USER"), (_req: Request, res: Response) => {
+  res.json({ success: true });
+});
 const PALM_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const PALM_MAX_BASE64_CHARS = 8_000_000; // ~6 MB of image data
 app.post("/api/palm-reading", ...feature("palm-reading"), auth("USER"), createRateLimiter({ windowMs: 60_000, max: 5 }), async (req: Request, res: Response) => {

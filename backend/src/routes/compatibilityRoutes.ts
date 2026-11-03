@@ -8,6 +8,12 @@ router.use(auth("USER"));
 // This AI endpoint is not called by the current Compatibility page; keep it from being used as an open, uncapped AI relay.
 router.use(createRateLimiter({ windowMs: 60_000, max: 10 }));
 
+// The live Compatibility page compares signs in the browser and calls this first purely to consume one use of
+// the admin's per-24h "compatibility" limit before showing a result.
+router.post("/check", (_req: Request, res: Response) => {
+  res.json({ success: true });
+});
+
 router.post("/analyze", async (req: Request, res: Response) => {
   try {
     const { p1, p2, scores } = req.body;
