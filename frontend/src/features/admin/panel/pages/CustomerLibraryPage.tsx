@@ -52,7 +52,7 @@ export default function CustomerLibraryPage() {
                 <Table head={["Customer", "Feature", "Saved", "Generated"]}>
                   {d.items.map((r) => (
                     <tr key={r.id}>
-                      <td className="px-3 py-2"><Link className="font-medium hover:text-[#803003]" to={`/admin/customers?user=${r.customer.id}`}>{personName({ name: r.customer.name, email: null }) === "Unknown" ? r.customer.email : personName({ name: r.customer.name, email: null })}</Link><span className="block text-xs text-[#6B6259]">{r.customer.email}</span></td>
+                      <td className="px-3 py-2"><Link className="font-medium hover:text-[#803003]" to={`/admin/customers/${r.customer.id}`}>{personName({ name: r.customer.name, email: null }) === "Unknown" ? r.customer.email : personName({ name: r.customer.name, email: null })}</Link><span className="block text-xs text-[#6B6259]">{r.customer.email}</span></td>
                       <td className="px-3 py-2">{r.label}</td>
                       <td className="px-3 py-2">{r.isSaved ? <Badge tone="good">Saved</Badge> : <span className="text-xs text-[#756B61]">—</span>}</td>
                       <td className="px-3 py-2 text-xs">{fmtDate(r.createdAt)}</td>
