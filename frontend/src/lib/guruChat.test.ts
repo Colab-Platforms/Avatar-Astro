@@ -68,10 +68,10 @@ describe("scripture references", () => {
   it("refuses a reply that cites a verse it was not given", async () => {
     vi.mocked(aiChat).mockImplementation(() => ok("The Gita, Chapter 9, Verse 22 promises this."));
     await expect(askGuru([], "q", "", undefined, "", ["2.47"])).rejects.toThrow(/could not be checked/);
-    await expect(askGuru([], "q")).rejects.toThrow(/could not be checked/);
+    await expect(askGuru([], "q", "")).rejects.toThrow(/could not be checked/);
   });
   it("a reply with no reference is fine", async () => {
     vi.mocked(aiChat).mockImplementation(() => ok("Take a slow breath and do one small kind thing today."));
-    expect((await askGuru([], "q")).message).toMatch(/slow breath/);
+    expect((await askGuru([], "q", "")).message).toMatch(/slow breath/);
   });
 });

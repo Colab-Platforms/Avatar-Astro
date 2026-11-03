@@ -30,7 +30,11 @@ export function useApi<T = any>() {
     []
   );
 
-  return { ...state, execute };
+  const reset = useCallback(() => {
+    setState({ data: null, loading: false, error: null });
+  }, []);
+
+  return { ...state, execute, reset };
 }
 
 // Specific hooks for common operations
@@ -115,8 +119,8 @@ export function useAuth() {
 
   const logout = useCallback(() => {
     localStorage.removeItem('authToken');
-    setState({ data: null, loading: false, error: null });
-  }, []);
+    api.reset();
+  }, [api]);
 
   return { ...api, register, login, logout };
 }

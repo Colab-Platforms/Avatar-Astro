@@ -98,9 +98,12 @@ const saveCollapsed = (v: boolean) => {
   }
 };
 
-function Initials({ name, size = "md" }: { name: string; size?: "sm" | "md" }) {
+function Initials({ name, photo, size = "md" }: { name: string; photo?: string | null; size?: "sm" | "md" }) {
   const t = name.split(/\s+/).map((p) => p[0]).slice(0, 2).join("").toUpperCase() || "M";
   const sizeCls = size === "sm" ? "h-7 w-7 text-xs" : "h-9 w-9 text-xs";
+  if (photo) {
+    return <img src={photo} alt="" aria-hidden="true" className={cn("shrink-0 rounded-lg object-cover", sizeCls)} />;
+  }
   return (
     <span
       aria-hidden="true"
@@ -115,7 +118,7 @@ function Initials({ name, size = "md" }: { name: string; size?: "sm" | "md" }) {
 }
 
 export default function DashboardLayout() {
-  const user = useAuthStore((s) => s.user) as { firstName?: string; lastName?: string; email?: string } | null;
+  const user = useAuthStore((s) => s.user) as { firstName?: string; lastName?: string; email?: string; profileImage?: string | null } | null;
   const [collapsed, setCollapsed] = useState(readCollapsed);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
@@ -230,7 +233,7 @@ export default function DashboardLayout() {
           {!collapsed ? (
             <div className="space-y-3">
               <div className="flex items-center gap-3 px-1">
-                <Initials name={name} />
+                <Initials name={name} photo={user?.profileImage} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-[#2A1A10]">{name}</p>
                   {user?.email && <p className="truncate text-xs text-[#8C7A6B]">{user.email}</p>}
@@ -270,7 +273,7 @@ export default function DashboardLayout() {
           ) : (
             <div className="flex flex-col items-center gap-2">
               <div title={name}>
-                <Initials name={name} />
+                <Initials name={name} photo={user?.profileImage} />
               </div>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
@@ -447,7 +450,7 @@ export default function DashboardLayout() {
               className="flex items-center gap-2 rounded-lg p-1 transition-colors hover:bg-[#F6EEDF]"
               title="Profile settings"
             >
-              <Initials name={name} size="sm" />
+              <Initials name={name} photo={user?.profileImage} size="sm" />
               <span className="hidden max-w-[10rem] truncate font-medium text-[#2A1A10] sm:inline-block">
                 {name}
               </span>
