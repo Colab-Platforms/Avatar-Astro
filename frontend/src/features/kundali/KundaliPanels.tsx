@@ -110,7 +110,7 @@ export const KundaliPanels = ({ k }: { k: KundaliResult }) => {
           </div>
           <p className="text-sm text-[#6B4A37]">
             Drawn in the North Indian style from the positions calculated above: the top diamond is the <TermInfo term="Lagna">Lagna</TermInfo> (house 1), houses run anticlockwise, and the small number in each
-            house is the <TermInfo term="Rashi">Rashi</TermInfo> number (1 = Mesha ... 12 = Meena). Su Sun, Mo Moon, Ma Mars, Me Mercury, Ju Jupiter, Ve Venus, Sa Saturn, Ra <TermInfo term="Rahu">Rahu</TermInfo>, Ke <TermInfo term="Ketu">Ketu</TermInfo>.
+            house is the <TermInfo term="Rashi">Rashi</TermInfo> number (1 = Mesha ... 12 = Meena). Surya (Sun), Chandra (Moon), Mangal (Mars), Budh (Mercury), Guru (Jupiter), Shukra (Venus), Shani (Saturn), <TermInfo term="Rahu">Rahu</TermInfo> and <TermInfo term="Ketu">Ketu</TermInfo>.
             The left chart is the <TermInfo term="D1 (Rashi chart)">Rashi chart (D1)</TermInfo>, the main birth chart. The right-hand chart is the <TermInfo term="Navamsa (D9)">Navamsa (D9)</TermInfo>, an extra view tradition reads for marriage and inner strength.
           </p>
         </Panel>

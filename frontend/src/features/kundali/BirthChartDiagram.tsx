@@ -4,7 +4,8 @@ import type { KundaliResult } from "./types";
 // houses run anticlockwise; the sign number inside each house is the sign that falls in that house. Nothing is invented: it
 // only places the grahas the server already calculated.
 
-const ABBR: Record<string, string> = { Sun: "Su", Moon: "Mo", Mars: "Ma", Mercury: "Me", Jupiter: "Ju", Venus: "Ve", Saturn: "Sa", Rahu: "Ra", Ketu: "Ke" };
+// Graha names as written in the chart: the Sanskrit/Hindi name (the English name is given in the text under the chart).
+const GRAHA_NAME: Record<string, string> = { Sun: "Surya", Moon: "Chandra", Mars: "Mangal", Mercury: "Budh", Jupiter: "Guru", Venus: "Shukra", Saturn: "Shani", Rahu: "Rahu", Ketu: "Ketu" };
 const SIGNS = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"];
 
 // Text anchor (centre) of each house in a 400x400 viewBox, houses 1..12.
@@ -28,8 +29,8 @@ interface Props {
 export const BirthChartDiagram = ({ title, lagnaSign, grahas, testId }: Props) => {
   const lagnaIdx = SIGNS.indexOf(lagnaSign);
   const byHouse = new Map<number, string[]>();
-  for (const g of grahas) byHouse.set(g.house, [...(byHouse.get(g.house) ?? []), ABBR[g.planet] ?? g.planet.slice(0, 2)]);
-  const label = grahas.map((g) => `${g.planet} in house ${g.house}`).join(", ");
+  for (const g of grahas) byHouse.set(g.house, [...(byHouse.get(g.house) ?? []), GRAHA_NAME[g.planet] ?? g.planet]);
+  const label = grahas.map((g) => `${GRAHA_NAME[g.planet] ?? g.planet} (${g.planet}) in house ${g.house}`).join(", ");
   return (
     <figure className="m-0 min-w-0" data-testid={testId}>
       <svg viewBox="0 0 400 400" role="img" aria-label={`${title}. Lagna ${lagnaSign}. ${label}`} className="h-auto w-full max-w-[420px]">
@@ -44,7 +45,7 @@ export const BirthChartDiagram = ({ title, lagnaSign, grahas, testId }: Props) =
             <g key={house}>
               <text x={sx} y={sy} textAnchor="middle" fontSize="13" fill="#6B4A37">{signNum}</text>
               {ps.map((p, j) => (
-                <text key={p} x={x} y={y + (j - (ps.length - 1) / 2) * 17} textAnchor="middle" fontSize="15" fontWeight="700" fill="#301607">{p}</text>
+                <text key={p} x={x} y={y + (j - (ps.length - 1) / 2) * 16} textAnchor="middle" fontSize="13" fontWeight="700" fill="#301607">{p}</text>
               ))}
             </g>
           );
