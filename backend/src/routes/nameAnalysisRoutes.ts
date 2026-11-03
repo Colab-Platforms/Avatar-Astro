@@ -9,6 +9,12 @@ router.use(auth("USER"));
 // It is kept (rate-limited) only so older clients do not break; it still falls back to canned text, so do not build on it.
 router.use(createRateLimiter({ windowMs: 60_000, max: 10 }));
 
+// The live Naamank Jyotish page computes the report in the browser and calls this first purely to consume one
+// use of the admin's per-24h "name-analysis" limit before showing a result.
+router.post("/check", (_req: Request, res: Response) => {
+  res.json({ success: true });
+});
+
 interface NarrativeRequest {
   name: string;
   dob: string;

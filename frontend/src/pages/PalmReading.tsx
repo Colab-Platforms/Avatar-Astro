@@ -10,7 +10,8 @@ import {
 import { SQUARE_PALM_MIN, LONG_FINGERS_MIN } from "@/lib/palmAnalysis/lineEstimator";
 import { ScanSequence } from "@/components/palm/ScanSequence";
 import PalmEducation from "@/components/palm/PalmEducation";
-import { requireSignIn } from "@/lib/authedFetch";
+import { authedFetch, requireSignIn, SignInRequiredError } from "@/lib/authedFetch";
+import { AUTH_API_BASE_URL } from "@/lib/authClient";
 
 // Upload limits (checked before anything is read or analysed).
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -228,8 +229,24 @@ export default function PalmReading() {
   useBackOverride(stage !== "landing" ? resetToLanding : null, [stage]);
 
   const runAnalysisPipeline = useCallback(async (dataUrl: string) => {
-    setStage("processing");
     setRetakeMessage(null);
+    try {
+      const checkRes = await authedFetch(`${AUTH_API_BASE_URL}/palm-reading/check`, { method: "POST" });
+      if (!checkRes.ok) {
+        const body = await checkRes.json().catch(() => null);
+        setRetakeMessage(body?.message || "This tool is temporarily unavailable. Please try again later.");
+        setStage("retake");
+        return;
+      }
+    } catch (err) {
+      if (!(err instanceof SignInRequiredError)) {
+        setRetakeMessage("Couldn't verify usage limit. Please check your connection and try again.");
+        setStage("retake");
+      }
+      return;
+    }
+
+    setStage("processing");
     setProcessingPct(0);
     setProcessingMessage("Preparing hand detection...");
     // Never leave the user waiting: if detection stalls, give up after 60s and offer a retake.

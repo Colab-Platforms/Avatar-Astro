@@ -6,7 +6,8 @@ import NameDestinyReport from "@/components/NameDestinyReport";
 import FeatureIntro from "@/components/FeatureIntro";
 import NameNumerologyEducation from "@/components/NameNumerologyEducation";
 import { buildProfile, checkName, type NameProfile } from "@/lib/numerology";
-import { requireSignIn } from "@/lib/authedFetch";
+import { authedFetch, requireSignIn, SignInRequiredError } from "@/lib/authedFetch";
+import { AUTH_API_BASE_URL } from "@/lib/authClient";
 
 interface FormState {
   firstName: string;
@@ -40,7 +41,7 @@ export default function NameDestinyReportPage() {
     setForm((f) => ({ ...f, [key]: value }));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!requireSignIn(() => handleSubmit({ preventDefault() {} } as React.FormEvent))) return; // signed out: ask, keep the form, then run this once
     if (!form.firstName.trim() || !form.dob) {
@@ -66,6 +67,17 @@ export default function NameDestinyReportPage() {
     const result = buildProfile([form.firstName, form.lastName].filter((p) => p.trim()).join(" "), form.dob);
     if ("error" in result) {
       setError(result.error);
+      return;
+    }
+    try {
+      const checkRes = await authedFetch(`${AUTH_API_BASE_URL}/name-analysis/check`, { method: "POST" });
+      if (!checkRes.ok) {
+        const body = await checkRes.json().catch(() => null);
+        setError(body?.message || "This tool is temporarily unavailable. Please try again later.");
+        return;
+      }
+    } catch (err) {
+      if (!(err instanceof SignInRequiredError)) setError("Couldn't verify usage limit. Please check your connection and try again.");
       return;
     }
     setError("");
