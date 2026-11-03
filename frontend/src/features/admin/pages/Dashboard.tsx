@@ -84,7 +84,7 @@ export default function AdminOverviewPage() {
                       <ul className="divide-y divide-[#EEE9E2] text-sm">
                         {o.recentSignups.map((u) => (
                           <li key={u.id}>
-                            <Link className="flex items-center justify-between gap-3 py-2 hover:text-[#803003]" to={`/admin/customers?user=${u.id}`}>
+                            <Link className="flex items-center justify-between gap-3 py-2 hover:text-[#803003]" to={`/admin/customers/${u.id}`}>
                               <span className="min-w-0 truncate">{personName(u)}</span>
                               <span className="shrink-0 text-xs text-[#6B6259]">{fmtDate(u.createdAt)}</span>
                             </Link>

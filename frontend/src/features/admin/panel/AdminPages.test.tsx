@@ -19,6 +19,7 @@ vi.mock("recharts", () => {
 vi.mock("@/features/auth/hooks/useAuthMutations", () => ({ useLogoutMutation: () => ({ mutateAsync: vi.fn(), isPending: false }) }));
 
 import UsersPage from "./pages/UsersPage";
+import CustomerDetailPage from "./pages/CustomerDetailPage";
 import ActivityPage from "./pages/ActivityPage";
 import ReportsPage from "./pages/ReportsPage";
 import AdminOverviewPage from "../pages/Dashboard";
@@ -84,15 +85,11 @@ describe("Users page", () => {
     await waitFor(() => expect(screen.getByTestId("where").textContent).toBe("/admin/customers?provider=GOOGLE"));
   });
 
-  it("opens the Customer 360 profile from a row and from a deep link", async () => {
+  it("links each row to its own customer detail page", async () => {
     mount(<UsersPage />, "/admin/customers");
-    fireEvent.click(await screen.findByRole("button", { name: /Open profile of Asha Rao/ }));
-    await screen.findByText("Customer profile");
-    await screen.findByText("Sign-in history");
-    expect(screen.getByText(/Signed in/)).toBeInTheDocument();
-    expect(screen.getByText(/Reading content is not saved on the server/)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "View all activity" })).toHaveAttribute("href", "/admin/activity?userId=u1");
-    expect(calls()).toContain("/admin/customers/u1");
+    const link = await screen.findByRole("link", { name: /Open profile of Asha Rao/ });
+    expect(link).toHaveAttribute("href", "/admin/customers/u1");
+    expect(screen.getByRole("link", { name: "View" })).toHaveAttribute("href", "/admin/customers/u1");
   });
 
   it("shows an honest empty state when filters match nobody", async () => {
@@ -100,6 +97,52 @@ describe("Users page", () => {
     mount(<UsersPage />, "/admin/customers?status=inactive");
     await screen.findByText("No customers match these filters");
     expect(screen.getByRole("button", { name: "Clear filters" })).toBeInTheDocument();
+  });
+});
+
+describe("Customer detail page", () => {
+  function mountDetail(id = "u1") {
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    return render(
+      <QueryClientProvider client={qc}>
+        <MemoryRouter initialEntries={[`/admin/customers/${id}`]}>
+          <Routes><Route path="/admin/customers/:id" element={<CustomerDetailPage />} /></Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+  }
+
+  beforeEach(() => {
+    authRequest.mockReset();
+    authRequest.mockImplementation(async (url: string) => {
+      if (url.startsWith("/admin/customers/u1")) {
+        return { ...user(), address: null, gender: null, dateOfBirth: null, profileImage: null, activeSessions: 1, usageLast30Days: [], lastLoginAt: "2026-10-29T09:00:00.000Z",
+          loginHistory: [{ id: "e1", eventType: "auth.login", status: "success", metadata: { method: "google" }, createdAt: "2026-10-29T09:00:00.000Z" }],
+          recentActivity: [{ id: "e2", eventType: "feature.request", feature: "tarot", status: "success", statusCode: 200, metadata: null, createdAt: "2026-10-29T10:00:00.000Z", label: "Used" }],
+          featureUsage: [{ feature: "tarot", total: 2, success: 1, failed: 1 }], eventCounts: [],
+          rateLimits: [{ tool: "tarot", label: "AI Tarot Reading", limit: 5, used: 5, windowHours: 24 }],
+          credentialStatus: "none (signs in with Google)", createdBy: null, library: { readings: 3, saved: 1, conversations: 2 }, auditHistory: [], notStored: ["Reading content is not saved on the server."] };
+      }
+      return { mainAdmin: true, email: "owner@example.com" };
+    });
+  });
+
+  it("shows the full customer record: login history, tool usage and rate limits", async () => {
+    mountDetail("u1");
+    await screen.findByText("Customer profile");
+    await screen.findByText("Sign-in history");
+    expect(screen.getByText(/Signed in/)).toBeInTheDocument();
+    expect(screen.getByText(/Reading content is not saved on the server/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "View all activity" })).toHaveAttribute("href", "/admin/activity?userId=u1");
+    const rateLimitRow = screen.getByText("AI Tarot Reading").closest("tr")!;
+    expect(within(rateLimitRow).getAllByText("5")).toHaveLength(2);
+    expect(calls()).toContain("/admin/customers/u1");
+  });
+
+  it("links back to the customers list", async () => {
+    mountDetail("u1");
+    await screen.findByText("Customer profile");
+    expect(screen.getByRole("link", { name: "Back to customers" })).toHaveAttribute("href", "/admin/customers");
   });
 });
 
@@ -113,7 +156,7 @@ describe("Activity page", () => {
     }));
     mount(<ActivityPage />, "/admin/activity?feature=tarot&status=error&eventType=feature.request");
     const row = await screen.findByText("Asha Rao");
-    expect(row.closest("a")).toHaveAttribute("href", "/admin/customers?user=u1");
+    expect(row.closest("a")).toHaveAttribute("href", "/admin/customers/u1");
     const qs = new URLSearchParams(calls().find((c) => c.startsWith("/admin/activity?"))!.split("?")[1]);
     expect(Object.fromEntries(qs)).toMatchObject({ feature: "tarot", status: "error", eventType: "feature.request", page: "1", pageSize: "25" });
     expect(screen.getByText(/HTTP 500/)).toBeInTheDocument();
@@ -154,7 +197,7 @@ describe("Overview KPIs", () => {
     expect(screen.getByRole("link", { name: /Live Darshan channels/ })).toHaveAttribute("href", "/admin/devotion");
     expect(screen.getByRole("link", { name: /Shop products/ })).toHaveAttribute("href", "/admin/shop-orders");
     expect(screen.getByRole("link", { name: /Orders \/ bookings \/ payments/ })).toHaveAttribute("href", "/admin/payments");
-    expect(screen.getByRole("link", { name: /Gita S/ })).toHaveAttribute("href", "/admin/customers?user=u9");
+    expect(screen.getByRole("link", { name: /Gita S/ })).toHaveAttribute("href", "/admin/customers/u9");
     const failure = screen.getAllByRole("link").find((l) => /feature=tarot&status=error&from=2026-10-30/.test(l.getAttribute("href") ?? ""));
     expect(failure).toBeTruthy();
   });
