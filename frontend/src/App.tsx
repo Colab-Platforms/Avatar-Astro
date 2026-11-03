@@ -57,6 +57,7 @@ const AdminDashboardPage = lazy(
 );
 const AdminPujaPage = lazy(() => import("./features/admin/pages/Puja"));
 const AdminUsersPage = lazy(() => import("./features/admin/panel/pages/UsersPage"));
+const AdminCustomerDetailPage = lazy(() => import("./features/admin/panel/pages/CustomerDetailPage"));
 const AdminAdminsPage = lazy(() => import("./features/admin/panel/pages/AdminsPage"));
 const AdminCustomerLibraryPage = lazy(() => import("./features/admin/panel/pages/CustomerLibraryPage"));
 const AdminToolsPage = lazy(() => import("./features/admin/panel/pages/ToolsPage"));
@@ -565,6 +566,14 @@ const App = () => {
                 element={
                   <Suspense fallback={<AdminLazyFallback />}>
                     <MainOnly><AdminUsersPage /></MainOnly>
+                  </Suspense>
+                }
+              />
+              <Route
+                path="customers/:id"
+                element={
+                  <Suspense fallback={<AdminLazyFallback />}>
+                    <MainOnly><AdminCustomerDetailPage /></MainOnly>
                   </Suspense>
                 }
               />
