@@ -6,6 +6,7 @@ export interface MyDashboard {
     id: string; firstName: string | null; lastName: string | null; email: string; phoneNo: string | null; gender: string | null;
     city: string | null; state: string | null; country: string | null; authProvider: string;
     isEmailVerified: boolean; isPhoneVerified: boolean; profileCompleted: boolean; createdAt: string;
+    profileImage: string | null; profileImagePublicId: string | null;
   };
   activeSessions: number;
   usage: { windowDays: number; byFeature: { feature: string; label: string; count: number }[] };

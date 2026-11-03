@@ -16,7 +16,7 @@ export function useSpeechRecognition(options: SpeechRecognitionOptions = {}) {
 
   const supported =
     typeof window !== "undefined" &&
-    !!(window.SpeechRecognition || (window as any).webkitSpeechRecognition);
+    !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
 
   const start = useCallback(() => {
     const SR =

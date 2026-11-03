@@ -88,6 +88,36 @@ export const uploadImageBuffer = (
   });
 };
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Same as uploadImageBuffer, but retries transient failures (network blips,
+ * Cloudinary 5xx) up to `attempts` times with a short backoff before giving
+ * up. Bad-credential (401/403) failures are not worth retrying, so those
+ * fail fast on the first attempt.
+ */
+export const uploadImageBufferWithRetry = async (
+  buffer: Buffer,
+  folder: string,
+  attempts = 3,
+): Promise<UploadedAsset> => {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      return await uploadImageBuffer(buffer, folder);
+    } catch (error) {
+      lastError = error;
+      const httpCode = (error as any)?.httpCode ?? (error as ApiError)?.statusCode;
+      if (httpCode === STATUS_CODES.UNAUTHORIZED || httpCode === 403) break;
+      if (attempt < attempts) {
+        console.warn(`[cloudinary] upload attempt ${attempt} failed, retrying…`, error instanceof Error ? error.message : error);
+        await sleep(300 * attempt);
+      }
+    }
+  }
+  throw lastError;
+};
+
 export interface UploadedAudio extends UploadedAsset {
   durationSeconds: number | null;
   bytes: number;
