@@ -244,7 +244,7 @@ export default function NameDestinyReport({ profile }: { profile: NameProfile })
       <details className="glass-card rounded-2xl p-5 sm:p-6" data-testid="nd-calculations">
         <summary className="cursor-pointer text-xl font-bold text-[#592209]" style={heading}>Show Calculations</summary>
         <div className="mt-4 space-y-4">
-          <p className="text-sm leading-relaxed text-[#4A2E1F]">{PLANET_NOTE} Each number is plain arithmetic: take each letter's value, add them, then add the digits of the total until one digit is left. Nothing here is written by AI.</p>
+          <p className="text-sm leading-relaxed text-[#4A2E1F]">{PLANET_NOTE} Each number is plain arithmetic: take each letter's value, add them, then add the digits of the total until one digit is left. Nothing here is generated text.</p>
           <Calc title="Naamank (Name Number)" method="Chaldean (letters A to Z valued 1 to 8)" input={profile.letters}>
             <p>Letter values: {cw.values}</p><p>Addition: {cw.sum}</p><p>Reduction: {cw.reduce}</p><p>Result: {profile.chaldean.result}</p>
           </Calc>

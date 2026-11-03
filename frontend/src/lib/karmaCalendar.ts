@@ -71,3 +71,24 @@ export function namesOtherCalendarFacts(text: string, c: TodayCalendar | null): 
     return new RegExp(`\\b${k}\\b`).test(t) && !own.some((o) => o === k || o.startsWith(k) || k.startsWith(o));
   });
 }
+
+const DEV_TERMS = [
+  // tithis
+  "प्रतिपदा", "द्वितीया", "तृतीया", "चतुर्थी", "पंचमी", "षष्ठी", "सप्तमी", "अष्टमी", "नवमी", "दशमी", "एकादशी", "द्वादशी", "त्रयोदशी", "चतुर्दशी", "पूर्णिमा", "अमावस्या",
+  // nakshatras
+  "अश्विनी", "भरणी", "कृत्तिका", "रोहिणी", "मृगशिरा", "आर्द्रा", "पुनर्वसु", "पुष्य", "आश्लेषा", "मघा", "फाल्गुनी", "हस्त नक्षत्र", "चित्रा", "स्वाति", "विशाखा", "अनुराधा", "ज्येष्ठा", "पूर्वाषाढ़ा", "उत्तराषाढ़ा", "श्रवण", "धनिष्ठा", "शतभिषा", "भाद्रपद", "रेवती",
+  // weekdays
+  "रविवार", "सोमवार", "मंगलवार", "बुधवार", "गुरुवार", "शुक्रवार", "शनिवार",
+];
+const ROMAN_DAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "ravivar", "somvar", "mangalvar", "budhvar", "guruvar", "shukravar", "shanivar"];
+
+/**
+ * True when a model reply names ANY tithi, nakshatra or weekday, in English, Hinglish or Hindi. The reply is meant to be
+ * a short thought about the question: the calendar facts are shown by the app itself, so the model never has to
+ * state them, and a reply that does is refused (it could be wrong, or claim what a tithi "means").
+ */
+export function namesAnyCalendarTerm(text: string): boolean {
+  const t = text.toLowerCase();
+  if ([...TITHIS, ...NAKSHATRAS, ...ROMAN_DAYS].some((n) => new RegExp(`\\b${n.toLowerCase()}\\b`).test(t))) return true;
+  return DEV_TERMS.some((n) => text.includes(n));
+}

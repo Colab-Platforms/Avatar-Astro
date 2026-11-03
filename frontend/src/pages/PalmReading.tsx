@@ -234,7 +234,7 @@ export default function PalmReading() {
       const checkRes = await authedFetch(`${AUTH_API_BASE_URL}/palm-reading/check`, { method: "POST" });
       if (!checkRes.ok) {
         const body = await checkRes.json().catch(() => null);
-        setRetakeMessage(body?.message || "This tool is temporarily unavailable. Please try again later.");
+        setRetakeMessage(body?.message || "This feature is temporarily unavailable. Please try again later.");
         setStage("retake");
         return;
       }

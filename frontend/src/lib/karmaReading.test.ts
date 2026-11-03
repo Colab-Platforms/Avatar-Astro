@@ -12,7 +12,7 @@ const calendar: TodayCalendar = {
   tithi: { name: "Navami", numberInPaksha: 9, endsAtLocal: "Tue, 3 Nov 2026, 11:55" },
   nakshatra: { name: "Ashlesha", pada: 3 }, yoga: "Shukla", karana: "Taitila", sunrise: "06:33", sunset: "17:35", festivals: null, notes: [],
 };
-const good = { meaning: "Today is a dark-moon day, the ninth day. It is a time to slow down.", thought: "Small habits shape how we feel.", action: "Say thank you to one person today.", remember: "You can begin again any time." };
+const good = { thought: "Small habits shape how we feel.", action: "Say thank you to one person today.", remember: "You can begin again any time." };
 
 describe("calendar facts", () => {
   it("lists only the facts that exist", () => {
@@ -41,7 +41,9 @@ describe("prompt", () => {
     expect(p).toContain("- Tithi: Navami");
     expect(p).toContain("- Nakshatra: Ashlesha");
     expect(p).toContain("verified");
-    expect(p).toMatch(/Never name a tithi, nakshatra, yoga, karana, month or festival other than the verified ones/);
+    expect(p).toMatch(/Never name any tithi, nakshatra, yoga, karana, month, festival or weekday, and never say what any of them means/);
+    expect(p).toMatch(/do NOT name any of it in your reply/);
+    expect(p).toContain("dark half (the Moon grows smaller each night)"); // the one Moon idea it may use
     expect(p).toMatch(/child can understand/);
   });
   it("says so, and forbids calendar talk, when no calendar is available", () => {
@@ -62,14 +64,31 @@ describe("parseKarmaAnswer", () => {
     expect(parseKarmaAnswer(JSON.stringify({ ...good, action: "" }), calendar)).toBeNull();
     expect(parseKarmaAnswer(JSON.stringify({ ...good, thought: "" }), calendar)).toBeNull();
   });
-  it("drops the calendar meaning when there was no calendar, and keeps short fields short", () => {
+  it("keeps each part short", () => {
     const r = parseKarmaAnswer(JSON.stringify({ ...good, thought: "x".repeat(900) }), null)!;
-    expect(r.meaning).toBe("");
-    expect(r.thought.length).toBeLessThanOrEqual(320);
+    expect(r.thought.length).toBeLessThanOrEqual(300);
   });
-  it("refuses an answer that names a calendar fact the calendar did not give", () => {
-    expect(parseKarmaAnswer(JSON.stringify({ ...good, meaning: "Today is Ekadashi." }), calendar)).toBeNull();
-    expect(parseKarmaAnswer(JSON.stringify({ ...good, thought: "Purnima is near." }), null)).toBeNull();
+  it("refuses an answer that names any tithi, nakshatra or weekday (English, Hinglish or Hindi), even today's verified ones", () => {
+    for (const thought of ["Today is Ekadashi.", "Purnima is near.", "Navami is a good day.", "The Moon is in Ashlesha.", "On Monday you may begin.", "Aaj Somvar hai."]) {
+      expect(parseKarmaAnswer(JSON.stringify({ ...good, thought }), calendar), thought).toBeNull();
+    }
+    for (const thought of ["आज दशमी है।", "मघा नक्षत्र अच्छा है।", "सोमवार को शुरू करें।"]) {
+      expect(parseKarmaAnswer(JSON.stringify({ thought, action: "आज किसी की मदद करें।", remember: "आप कर सकते हैं।" }), calendar, "hi"), thought).toBeNull();
+    }
+  });
+  it("refuses scripture quotes and a figure that looks like a verse reference", () => {
+    for (const thought of ["As the Gita says in Chapter 2, Verse 47, act well.", "See 2.47 for help.", "गीता में लिखा है।"]) {
+      expect(parseKarmaAnswer(JSON.stringify({ ...good, thought }), calendar), thought).toBeNull();
+    }
+  });
+  it("accepts only the chosen language's script", () => {
+    const hi = { thought: "छोटी आदतें हमारे मन को शांत करती हैं।", action: "आज किसी एक व्यक्ति को धन्यवाद कहें।", remember: "आप फिर से शुरू कर सकते हैं।" };
+    expect(parseKarmaAnswer(JSON.stringify(hi), calendar, "hi")).toEqual(hi);
+    expect(parseKarmaAnswer(JSON.stringify(hi), calendar, "en")).toBeNull(); // Devanagari when English was asked
+    expect(parseKarmaAnswer(JSON.stringify(hi), calendar, "hinglish")).toBeNull(); // Devanagari when Hinglish was asked
+    expect(parseKarmaAnswer(JSON.stringify(good), calendar, "hi")).toBeNull(); // Roman when Hindi was asked
+    const hing = { thought: "Chhoti aadatein mann ko shaant karti hain.", action: "Aaj kisi ek vyakti ko dhanyavaad kahein.", remember: "Aap phir se shuru kar sakte hain." };
+    expect(parseKarmaAnswer(JSON.stringify(hing), calendar, "hinglish")).toEqual(hing);
   });
   it("does not carry unknown fields through", () => {
     expect(parseKarmaAnswer(JSON.stringify({ ...good, score: 99, prediction: "wealth" }), calendar)).not.toHaveProperty("prediction");
@@ -95,6 +114,26 @@ describe("askKarma", () => {
     const msgs = vi.mocked(aiChat).mock.calls[0][0].messages;
     expect(msgs.map((m) => m.content).filter((c) => /^q\d$/.test(c))).toEqual(["q2", "q3"]);
   });
+  it("asks once more when a reply fails the checks, and only then shows an error", async () => {
+    let n = 0;
+    vi.mocked(aiChat).mockImplementation(() => ok(JSON.stringify(++n === 1 ? { ...good, thought: "Today is Ekadashi." } : good)));
+    expect(await askKarma("What should I do?", calendar)).toEqual(good);
+    expect(aiChat).toHaveBeenCalledTimes(2);
+    vi.mocked(aiChat).mockClear();
+    vi.mocked(aiChat).mockImplementation(() => ok(JSON.stringify({ ...good, thought: "Today is Ekadashi." })));
+    await expect(askKarma("What should I do?", calendar)).rejects.toThrow(/didn't come out right/);
+    expect(aiChat).toHaveBeenCalledTimes(2); // one retry, no more
+  });
+
+  it("tells the model the reply language and answers errors in that language", async () => {
+    vi.mocked(aiChat).mockImplementation(() => ok(JSON.stringify(good)));
+    await askKarma("hello there", calendar, [], "hi").catch(() => {});
+    expect(vi.mocked(aiChat).mock.calls[0][0].messages[0].content).toContain("Devanagari script");
+    vi.mocked(aiChat).mockImplementation(() => Promise.resolve(new Response("{}", { status: 429 })));
+    await expect(askKarma("hello there", calendar, [], "hi")).rejects.toThrow(/बहुत सारे सवाल/);
+    await expect(askKarma("hello there", calendar, [], "hinglish")).rejects.toThrow(/bahut saare sawaal/);
+  });
+
   it("maps provider failure, rate limit and bad output to safe messages", async () => {
     vi.mocked(aiChat).mockImplementation(() => Promise.resolve(new Response("{}", { status: 502 })));
     await expect(askKarma("hello there", calendar)).rejects.toThrow(/not available/);

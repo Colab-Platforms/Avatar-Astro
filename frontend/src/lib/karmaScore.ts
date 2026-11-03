@@ -4,7 +4,10 @@
  * chart, transits or any astrological computation, and has no scientific or
  * predictive meaning.
  *
- *   score = round(points of completed practices / total points * 100)
+ *   score = min(100, round(points of completed practices / 68 * 100))
+ *
+ * 68 points is "a full day": the eight everyday practices together. More practices can be ticked for extra choice,
+ * but they only add to the same points, and the score never goes above 100, so no one has to do everything.
  */
 export interface KarmaAction {
   id: string;
@@ -13,28 +16,54 @@ export interface KarmaAction {
   type: "mantra" | "seva" | "charity" | "fast" | "pooja";
   /** Rough time the practice takes. Used only to suggest the easiest next step; it never changes the points. */
   minutes: number;
+  /** The eight everyday practices. The rest are extra choices, shown under "Show more". */
+  core?: boolean;
 }
 
 export const ACTIONS: KarmaAction[] = [
-  { id: "mantra", name: "Chant a mantra of your choice", pts: 8, type: "mantra", minutes: 5 },
-  { id: "meditation", name: "15 minutes of quiet meditation", pts: 5, type: "seva", minutes: 15 },
-  { id: "truth", name: "Speak only truth today (Satya)", pts: 6, type: "seva", minutes: 0 },
-  { id: "feed", name: "Feed a cow, dog, or someone in need", pts: 10, type: "charity", minutes: 15 },
-  { id: "fast", name: "Keep a simple fast or eat mindfully", pts: 12, type: "fast", minutes: 0 },
-  { id: "pooja", name: "Morning prayer / aarti", pts: 9, type: "pooja", minutes: 10 },
-  { id: "anger", name: "Stayed patient and did not lose temper", pts: 7, type: "seva", minutes: 0 },
-  { id: "charity", name: "Gave a donation or time in seva", pts: 11, type: "charity", minutes: 20 },
+  { id: "mantra", name: "Chant a mantra of your choice", pts: 8, type: "mantra", minutes: 5, core: true },
+  { id: "meditation", name: "15 minutes of quiet meditation", pts: 5, type: "seva", minutes: 15, core: true },
+  { id: "truth", name: "Speak only truth today (Satya)", pts: 6, type: "seva", minutes: 0, core: true },
+  { id: "feed", name: "Feed a cow, dog, or someone in need", pts: 10, type: "charity", minutes: 15, core: true },
+  { id: "fast", name: "Keep a simple fast or eat mindfully", pts: 12, type: "fast", minutes: 0, core: true },
+  { id: "pooja", name: "Morning prayer / aarti", pts: 9, type: "pooja", minutes: 10, core: true },
+  { id: "anger", name: "Stayed patient and did not lose temper", pts: 7, type: "seva", minutes: 0, core: true },
+  { id: "charity", name: "Gave a donation or time in seva", pts: 11, type: "charity", minutes: 20, core: true },
 ];
 
+/** More good deeds from everyday Hindu life. Points follow the same scale as the eight above (effort and time). */
+export const EXTRA_ACTIONS: KarmaAction[] = [
+  { id: "surya", name: "Offer water to the Sun (Surya Arghya)", pts: 6, type: "pooja", minutes: 5 },
+  { id: "tulsi", name: "Water the Tulsi or any plant", pts: 4, type: "seva", minutes: 3 },
+  { id: "scripture", name: "Read a page of a holy book", pts: 7, type: "seva", minutes: 10 },
+  { id: "bhajan", name: "Sing or listen to a bhajan or kirtan", pts: 5, type: "pooja", minutes: 10 },
+  { id: "elders", name: "Respect your elders, thank your parents", pts: 6, type: "seva", minutes: 3 },
+  { id: "gratitude", name: "Write three things you are grateful for", pts: 5, type: "seva", minutes: 5 },
+  { id: "kindword", name: "Say a kind word to someone", pts: 4, type: "seva", minutes: 0 },
+  { id: "forgive", name: "Forgive someone, or say sorry", pts: 8, type: "seva", minutes: 0 },
+  { id: "yoga", name: "10 minutes of yoga or pranayama", pts: 6, type: "seva", minutes: 10 },
+  { id: "silence", name: "5 minutes of silence, away from the phone", pts: 5, type: "seva", minutes: 5 },
+  { id: "birds", name: "Give water or grain to birds or animals", pts: 5, type: "charity", minutes: 3 },
+  { id: "nature", name: "Care for nature: plant a tree or clean a spot", pts: 9, type: "charity", minutes: 20 },
+];
+
+/** Every practice that can be ticked. The score looks the id up here, so unknown or repeated ids are ignored. */
+export const ALL_ACTIONS: KarmaAction[] = [...ACTIONS, ...EXTRA_ACTIONS];
+
+/** Points that give a full score of 100: the eight everyday practices together. */
 export const MAX_POINTS = ACTIONS.reduce((s, a) => s + a.pts, 0);
+
+/** The score for a number of points, capped at 100. */
+export const scoreFromPoints = (pts: number): number => Math.min(100, Math.round((pts / MAX_POINTS) * 100));
 
 /** Points earned from a list of completed action ids (unknown ids and duplicates are ignored). */
 export function pointsFor(done: string[]): number {
-  return ACTIONS.filter((a) => new Set(done).has(a.id)).reduce((s, a) => s + a.pts, 0);
+  const have = new Set(done);
+  return ALL_ACTIONS.filter((a) => have.has(a.id)).reduce((s, a) => s + a.pts, 0);
 }
 
 export function computeDailyScore(done: string[]): number {
-  return Math.round((pointsFor(done) / MAX_POINTS) * 100);
+  return scoreFromPoints(pointsFor(done));
 }
 
 /** Local calendar date as YYYY-MM-DD (toISOString would use UTC and roll the day over at 5:30am in India). */
@@ -98,7 +127,11 @@ export interface Suggestion {
   reason: string;
 }
 
-/** Practices not yet ticked, best first: the most points for the least time. Pure arithmetic on the fixed table. */
+/**
+ * Practices not yet ticked, best first: the most points for the least time. Pure arithmetic on the fixed table.
+ * Only the eight everyday practices are suggested, because they are always on screen and together they are
+ * enough for a full score; the extras are never required.
+ */
 export function suggestNext(done: string[], limit = 3): Suggestion[] {
   const have = new Set(done);
   const base = pointsFor(done);
@@ -111,7 +144,7 @@ export function suggestNext(done: string[], limit = 3): Suggestion[] {
       id: a.id,
       name: a.name,
       gain: a.pts,
-      scoreAfter: Math.round(((base + a.pts) / MAX_POINTS) * 100),
+      scoreAfter: scoreFromPoints(base + a.pts),
       minutes: a.minutes,
       reason: a.minutes === 0 ? "Needs no extra time, only attention through the day" : `Takes about ${a.minutes} minutes`,
     }));
@@ -129,11 +162,11 @@ export function pathToNextLevel(done: string[]): { target: { label: string; min:
   const steps: Suggestion[] = [];
   const pool = ACTIONS.filter((a) => !have.has(a.id)).sort((x, y) => y.pts - x.pts);
   for (const a of pool) {
-    if (Math.round((pts / MAX_POINTS) * 100) >= tier.next.min) break;
+    if (scoreFromPoints(pts) >= tier.next.min) break;
     pts += a.pts;
-    steps.push({ id: a.id, name: a.name, gain: a.pts, scoreAfter: Math.round((pts / MAX_POINTS) * 100), minutes: a.minutes, reason: "" });
+    steps.push({ id: a.id, name: a.name, gain: a.pts, scoreAfter: scoreFromPoints(pts), minutes: a.minutes, reason: "" });
   }
-  const scoreAfter = Math.round((pts / MAX_POINTS) * 100);
+  const scoreAfter = scoreFromPoints(pts);
   if (scoreAfter < tier.next.min) return null;
   return { target: tier.next, steps, scoreAfter };
 }

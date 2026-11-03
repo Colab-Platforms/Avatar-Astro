@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import { createRateLimiter } from "../utils/rateLimit.js";
 import { auth } from "../middleware/authMiddleware.js";
 import { buildTodayPanchang } from "../modules/gemstone/panchang.today.js";
+import { buildBirthPanchang, buildTodayBlock, parseBirthPlace, namesCalendarTerm, contradictsFacts, citesScripture } from "../modules/gemstone/panchang.birth.js";
 import { getDailyChatStatus, consumeDailyChatSession } from "../utils/dailyChatSession.js";
 import { screenMessage, ESCALATION_REPLY, OFF_TOPIC_REPLY } from "../utils/chatScreening.js";
 import prisma from "@root/prisma.js";
@@ -79,7 +80,11 @@ router.post("/chat/screen", createRateLimiter({ windowMs: 60_000, max: 40 }), as
 });
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const MODEL = "google/gemma-4-31b-it:free";
+// The default is unchanged. Set OPENROUTER_MODEL in the environment (for example locally) to use another model when the
+// free model's shared pool is rate limited; nothing is overridden unless that variable is set.
+const DEFAULT_MODEL = "google/gemma-4-31b-it:free";
+// Read when a request is made, because the environment file is loaded after this module is imported.
+const currentModel = (): string => process.env.OPENROUTER_MODEL?.trim() || DEFAULT_MODEL;
 
 // Every AI reply defaults to Hinglish, which is how most users speak and write.
 export const HINGLISH_RULE = `\n\nLanguage: write every human-readable text value in natural Hinglish (Roman-script Hindi mixed with English, the way people actually speak). Keep JSON keys, fixed values and any Sanskrit verses or mantras exactly as specified. Only if the person wrote in Devanagari Hindi, answer in Hindi instead.`;
@@ -92,7 +97,7 @@ export class ProviderError extends Error {
   }
 }
 
-async function callAI(apiKey: string, prompt: string, maxTokens = 1000, model: string = MODEL): Promise<string> {
+async function callAI(apiKey: string, prompt: string, maxTokens = 1000, model: string = currentModel(), languageRule = HINGLISH_RULE): Promise<string> {
   const res = await fetch(OPENROUTER_URL, {
     method: "POST",
     signal: AbortSignal.timeout(45_000),
@@ -105,7 +110,7 @@ async function callAI(apiKey: string, prompt: string, maxTokens = 1000, model: s
     body: JSON.stringify({
       model,
       max_tokens: maxTokens,
-      messages: [{ role: "user", content: prompt + HINGLISH_RULE }],
+      messages: [{ role: "user", content: prompt + languageRule }],
     }),
   });
   // A timeout while reading the body must stay a timeout, not look like an empty reply.
@@ -313,9 +318,31 @@ router.get("/panchang", createRateLimiter({ windowMs: 60_000, max: 30 }), (_req:
 });
 
 // ── POST /api/inner-voice/life-path ───────────────────────────────────────────
-// Birth details are used only to build the prompt for this request; nothing is
-// stored or logged. No ephemeris is computed here: the reading is an AI-written
-// interpretation, and the prompt forbids inventing exact planetary positions.
+// Birth details are used only for this request; nothing is stored or logged. The Hindu calendar facts
+// (birth Panchang when a birthplace is given, and today's Panchang) are CALCULATED in panchang.birth.ts and
+// handed to the model, which only explains them in a few simple sentences. A reply that names a calendar fact
+// it was not given, or quotes scripture, is refused.
+// Short, simple readings: each part has a hard length limit, and a longer text is cut at a full sentence.
+const LIFE_PATH_MAX_TOKENS = 3000; // a ceiling only: some models spend much of it thinking (1200 cut replies off mid-JSON); the reading itself is capped below
+const LIFE_PATH_LIMITS = { guidance: 200, step: 110, thought: 80 } as const;
+// Standard numerology keywords for each life path number: the model may use only these ideas, so it does not
+// recall meanings of its own.
+const LIFE_PATH_IDEAS: Record<number, string> = {
+  1: "leading and starting on your own", 2: "working together and patience", 3: "creativity and sharing ideas", 4: "steady, hard work and order",
+  5: "change, freedom and learning by trying", 6: "care for others and responsibility", 7: "thinking deeply and learning", 8: "effort, planning and achieving goals",
+  9: "kindness and finishing what you start", 11: "intuition and inspiring others", 22: "building big plans step by step", 33: "teaching and serving others",
+};
+const PLAIN_ENGLISH_RULE = "\n\nLanguage: write in simple, clear English.";
+/** A trimmed single-paragraph string no longer than `max`, cut at the last full sentence; "" when there is none. */
+export function shortText(v: unknown, max: number): string {
+  if (typeof v !== "string") return "";
+  const t = v.replace(/\s+/g, " ").trim();
+  if (t.length <= max) return t;
+  const cut = t.slice(0, max);
+  const end = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf("! "), cut.lastIndexOf("? "));
+  return end > 0 ? cut.slice(0, end + 1) : "";
+}
+
 const LIFE_PATH_FOCUS = ["general", "career", "relationships", "personal-growth", "finance"] as const;
 
 router.post("/life-path", createRateLimiter({ windowMs: 60_000, max: 10 }), async (req: Request, res: Response) => {
@@ -349,6 +376,11 @@ router.post("/life-path", createRateLimiter({ windowMs: 60_000, max: 10 }), asyn
     if (pobStr && (pobStr.length > 100 || !/^[\p{L}\p{M}\d\s,.'’-]+$/u.test(pobStr))) {
       return res.status(400).json({ error: "Place of birth contains invalid characters" });
     }
+    // The coordinates and time zone of the chosen place decide the birth Panchang. A malformed one is refused,
+    // never ignored, so a wrong place can't quietly produce a wrong calendar.
+    const rawPlace = req.body?.place;
+    const birthPlace = rawPlace == null ? null : parseBirthPlace(rawPlace);
+    if (rawPlace != null && !birthPlace) return res.status(400).json({ error: "Place of birth details are not valid" });
 
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
@@ -356,43 +388,63 @@ router.post("/life-path", createRateLimiter({ windowMs: 60_000, max: 10 }), asyn
       return res.status(503).json({ error: "The reading service is not configured" });
     }
 
-    const prompt = `You are a thoughtful Vedic astrology guide. Write an interpretive life-path reading for a person with these details:
-- Date of birth: ${dobStr}
-- Time of birth: ${tobStr || "not provided"}
-- Place of birth: ${pobStr || "not provided"}
-- Area of interest: ${focus}
-- Calculated facts you may rely on: born on a ${facts.weekday}; numerology life path number ${facts.number} (${facts.working})
-- Today's date: ${new Date().toISOString().slice(0, 10)}
+    // Calendar facts are CALCULATED here (see panchang.birth.ts). "What it means" is built from them in code, so it is
+    // always exact; the model only writes a short piece of guidance, one step and one thought, and may not name
+    // any calendar term itself.
+    const birthBlock = buildBirthPanchang(dobStr, tobStr, birthPlace, pobStr || "your birthplace");
+    const todayBlock = buildTodayBlock(new Date());
+    const meaning = [birthBlock?.summary, todayBlock?.summary].filter(Boolean).join(" ");
+    const ideas = [
+      ...(birthBlock?.paksha ? [`Moon half at birth: ${birthBlock.paksha === "Shukla" ? "bright half (the Moon grows bigger each night): starting, building, growing" : "dark half (the Moon grows smaller each night): reflecting, finishing, letting go"}`] : []),
+      `Life path number ${facts.number}: ${LIFE_PATH_IDEAS[facts.number] ?? "your own steady growth"}`,
+    ];
 
-Rules:
-- This is interpretive guidance for reflection, not certain knowledge of the future. Use soft language ("may", "tends to", "could").
-- Do NOT state exact planetary degrees, house positions, or dasha dates; you have not computed a chart. If time/place are missing, do not pretend to know the ascendant.
-- Only give broad time-based themes if you can ground them in general astrological ideas; otherwise set "upcomingPeriods" to an empty array.
-- Never give medical, legal, or financial-product advice. No fear-based or fatalistic statements.
-- Present future-oriented statements as possibilities to reflect on, never as events that will happen. Keep each section specific and non-repetitive; avoid generic filler.
-- "nextSteps" must be practical, realistic actions the person can take in the next few weeks.
+    const prompt = `Write very short guidance for reflection for someone interested in: ${focus}.
+Use only these ideas:
+- ${ideas.join("\n- ")}
+
+Rules: do not name any tithi, nakshatra, yoga, karana, month, weekday, festival or date. Do not say what any of them means. Do not quote scripture. No fear, no certain predictions: say "may" or "can". Very simple everyday English that a child can follow, short sentences.
 
 Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this structure:
 {
-  "lifePathOverview": "3-4 sentences on the person's general journey and temperament",
-  "careerAndGrowth": "2-3 sentences on work, skills, and opportunities",
-  "relationships": "2-3 sentences of reflective insight on relationships and communication",
-  "personalDevelopment": "2-3 sentences on areas for self-improvement",
-  "focusInsight": "2-3 sentences specific to the area of interest (${focus})",
-  "upcomingPeriods": [{"period": "a broad timeframe label", "theme": "1-2 sentence theme"}],
-  "nextSteps": ["a practical action for the next few weeks", "another", "another"],
-  "reflectionQuestions": ["a question for self-reflection", "another question"]
+  "guidance": "2 short sentences linking the ideas above to ${focus}",
+  "step": "ONE small action to practise this week, one short sentence",
+  "thought": "ONE short encouraging sentence"
 }`;
 
-    let raw: string;
+    // The free model's pool is shared and is often rate limited for a few seconds: retry twice, waiting longer each time.
+    const askModel = async (): Promise<string> => {
+      for (let attempt = 0; ; attempt++) {
+        try {
+          return await callAI(apiKey, prompt, LIFE_PATH_MAX_TOKENS, OPENROUTER_MODEL, PLAIN_ENGLISH_RULE);
+        } catch (err: any) {
+          if (!(err instanceof ProviderError && err.status === 429) || attempt >= 2) throw err;
+          await sleep(LIFE_PATH_RETRY_DELAY_MS * 2 * (attempt + 1));
+        }
+      }
+    };
+
+    // A reply that names a calendar term, another number, or scripture is not shown: the model is asked once more, then it is refused.
+    let text: { guidance: string; step: string; thought: string } | null = null;
+    let unreadable = false;
     try {
-      try {
-        // The shared free model is rate limited by its upstream; the app's standard model (OPENROUTER_MODEL) is used here. 3000 tokens: 1200 cut Hinglish replies off mid-JSON.
-        raw = await callAI(apiKey, prompt, 3000, OPENROUTER_MODEL);
-      } catch (err: any) {
-        if (!(err instanceof ProviderError && err.status === 429)) throw err;
-        await sleep(LIFE_PATH_RETRY_DELAY_MS);
-        raw = await callAI(apiKey, prompt, 3000, OPENROUTER_MODEL);
+      for (let tries = 0; tries < 2 && !text; tries++) {
+        let result: any;
+        try {
+          result = parseJSON(await askModel());
+        } catch (err: any) {
+          if (err instanceof ProviderError || err?.name === "TimeoutError" || err?.name === "AbortError") throw err;
+          unreadable = true;
+          continue;
+        }
+        const t = {
+          guidance: shortText(result?.guidance, LIFE_PATH_LIMITS.guidance),
+          step: shortText(result?.step, LIFE_PATH_LIMITS.step),
+          thought: shortText(result?.thought, LIFE_PATH_LIMITS.thought),
+        };
+        const all = Object.values(t).join(" ");
+        if (t.guidance && t.step && !namesCalendarTerm(all) && !citesScripture(all) && !contradictsFacts(all, facts.number)) text = t;
+        else unreadable = false;
       }
     } catch (err: any) {
       const timedOut = err?.name === "TimeoutError" || err?.name === "AbortError";
@@ -406,18 +458,12 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
         .status(timedOut ? 504 : 502)
         .json({ error: timedOut ? "The reading service timed out" : "The reading service is unavailable" });
     }
-
-    let result: any;
-    try {
-      result = parseJSON(raw);
-    } catch {
-      return res.status(502).json({ error: "The reading service returned an unreadable response" });
+    if (!text) {
+      return res.status(502).json({ error: unreadable ? "The reading service returned an unreadable response" : "The reading service returned an incomplete response" });
     }
-    if (!result || typeof result.lifePathOverview !== "string" || !result.lifePathOverview.trim()) {
-      return res.status(502).json({ error: "The reading service returned an incomplete response" });
-    }
-    const str = (v: unknown) => (typeof v === "string" ? v : undefined);
     return res.json({
+      panchang: { birth: birthBlock, today: todayBlock, birthNeedsPlace: !birthPlace },
+      panchangBased: !!birthBlock && birthBlock.facts.length > 0,
       basis: {
         used: [
           { label: "Date of birth", value: dobStr },
@@ -429,31 +475,20 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
         calculated: [
           { label: "Day of the week you were born", value: facts.weekday, how: "Calendar arithmetic on your date of birth." },
           { label: "Life path number (numerology)", value: String(facts.number), how: `Add every digit of your birth date: ${facts.working}. Master numbers 11, 22 and 33 are kept.` },
+          ...(birthBlock ? [{ label: "Birth Panchang", value: "Calculated", how: "From the real positions of the Sun and Moon at your birthplace (Lahiri sidereal, Amanta months, Vikram Samvat)." }] : []),
         ],
         limits: [
-          "No birth chart, planetary position, ascendant or house was calculated.",
-          ...(tobStr && pobStr
-            ? ["Your birth time and place are passed to the reading as context only; they were not used to calculate a chart."]
-            : ["Without a birth time and place an ascendant or house-based reading is not possible, so the reading stays general."]),
-          "Every section of the reading is an interpretation written for reflection, not a fact or a prediction.",
+          "No birth chart, ascendant, houses or planet positions were drawn. The Panchang uses only the Sun and Moon.",
+          ...(birthPlace ? [] : ["Your birth Panchang needs your birthplace, so it was not calculated. Nothing was assumed in its place."]),
+          "Festivals are not calculated here, so none are shown.",
+          "The words that explain the calendar are an interpretation written for reflection, not a fact or a prediction.",
         ],
       },
-      lifePathOverview: result.lifePathOverview,
-      careerAndGrowth: str(result.careerAndGrowth),
-      relationships: str(result.relationships),
-      personalDevelopment: str(result.personalDevelopment),
-      focusInsight: str(result.focusInsight),
-      upcomingPeriods: Array.isArray(result.upcomingPeriods)
-        ? result.upcomingPeriods
-            .filter((p: any) => p && typeof p.period === "string" && typeof p.theme === "string")
-            .slice(0, 6)
-        : [],
-      nextSteps: Array.isArray(result.nextSteps)
-        ? result.nextSteps.filter((q: unknown) => typeof q === "string" && q.trim()).slice(0, 4)
-        : [],
-      reflectionQuestions: Array.isArray(result.reflectionQuestions)
-        ? result.reflectionQuestions.filter((q: unknown) => typeof q === "string").slice(0, 5)
-        : [],
+      // `lifePathOverview` keeps its old name because saved readings and the library read it.
+      lifePathOverview: text.guidance,
+      meaning: meaning || undefined,
+      oneGoodStep: text.step,
+      thought: text.thought || undefined,
     });
   } catch (err: any) {
     console.error("Life path error:", err?.name);

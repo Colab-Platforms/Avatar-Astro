@@ -1,48 +1,51 @@
 import { aiChat } from "@/lib/aiClient";
 import { SignInRequiredError } from "@/lib/authedFetch";
-import { calendarFacts, namesOtherCalendarFacts, type TodayCalendar } from "@/lib/karmaCalendar";
+import { calendarFacts, namesAnyCalendarTerm, type TodayCalendar } from "@/lib/karmaCalendar";
+import { KARMA_TEXT, PAKSHA_IDEA, REPLY_DIRECTIVE, matchesLanguage, type KarmaLang } from "@/lib/karmaLanguage";
 
 export const MIN_SITUATION_CHARS = 3;
 export const MAX_SITUATION_CHARS = 1500;
 
 /** A short, plain-language answer. An empty field is never shown. */
 export interface KarmaAnswer {
-  meaning: string;
   thought: string;
   action: string;
   remember: string;
 }
 
 /**
- * The calendar facts are given to the model as verified input. It is told to use only those facts, to keep
- * the words very simple, and to return four short fields. It is NOT asked to work out any calendar value.
+ * The model is given the person's question, the reply language, and (when available) today's verified calendar as
+ * background. It writes only three short parts: a thought that answers the question, one small action and one
+ * encouraging line. It may NOT name any tithi, nakshatra or weekday, or say what any of them "means": the app shows
+ * the calendar and its explanation itself, exactly, from the calculation.
  */
-export function buildKarmaPrompt(calendar: TodayCalendar | null): string {
+export function buildKarmaPrompt(calendar: TodayCalendar | null, lang: KarmaLang = "en"): string {
   const calendarBlock = calendar
-    ? `Today's Hindu calendar (calculated for ${calendar.place}; these facts are verified, do not change them and do not add any other calendar fact):\n${calendarFacts(calendar).map((f) => `- ${f.label}: ${f.value}`).join("\n")}`
+    ? `Background (verified, for you only; do NOT name any of it in your reply). Today's Hindu calendar for ${calendar.place}:\n${calendarFacts(calendar).map((f) => `- ${f.label}: ${f.value}`).join("\n")}\nIf it helps, you may use ONLY this idea about the Moon: ${PAKSHA_IDEA[calendar.paksha]}.`
     : `Today's Hindu calendar is not available right now. Do not mention any tithi, nakshatra, yoga, karana, month or festival. Say nothing about today's calendar.`;
-  return `You are a calm, kind guide for the Know Your Karma feature. You give one short reflection. It is a thought to reflect on, never a fact or a prediction.
+  return `You are a calm, kind guide for the Know Your Karma feature. Karma here simply means our actions and choices. You give one short reflection. It is a thought to reflect on, never a fact or a prediction.
 
 ${calendarBlock}
 
 Rules:
+- Answer the person's question directly and logically. Connect it to their own actions and choices.
 - Use very simple words and short sentences, so a child can understand. No hard Sanskrit words unless you explain them in a few simple words.
-- Reply in the same language the person used. If they write Hindi or Hinglish, reply in Hinglish. Otherwise use plain English.
-- Never name a tithi, nakshatra, yoga, karana, month or festival other than the verified ones above. If asked about a date or festival you were not given, say you do not have it.
-- Never predict what will happen. No fear, guilt or "karmic debt". Karma here means our actions and choices.
+- ${REPLY_DIRECTIVE[lang]}
+- Never name any tithi, nakshatra, yoga, karana, month, festival or weekday, and never say what any of them means. If asked about a date or festival, say you do not have it.
+- Do not quote any scripture, chapter or verse. Do not invent facts.
+- Never predict what will happen. No fear, guilt or "karmic debt".
 - For health, money or relationship distress, gently suggest talking to someone they trust or a qualified person.
-- Do not repeat the same idea in different fields.
+- Do not repeat the same idea in different parts.
 
 Return ONLY a JSON object with exactly these keys:
 {
-  "meaning": "${calendar ? "2 or 3 short sentences: what today's calendar facts (tithi, paksha, nakshatra) mean in simple words" : "leave this as an empty string"}",
-  "thought": "1 or 2 short sentences: a karma thought for this person's question",
-  "action": "ONE small, practical good action they can do today",
+  "thought": "1 or 2 short sentences: a karma thought that answers this person's question",
+  "action": "ONE small, practical good action they can do today, in one short sentence",
   "remember": "ONE short, encouraging sentence"
 }`;
 }
 
-const str = (v: unknown, max: number): string => (typeof v === "string" ? v.trim().slice(0, max) : "");
+const str = (v: unknown, max: number): string => (typeof v === "string" ? v.replace(/\s+/g, " ").trim().slice(0, max) : "");
 
 function extractJson(raw: string): unknown {
   const start = raw.indexOf("{");
@@ -55,22 +58,25 @@ function extractJson(raw: string): unknown {
   }
 }
 
+const CITES_SCRIPTURE = /\b(chapter|verse|shloka|sloka|adhyay|adhyaya|canto|skandha|gita|bhagavad|bhagwad|bhagavata|purana)\b|अध्याय|श्लोक|गीता|भगवद्|पुराण|\b\d{1,2}\s*[.:]\s*\d{1,3}\b/i;
+
 /**
- * Validate a model reply into a KarmaAnswer, or null when it is unusable. It is also refused when it names a
- * calendar fact that is not the verified one, and the "meaning" field is dropped when no calendar was available.
+ * Validate a model reply into a KarmaAnswer, or null when it is unusable. It is refused when it names any calendar
+ * term or weekday, quotes scripture, or is not in the chosen language's script. (The calendar and its explanation are
+ * shown by the app itself, once, from the calculation; they are not part of the model's answer.)
  */
-export function parseKarmaAnswer(raw: string, calendar: TodayCalendar | null = null): KarmaAnswer | null {
+export function parseKarmaAnswer(raw: string, _calendar: TodayCalendar | null = null, lang: KarmaLang = "en"): KarmaAnswer | null {
   const obj = extractJson(raw) as Record<string, unknown> | null;
   if (!obj || typeof obj !== "object") return null;
   const answer: KarmaAnswer = {
-    meaning: calendar ? str(obj.meaning, 420) : "",
-    thought: str(obj.thought, 320),
-    action: str(obj.action, 240),
-    remember: str(obj.remember, 160),
+    thought: str(obj.thought, 300),
+    action: str(obj.action, 200),
+    remember: str(obj.remember, 130),
   };
   // The reflection and the action are the core of the answer.
   if (!answer.thought || !answer.action) return null;
-  if (namesOtherCalendarFacts(Object.values(answer).join(" "), calendar)) return null;
+  const written = [answer.thought, answer.action, answer.remember].join(" ");
+  if (namesAnyCalendarTerm(written) || CITES_SCRIPTURE.test(written) || !matchesLanguage(written, lang)) return null;
   return answer;
 }
 
@@ -81,31 +87,36 @@ export interface KarmaTurn {
   answer: KarmaAnswer;
 }
 
-/** Ask one question. Throws KarmaReadingError with a message that is safe to show. */
-export async function askKarma(question: string, calendar: TodayCalendar | null, previous: KarmaTurn[] = []): Promise<KarmaAnswer> {
+/** Ask one question. Throws KarmaReadingError with a message (in the chosen language) that is safe to show. */
+export async function askKarma(question: string, calendar: TodayCalendar | null, previous: KarmaTurn[] = [], lang: KarmaLang = "en"): Promise<KarmaAnswer> {
+  const errors = KARMA_TEXT[lang].errors;
   const text = question.trim().slice(0, MAX_SITUATION_CHARS);
   // A little context from the last two exchanges keeps follow-up questions natural.
   const history = previous.slice(-2).flatMap((t) => [
     { role: "user" as const, content: t.question },
     { role: "assistant" as const, content: [t.answer.thought, t.answer.action].filter(Boolean).join(" ") },
   ]);
-  let res: Response;
-  try {
-    res = await aiChat({
-      temperature: 0.5,
-      max_tokens: 600,
-      json: true,
-      library: { feature: "karma" },
-      messages: [{ role: "system", content: buildKarmaPrompt(calendar) }, ...history, { role: "user", content: text }],
-    });
-  } catch (e) {
-    if (e instanceof SignInRequiredError) throw new KarmaReadingError("Please sign in to continue.");
-    throw new KarmaReadingError("We couldn't reach the guide. Check your connection and try again.");
+  // A reply that fails the checks is asked for once more before the person sees an error.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    let res: Response;
+    try {
+      res = await aiChat({
+        temperature: 0.5,
+        // A ceiling only: some models think before they write. The answer itself is capped above.
+        max_tokens: 900,
+        json: true,
+        library: { feature: "karma" },
+        messages: [{ role: "system", content: buildKarmaPrompt(calendar, lang) }, ...history, { role: "user", content: text }],
+      });
+    } catch (e) {
+      if (e instanceof SignInRequiredError) throw new KarmaReadingError(errors.signIn);
+      throw new KarmaReadingError(errors.network);
+    }
+    if (res.status === 429) throw new KarmaReadingError(errors.rate);
+    const data = await res.json().catch(() => null);
+    if (!res.ok || data?.error) throw new KarmaReadingError(errors.unavailable);
+    const answer = parseKarmaAnswer(data?.choices?.[0]?.message?.content ?? "", calendar, lang);
+    if (answer) return answer;
   }
-  if (res.status === 429) throw new KarmaReadingError("Too many questions at once. Please wait a minute and try again.");
-  const data = await res.json().catch(() => null);
-  if (!res.ok || data?.error) throw new KarmaReadingError("The guide is not available right now. Please try again in a moment.");
-  const answer = parseKarmaAnswer(data?.choices?.[0]?.message?.content ?? "", calendar);
-  if (!answer) throw new KarmaReadingError("That answer didn't come out right. Please ask again.");
-  return answer;
+  throw new KarmaReadingError(errors.bad);
 }

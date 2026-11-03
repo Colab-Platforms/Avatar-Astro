@@ -95,22 +95,23 @@ export const AstrologerCard = ({ a }: { a: Astrologer }) => (
     </ul>
     <p className="mt-2 text-sm text-[#6B4A37]">{a.languages.join(" · ")}</p>
 
-    <dl className="mt-auto grid grid-cols-3 gap-2 pt-3 text-center text-sm">
-      <div className="rounded-lg bg-[#592209]/5 p-2">
+    {/* Chips wrap onto a second line on a narrow card instead of spilling out of their box. */}
+    <dl className="mt-auto flex flex-wrap gap-2 pt-3 text-center text-sm">
+      <div className="min-w-fit flex-1 rounded-lg bg-[#592209]/5 px-2.5 py-2">
         <dt className="sr-only">Experience</dt>
         <dd className="flex items-center justify-center gap-1 whitespace-nowrap font-semibold text-[#301607]">
           <Clock3 className="h-3.5 w-3.5 text-[#592209]" aria-hidden="true" />
           {a.experienceYears} yrs
         </dd>
       </div>
-      <div className="rounded-lg bg-[#592209]/5 p-2">
+      <div className="min-w-fit flex-1 rounded-lg bg-[#592209]/5 px-2.5 py-2">
         <dt className="sr-only">Rating</dt>
         <dd className="flex items-center justify-center gap-1 whitespace-nowrap font-semibold text-[#301607]">
           <Star className="h-3.5 w-3.5 fill-[#E58A45] text-[#E58A45]" aria-hidden="true" />
           {a.rating.toFixed(1)}
         </dd>
       </div>
-      <div className="rounded-lg bg-[#592209]/5 p-2">
+      <div className="min-w-fit flex-1 rounded-lg bg-[#592209]/5 px-2.5 py-2">
         <dt className="sr-only">Consultations</dt>
         <dd className="whitespace-nowrap font-semibold text-[#301607]">{formatCount(a.consultations)} <span className="text-xs font-normal text-[#6B4A37]">chats</span></dd>
       </div>

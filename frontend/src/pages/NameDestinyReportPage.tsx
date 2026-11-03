@@ -72,7 +72,7 @@ export default function NameDestinyReportPage() {
       const checkRes = await authedFetch(`${AUTH_API_BASE_URL}/name-analysis/check`, { method: "POST" });
       if (!checkRes.ok) {
         const body = await checkRes.json().catch(() => null);
-        setError(body?.message || "This tool is temporarily unavailable. Please try again later.");
+        setError(body?.message || "This feature is temporarily unavailable. Please try again later.");
         return;
       }
     } catch (err) {
