@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { auth, type AuthRequest } from "@/middleware/authMiddleware.js";
+import { requireAstrologer, type AstrologerRequest } from "@/middleware/astrologerAuth.js";
 import { noStore } from "@/middleware/noStore.js";
 import { createRateLimiter } from "@/utils/rateLimit.js";
 import { ApiError } from "@/utils/ApiError.js";
@@ -20,6 +21,15 @@ const wrap =
   (fn: (req: AuthRequest, res: Response) => Promise<unknown>) =>
   (req: Request, res: Response, next: NextFunction) =>
     fn(req as AuthRequest, res).catch((err) => {
+      if (err instanceof ApiError) return next(err);
+      console.error("[astrologer] unexpected error:", err);
+      next(new ApiError("Something went wrong. Please try again.", STATUS_CODES.SERVER_ERROR));
+    });
+
+const wrapAstrologer =
+  (fn: (req: AstrologerRequest, res: Response) => Promise<unknown>) =>
+  (req: Request, res: Response, next: NextFunction) =>
+    fn(req as AstrologerRequest, res).catch((err) => {
       if (err instanceof ApiError) return next(err);
       console.error("[astrologer] unexpected error:", err);
       next(new ApiError("Something went wrong. Please try again.", STATUS_CODES.SERVER_ERROR));
@@ -178,6 +188,57 @@ export function createAstrologerRouter(): Router {
     wrap(async (req, res) => {
       const app = await svc.withdrawApplication(req.user!.id);
       sendResponse(res, true, { status: app.status }, "Application withdrawn");
+    }),
+  );
+
+  // ── Astrologer workspace — only reachable once approved (requireAstrologer
+  // re-checks role + active account + not-suspended on every request, live, no
+  // caching). A 403 here is how the frontend tells "not an astrologer" apart from
+  // a real error — see features/astrologer/workspace/hooks.ts's useAstrologerAccess().
+  router.get(
+    "/profile",
+    requireAstrologer,
+    wrapAstrologer(async (req, res) => sendResponse(res, true, await svc.getOwnAstrologerProfile(req.user!.id))),
+  );
+
+  router.patch(
+    "/profile",
+    requireAstrologer,
+    wrapAstrologer(async (req, res) => {
+      const profile = await svc.updateOwnAstrologerProfile(req.user!.id, req.body ?? {});
+      sendResponse(res, true, profile, "Profile updated");
+    }),
+  );
+
+  router.patch(
+    "/profile/publish",
+    requireAstrologer,
+    wrapAstrologer(async (req, res) => {
+      const profile = await svc.setOwnPublication(req.user!.id, Boolean(req.body?.isPublished));
+      sendResponse(res, true, profile, profile.isPublished ? "Profile published" : "Profile unpublished");
+    }),
+  );
+
+  router.post(
+    "/profile/photo",
+    requireAstrologer,
+    uploadSingleImage,
+    wrapAstrologer(async (req, res) => {
+      const file = (req as Request & { file?: { buffer: Buffer } }).file;
+      if (!file) throw new ApiError("Select a profile photograph to upload", STATUS_CODES.BAD_REQUEST);
+      const existing = await svc.getOwnAstrologerProfile(req.user!.id);
+      const uploaded = await uploadImageBufferWithRetry(file.buffer, PROFILE_PHOTO_FOLDER);
+      let profile;
+      try {
+        profile = await svc.setOwnProfilePhoto(req.user!.id, uploaded.url, uploaded.publicId);
+      } catch (err) {
+        void deleteImageByPublicId(uploaded.publicId).catch((e) => console.error("[astrologer] cleanup failed for orphaned photo:", uploaded.publicId, e));
+        throw err;
+      }
+      if (existing.profilePhotoPublicId) {
+        void deleteImageByPublicId(existing.profilePhotoPublicId).catch((e) => console.error("[astrologer] failed to remove previous profile photo:", e));
+      }
+      sendResponse(res, true, profile, "Profile photograph updated");
     }),
   );
 

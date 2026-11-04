@@ -374,4 +374,47 @@ export async function withdrawApplication(userId: string): Promise<AstrologerApp
   return updated;
 }
 
+// ── Post-approval astrologer workspace (requireAstrologer-gated routes) ────
+// These operate on AstrologerProfile, the public-facing snapshot created at approval —
+// never on AstrologerApplication, which stays frozen as the verification record.
+
+export async function getOwnAstrologerProfile(userId: string) {
+  const profile = await prisma.astrologerProfile.findUnique({ where: { userId } });
+  if (!profile) throw new ApiError("No astrologer profile found for this account.", STATUS_CODES.NOT_FOUND);
+  return profile;
+}
+
+const PROFILE_EDITABLE_FIELDS = ["displayName", "bio", "yearsOfExperience", "languages"] as const;
+
+export async function updateOwnAstrologerProfile(userId: string, patch: Record<string, unknown>) {
+  const profile = await getOwnAstrologerProfile(userId);
+  const data: Record<string, unknown> = {};
+  for (const field of PROFILE_EDITABLE_FIELDS) {
+    if (Object.prototype.hasOwnProperty.call(patch, field)) data[field] = patch[field];
+  }
+  if (Object.keys(data).length === 0) throw new ApiError("No editable fields supplied.", STATUS_CODES.BAD_REQUEST);
+  if ("displayName" in data && !String(data.displayName ?? "").trim()) throw new ApiError("Display name cannot be empty.", STATUS_CODES.BAD_REQUEST);
+  return prisma.astrologerProfile.update({ where: { id: profile.id }, data });
+}
+
+export async function setOwnProfilePhoto(userId: string, url: string | null, publicId: string | null) {
+  const profile = await getOwnAstrologerProfile(userId);
+  return prisma.astrologerProfile.update({ where: { id: profile.id }, data: { profilePhotoUrl: url, profilePhotoPublicId: publicId } });
+}
+
+/**
+ * Self-serve publish/unpublish — the brief's "an approved astrologer may remain
+ * unpublished until their profile is ready" is the astrologer's own call, while a
+ * suspension (SUPERADMIN-only) always overrides it: a suspended astrologer can never
+ * publish themselves back live.
+ */
+export async function setOwnPublication(userId: string, isPublished: boolean) {
+  const profile = await getOwnAstrologerProfile(userId);
+  if (profile.suspendedAt) throw new ApiError("Your astrologer access is currently suspended; you cannot publish your profile.", STATUS_CODES.CONFLICT);
+  return prisma.astrologerProfile.update({
+    where: { id: profile.id },
+    data: { isPublished, publishedAt: isPublished ? new Date() : profile.publishedAt },
+  });
+}
+
 export type { ApplicationWithDetail };

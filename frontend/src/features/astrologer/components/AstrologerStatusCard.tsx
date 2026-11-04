@@ -24,6 +24,7 @@ export function AstrologerStatusCard() {
   }
 
   const editable = EDITABLE_STATUSES.includes(application.status);
+  const isApprovedOrSuspended = application.status === "APPROVED" || application.status === "SUSPENDED";
   const pendingDocs = application.documents.filter((d) => d.verificationStatus === "RESUBMISSION_REQUIRED" || d.verificationStatus === "REJECTED");
 
   return (
@@ -38,8 +39,8 @@ export function AstrologerStatusCard() {
           <p className="mt-1 text-sm text-amber-700">{pendingDocs.length} document(s) need your attention.</p>
         )}
       </div>
-      <Link to="/astrologer-application" className={ghost}>
-        {editable ? "Continue application" : "View status"}
+      <Link to={isApprovedOrSuspended ? "/astrologer-dashboard" : "/astrologer-application"} className={ghost}>
+        {isApprovedOrSuspended ? "Open astrologer workspace" : editable ? "Continue application" : "View status"}
       </Link>
     </div>
   );
