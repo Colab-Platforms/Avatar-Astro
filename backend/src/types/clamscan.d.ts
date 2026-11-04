@@ -1,4 +1,6 @@
 declare module "clamscan" {
+  import type { Readable } from "node:stream";
+
   interface ClamdscanOptions {
     host?: string;
     port?: number;
@@ -15,14 +17,15 @@ declare module "clamscan" {
     preference?: "clamdscan" | "clamscan";
   }
 
-  interface ScanBufferResult {
+  interface ScanStreamResult {
     isInfected: boolean;
     viruses: string[];
   }
 
   class NodeClam {
     init(options: NodeClamOptions): Promise<NodeClam>;
-    scanBuffer(buffer: Buffer): Promise<ScanBufferResult>;
+    /** The real clamscan API has no scanBuffer — a readable stream is the closest primitive to "scan this in-memory data". */
+    scanStream(stream: Readable): Promise<ScanStreamResult>;
   }
 
   export default NodeClam;

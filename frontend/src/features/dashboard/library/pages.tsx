@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, ArrowUpRight, Bookmark, BookOpenText, CalendarHe
 import { useAuthStore } from "@/store/authStore";
 import { useFeatureFlags } from "@/lib/featureFlags";
 import { isAdminUser } from "@/features/admin/utils/roles";
+import { AstrologerStatusCard } from "@/features/astrologer/components/AstrologerStatusCard";
 import {
   useConversation, useConversations, useDeleteConversation, useDeleteReading, useNotConfigured, useOverview, useReading, useReadings, useSetSaved, useTimeline,
   type ReadingCard,
@@ -97,6 +98,10 @@ export function Overview() {
         <StatCard icon={Compass} tone="sage" value={d.stats.featuresExplored} label="Features explored" />
         <StatCard icon={MessageCircleHeart} tone="plum" value={d.stats.conversations} label="Conversations" />
         <StatCard className="col-span-2 sm:col-span-1" icon={Clock} tone="gold" value={last ? new Date(last).toLocaleDateString(undefined, { day: "numeric", month: "short" }) : "—"} label="Last active" hint={last ? ago(last) : "No activity yet"} />
+      </section>
+
+      <section aria-label="Astrologer application">
+        <AstrologerStatusCard />
       </section>
 
       {quick.length > 0 && (

@@ -38,6 +38,7 @@ const avatarLiveLinks = [
 const shopLink = { name: "Shop", path: "/shop" };
 
 const topLinks = [
+  { name: "Become an Astrologer", path: "/become-astrologer" },
   { name: "Blog",    path: "/blog" },
   { name: "About",   path: "/about" },
   { name: "Contact", path: "/contact" },

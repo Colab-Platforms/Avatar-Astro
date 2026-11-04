@@ -1,7 +1,7 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, Activity, Sparkles, MessageCircleHeart, MessageCircleWarning, Flame, Store, FileText, CreditCard,
-  Plug, BarChart3, ScrollText, LogOut, X, Lock, ShieldCheck, Library, History, AudioLines,
+  Plug, BarChart3, ScrollText, LogOut, X, Lock, ShieldCheck, Library, History, AudioLines, UserCog, ClipboardList, Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,12 @@ const NAV: NavDef[] = [
   { to: "/admin/payments", label: "Payments & plans", icon: CreditCard, mainOnly: true },
   { to: "/admin/integrations", label: "Integrations", icon: Plug, mainOnly: true },
   { to: "/admin/settings", label: "Settings & audit", icon: ScrollText, mainOnly: true },
+];
+
+const ASTROLOGER_MGMT: NavDef[] = [
+  { to: "/admin/astrologers", label: "Overview", icon: UserCog, mainOnly: true },
+  { to: "/admin/astrologers/applications", label: "Applications", icon: ClipboardList, mainOnly: true },
+  { to: "/admin/astrologers/settings", label: "Settings", icon: Settings, mainOnly: true },
 ];
 
 const CATALOGUE: NavDef[] = [
@@ -113,6 +119,8 @@ export function AdminSidebar({ mobileOpen = false, onMobileClose }: AdminSidebar
         {ADMINISTRATION.map(renderItem)}
         <p className="px-3 pb-1 pt-4 text-xs font-medium text-[#9A9086]">Platform</p>
         {NAV.map(renderItem)}
+        <p className="px-3 pb-1 pt-4 text-xs font-medium text-[#9A9086]">Astrologers</p>
+        {ASTROLOGER_MGMT.map(renderItem)}
         <p className="px-3 pb-1 pt-4 text-xs font-medium text-[#9A9086]">Catalogue editors</p>
         {CATALOGUE.map(renderItem)}
       </nav>
