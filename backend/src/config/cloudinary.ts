@@ -170,4 +170,76 @@ export const deleteImageByPublicId = async (
   return result?.result === "ok" || result?.result === "not found";
 };
 
+export interface UploadedPrivateAsset {
+  publicId: string;
+  resourceType: "image" | "raw";
+}
+
+/**
+ * Uploads a verification document (ID proof, certificate, ...) as a Cloudinary
+ * "authenticated" asset — never delivered via a plain public secure_url. The caller
+ * never receives a URL back; only an admin "view document" action generates one, and
+ * only as a short-lived signed URL (see getSignedDocumentUrl). public_id is Cloudinary's
+ * own random id (unique_filename, no user-supplied filename), so nothing guessable is
+ * ever stored. PDFs go through as resource_type "raw"; images as "image".
+ */
+export const uploadPrivateDocumentBuffer = (
+  buffer: Buffer,
+  folder: string,
+  mimeType: string,
+): Promise<UploadedPrivateAsset> => {
+  assertConfigured();
+  const resourceType: "image" | "raw" = mimeType === "application/pdf" ? "raw" : "image";
+
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder, resource_type: resourceType, type: "authenticated", unique_filename: true, overwrite: false },
+      (error, result) => {
+        if (error || !result) {
+          console.error("Cloudinary private document upload failed:", error);
+          reject(new ApiError(describeUploadError(error), STATUS_CODES.BAD_REQUEST));
+          return;
+        }
+        resolve({ publicId: result.public_id, resourceType });
+      },
+    );
+    stream.end(buffer);
+  });
+};
+
+/**
+ * Short-lived signed URL for an admin to view a private document. Always goes through
+ * sign_url so no derived/thumbnail access can bypass the "authenticated" delivery type —
+ * never construct a bare cloudinary.url() for a document outside this helper.
+ */
+export const getSignedDocumentUrl = (
+  publicId: string,
+  resourceType: "image" | "raw",
+  expirySeconds = 300,
+): string => {
+  assertConfigured();
+  const expiresAt = Math.floor(Date.now() / 1000) + expirySeconds;
+  return cloudinary.url(publicId, {
+    type: "authenticated",
+    resource_type: resourceType,
+    sign_url: true,
+    secure: true,
+    expires_at: expiresAt,
+  });
+};
+
+/** Deletes a private document asset. Mirrors deleteImageByPublicId but for authenticated/raw assets. */
+export const deletePrivateDocument = async (
+  publicId: string,
+  resourceType: "image" | "raw",
+): Promise<boolean> => {
+  assertConfigured();
+  const result = await cloudinary.uploader.destroy(publicId, {
+    resource_type: resourceType,
+    type: "authenticated",
+    invalidate: true,
+  });
+  return result?.result === "ok" || result?.result === "not found";
+};
+
 export default cloudinary;
