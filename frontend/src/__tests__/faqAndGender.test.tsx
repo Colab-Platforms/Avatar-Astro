@@ -49,9 +49,9 @@ describe("FAQs", () => {
   it("the education sections show the new questions and none of the old ones", () => {
     const cases: [React.ReactElement, string][] = [
       [<BirthChartEducation />, "What can I discover from my Janma Kundali?"],
-      [<CompatibilityEducation />, "How does Jodi Jyotish compare two people?"],
+      [<CompatibilityEducation />, "How does Love Compatibility compare two people?"],
       [<ZodiacEducation />, "How can I discover my Rashi?"],
-      [<NameNumerologyEducation />, "What does Naamank Jyotish reveal?"],
+      [<NameNumerologyEducation />, "What does Namank Jyotish reveal?"],
       [<PalmEducation />, "Which hand should I use for my reading?"],
       [<TarotEducation />, "What can I ask during a tarot reading?"],
     ];
@@ -69,7 +69,7 @@ describe("FAQs", () => {
   });
 });
 
-describe("Jodi Jyotish gender", () => {
+describe("Love Compatibility gender", () => {
   it("each partner has their own optional gender field and the two do not affect each other", () => {
     render(
       <QueryClientProvider client={new QueryClient()}>

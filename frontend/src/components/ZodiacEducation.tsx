@@ -12,7 +12,7 @@ const blocks: EducationBlock[] = [
     ],
   },
   {
-    heading: "How Does Rashi Chakra Work?",
+    heading: "How Does Daily Horoscope Work?",
     list: [
       "Explore the wheel. Tap any sign to see its dates, element, ruling planet and a short description. The wheel also cycles through the signs by itself until you tap one.",
       "Filter by element if you want to compare Fire, Earth, Air or Water signs side by side.",
@@ -64,5 +64,5 @@ const DISCLAIMER =
   "Zodiac sign profiles are offered for personal interest, cultural exploration and reflection. They describe traditional symbolism, are not scientifically proven, and are not predictions or professional advice.";
 
 export default function ZodiacEducation() {
-  return <EducationSection audioToolSlug={FEATURES.zodiac.id} idPrefix="zodiac" title="About Rashi Chakra" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
+  return <EducationSection audioToolSlug={FEATURES.zodiac.id} idPrefix="zodiac" title="About Daily Horoscope" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
 }

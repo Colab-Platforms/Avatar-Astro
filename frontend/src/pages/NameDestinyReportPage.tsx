@@ -97,7 +97,7 @@ export default function NameDestinyReportPage() {
           </header>
 
           <p className="mx-auto mb-4 max-w-2xl px-4 text-center text-base leading-relaxed text-foreground/75 sm:text-lg">
-            Explore what the letters of your name and the digits of your birth date add up to in numerology. Naamank Jyotish calculates your Destiny, Soul Urge, Personality, Chaldean, Life Path and Birth numbers, shows every step of the working, and gives the traditional meaning of each.
+            Explore what the letters of your name and the digits of your birth date add up to in numerology. Namank Jyotish calculates your Destiny, Soul Urge, Personality, Chaldean, Life Path and Birth numbers, shows every step of the working, and gives the traditional meaning of each.
           </p>
 
           <form id="destiny-form" onSubmit={handleSubmit} noValidate style={{ maxWidth: 600, margin: "0 auto", padding: "32px 0 20px", scrollMarginTop: 100 }}>
@@ -139,7 +139,7 @@ export default function NameDestinyReportPage() {
                   cursor: "pointer", boxShadow: "0 0 30px rgba(89,34,9,0.35)",
                 }}
               >
-                ✦ Show My Naamank Jyotish ✦
+                ✦ Show My Namank Jyotish ✦
               </button>
             </div>
           </form>

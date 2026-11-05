@@ -870,7 +870,7 @@ const CardSpreadScene = ({ numCards, positions, question, onComplete }: { numCar
     };
   };
 
-  const guidanceLabel = question || (numCards === 5 ? 'Life Timeline' : 'Karma Mirror');
+  const guidanceLabel = question || (numCards === 5 ? 'Tarot Bhagya' : 'Karma Mirror');
 
   return (
     <div style={{

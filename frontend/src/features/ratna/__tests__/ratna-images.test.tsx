@@ -109,10 +109,10 @@ const renderForm = () =>
 
 describe("form heading, terminology and theme", () => {
   it("uses the exact heading and subheading", () => {
-    expect(RATNA_TITLE).toBe("Ratna Jyotish");
+    expect(RATNA_TITLE).toBe("Ratna Jyotish (Lucky Gemstone)");
     expect(RATNA_SUBTITLE).toBe("Know your Rashi Ratna and explore traditional gemstone guidance based on your Kundali.");
     renderForm();
-    const h1 = screen.getByRole("heading", { level: 1, name: "Ratna Jyotish" });
+    const h1 = screen.getByRole("heading", { level: 1, name: "Ratna Jyotish (Lucky Gemstone)" });
     expect(h1.className).toContain("font-home-serif");
     expect(h1.className).toContain("text-[#592209]");
     expect(screen.getByText("Know your Rashi Ratna and explore traditional gemstone guidance based on your Kundali.")).toBeInTheDocument();

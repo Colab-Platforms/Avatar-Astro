@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { MAJOR_ARCANA } from "@/data/tarotData";
 import TarotArt from "./TarotArt";
+import NewAdvancedBadge from "../NewAdvancedBadge";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface TarotMode {
@@ -24,7 +25,7 @@ interface TarotLandingSceneProps {
 const TAROT_MODES: TarotMode[] = [
   {
     id: "life-timeline",
-    name: "Life Timeline Tarot",
+    name: "Tarot Bhagya",
     cardCount: 5,
     intro: "Understand your life's journey through five Tarot cards. Each card represents a different part of your journey:",
     steps: [
@@ -156,7 +157,7 @@ const ModeCard: React.FC<{ mode: TarotMode; onSelect: (id: string) => void; anim
         <CardFan ids={mode.preview} />
         <div className="tls-card-head">
           <span className="tls-badge">{mode.cardCount} cards</span>
-          <h2>{mode.name}<sup>™</sup></h2>
+          <h2>{mode.name}<sup>™</sup>{mode.id === "karma-mirror" && <NewAdvancedBadge className="ml-2" />}</h2>
         </div>
       </div>
       <p className="tls-intro">{mode.intro}</p>
@@ -183,7 +184,7 @@ const Comparison: React.FC = () => (
     <div className="tls-table-wrap">
       <table>
         <thead>
-          <tr><th scope="col">Life Timeline Tarot™</th><th scope="col">Karma Mirror™</th></tr>
+          <tr><th scope="col">Tarot Bhagya™</th><th scope="col">Karma Mirror™ <NewAdvancedBadge /></th></tr>
         </thead>
         <tbody>
           {COMPARISON.map(([a, b]) => (
@@ -193,7 +194,7 @@ const Comparison: React.FC = () => (
       </table>
     </div>
     <ul className="tls-reco">
-      <li><strong>Choose Life Timeline Tarot</strong> if you want to explore your past, present and possible future.</li>
+      <li><strong>Choose Tarot Bhagya</strong> if you want to explore your past, present and possible future.</li>
       <li><strong>Choose Karma Mirror</strong> if you want to understand repeated patterns and what you can change.</li>
     </ul>
   </section>

@@ -5,7 +5,7 @@ import { FEATURES } from "@/data/featureCatalog";
 import type { TarotCard } from "@/data/tarotData";
 import TarotArt from "./TarotArt";
 
-// Result screens for Life Timeline Tarot and Karma Mirror. Both are built only from the cards that were drawn, the
+// Result screens for Tarot Bhagya and Karma Mirror. Both are built only from the cards that were drawn, the
 // deck's own card data and the fields the reading service returned: nothing here writes new interpretation text.
 // The follow-up ("Need More Guidance?") is rendered exactly once, at the bottom of each result.
 
@@ -201,7 +201,7 @@ const Hint: React.FC<{ selected: boolean }> = ({ selected }) => (
   <p className="trr-hint" aria-live="polite">{selected ? "Select the same card again to close it." : "Tap a card to read its meaning."}</p>
 );
 
-// ─── Life Timeline Tarot ─────────────────────────────────────────────────────
+// ─── Tarot Bhagya ─────────────────────────────────────────────────────
 
 export const TimelineResult: React.FC<{ cards: TarotCard[]; reading: AIReading; question?: string; embedded?: boolean; children?: React.ReactNode }> = ({ cards, reading, question, embedded = false, children }) => {
   const [active, setActive] = useState<number | null>(null);
@@ -216,7 +216,7 @@ export const TimelineResult: React.FC<{ cards: TarotCard[]; reading: AIReading; 
     <div className="trr-root" data-testid="tarot-timeline-result">
       <TarotResultStyles />
       {!embedded && <ResultHeader
-        product="Life Timeline Tarot™"
+        product="Tarot Bhagya™"
         title={<>Your Soul&apos;s <em>Timeline</em></>}
         area={area}
         instruction="Explore the five cards to understand each stage of your reading. Select a card to discover its meaning and guidance."

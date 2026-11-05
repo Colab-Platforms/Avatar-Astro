@@ -1,3 +1,9 @@
+import { useState } from "react";
+import { ChevronDown } from "lucide-react";
+
+/** Paragraphs shown before "Read more". */
+const VISIBLE = 2;
+
 const paragraphs = [
   "Life rarely feels random once you start looking for the patterns in it — recurring seasons of change, relationships that echo old lessons, moments that arrive right when you need them. Astrology is a language for reading those patterns, connecting what's happening in your life to the larger rhythms moving above it.",
   "For thousands of years, the positions and movements of the planets have been observed and interpreted as reflections of human experience — each planet, sign, and transit carrying its own symbolism for the moods, challenges, and opportunities that shape our days.",
@@ -6,7 +12,10 @@ const paragraphs = [
   "This is old knowledge, carried forward across cultures and generations long before it reached us. Understanding astrology today means drawing on that long history of observation while applying it to the very modern questions we're all still asking about who we are and where we're headed.",
 ];
 
-const WhyAstrologySection = () => (
+const WhyAstrologySection = () => {
+  const [open, setOpen] = useState(false);
+  const shown = open ? paragraphs : paragraphs.slice(0, VISIBLE);
+  return (
   <section className="hl-section relative z-10 w-full border-t border-home-line" aria-labelledby="home-why-h">
     <div className="container relative mx-auto px-4 md:px-6">
       <div className="grid gap-8 lg:grid-cols-[0.8fr_1.4fr] lg:gap-16">
@@ -22,15 +31,28 @@ const WhyAstrologySection = () => (
         </div>
 
         <div className="space-y-5 border-home-gold font-home-sans text-base leading-relaxed text-home-muted lg:border-l-2 lg:pl-10">
-          {paragraphs.map((p, i) => (
-            <p key={i} className={i === 0 ? "text-lg text-home-ink" : undefined}>
-              {p}
-            </p>
-          ))}
+          <div id="home-why-body" className="space-y-5">
+            {shown.map((p, i) => (
+              <p key={i} className={i === 0 ? "text-lg text-home-ink" : undefined}>
+                {p}
+              </p>
+            ))}
+          </div>
+          <button
+            type="button"
+            aria-expanded={open}
+            aria-controls="home-why-body"
+            onClick={() => setOpen((v) => !v)}
+            className="hl-btn-ghost hl-btn-sm inline-flex items-center gap-1.5"
+          >
+            {open ? "Read less" : "Read more"}
+            <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden="true" />
+          </button>
         </div>
       </div>
     </div>
   </section>
-);
+  );
+};
 
 export default WhyAstrologySection;

@@ -11,7 +11,7 @@ const blocks: EducationBlock[] = [
     ],
   },
   {
-    heading: "How Does Jodi Jyotish Work?",
+    heading: "How Does Love Compatibility Work?",
     list: [
       "Enter a name and a date of birth for each person.",
       "The Seva works out each person's Sun sign from the birth date, then compares the two signs' elements and the aspect between them.",
@@ -74,5 +74,5 @@ const DISCLAIMER =
   "Compatibility readings are offered for personal interest, cultural exploration and reflection. They describe traditional symbolism, are not scientifically proven, and are not predictions or relationship advice.";
 
 export default function CompatibilityEducation() {
-  return <EducationSection audioToolSlug={FEATURES.compatibility.id} idPrefix="compat" title="About Jodi Jyotish" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
+  return <EducationSection audioToolSlug={FEATURES.compatibility.id} idPrefix="compat" title="About Love Compatibility" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
 }

@@ -113,12 +113,12 @@ const ZodiacDetail = () => {
       <section className="mt-8 rounded-2xl border border-primary/20 bg-primary/5 p-6 text-center md:p-8" aria-labelledby="next-h">
         <h2 id="next-h" className={h2}>Explore More</h2>
         <p className="mx-auto mb-5 max-w-2xl text-muted-foreground">
-          Your Sun sign is only one part of your story. Your Janma Kundali shows your Vedic Janma Rashi and full birth chart, and Jodi Jyotish looks at compatibility.
+          Your Sun sign is only one part of your story. Your Janma Kundali shows your Vedic Janma Rashi and full birth chart, and Love Compatibility shows how you match with someone else.
         </p>
         <div className="flex flex-col justify-center gap-3 sm:flex-row">
           <Link to="/birth-chart" className="btn-outline-cosmic rounded-lg px-6 py-3">Janma Kundali</Link>
           <Link to="/horoscopes" className="btn-outline-cosmic rounded-lg px-6 py-3">Daily Horoscope</Link>
-          <Link to="/compatibility" className="btn-outline-cosmic rounded-lg px-6 py-3">Explore Jodi Jyotish</Link>
+          <Link to="/compatibility" className="btn-outline-cosmic rounded-lg px-6 py-3">Explore Love Compatibility</Link>
         </div>
       </section>
 

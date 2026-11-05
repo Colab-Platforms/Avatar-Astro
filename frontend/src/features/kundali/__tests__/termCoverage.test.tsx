@@ -75,7 +75,7 @@ describe("every technical term in a result has an in-place explanation", () => {
     { const u = unexplained(container); if (u.length) console.log("MISSING>>", u.join(" | ")); expect(u).toEqual([]); }
   });
 
-  it("Jodi Jyotish: Guna Milan result", async () => {
+  it("Love Compatibility: Guna Milan result", async () => {
     const kootas = ["Varna", "Vashya", "Tara", "Yoni", "Graha Maitri", "Gana", "Bhakoot", "Nadi"].map((koota, i) => ({ koota, max: [1, 2, 3, 4, 5, 6, 7, 8][i], score: i % 3 ? 0 : [1, 2, 3, 4, 5, 6, 7, 8][i], a: "x", b: "y", note: "Moon signs differ." }));
     const res = {
       a: chart, b: chart,
@@ -97,7 +97,7 @@ describe("every technical term in a result has an in-place explanation", () => {
     { const u = unexplained(container); if (u.length) console.log("MISSING>>", u.join(" | ")); expect(u).toEqual([]); }
   });
 
-  it("Jodi Jyotish: the 'no details' state also explains its terms", () => {
+  it("Love Compatibility: the 'no details' state also explains its terms", () => {
     const people = [
       { name: "Ravi", gender: "Male", day: "22", month: "11", year: "1991", time: "", place: null },
       { name: "Asha", gender: "Female", day: "15", month: "8", year: "1992", time: "", place: null },

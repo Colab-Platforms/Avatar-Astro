@@ -10,9 +10,9 @@ const blocks: EducationBlock[] = [
     ],
   },
   {
-    heading: "How Does Tarot Drishti Work?",
+    heading: "How Does Tarot Prediction Work?",
     list: [
-      "Choose a reading: Life Timeline Tarot (five cards, with a life area such as Career or Love) or Karma Mirror (three cards).",
+      "Choose a reading: Tarot Bhagya (five cards, with a life area such as Career or Love) or Karma Mirror (three cards).",
       "Shuffle if you like, then pick the cards that draw you from the fanned deck and watch them turn over.",
       "Read the interpretation written for exactly those cards in their positions. Tap any card to see its general meaning.",
     ],
@@ -32,8 +32,8 @@ const blocks: EducationBlock[] = [
 const faqs = FEATURE_FAQS.tarot;
 
 const DISCLAIMER =
-  "Tarot Drishti is offered for personal interest and reflection. Readings are generated interpretations, not predictions, and not medical, legal, financial or relationship advice.";
+  "Tarot Prediction is offered for personal interest and reflection. Readings are generated interpretations, not predictions, and not medical, legal, financial or relationship advice.";
 
 export default function TarotEducation() {
-  return <EducationSection audioToolSlug={FEATURES.tarot.id} idPrefix="tarot" title="About Tarot Drishti" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
+  return <EducationSection audioToolSlug={FEATURES.tarot.id} idPrefix="tarot" title="About Tarot Prediction" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
 }

@@ -74,5 +74,5 @@ const DISCLAIMER =
   "Palm reading is offered for personal interest, cultural exploration and reflection. It is a traditional practice that is not scientifically proven, and the result is not a prediction, a medical assessment or professional advice.";
 
 export default function PalmEducation() {
-  return <EducationSection audioToolSlug={FEATURES.palm.id} idPrefix="palm" title="About Hasta Rekha" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
+  return <EducationSection audioToolSlug={FEATURES.palm.id} idPrefix="palm" title="About Hasta Rekha (Palmistry)" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
 }

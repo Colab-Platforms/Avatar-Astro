@@ -94,7 +94,7 @@ export const ALL_ASTROLOGERS: Astrologer[] = [
     experienceYears: 15,
     rating: 4.8,
     consultations: 12000,
-    pricePerMin: 25,
+    pricePerMin: 10,
     originalPricePerMin: null,
     about:
       "Focuses on reading the Janma Kundali: Lagna, Chandra Rashi, Nakshatra and the Vimshottari dasha, and explaining them in plain language.",
@@ -117,7 +117,7 @@ export const ALL_ASTROLOGERS: Astrologer[] = [
     experienceYears: 8,
     rating: 4.7,
     consultations: 6400,
-    pricePerMin: 18,
+    pricePerMin: 5,
     originalPricePerMin: null,
     about:
       "Uses tarot as a way to reflect on relationships and decisions, with a calm, non-predictive approach.",
@@ -140,7 +140,7 @@ export const ALL_ASTROLOGERS: Astrologer[] = [
     experienceYears: 22,
     rating: 4.9,
     consultations: 21000,
-    pricePerMin: 30,
+    pricePerMin: 10,
     originalPricePerMin: null,
     about:
       "Answers specific questions through Prashna (horary) astrology and supports them with palm reading.",
@@ -163,7 +163,7 @@ export const ALL_ASTROLOGERS: Astrologer[] = [
     experienceYears: 11,
     rating: 4.6,
     consultations: 4800,
-    pricePerMin: 20,
+    pricePerMin: 5,
     originalPricePerMin: null,
     about:
       "Works with name and birth-date numerology and face reading, explaining each step of the working.",
@@ -186,7 +186,7 @@ export const ALL_ASTROLOGERS: Astrologer[] = [
     experienceYears: 18,
     rating: 4.8,
     consultations: 15500,
-    pricePerMin: 28,
+    pricePerMin: 10,
     originalPricePerMin: null,
     about:
       "Looks at marriage and career timing through the dasha periods, with attention to what the chart can and cannot say.",

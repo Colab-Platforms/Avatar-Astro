@@ -1,8 +1,7 @@
-import type { LucideIcon } from "lucide-react";
 import { FEATURES } from "./featureCatalog";
-import { Landmark, Flame, BookOpen, Music2 } from "lucide-react"; // PartyPopper, Bell: re-add with the hidden Puja entries
 
-export interface FeaturedSlide {
+export interface DevotionSlide {
+  /** Small label above the title. */
   badge: string;
   title: string;
   description: string;
@@ -14,67 +13,47 @@ export interface FeaturedSlide {
   checklist: string[];
 }
 
-/** The four slides of the Featured carousel. */
-export const featuredSlides: FeaturedSlide[] = [
+/** The Devotion & Spirituality carousel: Temples, Daily Aarti, Spiritual Books, Mantras & Chants. */
+export const devotionSlides: DevotionSlide[] = [
   {
-    badge: "Featured",
-    title: FEATURES.birthChart.name,
-    description: FEATURES.birthChart.subtitle,
-    buttonLabel: "Explore Janma Kundali",
-    buttonPath: "/birth-chart",
-    image: "/images/tools/birth-chart-feature.jpg",
-    imageAlt: "A printed natal chart being marked with a pen",
-    checklist: [
-      "Detailed Planet Positions",
-      "Dasha & Predictions",
-      "Strengths & Challenges",
-      "Remedies & Guidance",
-    ],
+    badge: "Devotion & Spirituality",
+    title: "Temples",
+    description: "Visit India's sacred temples through live darshan and feel divine blessings from anywhere.",
+    buttonLabel: "Watch Live Darshan",
+    buttonPath: "/avatar-live/darshan",
+    image: "/placeholders/golden-temple.webp",
+    imageAlt: "The Golden Temple glowing beside its sacred pool",
+    checklist: ["Live darshan from sacred temples", "Watch from anywhere", "Feel the blessings at home"],
   },
   {
-    badge: "Featured",
-    title: FEATURES.tarot.name,
-    description: FEATURES.tarot.subtitle,
-    buttonLabel: "Start Your Reading",
-    buttonPath: "/tarot",
-    image: "/images/tools/tarot-feature.jpg",
-    imageAlt: "Tarot cards and a lit candle on a wooden table",
-    checklist: [
-      "Life Timeline 5-card spread",
-      "Karma Mirror 3-card reading",
-      "Choose your question category",
-      "Personalised interpretation",
-    ],
+    badge: "Devotion & Spirituality",
+    title: "Daily Aarti",
+    description: "Begin and end your day with devotion by joining the aarti as it happens.",
+    buttonLabel: "Join the Aarti",
+    buttonPath: "/avatar-live/darshan",
+    image: "/placeholders/iskon.webp",
+    imageAlt: "A temple lit up for the evening aarti",
+    checklist: ["Live aarti from temples", "Simple to join, nothing to install", "A calm start or end to your day"],
   },
   {
-    badge: "Featured",
-    title: FEATURES.compatibility.name,
-    description: FEATURES.compatibility.subtitle,
-    buttonLabel: "Explore Jodi Jyotish",
-    buttonPath: "/compatibility",
-    image: "/images/tools/compatibility-feature.jpg",
-    imageAlt: "A couple sitting across a table by a lake",
-    checklist: [
-      "Overall compatibility score",
-      "Love, chemistry & communication",
-      "Green flags & red flags",
-      "Marriage-window insight",
-    ],
+    badge: "Devotion & Spirituality",
+    title: "Spiritual Books",
+    description: "Read sacred verses with their meanings and timeless wisdom for everyday life.",
+    buttonLabel: "Read Divya Shloka",
+    buttonPath: "/inner-voice/wisdom",
+    image: "/placeholders/guruji.webp",
+    imageAlt: "A guru sharing spiritual wisdom",
+    checklist: ["Sacred verses and their meanings", "Wisdom for everyday life", "Easy to read and reflect on"],
   },
   {
-    badge: "Featured",
-    title: FEATURES.palm.name,
-    description: FEATURES.palm.subtitle,
-    buttonLabel: "Scan Your Palm",
-    buttonPath: "/palm-reading",
-    image: "/images/tools/palm-reading-feature.jpg",
-    imageAlt: "A palm being read during a consultation",
-    checklist: [
-      "Camera or photo hand scan",
-      "Heart, head, life & fate lines",
-      "Six planetary mounts",
-      "Life-phase timeline",
-    ],
+    badge: "Devotion & Spirituality",
+    title: "Mantras & Chants",
+    description: "Discover mantras, chants and verses to bring peace and focus to your day.",
+    buttonLabel: "Explore Mantras",
+    buttonPath: "/inner-voice/wisdom",
+    image: "/placeholders/mahalaskhmi-temple.webp",
+    imageAlt: "A temple with lamps lit for prayer",
+    checklist: ["Mantras and sacred chants", "Verses with their meanings", "Peace and focus through the day"],
   },
 ];
 
@@ -121,29 +100,4 @@ export const aiGuruFeature: AIGuruFeature = {
   inputPlaceholder: "Ask your question...",
   buttonLabel: "Talk to Divya Margdarshak",
   buttonPath: "/inner-voice/chat",
-};
-
-export interface DevotionItem {
-  label: string;
-  icon: LucideIcon;
-  path: string;
-}
-
-export const devotionItems: DevotionItem[] = [
-  { label: "Temples", icon: Landmark, path: "/avatar-live/darshan" },
-  // Puja entry points are temporarily hidden (route and pages remain):
-  // { label: "Festivals", icon: PartyPopper, path: "/puja" },
-  { label: "Daily Aarti", icon: Flame, path: "/avatar-live/darshan" },
-  { label: "Spiritual Books", icon: BookOpen, path: "/inner-voice/wisdom" },
-  // { label: "Puja & Remedies", icon: Bell, path: "/puja" },
-  { label: "Mantras & Chants", icon: Music2, path: "/inner-voice/wisdom" },
-];
-
-export const devotionFeature = {
-  title: "Devotion & Spirituality",
-  description:
-    "Temples, festivals, daily aarti, spiritual books, remedies and mantras in one place.",
-  items: devotionItems,
-  buttonLabel: "Explore All",
-  buttonPath: "/avatar-live", // was "/puja" while Puja is hidden
 };

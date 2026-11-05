@@ -1,32 +1,37 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react";
-import { featuredSlides } from "@/data/features";
+import { devotionSlides } from "@/data/features";
+import { useFeatureFlags } from "@/lib/featureFlags";
 import FeatureButton from "./FeatureButton";
 
 const arrowCls =
   "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-home-gerua bg-home-gerua text-home-ivory transition-colors duration-300 hover:border-home-gold hover:bg-home-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-home-ink motion-reduce:transition-none";
 
-/** Four-slide featured-tool carousel: arrows wrap around, dots jump to a slide, no auto-advance. */
+/** Devotion & Spirituality carousel: arrows wrap around, dots jump to a slide, no auto-advance. */
 const FeaturedCarousel = () => {
   const [index, setIndex] = useState(0);
-  const count = featuredSlides.length;
+  const { isPathDisabled } = useFeatureFlags();
+  // Slides whose page the admin switched off are not listed (fails open if the config cannot load).
+  const slides = devotionSlides.filter((s) => !isPathDisabled(s.buttonPath));
+  const count = slides.length;
   const go = (delta: number) => setIndex((i) => (i + delta + count) % count);
 
+  if (count === 0) return null;
   return (
     <div className="hl-card group relative overflow-hidden">
       <div
         role="region"
         aria-roledescription="carousel"
-        aria-label="Featured Seva"
+        aria-label="Devotion & Spirituality"
         className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 px-4 py-4 sm:px-5 lg:gap-x-4 lg:py-6"
       >
-        <button type="button" aria-label="Previous featured Seva" onClick={() => go(-1)} className={`${arrowCls} order-2 lg:order-1`}>
+        <button type="button" aria-label="Previous slide" onClick={() => go(-1)} className={`${arrowCls} order-2 lg:order-1`}>
           <ChevronLeft className="h-4 w-4" />
         </button>
 
         <div className="order-1 col-span-3 min-w-0 lg:order-2 lg:col-span-1 lg:mx-auto lg:w-full lg:max-w-[1040px]" aria-live="polite">
           <div className="grid">
-            {featuredSlides.map((slide, i) => {
+            {slides.map((slide, i) => {
               const active = i === index;
               return (
                 <div
@@ -80,12 +85,12 @@ const FeaturedCarousel = () => {
           </div>
         </div>
 
-        <button type="button" aria-label="Next featured Seva" onClick={() => go(1)} className={`${arrowCls} order-4 lg:order-3`}>
+        <button type="button" aria-label="Next slide" onClick={() => go(1)} className={`${arrowCls} order-4 lg:order-3`}>
           <ChevronRight className="h-4 w-4" />
         </button>
 
-        <div className="order-3 flex items-center justify-center lg:order-4 lg:col-span-3" role="group" aria-label="Choose featured Seva">
-          {featuredSlides.map((slide, i) => (
+        <div className="order-3 flex items-center justify-center lg:order-4 lg:col-span-3" role="group" aria-label="Choose slide">
+          {slides.map((slide, i) => (
             <button
               key={slide.title}
               type="button"

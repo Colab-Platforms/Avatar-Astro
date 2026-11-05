@@ -6,8 +6,7 @@ import { subscribeNewsletter } from '@/lib/inquiry';
 import { useFeatureFlags } from '@/lib/featureFlags';
 
 const exploreLinks = [
-  { label: 'Daily Horoscopes', path: '/horoscopes' },
-  { label: FEATURES.zodiac.name, path: FEATURES.zodiac.path },
+  { label: 'Daily Horoscope', path: '/horoscopes' },
   { label: FEATURES.compatibility.name, path: FEATURES.compatibility.path },
   { label: FEATURES.birthChart.name, path: FEATURES.birthChart.path },
 ];
@@ -69,7 +68,7 @@ const Footer = () => {
           {/* Intro */}
           <div>
             <p className="max-w-xs text-xl italic leading-relaxed md:text-[22px]">
-              Unlock the secrets of the cosmos and discover what the stars have written for you.
+              Discover your path, embrace your karma, and let ancient wisdom guide your journey.
             </p>
           </div>
 
