@@ -1,14 +1,8 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Sparkles, ShieldCheck, Globe2, Users } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useReducedMotion } from "framer-motion";
 import { useFeatureFlags } from "@/lib/featureFlags";
-
-const stats = [
-  { icon: Sparkles, value: "50,000+", label: "Happy Users" },
-  { icon: ShieldCheck, value: "Verified", label: "Astrologers" },
-  { icon: Globe2, value: "13+", label: "Languages" },
-  { icon: Users, value: "60+", label: "Countries" },
-];
+import { FEATURES } from "@/data/featureCatalog";
 
 /** First section under the hero — the Astrology Tools block on this page. */
 const NEXT_SECTION_ID = "astrology-tools";
@@ -79,32 +73,18 @@ const Hero = () => {
             Get accurate astrology insights, personalised guidance, and powerful Seva to help you make better decisions in love, career, health and life.
           </p>
 
-          <div className="mb-8 flex flex-col gap-3 sm:flex-row lg:mb-8">
+          <div className="flex flex-col gap-3 sm:flex-row">
             <a href={`#${NEXT_SECTION_ID}`} onClick={scrollToNext} className="hl-btn group w-full sm:w-auto">
               Explore Astrology Seva
               <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
             </a>
-            {!isPathDisabled("/inner-voice/chat") && (
-              <Link to="/inner-voice/chat" className="hl-btn-ghost w-full sm:w-auto">
-                Book a Consultation
+            {!isPathDisabled(FEATURES.guru.path) && (
+              <Link to={FEATURES.guru.path} className="hl-btn-ghost w-full sm:w-auto">
+                Try {FEATURES.guru.name}
               </Link>
             )}
           </div>
 
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-5 sm:flex sm:flex-wrap sm:items-center sm:gap-x-0 sm:gap-y-4">
-            {stats.map((s, i) => (
-              <div key={s.label} className="flex items-center">
-                {i > 0 && <span aria-hidden="true" className="mx-4 hidden h-9 xl:mx-6 w-px bg-home-line sm:block" />}
-                <div className="flex items-center gap-2.5 text-left">
-                  <s.icon className="h-6 w-6 shrink-0 text-home-gerua" strokeWidth={1.5} aria-hidden="true" />
-                  <div className="leading-tight">
-                    <dd className="font-home-sans text-[0.95rem] font-bold text-home-ink">{s.value}</dd>
-                    <dt className="font-home-sans text-xs text-home-muted">{s.label}</dt>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </dl>
         </div>
       </div>
 

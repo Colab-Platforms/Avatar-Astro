@@ -26,11 +26,11 @@ const blocks: EducationBlock[] = [
     heading: "What Is Name Numerology?",
     paragraphs: [
       "Name numerology is a traditional practice that turns the letters of a name, and the digits of a birth date, into numbers, then reads each number as a symbol for personality themes. Different cultures have used it for centuries, including in India and the Greek and Hebrew traditions.",
-      "The adding-up part is plain arithmetic that anyone can check. The meanings attached to the numbers are traditional beliefs, and they are not scientifically proven. Naamank Jyotish is useful if you are curious about the numbers in your name and birth date, and what numerologists say about them.",
+      "The adding-up part is plain arithmetic that anyone can check. The meanings attached to the numbers are traditional beliefs, and they are not scientifically proven. Namank Jyotish is useful if you are curious about the numbers in your name and birth date, and what numerologists say about them.",
     ],
   },
   {
-    heading: "How Does Naamank Jyotish Work?",
+    heading: "How Does Namank Jyotish (Lucky Name) Work?",
     list: [
       "Enter your first name, your optional last name, and your date of birth.",
       "The Seva turns each letter into a number using two letter tables, adds the numbers and reduces the total to a single digit. It does the same with the digits of your birth date.",
@@ -44,7 +44,7 @@ const blocks: EducationBlock[] = [
   {
     heading: "Which Numerology System Is Used?",
     paragraphs: [
-      "Naamank Jyotish implements two systems and uses each for specific numbers.",
+      "Namank Jyotish implements two systems and uses each for specific numbers.",
     ],
     list: [
       "Pythagorean: letters run A=1 to I=9, then the cycle repeats. It is used for the Destiny (Expression), Soul Urge and Personality numbers.",
@@ -107,5 +107,5 @@ const DISCLAIMER =
   "Numerology is offered for personal interest, cultural exploration and reflection. It is a traditional belief system that is not scientifically proven. Results are not predictions, and they are not professional advice.";
 
 export default function NameNumerologyEducation() {
-  return <EducationSection audioToolSlug={FEATURES.numerology.id} idPrefix="numerology" title="About Naamank Jyotish" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
+  return <EducationSection audioToolSlug={FEATURES.numerology.id} idPrefix="numerology" title="About Namank Jyotish (Lucky Name)" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
 }

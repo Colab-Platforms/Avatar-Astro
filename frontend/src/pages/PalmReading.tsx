@@ -827,7 +827,7 @@ export default function PalmReading() {
           This reading is for personal interest and reflection. Palmistry is a traditional practice that is not scientifically proven, and the result is not a prediction or professional advice.
         </p>
         <div style={{ textAlign: "center" }}>
-          <button style={goldBtn} onClick={resetToLanding}>🔄 New Hasta Rekha Reading</button>
+          <button style={goldBtn} onClick={resetToLanding}>🔄 New Hasta Rekha (Palmistry) Reading</button>
         </div>
       </div>
       <AskDivyaSection feature="palm" context={`Hand shape: ${shape.label}. ${meaning}`} />

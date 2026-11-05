@@ -9,7 +9,7 @@ import Layout from "@/components/Layout";
 import { NavigationProvider } from "@/context/NavigationContext";
 import { tools } from "@/data/tools";
 import { homeBlogPosts } from "@/data/homeBlog";
-import { featuredSlides, devotionFeature, aiGuruFeature, liveDarshanFeature } from "@/data/features";
+import { devotionSlides, aiGuruFeature, liveDarshanFeature } from "@/data/features";
 
 // framer-motion's whileInView needs IntersectionObserver, which jsdom lacks.
 beforeAll(() => {
@@ -47,19 +47,20 @@ describe("homepage content and structure", () => {
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(/Discover Clarity,\s*Align Your Energy,\s*Create a Better Tomorrow/);
     for (const name of [
       /Explore Our\s+Astrology Seva/,
-      /RASHI CHAKRA/,
+      /DAILY HOROSCOPE/,
       /Read from our\s+blog\./,
       /Why do\s+You\s+need astrology\?/,
       /Start Your Journey With\s+Clarity\./,
     ]) {
       expect(screen.getByRole("heading", { level: 2, name })).toBeInTheDocument();
     }
-    for (const t of ["Live Darshan", "Divya Margdarshak", "Devotion & Spirituality"]) {
+    for (const t of ["Live Darshan", "Divya Margdarshak"]) {
       expect(screen.getByRole("heading", { level: 3, name: t })).toBeInTheDocument();
     }
     for (const t of ["Janma Kundali"]) {
-      expect(screen.getAllByRole("heading", { level: 3, name: t }).length).toBeGreaterThan(0); // card grid and featured carousel
+      expect(screen.getAllByRole("heading", { level: 3, name: t }).length).toBeGreaterThan(0); // card grid
     }
+    expect(screen.queryByText("Featured")).toBeNull(); // the old Featured carousel is gone
   });
 
   it("hero: static artwork (no video), the approved copy, real destinations and no eyebrow or scroll prompt", () => {
@@ -70,11 +71,9 @@ describe("homepage content and structure", () => {
     expect(screen.queryByText(/YOUR PERSONAL ASTROLOGY/)).toBeNull();
     expect(screen.getByText(/Get accurate astrology insights, personalised guidance/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Explore Astrology Seva/ })).toHaveAttribute("href", "#astrology-tools");
-    expect(screen.getByRole("link", { name: "Book a Consultation" })).toHaveAttribute("href", "/inner-voice/chat");
-    for (const [v, l] of [["50,000+", "Happy Users"], ["Verified", "Astrologers"], ["13+", "Languages"], ["60+", "Countries"]]) {
-      expect(screen.getByText(v)).toBeInTheDocument();
-      expect(within(document.querySelector("main")!).getByText(l)).toBeInTheDocument();
-    }
+    expect(screen.queryByRole("link", { name: "Book a Consultation" })).toBeNull();
+    expect(screen.getByRole("link", { name: "Try Divya Margdarshak" })).toHaveAttribute("href", "/inner-voice/chat");
+    for (const t of ["Happy Users", "Languages", "Countries", "50,000+", "13+", "60+"]) expect(screen.queryByText(t)).toBeNull();
     expect(screen.queryByText(/Scroll to explore/)).toBeNull();
     const hero = h1.closest("section")!;
     expect(hero.querySelector("video")).toBeNull();
@@ -93,9 +92,10 @@ describe("homepage content and structure", () => {
     expect(screen.getAllByRole("heading", { level: 2, name: /Astrology\s+Seva/ })).toHaveLength(1); // one section only
     const titles = [...section.querySelectorAll(".hl-card h3")].map((h) => h.textContent);
     expect(titles).toEqual(tools.map((t) => t.title)); // follows tools.ts, whatever it contains
-    expect(titles.slice(0, 4)).toEqual(["Janma Kundali", "Tarot Drishti", "Jodi Jyotish", "Hasta Rekha"]);
+    expect(titles.slice(0, 4)).toEqual(["Janma Kundali", "Tarot Prediction", "Love Compatibility", "Hasta Rekha (Palmistry)"]);
     for (const tool of tools.slice(0, 4)) {
-      expect(tool.image).toMatch(/^\/images\/tools\/.+\.jpg$/); // the photo cards
+      expect(tool.image).toMatch(/^\/images\/tools\/.+\.(jpg|webp)$/); // the photo cards (Hasta Rekha uses its own labelled palmistry artwork)
+      if (tool.title === "Hasta Rekha (Palmistry)") expect(tool.image).toBe("/images/tools/hasta-rekha-palmistry.webp");
     }
     for (const tool of tools) {
       const card = within(document.getElementById("astrology-tools")!).getByRole("heading", { level: 3, name: tool.title }).closest(".hl-card") as HTMLElement;
@@ -127,30 +127,41 @@ describe("homepage content and structure", () => {
     expect(css).not.toMatch(/\.hl-tone-/);
   });
 
-  it("Featured carousel: four slides, arrows wrap, dots jump, one slide visible at a time", () => {
+  it("Why astrology: two paragraphs, the rest behind Read more", () => {
+    renderAt("/");
+    const body = document.getElementById("home-why-body")!;
+    expect(body.querySelectorAll("p")).toHaveLength(2);
+    fireEvent.click(screen.getByRole("button", { name: /Read more/ }));
+    expect(body.querySelectorAll("p").length).toBeGreaterThan(2);
+    fireEvent.click(screen.getByRole("button", { name: /Read less/ }));
+    expect(body.querySelectorAll("p")).toHaveLength(2);
+  });
+
+  it("Devotion & Spirituality carousel: four slides, arrows wrap, dots jump, one slide visible at a time", () => {
     const { container } = renderAt("/");
-    const region = screen.getByRole("region", { name: "Featured Seva" });
+    const region = screen.getByRole("region", { name: "Devotion & Spirituality" });
     expect(region).toHaveAttribute("aria-roledescription", "carousel");
     const slides = () => [...container.querySelectorAll("[aria-roledescription='slide']")];
     const visible = () => slides().filter((s) => s.getAttribute("aria-hidden") === "false").map((s) => s.querySelector("h3")!.textContent);
     expect(slides()).toHaveLength(4);
-    expect(visible()).toEqual(["Janma Kundali"]);
+    expect(devotionSlides.map((d) => d.title)).toEqual(["Temples", "Daily Aarti", "Spiritual Books", "Mantras & Chants"]);
+    expect(visible()).toEqual(["Temples"]);
 
-    fireEvent.click(screen.getByRole("button", { name: "Next featured Seva" }));
-    expect(visible()).toEqual(["Tarot Drishti"]);
-    fireEvent.click(screen.getByRole("button", { name: "Show Hasta Rekha" }));
-    expect(visible()).toEqual(["Hasta Rekha"]);
-    fireEvent.click(screen.getByRole("button", { name: "Next featured Seva" })); // wraps
-    expect(visible()).toEqual(["Janma Kundali"]);
-    fireEvent.click(screen.getByRole("button", { name: "Previous featured Seva" })); // wraps back
-    expect(visible()).toEqual(["Hasta Rekha"]);
-    expect(screen.getByRole("button", { name: "Show Hasta Rekha" })).toHaveAttribute("aria-current", "true");
+    fireEvent.click(screen.getByRole("button", { name: "Next slide" }));
+    expect(visible()).toEqual(["Daily Aarti"]);
+    fireEvent.click(screen.getByRole("button", { name: "Show Mantras & Chants" }));
+    expect(visible()).toEqual(["Mantras & Chants"]);
+    fireEvent.click(screen.getByRole("button", { name: "Next slide" })); // wraps
+    expect(visible()).toEqual(["Temples"]);
+    fireEvent.click(screen.getByRole("button", { name: "Previous slide" })); // wraps back
+    expect(visible()).toEqual(["Mantras & Chants"]);
+    expect(screen.getByRole("button", { name: "Show Mantras & Chants" })).toHaveAttribute("aria-current", "true");
   });
 
-  it("Featured slides keep their copy, photo, checklist and destination", () => {
+  it("Devotion slides keep their copy, photo, checklist and destination", () => {
     const { container } = renderAt("/");
     const slides = [...container.querySelectorAll("[aria-roledescription='slide']")] as HTMLElement[];
-    featuredSlides.forEach((slide, i) => {
+    devotionSlides.forEach((slide, i) => {
       const el = slides[i];
       expect(el.querySelector("h3")).toHaveTextContent(slide.title);
       expect(el.textContent).toContain(slide.description);
@@ -161,7 +172,7 @@ describe("homepage content and structure", () => {
     });
   });
 
-  it("Live Darshan, Divya Margdarshak and Devotion keep their photos, tiles and links", () => {
+  it("Live Darshan and Divya Margdarshak keep their photos, tiles and links", () => {
     renderAt("/");
     const live = screen.getByRole("heading", { level: 3, name: "Live Darshan" }).closest(".hl-card") as HTMLElement;
     expect(within(live).getByText("LIVE")).toBeInTheDocument();
@@ -172,15 +183,6 @@ describe("homepage content and structure", () => {
     expect(within(guru).getByRole("img", { name: aiGuruFeature.imageAlt })).toHaveAttribute("src", "/images/tools/ai-guru.jpg");
     expect(within(guru).getByText("Ask your question...")).toBeInTheDocument();
     expect(within(guru).getByRole("link", { name: /Talk to Divya Margdarshak/ })).toHaveAttribute("href", "/inner-voice/chat");
-
-    const dev = screen.getByRole("heading", { level: 3, name: "Devotion & Spirituality" }).closest(".hl-card") as HTMLElement;
-    expect(within(dev).getByText(devotionFeature.description)).toBeInTheDocument();
-    for (const item of devotionFeature.items) {
-      expect(within(dev).getByRole("link", { name: item.label })).toHaveAttribute("href", item.path);
-    }
-    expect(within(dev).getByRole("link", { name: /Explore All/ })).toHaveAttribute("href", "/avatar-live");
-    // Puja entry points are temporarily hidden from the card.
-    expect(within(dev).queryByRole("link", { name: /Puja|Festivals/ })).toBeNull();
   });
 
   it("zodiac carousel: arrows and dots change the selected sign, with the profile link on the pills row", () => {
@@ -236,7 +238,7 @@ describe("homepage content and structure", () => {
   it("every homepage image path points at a file that exists in the repo", () => {
     const paths = [
       ...tools.map((t) => t.image),
-      ...featuredSlides.map((s) => s.image),
+      ...devotionSlides.map((s) => s.image),
       aiGuruFeature.image,
       liveDarshanFeature.image,
       ...liveDarshanFeature.thumbnails,
@@ -361,7 +363,7 @@ describe("no dark sections remain", () => {
 
   it("carousel arrows are gerua with ivory icons", () => {
     renderAt("/");
-    for (const name of ["Previous sign", "Next sign", "Previous featured Seva", "Next featured Seva"]) {
+    for (const name of ["Previous sign", "Next sign", "Previous slide", "Next slide"]) {
       expect(screen.getByRole("button", { name }).className, name).toContain("bg-home-gerua");
       expect(screen.getByRole("button", { name }).className, name).toContain("text-home-ivory");
     }
@@ -376,12 +378,11 @@ describe("layout matches the design", () => {
 
   it("featured, zodiac and blog use the 1440px content width; the trio is 1/2/3 columns", () => {
     renderAt("/");
-    for (const sec of [sectionOf(/Read from our\s+blog\./), screen.getByRole("region", { name: "Featured Seva" }).closest("section")!]) {
+    for (const sec of [sectionOf(/Read from our\s+blog\./), screen.getByRole("region", { name: "Devotion & Spirituality" }).closest("section")!]) {
       expect(sec.querySelector("[class*='max-w-[1440px]']")).not.toBeNull();
     }
     const trio = screen.getByRole("heading", { level: 3, name: "Live Darshan" }).closest(".grid")!;
     expect(trio.className).toContain("md:grid-cols-2");
-    expect(trio.className).toContain("lg:grid-cols-3");
     const blogGrid = sectionOf(/Read from our\s+blog\./).querySelector(".grid")!;
     expect(blogGrid.className).toContain("sm:grid-cols-2");
     expect(blogGrid.className).toContain("xl:grid-cols-4");
@@ -436,13 +437,13 @@ describe("parchment / gerua / gold palette", () => {
 
   it("cosmic navy is not used as any homepage background", () => {
     expect(css.slice(css.indexOf("HOMEPAGE LIGHT THEME"))).not.toMatch(/background[^;]*var\(--mb-cosmic-navy\)/);
-    const files = ["pages/Index.tsx", "components/hero/Hero.tsx", "components/ToolCard.tsx", "components/AstrologyToolsSection.tsx", "components/FeatureShowcase.tsx", "components/FeaturedCarousel.tsx", "components/LiveDarshanCard.tsx", "components/AIGuruCard.tsx", "components/DevotionCard.tsx", "components/ZodiacWheelSection.tsx", "components/HomeBlogSection.tsx", "components/WhyAstrologySection.tsx", "components/FaqSection.tsx", "components/Footer.tsx"];
+    const files = ["pages/Index.tsx", "components/hero/Hero.tsx", "components/ToolCard.tsx", "components/AstrologyToolsSection.tsx", "components/FeatureShowcase.tsx", "components/FeaturedCarousel.tsx", "components/LiveDarshanCard.tsx", "components/AIGuruCard.tsx", "components/ZodiacWheelSection.tsx", "components/HomeBlogSection.tsx", "components/WhyAstrologySection.tsx", "components/FaqSection.tsx", "components/Footer.tsx"];
     for (const f of files) expect(src(f), f).not.toMatch(/bg-home-navy|#1C2740/);
   });
 
   it("no homepage source still uses the superseded rust-orange, indigo-purple or earlier palettes", () => {
     const old = ["#5136BC", "#8754D9", "#EDEBFF", "#E7E6F0", "#252B72", "#202950", "#FFFCF8", "#5B6380", "#F8F7FC", "#D05F2F", "#121212", "#FE9F30", "#FFF3EC", "#A14C28", "#F2CAB7", "#54514F", "#F8F3EB", "#EFE4D5", "#FFFCF7", "#B95638", "#98432D", "#E9CF78", "#C7A46A", "#081426", "#020B1F", "home-purple", "home-violet", "home-lavender", "home-indigo", "home-peach", "home-mint", "home-pink", "home-mist", "home-rust", "home-orange", "home-cream", "home-deep", "home-card", "hl-gradient", "hl-tone", "brand-accent", "--mb-ivory", "--mb-purple", "--mb-violet", "--mb-rust", "--mb-orange", "--mb-cream"];
-    const files = ["pages/Index.tsx", "components/Footer.tsx", "components/hero/Hero.tsx", "components/ToolCard.tsx", "components/AstrologyToolsSection.tsx", "components/FeatureShowcase.tsx", "components/FeaturedCarousel.tsx", "components/LiveDarshanCard.tsx", "components/AIGuruCard.tsx", "components/DevotionCard.tsx", "components/FeatureButton.tsx", "components/ZodiacWheelSection.tsx", "components/HomeBlogSection.tsx", "components/WhyAstrologySection.tsx", "components/FaqSection.tsx"];
+    const files = ["pages/Index.tsx", "components/Footer.tsx", "components/hero/Hero.tsx", "components/ToolCard.tsx", "components/AstrologyToolsSection.tsx", "components/FeatureShowcase.tsx", "components/FeaturedCarousel.tsx", "components/LiveDarshanCard.tsx", "components/AIGuruCard.tsx", "components/FeatureButton.tsx", "components/ZodiacWheelSection.tsx", "components/HomeBlogSection.tsx", "components/WhyAstrologySection.tsx", "components/FaqSection.tsx"];
     const themeCss = css.slice(css.indexOf("HOMEPAGE LIGHT THEME"));
     for (const f of files) for (const o of old) expect(src(f), `${f} -> ${o}`).not.toContain(o);
     for (const o of old) expect(themeCss, o).not.toContain(o);

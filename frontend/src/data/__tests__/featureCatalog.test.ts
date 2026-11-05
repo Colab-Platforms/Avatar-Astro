@@ -6,18 +6,18 @@ import { ASTROLOGY_SEVA_NAV, FEATURES, INNER_VOICE_NAV } from "../featureCatalog
 describe("feature catalog", () => {
   it("holds the twelve approved names, subtitles and unchanged routes", () => {
     const expected: [string, string, string][] = [
-      ["Tarot Drishti", "/tarot", "Discover the messages within the cards and find clarity for the questions on your mind."],
-      ["Rashi Chakra", "/zodiac", "Explore your zodiac sign, planetary influences and the qualities that shape your personality."],
+      ["Tarot Prediction", "/tarot", "Discover the messages within the cards and find clarity for the questions on your mind."],
+      ["Daily Horoscope", "/zodiac", "Explore your zodiac sign, planetary influences and the qualities that shape your personality."],
       ["Janma Kundali", "/birth-chart", "Understand your life's cosmic blueprint through the positions of planets at your birth."],
-      ["Jodi Jyotish", "/compatibility", "Explore your connection, compatibility and relationship harmony through Vedic astrology."],
-      ["Hasta Rekha", "/palm-reading", "Discover what the lines and patterns of your palm reveal in traditional palmistry."],
-      ["Ratna Jyotish", "/ratna-jyotish", "Know your Rashi Ratna and explore traditional gemstone guidance based on your Kundali."],
+      ["Love Compatibility", "/compatibility", "Explore your connection, compatibility and relationship harmony through Vedic astrology."],
+      ["Hasta Rekha (Palmistry)", "/palm-reading", "Discover what the lines and patterns of your palm reveal in traditional palmistry."],
+      ["Ratna Jyotish (Lucky Gemstone)", "/ratna-jyotish", "Know your Rashi Ratna and explore traditional gemstone guidance based on your Kundali."],
       ["Know Your Karma", "/inner-voice", "Reflect on your actions, choices and the karmic patterns shaping your journey."],
       ["Divya Margdarshak", "/inner-voice/chat", "Find thoughtful spiritual guidance and answers to the questions guiding your life."],
       ["Karma Sankhya", "/inner-voice/dashboard", "Explore your karma score through your actions, intentions and personal reflections."],
       ["Bhavishya Marg", "/inner-voice/future-path", "Explore possible life paths and discover traditional astrological insights for your future."],
       ["Divya Shloka", "/inner-voice/wisdom", "Discover sacred verses, their meanings and timeless wisdom for everyday life."],
-      ["Naamank Jyotish", "/name-destiny-report", "Discover what your name and date of birth reveal through traditional numerology."],
+      ["Namank Jyotish (Lucky Name)", "/name-destiny-report", "Discover what your name and date of birth reveal through traditional numerology."],
     ];
     const all = Object.values(FEATURES);
     expect(all).toHaveLength(12);
@@ -31,7 +31,7 @@ describe("feature catalog", () => {
 
   it("navigation groups match the approved lists and order", () => {
     expect(ASTROLOGY_SEVA_NAV.map((f) => f.name)).toEqual([
-      "Tarot Drishti", "Rashi Chakra", "Janma Kundali", "Jodi Jyotish", "Hasta Rekha", "Ratna Jyotish", "Naamank Jyotish",
+      "Tarot Prediction", "Daily Horoscope", "Janma Kundali", "Love Compatibility", "Hasta Rekha (Palmistry)", "Ratna Jyotish (Lucky Gemstone)", "Namank Jyotish (Lucky Name)",
     ]);
     expect(INNER_VOICE_NAV.map((f) => f.name)).toEqual([
       "Know Your Karma", "Divya Margdarshak", "Karma Sankhya", "Bhavishya Marg", "Divya Shloka",

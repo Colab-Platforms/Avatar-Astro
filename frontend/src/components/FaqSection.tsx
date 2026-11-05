@@ -6,7 +6,7 @@ const faqs = [
   {
     question: "What can I explore on MyBhagya?",
     answer:
-      "MyBhagya brings astrology and spiritual guidance together in one place. You can explore Janma Kundali, Tarot Drishti, Naamank Jyotish, Hasta Rekha, Jodi Jyotish, Rashi Chakra, Ratna Jyotish, Daily Horoscope, Divya Margdarshak guidance, Live Darshan, and devotional experiences.",
+      "MyBhagya brings astrology and spiritual guidance together in one place. You can explore Janma Kundali, Tarot Prediction, Namank Jyotish (Lucky Name), Hasta Rekha (Palmistry), Love Compatibility, Ratna Jyotish (Lucky Gemstone), Daily Horoscope, Divya Margdarshak guidance, Live Darshan, and devotional experiences.",
   },
   {
     question: "How does Janma Kundali work on MyBhagya?",

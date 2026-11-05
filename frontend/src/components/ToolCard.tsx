@@ -24,6 +24,7 @@ const ToolCard = ({ tool, index }: ToolCardProps) => (
         width={960}
         height={492}
         className="h-full w-full object-cover object-center"
+        style={tool.imagePosition ? { objectPosition: tool.imagePosition } : undefined}
         loading="lazy"
         decoding="async"
       />

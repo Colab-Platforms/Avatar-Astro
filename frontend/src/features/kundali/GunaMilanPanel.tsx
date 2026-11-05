@@ -6,7 +6,7 @@ import { kundaliApi } from "./api";
 import { D1Chart } from "./BirthChartDiagram";
 import type { KootaScore, MatchResult } from "./types";
 
-// Jodi Jyotish: the real Ashtakoota (Guna Milan) score for the two people already entered above. It is calculated by the
+// Love Compatibility: the real Ashtakoota (Guna Milan) score for the two people already entered above. It is calculated by the
 // server from each person's Moon sign and Nakshatra, which need an exact birth time and place, so those are asked for here.
 // If anything is missing or the calculation fails, an "unavailable" state is shown: a score is never estimated or invented.
 

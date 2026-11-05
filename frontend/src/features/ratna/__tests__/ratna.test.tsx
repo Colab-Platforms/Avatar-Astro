@@ -73,7 +73,7 @@ describe("Ratna Jyotish form: personal details, no Panchang input", () => {
 describe("Ratna Jyotish form", () => {
   it("shows only the four primary inputs, the emblem and the CTA", () => {
     renderApp();
-    expect(screen.getByRole("heading", { level: 1, name: "Ratna Jyotish" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Ratna Jyotish (Lucky Gemstone)" })).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Ratna Jyotish emblem" })).toBeInTheDocument();
     expect(screen.getByText("Know your Rashi Ratna and explore traditional gemstone guidance based on your Kundali.")).toBeInTheDocument();
     expect(screen.getByLabelText("Full name")).toBeInTheDocument();

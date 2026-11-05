@@ -5,6 +5,8 @@ export interface AstrologyTool {
   description: string;
   /** Path under /public. */
   image: string;
+  /** CSS object-position for the card photo (default: centre). Used where the artwork is taller than the card. */
+  imagePosition?: string;
   button: string;
   path: string;
 }
@@ -34,7 +36,8 @@ export const tools: AstrologyTool[] = [
   {
     title: FEATURES.palm.name,
     description: FEATURES.palm.subtitle,
-    image: "/images/tools/palm-reading.jpg",
+    image: "/images/tools/hasta-rekha-palmistry.webp",
+    imagePosition: "center 62%", // the artwork is portrait: keep the palm and all five labels in the card frame
     button: "Analyze",
     path: "/palm-reading",
   },

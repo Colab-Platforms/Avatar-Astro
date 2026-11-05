@@ -175,7 +175,7 @@ export default function NameDestinyReport({ profile }: { profile: NameProfile })
   return (
     <div className="my-12 space-y-10" data-testid="nd-results">
       <header className="text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#592209] mb-3">Your Naamank Jyotish</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#592209] mb-3">Your Namank Jyotish</p>
         <h1 className="mb-1 text-3xl sm:text-5xl font-bold text-[#301607] break-words" style={heading}>{profile.name}</h1>
         <p className="text-[#4A2E1F]">Born {formatDob(profile.dob)}</p>
       </header>

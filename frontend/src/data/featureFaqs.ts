@@ -16,12 +16,12 @@ export const FEATURE_FAQS: Record<FaqKey, Faq[]> = {
     {
       question: "What can I ask during a tarot reading?",
       answer:
-        "Choose a life area such as Career, Love, Marriage, Business or Finance, or reflect on a question you have in mind. Tarot Drishti works best with open questions like \"What should I focus on in my career right now?\" rather than yes-or-no ones.",
+        "Choose a life area such as Career, Love, Marriage, Business or Finance, or reflect on a question you have in mind. Tarot Prediction works best with open questions like \"What should I focus on in my career right now?\" rather than yes-or-no ones.",
     },
     {
       question: "Which spreads can I choose from?",
       answer:
-        "Life Timeline Tarot lays out five cards across your past, present and future for a life area you pick. Karma Mirror is a three-card reading about the patterns you are carrying. Each card is explained in your reading.",
+        "Tarot Bhagya lays out five cards across your past, present and future for a life area you pick. Karma Mirror is a three-card reading about the patterns you are carrying. Each card is explained in your reading.",
     },
     {
       question: "How should I understand the cards in my reading?",
@@ -43,7 +43,7 @@ export const FEATURE_FAQS: Record<FaqKey, Faq[]> = {
     {
       question: "How can I discover my Rashi?",
       answer:
-        "Open Janma Kundali and enter your birth date, time and birthplace. It calculates your Surya Rashi and Chandra Rashi in the Vedic (sidereal) zodiac. Rashi Chakra here introduces all twelve signs so you can read about each one.",
+        "Open Janma Kundali and enter your birth date, time and birthplace. It calculates your Surya Rashi and Chandra Rashi in the Vedic (sidereal) zodiac. The Daily Horoscope section here introduces all twelve signs so you can read about each one.",
     },
     {
       question: "What does each sign describe?",
@@ -58,7 +58,7 @@ export const FEATURE_FAQS: Record<FaqKey, Faq[]> = {
     {
       question: "What can I explore after finding my sign?",
       answer:
-        "Read your sign's full profile, then try Janma Kundali for your own Rashi and Nakshatra, or Jodi Jyotish to see how your sign pairs with someone else's.",
+        "Read your sign's full profile, then try Janma Kundali for your own Rashi and Nakshatra, or Love Compatibility to see how your sign pairs with someone else's.",
     },
     {
       question: "Where can I find daily guidance for my sign?",
@@ -99,7 +99,7 @@ export const FEATURE_FAQS: Record<FaqKey, Faq[]> = {
   ],
   compatibility: [
     {
-      question: "How does Jodi Jyotish compare two people?",
+      question: "How does Love Compatibility compare two people?",
       answer:
         "It works out each person's sun sign from their birth date, then compares the two signs' elements and the traditional aspect between them.",
     },
@@ -131,7 +131,7 @@ export const FEATURE_FAQS: Record<FaqKey, Faq[]> = {
         "Use the hand you would like to explore. The result notes which hand was in your photo. Keep your whole palm open, fingers slightly apart, in bright even light.",
     },
     {
-      question: "What does Hasta Rekha tell me?",
+      question: "What does Hasta Rekha (Palmistry) tell me?",
       answer:
         "It measures your palm's width and length and your finger lengths from your photo, then gives your hand shape: Earth, Air, Water or Fire, with its traditional description.",
     },
@@ -290,7 +290,7 @@ export const FEATURE_FAQS: Record<FaqKey, Faq[]> = {
   ],
   numerology: [
     {
-      question: "What does Naamank Jyotish reveal?",
+      question: "What does Namank Jyotish reveal?",
       answer:
         "Your Destiny, Soul Urge, Personality, Chaldean, Life Path and Birth numbers, each with its traditional meaning.",
     },
@@ -315,7 +315,7 @@ export const FEATURE_FAQS: Record<FaqKey, Faq[]> = {
     },
     {
       question: "Can I download my report?",
-      answer: "Yes. You can download your Naamank Jyotish report as a PDF from the result page.",
+      answer: "Yes. You can download your Namank Jyotish report as a PDF from the result page.",
     },
   ],
   astrologers: [
