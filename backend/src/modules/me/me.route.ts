@@ -11,8 +11,11 @@ import { noStore } from "@/middleware/noStore.js";
 import { createRateLimiter } from "@/utils/rateLimit.js";
 import { createLibraryRouter, clearPersonalActivity } from "@/modules/library/library.route.js";
 import { logActivity } from "@/modules/library/library.service.js";
+import { uploadSingleImage } from "@/middleware/upload.js";
+import { uploadImageBufferWithRetry, deleteImageByPublicId } from "@/config/cloudinary.js";
 
 const DAY_MS = 86_400_000;
+const PROFILE_IMAGE_FOLDER = "users/profile-images";
 
 const wrap =
   (fn: (req: AuthRequest, res: Response) => Promise<unknown>) =>
@@ -34,6 +37,7 @@ const PROFILE_SELECT = {
   id: true, firstName: true, lastName: true, email: true, phoneNo: true, gender: true,
   city: true, state: true, country: true, authProvider: true, isEmailVerified: true,
   isPhoneVerified: true, profileCompleted: true, createdAt: true,
+  profileImage: true, profileImagePublicId: true,
 } as const;
 
 /**
@@ -94,6 +98,63 @@ export function createMeRouter(): Router {
       void logActivity({ userId: req.user!.id, kind: "profile.updated", title: "Profile details" });
       recordEvent({ userId: req.user!.id, eventType: EVENT_TYPES.profileUpdated, feature: PROFILE_FEATURE, status: "success", metadata: { fields: Object.keys(data), source: "profile_page" } });
       sendResponse(res, true, updated, "Profile updated");
+    }),
+  );
+
+  router.post(
+    "/profile/image",
+    uploadSingleImage,
+    wrap(async (req, res) => {
+      const file = (req as Request & { file?: { buffer: Buffer } }).file;
+      if (!file) throw new ApiError("Select an image to upload", STATUS_CODES.BAD_REQUEST);
+
+      const existing = await prisma.user.findUnique({
+        where: { id: req.user!.id },
+        select: { profileImagePublicId: true },
+      });
+
+      const uploaded = await uploadImageBufferWithRetry(file.buffer, PROFILE_IMAGE_FOLDER);
+
+      const updated = await prisma.user.update({
+        where: { id: req.user!.id },
+        data: { profileImage: uploaded.url, profileImagePublicId: uploaded.publicId },
+        select: PROFILE_SELECT,
+      });
+
+      if (existing?.profileImagePublicId) {
+        void deleteImageByPublicId(existing.profileImagePublicId).catch((err) =>
+          console.error("[me] failed to remove previous profile image:", err),
+        );
+      }
+
+      void logActivity({ userId: req.user!.id, kind: "profile.updated", title: "Profile photo" });
+      recordEvent({ userId: req.user!.id, eventType: EVENT_TYPES.profileUpdated, feature: PROFILE_FEATURE, status: "success", metadata: { field: "profileImage" } });
+      sendResponse(res, true, updated, "Profile photo updated");
+    }),
+  );
+
+  router.delete(
+    "/profile/image",
+    wrap(async (req, res) => {
+      const existing = await prisma.user.findUnique({
+        where: { id: req.user!.id },
+        select: { profileImagePublicId: true },
+      });
+      if (!existing?.profileImagePublicId) throw new ApiError("No profile photo to remove", STATUS_CODES.BAD_REQUEST);
+
+      const updated = await prisma.user.update({
+        where: { id: req.user!.id },
+        data: { profileImage: null, profileImagePublicId: null },
+        select: PROFILE_SELECT,
+      });
+
+      void deleteImageByPublicId(existing.profileImagePublicId).catch((err) =>
+        console.error("[me] failed to remove previous profile image:", err),
+      );
+
+      void logActivity({ userId: req.user!.id, kind: "profile.updated", title: "Profile photo removed" });
+      recordEvent({ userId: req.user!.id, eventType: EVENT_TYPES.profileUpdated, feature: PROFILE_FEATURE, status: "success", metadata: { field: "profileImage", action: "removed" } });
+      sendResponse(res, true, updated, "Profile photo removed");
     }),
   );
 

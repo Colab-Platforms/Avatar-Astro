@@ -12,6 +12,7 @@ const exploreLinks = [
 ];
 
 const resourceLinks = [
+  { label: 'Become an Astrologer', path: '/become-astrologer' },
   { label: 'Blog', path: '/blog' },
   { label: 'About Us', path: '/about' },
   { label: 'Contact', path: '/contact' },

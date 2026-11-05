@@ -101,6 +101,13 @@ const RatnaJyotish = lazy(() => import("./pages/RatnaJyotish"));
 const RatnaJyotishResult = lazy(() => import("./pages/RatnaJyotishResult"));
 const Astrologers = lazy(() => import("./pages/Astrologers"));
 const AstrologerProfile = lazy(() => import("./pages/AstrologerProfile"));
+const BecomeAstrologerPage = lazy(() => import("./features/astrologer/pages/BecomeAstrologerPage"));
+const ApplicationWizardPage = lazy(() => import("./features/astrologer/pages/ApplicationWizardPage"));
+const AstrologerDashboardPage = lazy(() => import("./features/astrologer/workspace/pages/AstrologerDashboardPage"));
+const AdminAstrologersOverviewPage = lazy(() => import("./features/admin/astrologers/pages/AstrologersOverviewPage"));
+const AdminAstrologerApplicationsPage = lazy(() => import("./features/admin/astrologers/pages/AstrologerApplicationsPage"));
+const AdminAstrologerApplicationDetailPage = lazy(() => import("./features/admin/astrologers/pages/AstrologerApplicationDetailPage"));
+const AdminAstrologerSettingsPage = lazy(() => import("./features/admin/astrologers/pages/AstrologerSettingsPage"));
 const ShopPage      = lazy(() => import("./pages/Shop/index"));
 const ShopDetail    = lazy(() => import("./pages/Shop/ShopDetail"));
 const AvatarLivePage   = lazy(() => import("./pages/AvatarLive/index"));
@@ -372,6 +379,16 @@ export const AnimatedRoutes = () => {
         />
         {/* Legacy alias: old gemstone-calculator links keep working. */}
         <Route path="/gemstone-calculator" element={<Navigate to="/ratna-jyotish" replace />} />
+        <Route
+          path="/become-astrologer"
+          element={
+            <PageTransition>
+              <Suspense fallback={<LazyFallback />}>
+                <BecomeAstrologerPage />
+              </Suspense>
+            </PageTransition>
+          }
+        />
         <Route
           path="/astrologers"
           element={
@@ -691,6 +708,38 @@ const App = () => {
                 }
               />
               <Route
+                path="astrologers"
+                element={
+                  <Suspense fallback={<AdminLazyFallback />}>
+                    <MainOnly><AdminAstrologersOverviewPage /></MainOnly>
+                  </Suspense>
+                }
+              />
+              <Route
+                path="astrologers/applications"
+                element={
+                  <Suspense fallback={<AdminLazyFallback />}>
+                    <MainOnly><AdminAstrologerApplicationsPage /></MainOnly>
+                  </Suspense>
+                }
+              />
+              <Route
+                path="astrologers/applications/:id"
+                element={
+                  <Suspense fallback={<AdminLazyFallback />}>
+                    <MainOnly><AdminAstrologerApplicationDetailPage /></MainOnly>
+                  </Suspense>
+                }
+              />
+              <Route
+                path="astrologers/settings"
+                element={
+                  <Suspense fallback={<AdminLazyFallback />}>
+                    <MainOnly><AdminAstrologerSettingsPage /></MainOnly>
+                  </Suspense>
+                }
+              />
+              <Route
                 path="puja"
                 element={
                   <Suspense fallback={<AdminLazyFallback />}>
@@ -731,11 +780,9 @@ const App = () => {
               path="/dashboard"
               element={
                 <NavigationProvider>
-                  <Layout>
                     <Suspense fallback={<LazyFallback />}>
                       <DashboardLayout />
                     </Suspense>
-                  </Layout>
                 </NavigationProvider>
               }
             >
@@ -753,6 +800,14 @@ const App = () => {
               <Route path="devotion" element={<Navigate to="/dashboard/bookings" replace />} />
               <Route path="profile" element={<Suspense fallback={<LazyFallback />}><ProfileSettings /></Suspense>} />
             </Route>
+            <Route
+              path="/astrologer-application"
+              element={<Suspense fallback={<LazyFallback />}><ApplicationWizardPage /></Suspense>}
+            />
+            <Route
+              path="/astrologer-dashboard"
+              element={<Suspense fallback={<LazyFallback />}><AstrologerDashboardPage /></Suspense>}
+            />
           </Route>
 
           {/* All other pages with Layout */}

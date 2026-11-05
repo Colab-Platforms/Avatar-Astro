@@ -32,6 +32,9 @@ export const ACTIVITY_KINDS = [
   "conversation.removed",
   "feature.opened",
   "profile.updated",
+  "astrologer.application.started",
+  "astrologer.application.submitted",
+  "astrologer.application.withdrawn",
 ] as const;
 export type ActivityKind = (typeof ACTIVITY_KINDS)[number];
 
@@ -45,6 +48,9 @@ export const ACTIVITY_LABELS: Record<ActivityKind, string> = {
   "conversation.removed": "Conversation removed",
   "feature.opened": "Feature opened",
   "profile.updated": "Profile updated",
+  "astrologer.application.started": "Astrologer application started",
+  "astrologer.application.submitted": "Astrologer application submitted",
+  "astrologer.application.withdrawn": "Astrologer application withdrawn",
 };
 
 /** Label for any feature key the dashboard can show. */

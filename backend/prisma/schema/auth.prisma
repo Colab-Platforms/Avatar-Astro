@@ -46,6 +46,10 @@ model User {
   userRoleMappings UserRoleMapping[]
   chatEscalations  ChatEscalation[]
 
+  // Astrologer onboarding — additive, does not affect existing USER/ADMIN/SUPERADMIN behavior.
+  astrologerApplications AstrologerApplication[]
+  astrologerProfile      AstrologerProfile?
+
   sessions         Session[]
   readings         GeneratedReading[]
   conversations    Conversation[]

@@ -18,6 +18,8 @@ import { installAiUsageCapture } from "./utils/aiUsageCapture.js";
 import { createMeRouter } from "./modules/me/me.route.js";
 import { createPublicContentRouter } from "./routes/publicContentRoutes.js";
 import darshanRoutes from "./modules/darshan/darshan.public.route.js";
+import { createAstrologerRouter } from "./modules/astrologer/astrologer.route.js";
+import { createAstrologerPublicRouter } from "./modules/astrologer/public/astrologerPublic.route.js";
 import authRoutes from "./modules/auth/auth.route.js";
 import adminRoutes from "./modules/admin/admin.route.js";
 import { createAstrologyAudioPublicRouter } from "./modules/astrologyAudio/astrologyAudio.route.js";
@@ -39,7 +41,7 @@ const app = express();
   if (critical.length) console.error(`✗ MISSING REQUIRED ENV: ${critical.join(", ")} — sign-in and most features will fail`);
   if (process.env.JWT_SECRET && process.env.JWT_SECRET.length < 32) console.warn("! JWT_SECRET is shorter than 32 characters");
   if ((process.env.OTP_HMAC_SECRET ?? "").trim().length < 32) console.error("✗ OTP_HMAC_SECRET is missing or shorter than 32 characters — e-mail OTPs cannot be issued or verified (registration / unverified login will fail closed)");
-  const optional = ["OPENROUTER_API_KEY", "GROQ_API_KEY", "RESEND_API_KEY", "SMTP_FROM_EMAIL", "SUPPORT_EMAIL", "YOUTUBE_API_KEY", "CORS_ORIGIN"].filter((k) => !process.env[k]);
+  const optional = ["OPENROUTER_API_KEY", "GROQ_API_KEY", "RESEND_API_KEY", "SMTP_FROM_EMAIL", "SUPPORT_EMAIL", "YOUTUBE_API_KEY", "CORS_ORIGIN", "CLAMAV_HOST", "CLAMAV_PORT"].filter((k) => !process.env[k]);
   if (optional.length) console.warn(`! Optional env not set (related features disabled or degraded): ${optional.join(", ")}`);
 }
 // Render (and most hosts) terminate TLS at one proxy hop. Without this, req.ip is the proxy for every visitor,
@@ -318,6 +320,12 @@ app.use("/api/inner-voice", ...feature("inner-voice"), innerVoiceRoutes);
 app.use("/api/me", createMeRouter());
 app.use("/api/public", createPublicContentRouter());
 app.use("/api/darshan", darshanRoutes);
+
+// Astrologer onboarding: applicant application/document flow (signed-in USER), and the
+// public published-astrologer directory (read-only, no auth). SUPERADMIN review/approval
+// lives under /api/admin/astrologers (see admin.route.ts) using the existing admin auth.
+app.use("/api/astrologer", createAstrologerRouter());
+app.use("/api/astrologers", createAstrologerPublicRouter());
 
 // Published astrology About-section audio (public, read-only; never calls ElevenLabs)
 app.use("/api/astrology", createAstrologyAudioPublicRouter());

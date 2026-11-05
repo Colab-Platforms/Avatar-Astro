@@ -8,6 +8,7 @@ import { requireMainAdmin } from "@/middleware/mainAdmin.js";
 import { noStore } from "@/middleware/noStore.js";
 import { createAdminPanelRouter } from "./adminPanel.route.js";
 import { createAstrologyAudioAdminRouter } from "@/modules/astrologyAudio/astrologyAudio.route.js";
+import { createAstrologerAdminRouter } from "@/modules/admin/astrologers/astrologerAdmin.route.js";
 
 const router = Router();
 
@@ -30,6 +31,9 @@ router.use("/shop", shopRoutes);
 
 // Astrology Audio Manager (ElevenLabs narration + Cloudinary storage)
 router.use("/astrology/audio", createAstrologyAudioAdminRouter());
+
+// Astrologer onboarding: application review, document verification, approval.
+router.use("/astrologers", createAstrologerAdminRouter());
 
 // Admin panel modules (overview, users, tools, content, reports, audit...).
 router.use(createAdminPanelRouter());

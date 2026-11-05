@@ -218,17 +218,20 @@ const AsteroidField = () => (
 
 // ── Shooting stars ────────────────────────────────────────────────────────────
 const ShootingStar = ({ id, onComplete }: { id: number; onComplete: (id: number) => void }) => {
-  const lineRef = useRef<THREE.Line>(null);
   const lifeRef = useRef(0);
   const doneRef = useRef(false);
   const MAX     = 1.3;
-  const { posArray, geometry, start, dir, speed, trail } = useMemo(() => {
+  // Built imperatively and rendered via <primitive>, so there is no JSX <line> tag whose
+  // ref type would otherwise clash with the SVG element of the same name.
+  const { line, posArray, geometry, start, dir, speed, trail } = useMemo(() => {
     const posArray = new Float32Array(6);
     const geometry = new THREE.BufferGeometry();
     const attr     = new THREE.BufferAttribute(posArray, 3);
     attr.setUsage(THREE.DynamicDrawUsage);
     geometry.setAttribute('position', attr);
+    const material = new THREE.LineBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0 });
     return {
+      line: new THREE.Line(geometry, material),
       posArray, geometry,
       start: new THREE.Vector3(
         (Math.random() - 0.5) * 200 + 60,
@@ -252,13 +255,9 @@ const ShootingStar = ({ id, onComplete }: { id: number; onComplete: (id: number)
     posArray[3] = head.x; posArray[4] = head.y; posArray[5] = head.z;
     (geometry.getAttribute('position') as THREE.BufferAttribute).needsUpdate = true;
     const op = t < 0.2 ? t / 0.2 : t > 0.8 ? (1 - t) / 0.2 : 1;
-    if (lineRef.current) (lineRef.current.material as THREE.LineBasicMaterial).opacity = op * 0.92;
+    (line.material as THREE.LineBasicMaterial).opacity = op * 0.92;
   });
-  return (
-    <line ref={lineRef} geometry={geometry}>
-      <lineBasicMaterial color="#ffffff" transparent opacity={0} />
-    </line>
-  );
+  return <primitive object={line} />;
 };
 const ShootingStarManager = () => {
   const [stars, setStars] = useState<{ id: number }[]>([]);

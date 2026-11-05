@@ -1,0 +1,347 @@
+// Astrologer onboarding, manual verification and approval. Additive-only domain —
+// nothing here changes an existing table. Two conditional (partial) unique indexes
+// referenced below can't be expressed in schema.prisma and are applied separately via
+// prisma/sql/astrologer_partial_indexes.sql — see that file's header for why and how.
+
+enum AstrologerApplicationStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  MORE_INFORMATION_REQUIRED
+  INTERVIEW_PENDING
+  APPROVED
+  REJECTED
+  WITHDRAWN
+  SUSPENDED
+}
+
+enum AstrologerDocumentVerificationStatus {
+  PENDING
+  UNDER_REVIEW
+  VERIFIED
+  REJECTED
+  RESUBMISSION_REQUIRED
+}
+
+/// SKIPPED means document scanning was turned off (see PlatformSetting key
+/// "astrologer.documentScanning.enabled") at upload time — a deliberate, audited
+/// admin choice, treated the same as CLEAN for approval purposes.
+enum AstrologerDocumentScanStatus {
+  PENDING
+  CLEAN
+  INFECTED
+  SCAN_FAILED
+  SKIPPED
+}
+
+enum AstrologerDocumentCategory {
+  IDENTITY
+  SUPPORTING
+}
+
+enum AstrologerAgreementType {
+  TERMS_AND_CONDITIONS
+  PRIVACY_NOTICE
+  VERIFICATION_CONSENT
+  PROFESSIONAL_CONDUCT_POLICY
+}
+
+enum AstrologerInterviewOutcome {
+  PENDING
+  PASS
+  FAIL
+  RESCHEDULE
+}
+
+/// One attempt at becoming an astrologer. A user may accumulate several historical rows
+/// (status REJECTED or WITHDRAWN) but only one row at a time outside that pair of
+/// statuses — enforced in the service layer AND, at the DB level, by a partial unique
+/// index applied manually (Prisma has no syntax for a conditional unique constraint):
+///   CREATE UNIQUE INDEX astrologer_applications_one_active_per_user
+///     ON astrologer_applications(user_id) WHERE status NOT IN ('REJECTED','WITHDRAWN');
+/// An APPROVED or SUSPENDED astrologer cannot self-serve a new attempt through this
+/// table — reinstatement is the only path back from SUSPENDED (admin-only).
+model AstrologerApplication {
+  id String @id @default(cuid())
+
+  userId        String @map("user_id")
+  attemptNumber Int    @default(1) @map("attempt_number")
+
+  status AstrologerApplicationStatus @default(DRAFT)
+
+  // Step 1 — personal / public profile
+  fullLegalName String? @map("full_legal_name")
+  displayName   String? @map("display_name")
+  email         String?
+  phone         String?
+  city          String?
+  state         String?
+  country       String?
+  bio           String?
+
+  // Public profile photograph — Cloudinary public delivery, kept structurally
+  // separate from AstrologerDocument's private/authenticated storage.
+  profilePhotoUrl      String? @map("profile_photo_url")
+  profilePhotoPublicId String? @map("profile_photo_public_id")
+
+  // Step 2 — professional details
+  yearsOfExperience      Int?    @map("years_of_experience")
+  educationBackground    String? @map("education_background")
+  certificationsText     String? @map("certifications_text")
+  professionalIntro      String? @map("professional_intro")
+  consultationExperience String? @map("consultation_experience")
+  areasOfExpertise       String? @map("areas_of_expertise")
+  languages              String[]
+
+  /// Frozen copy of the active AstrologerDocumentRequirement rows at the moment of
+  /// submission, so a later change to the live config never retroactively changes what
+  /// this application is judged against. Null while still DRAFT.
+  requirementsSnapshot Json? @map("requirements_snapshot")
+
+  submittedAt DateTime? @map("submitted_at")
+  /// Set once the application is locked against unrestricted editing (on submit).
+  lockedAt    DateTime? @map("locked_at")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  specialties   AstrologerApplicationSpecialty[]
+  documents     AstrologerDocument[]
+  statusHistory AstrologerApplicationStatusHistory[]
+  notes         AstrologerApplicationNote[]
+  agreements    AstrologerAgreementAcceptance[]
+  interviews    AstrologerInterview[]
+  profile       AstrologerProfile?
+
+  @@unique([userId, attemptNumber])
+  @@index([userId])
+  @@index([status])
+  @@map("astrologer_applications")
+}
+
+/// Config-driven specialty list — editable from the SUPERADMIN dashboard, never hardcoded
+/// into the frontend or backend beyond this table.
+model AstrologerSpecialtyOption {
+  id        String  @id @default(cuid())
+  key       String  @unique
+  label     String
+  isActive  Boolean @default(true) @map("is_active")
+  sortOrder Int     @default(0) @map("sort_order")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  applications AstrologerApplicationSpecialty[]
+
+  @@map("astrologer_specialty_options")
+}
+
+model AstrologerApplicationSpecialty {
+  id String @id @default(cuid())
+
+  applicationId     String  @map("application_id")
+  specialtyOptionId String  @map("specialty_option_id")
+  isPrimary         Boolean @default(false) @map("is_primary")
+
+  application AstrologerApplication     @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  specialty   AstrologerSpecialtyOption @relation(fields: [specialtyOptionId], references: [id], onDelete: Restrict)
+
+  @@unique([applicationId, specialtyOptionId])
+  @@index([applicationId])
+  @@map("astrologer_application_specialties")
+}
+
+/// Config-driven document requirements. `group` lets several acceptable identity
+/// documents (Passport / Driving Licence / Voter ID / ...) share one required slot —
+/// the applicant picks any one from the group, not all of them.
+model AstrologerDocumentRequirement {
+  id    String                      @id @default(cuid())
+  group String
+  key   String                      @unique
+  label String
+  category          AstrologerDocumentCategory
+  acceptedMimeTypes String[]                    @map("accepted_mime_types")
+  maxSizeMb         Int                         @default(10) @map("max_size_mb")
+  isRequired        Boolean                     @default(false) @map("is_required")
+  isActive          Boolean                     @default(true) @map("is_active")
+  sortOrder         Int                         @default(0) @map("sort_order")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  documents AstrologerDocument[]
+
+  @@index([group])
+  @@map("astrologer_document_requirements")
+}
+
+/// Private verification document. Replacing a document never overwrites a row — the old
+/// one is flipped isCurrent:false and a new row is inserted with version+1, giving free
+/// version history. Only isCurrent:true rows are ever candidates for approval.
+/// A second partial unique index (applied manually, see this file's header) prevents two
+/// concurrent replacements for the same slot from both landing as "current":
+///   CREATE UNIQUE INDEX astrologer_documents_one_current_per_requirement
+///     ON astrologer_documents(application_id, requirement_id) WHERE is_current = true;
+model AstrologerDocument {
+  id String @id @default(cuid())
+
+  applicationId String  @map("application_id")
+  requirementId String? @map("requirement_id")
+
+  fileName  String @map("file_name")
+  mimeType  String @map("mime_type")
+  sizeBytes Int    @map("size_bytes")
+
+  // Cloudinary, uploaded with type:"authenticated" into a private folder — never a
+  // public secure_url. Access is only ever via a short-lived signed URL (admin review).
+  storagePublicId     String @map("storage_public_id")
+  storageResourceType String @map("storage_resource_type")
+
+  version   Int     @default(1)
+  isCurrent Boolean @default(true) @map("is_current")
+
+  verificationStatus AstrologerDocumentVerificationStatus @default(PENDING) @map("verification_status")
+
+  // A document can reach VERIFIED only when scanStatus is CLEAN or SKIPPED — enforced in
+  // the service layer, not just by convention. See PlatformSetting
+  // "astrologer.documentScanning.enabled" for the admin-facing on/off toggle.
+  scanStatus AstrologerDocumentScanStatus @default(PENDING) @map("scan_status")
+  scannedAt  DateTime?                    @map("scanned_at")
+  /// Non-sensitive scanner message only (e.g. signature name) — never raw file content.
+  scanDetail String?                      @map("scan_detail")
+
+  reviewedById    String?   @map("reviewed_by_id")
+  reviewedAt      DateTime? @map("reviewed_at")
+  rejectionReason String?   @map("rejection_reason")
+  /// Private SUPERADMIN-only note. Never serialized to the applicant.
+  reviewNotes     String?   @map("review_notes")
+
+  /// Set once the Cloudinary asset has been purged under the retention policy;
+  /// storagePublicId is nulled at the same time.
+  retentionDeletedAt DateTime? @map("retention_deleted_at")
+
+  uploadedAt DateTime  @default(now()) @map("uploaded_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime? @updatedAt @map("updated_at")
+
+  application AstrologerApplication          @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  requirement AstrologerDocumentRequirement? @relation(fields: [requirementId], references: [id], onDelete: SetNull)
+
+  @@index([applicationId])
+  @@index([requirementId])
+  @@map("astrologer_documents")
+}
+
+/// Applicant-safe status trail (reason is written to be shown to the applicant) —
+/// distinct from AstrologerApplicationNote, which is internal-only.
+model AstrologerApplicationStatusHistory {
+  id String @id @default(cuid())
+
+  applicationId String                       @map("application_id")
+  fromStatus    AstrologerApplicationStatus? @map("from_status")
+  toStatus      AstrologerApplicationStatus  @map("to_status")
+  actorUserId   String?                      @map("actor_user_id")
+  reason        String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  application AstrologerApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@map("astrologer_application_status_history")
+}
+
+/// Internal-only free-text commentary. Never serialized to the applicant.
+model AstrologerApplicationNote {
+  id String @id @default(cuid())
+
+  applicationId String @map("application_id")
+  authorId      String @map("author_id")
+  note          String
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  application AstrologerApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@map("astrologer_application_notes")
+}
+
+model AstrologerAgreementAcceptance {
+  id String @id @default(cuid())
+
+  applicationId String                  @map("application_id")
+  agreementType AstrologerAgreementType @map("agreement_type")
+  /// The configured agreement version at acceptance time — later version bumps never
+  /// retroactively invalidate an already-submitted application's acceptances.
+  version       String
+  acceptedAt    DateTime                @default(now()) @map("accepted_at")
+  ipAddress     String?                 @map("ip_address")
+
+  application AstrologerApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@unique([applicationId, agreementType])
+  @@map("astrologer_agreement_acceptances")
+}
+
+model AstrologerInterview {
+  id String @id @default(cuid())
+
+  applicationId String @map("application_id")
+
+  isRequired Boolean @default(true) @map("is_required")
+  isWaived   Boolean @default(false) @map("is_waived")
+
+  scheduledAt DateTime? @map("scheduled_at")
+  conductedAt DateTime? @map("conducted_at")
+
+  communicationScore       Int? @map("communication_score")
+  domainKnowledgeScore     Int? @map("domain_knowledge_score")
+  professionalConductScore Int? @map("professional_conduct_score")
+
+  outcome AstrologerInterviewOutcome @default(PENDING)
+  /// Private — never serialized to the applicant.
+  notes   String?
+
+  createdById String @map("created_by_id")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  application AstrologerApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@map("astrologer_interviews")
+}
+
+/// Created (unpublished) once, at approval, via an idempotent upsert keyed on
+/// applicationId — a retried/duplicate approval can never create two profiles.
+model AstrologerProfile {
+  id String @id @default(cuid())
+
+  applicationId String @unique @map("application_id")
+  userId        String @unique @map("user_id")
+
+  displayName         String
+  bio                 String?
+  profilePhotoUrl      String?  @map("profile_photo_url")
+  profilePhotoPublicId String?  @map("profile_photo_public_id")
+  yearsOfExperience    Int?     @map("years_of_experience")
+  languages            String[]
+
+  isPublished      Boolean   @default(false) @map("is_published")
+  publishedAt      DateTime? @map("published_at")
+  suspendedAt      DateTime? @map("suspended_at")
+  suspensionReason String?   @map("suspension_reason")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  application AstrologerApplication @relation(fields: [applicationId], references: [id], onDelete: Restrict)
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([isPublished])
+  @@map("astrologer_profiles")
+}

@@ -205,6 +205,10 @@ const GunaMilanPanel = ({ people, onAddDetails }: { people: [MatchPersonInput, M
               <div><p className="mb-1 text-center font-semibold">{ordered[0].name}</p><D1Chart k={res.a} /></div>
               <div><p className="mb-1 text-center font-semibold">{ordered[1].name}</p><D1Chart k={res.b} /></div>
             </div>
+            <p className="mt-3 text-sm text-[#6B4A37]">
+              Surya = Sun, Chandra = Moon, Mangal = Mars, Budh = Mercury, Guru = Jupiter, Shukra = Venus, Shani = Saturn. The big number in each corner of a house is its <TermInfo term="Rashi">Rashi</TermInfo> number (1 = Mesha ... 12 = Meena).
+            </p>
+            <ExplainTerms terms={["Rahu", "Ketu"]} />
           </div>
 
           <details className={box} data-testid="guna-method">
