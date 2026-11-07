@@ -24,6 +24,7 @@ import authRoutes from "./modules/auth/auth.route.js";
 import adminRoutes from "./modules/admin/admin.route.js";
 import { createAstrologyAudioPublicRouter } from "./modules/astrologyAudio/astrologyAudio.route.js";
 import publicTempleRoutes from "./modules/puja/puja.public.route.js";
+import { createDevotionLibraryPublicRouter } from "./modules/devotionLibrary/devotionLibrary.public.route.js";
 import publicChadhawaRoutes from "./modules/chadhawa/chadhawa.public.route.js";
 import publicShopRoutes from "./modules/shop/shop.public.route.js";
 import gemstoneRoutes from "./modules/gemstone/gemstone.route.js";
@@ -301,6 +302,9 @@ app.use("/api/chadhawa", publicChadhawaRoutes);
 
 // Public Shop catalogue (read-only, no auth)
 app.use("/api/shop", publicShopRoutes);
+
+// Public Spiritual Books + Mantras & Chants library (read-only + download/play tracking, no auth)
+app.use("/api/devotion-library", createDevotionLibraryPublicRouter());
 
 // Ratna Jyotish (stateless gemstone calculator)
 // Public calculator: optionalAuth only identifies a signed-in caller for usage attribution; it never blocks or grants anything.

@@ -1,0 +1,3 @@
+# transits-forecasting
+
+Calculate and interpret planetary transits to a natal chart — current planet positions aspecting natal planets/angles. Covers transit timing (applying/separating/exact), retrograde transits (triple pass), outer planet transits (Saturn return, Pluto square, Neptune opposition, Uranus opposition, Jupiter return), inner planet transits, transit conjunctions, retrograde/stationary planets transiting natal positions, daily transits of ASC/MC/Part of Fortune, and personalized daily horoscopes. Use when the user wants to know what's happening astrologically right now or for a specific future/past date.

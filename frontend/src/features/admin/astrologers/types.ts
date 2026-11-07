@@ -107,7 +107,7 @@ export interface AdminApplicationDetail {
   languages: string[];
   submittedAt: string | null;
   createdAt: string;
-  specialties: { specialtyOptionId: string; isPrimary: boolean; specialty: { key: string; label: string } }[];
+  specialties: { specialtyOptionId: string; isPrimary: boolean; customLabel: string | null; specialty: { key: string; label: string } }[];
   documents: AdminDocument[];
   statusHistory: AdminStatusHistoryEntry[];
   notes: AdminNote[];

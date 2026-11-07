@@ -1348,13 +1348,38 @@ nav.navbar-gerua [role="menu"] a { border-color: var(--nav-menu-border) !importa
 /* Thin antique-gold orbital rings used as quiet decoration */
 .hl-orbit { border: 1px solid color-mix(in srgb, var(--mb-gold) 45%, transparent); border-radius: 9999px; }
 
+/* ── Book cover (Spiritual Books page) ──
+   A stacked-page shadow behind the cover suggests the book's actual pages rather than
+   a flat app thumbnail; the slight hover tilt reads as pulling the book off a shelf. */
+.book-cover {
+  position: relative;
+  border-radius: 0.25rem;
+  box-shadow:
+    3px 4px 0 0 var(--mb-surface),
+    3px 4px 0 1px var(--mb-border),
+    6px 8px 0 0 var(--mb-surface),
+    6px 8px 0 1px var(--mb-border),
+    10px 13px 20px -6px rgba(89, 34, 9, 0.35);
+  transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.35s ease;
+}
+.book-shelf-item:hover .book-cover {
+  transform: rotate(-2deg) translateY(-4px);
+  box-shadow:
+    3px 4px 0 0 var(--mb-surface),
+    3px 4px 0 1px var(--mb-border),
+    6px 8px 0 0 var(--mb-surface),
+    6px 8px 0 1px var(--mb-border),
+    14px 18px 26px -6px rgba(89, 34, 9, 0.4);
+}
+
 /* Soft fade-and-rise for selected sections. Content is visible without it. */
 @keyframes hl-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 .hl-rise { animation: hl-rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
 
 @media (prefers-reduced-motion: reduce) {
   .hl-rise { animation: none; }
-  .hl-card, .hl-card:hover, .hl-btn, .hl-btn:hover, .hl-img-zoom img, .hl-card:hover .hl-img-zoom img {
+  .hl-card, .hl-card:hover, .hl-btn, .hl-btn:hover, .hl-img-zoom img, .hl-card:hover .hl-img-zoom img,
+  .book-cover, .book-shelf-item:hover .book-cover {
     transition: none; transform: none;
   }
 }

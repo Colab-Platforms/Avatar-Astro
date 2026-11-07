@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import AstrologerCard from "@/components/astrologers/AstrologerCard";
-import { ASTROLOGERS } from "@/data/astrologers";
+import { usePublicAstrologers } from "@/features/astrologer/public/hooks";
 
-/** Homepage teaser for the astrologer directory: the first four profiles and a link to all of them. */
+/** Homepage teaser for the astrologer directory: the first four published profiles and a link to all of them. */
 const HomeAstrologersSection = () => {
-  const featured = ASTROLOGERS.slice(0, 4);
+  const query = usePublicAstrologers({ pageSize: 4 });
+  const featured = query.data?.items ?? [];
   if (featured.length === 0) return null; // only real, published astrologers are shown on the homepage
   return (
     <section className="relative w-full py-10 md:py-14" aria-labelledby="home-astrologers-h" data-testid="home-astrologers">

@@ -9,8 +9,23 @@ import { getSignedDocumentUrl, deletePrivateDocument } from "@/config/cloudinary
 import { isTransitionAllowed } from "@/modules/astrologer/astrologer.types.js";
 import { computeApprovalReadiness } from "@/modules/astrologer/astrologer.service.js";
 import { SCANNING_SETTING_KEY } from "@/services/malwareScan.js";
+import { sendAstrologerStatusEmail, type AstrologerNotificationStatus } from "@/utils/mailer.js";
+import { generateUniqueAstrologerSlug } from "@/utils/slug.js";
 
 const ASTROLOGER_ROLE_NAME = "ASTROLOGER";
+
+/** Prefers the application's own contact email (collected in the wizard) and falls back to the account's login email — never throws, since a missing email should never block the status change it's reporting on. */
+async function resolveNotifyEmail(userId: string, applicationEmail: string | null): Promise<string | null> {
+  if (applicationEmail) return applicationEmail;
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
+  return user?.email ?? null;
+}
+
+function notify(userId: string, applicationEmail: string | null, status: AstrologerNotificationStatus, reason?: string | null): void {
+  void resolveNotifyEmail(userId, applicationEmail)
+    .then((email) => { if (email) return sendAstrologerStatusEmail(email, status, reason); })
+    .catch((err) => console.error(`[astrologerAdmin] failed to send ${status} notification:`, err));
+}
 
 // ── listing / detail ──────────────────────────────────────────────────────────
 
@@ -57,7 +72,10 @@ export async function listApplications(filters: ApplicationListFilters) {
       phone: a.phone,
       profilePhotoUrl: a.profilePhotoUrl,
       yearsOfExperience: a.yearsOfExperience,
-      primarySpecialty: a.specialties.find((s) => s.isPrimary)?.specialty.label ?? a.specialties[0]?.specialty.label ?? null,
+      primarySpecialty: (() => {
+        const s = a.specialties.find((s) => s.isPrimary) ?? a.specialties[0];
+        return s ? s.customLabel?.trim() || s.specialty.label : null;
+      })(),
       status: a.status,
       createdAt: a.createdAt,
       submittedAt: a.submittedAt,
@@ -211,8 +229,10 @@ export async function recordInterview(
 
 // ── status transitions (non-approval) ───────────────────────────────────────
 
+const NOTIFIABLE_STATUSES = new Set<AstrologerApplicationStatus>(["UNDER_REVIEW", "MORE_INFORMATION_REQUIRED", "INTERVIEW_PENDING", "REJECTED"]);
+
 export async function transitionStatus(applicationId: string, toStatus: AstrologerApplicationStatus, reason: string | undefined, req: Request) {
-  const app = await prisma.astrologerApplication.findUnique({ where: { id: applicationId }, select: { id: true, status: true } });
+  const app = await prisma.astrologerApplication.findUnique({ where: { id: applicationId }, select: { id: true, status: true, userId: true, email: true } });
   if (!app) throw new ApiError("Application not found.", STATUS_CODES.NOT_FOUND);
   if (!isTransitionAllowed(app.status, toStatus, "ADMIN")) {
     throw new ApiError(`Cannot move from ${app.status} to ${toStatus}.`, STATUS_CODES.CONFLICT);
@@ -232,13 +252,16 @@ export async function transitionStatus(applicationId: string, toStatus: Astrolog
     await writeAudit(req, { action: "astrologer.application.status_changed", entityType: "AstrologerApplication", entityId: applicationId, summary: `${app.status} -> ${toStatus}`, metadata: { reason } }, tx);
     return { alreadyApplied: false as const };
   });
+  if (!result.alreadyApplied && NOTIFIABLE_STATUSES.has(toStatus)) {
+    notify(app.userId, app.email, toStatus as AstrologerNotificationStatus, reason);
+  }
   return result;
 }
 
 // ── approval — exact concurrency/idempotency semantics (see implementation plan) ──
 
 export async function approveApplication(applicationId: string, req: Request) {
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const readiness = await computeApprovalReadiness(applicationId, tx);
     if (!readiness.ready) {
       throw new ApiError(`Application is not ready for approval: ${readiness.blockers.join("; ")}`, STATUS_CODES.UNPROCESSIBLE_ENTITY);
@@ -267,17 +290,24 @@ export async function approveApplication(applicationId: string, req: Request) {
       );
     }
 
+    const existingProfile = await tx.astrologerProfile.findUnique({ where: { applicationId }, select: { slug: true } });
+    const appSpecialties = await tx.astrologerApplicationSpecialty.findMany({ where: { applicationId }, include: { specialty: true } });
+    const specialtyLabels = appSpecialties.map((s) => s.customLabel?.trim() || s.specialty.label);
+    const slug = existingProfile?.slug ?? (await generateUniqueAstrologerSlug(app.displayName ?? app.fullLegalName ?? "astrologer", tx));
+
     const profile = await tx.astrologerProfile.upsert({
       where: { applicationId },
       create: {
         applicationId,
         userId: app.userId,
+        slug,
         displayName: app.displayName ?? app.fullLegalName ?? "Astrologer",
         bio: app.bio,
         profilePhotoUrl: app.profilePhotoUrl,
         profilePhotoPublicId: app.profilePhotoPublicId,
         yearsOfExperience: app.yearsOfExperience,
         languages: app.languages,
+        specialtyLabels,
       },
       update: {
         displayName: app.displayName ?? app.fullLegalName ?? "Astrologer",
@@ -286,6 +316,7 @@ export async function approveApplication(applicationId: string, req: Request) {
         profilePhotoPublicId: app.profilePhotoPublicId,
         yearsOfExperience: app.yearsOfExperience,
         languages: app.languages,
+        specialtyLabels,
         suspendedAt: null,
         suspensionReason: null,
       },
@@ -304,13 +335,15 @@ export async function approveApplication(applicationId: string, req: Request) {
     await tx.astrologerApplicationStatusHistory.create({ data: { applicationId, fromStatus: app.status, toStatus: "APPROVED", actorUserId: (req as any).user!.id, reason: "Approved" } });
     await writeAudit(req, { action: "astrologer.application.approved", entityType: "AstrologerApplication", entityId: applicationId, summary: "Application approved; ASTROLOGER role granted" }, tx);
 
-    return { profile, alreadyApproved: false as const };
+    return { profile, alreadyApproved: false as const, userId: app.userId, email: app.email };
   });
+  if (!result.alreadyApproved) notify(result.userId, result.email, "APPROVED");
+  return result;
 }
 
 export async function suspendAstrologer(applicationId: string, reason: string, req: Request) {
   if (!reason?.trim()) throw new ApiError("A reason is required to suspend an astrologer.", STATUS_CODES.BAD_REQUEST);
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const app = await tx.astrologerApplication.findUnique({ where: { id: applicationId } });
     if (!app) throw new ApiError("Application not found.", STATUS_CODES.NOT_FOUND);
 
@@ -327,12 +360,14 @@ export async function suspendAstrologer(applicationId: string, reason: string, r
 
     await tx.astrologerApplicationStatusHistory.create({ data: { applicationId, fromStatus: "APPROVED", toStatus: "SUSPENDED", actorUserId: (req as any).user!.id, reason } });
     await writeAudit(req, { action: "astrologer.application.suspended", entityType: "AstrologerApplication", entityId: applicationId, summary: `Astrologer suspended: ${reason}` }, tx);
-    return { alreadySuspended: false as const };
+    return { alreadySuspended: false as const, userId: app.userId, email: app.email };
   });
+  if (!result.alreadySuspended) notify(result.userId, result.email, "SUSPENDED", reason);
+  return result;
 }
 
 export async function reinstateAstrologer(applicationId: string, req: Request) {
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const app = await tx.astrologerApplication.findUnique({ where: { id: applicationId } });
     if (!app) throw new ApiError("Application not found.", STATUS_CODES.NOT_FOUND);
 
@@ -350,8 +385,10 @@ export async function reinstateAstrologer(applicationId: string, req: Request) {
 
     await tx.astrologerApplicationStatusHistory.create({ data: { applicationId, fromStatus: "SUSPENDED", toStatus: "APPROVED", actorUserId: (req as any).user!.id, reason: "Reinstated" } });
     await writeAudit(req, { action: "astrologer.application.reinstated", entityType: "AstrologerApplication", entityId: applicationId, summary: "Astrologer reinstated; publication state left as-is" }, tx);
-    return { alreadyReinstated: false as const };
+    return { alreadyReinstated: false as const, userId: app.userId, email: app.email };
   });
+  if (!result.alreadyReinstated) notify(result.userId, result.email, "REINSTATED");
+  return result;
 }
 
 export async function setPublication(applicationId: string, isPublished: boolean, req: Request) {

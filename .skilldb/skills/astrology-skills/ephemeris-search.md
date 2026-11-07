@@ -1,0 +1,3 @@
+# ephemeris-search
+
+Ephemeris tables, planetary position lookups, aspect search engine, planetary conjunctions by zodiac degree, retrograde calendars, and planetary cycle data. Covers ephemeris for all planets from historical to far-future dates, ingress dates (when planets change signs), station dates (retrograde/direct), eclipse tables, aspect calendars (annual conjunctions and aspects), and planetary cycle durations. Use when the user needs to look up specific planetary positions for dates, find when aspects occur, check retrograde periods, or research historical/future astrological events.

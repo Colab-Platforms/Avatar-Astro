@@ -1,0 +1,69 @@
+enum DevotionLibraryStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model SpiritualBook {
+  id String @id @default(cuid())
+
+  title       String
+  slug        String  @unique
+  author      String?
+  category    String
+  description String
+
+  coverImageUrl      String? @map("cover_image_url")
+  coverImagePublicId String? @map("cover_image_public_id")
+
+  /// Null until the PDF is uploaded via POST /books/:id/file.
+  fileUrl      String? @map("file_url")
+  filePublicId String? @map("file_public_id")
+  fileBytes    Int?    @map("file_bytes")
+
+  status       DevotionLibraryStatus @default(DRAFT)
+  displayOrder Int                   @default(0) @map("display_order")
+
+  downloadCount Int @default(0) @map("download_count")
+
+  createdBy String? @map("created_by")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  @@index([status, displayOrder])
+  @@index([category])
+  @@map("spiritual_books")
+}
+
+model MantraChant {
+  id String @id @default(cuid())
+
+  title    String
+  slug     String  @unique
+  deity    String?
+  category String
+
+  lyricsText String? @map("lyrics_text")
+  meaning    String?
+
+  /// Null until the mp3 is uploaded via POST /mantras/:id/audio.
+  audioUrl        String? @map("audio_url")
+  audioPublicId   String? @map("audio_public_id")
+  durationSeconds Int?    @map("duration_seconds")
+
+  coverImageUrl      String? @map("cover_image_url")
+  coverImagePublicId String? @map("cover_image_public_id")
+
+  status       DevotionLibraryStatus @default(DRAFT)
+  displayOrder Int                   @default(0) @map("display_order")
+
+  playCount     Int @default(0) @map("play_count")
+  downloadCount Int @default(0) @map("download_count")
+
+  createdBy String? @map("created_by")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  @@index([status, displayOrder])
+  @@index([category])
+  @@map("mantras_chants")
+}

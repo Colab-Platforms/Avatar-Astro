@@ -48,6 +48,9 @@ export default function AstrologerDashboardPage() {
 
       <PublicationCard profile={profile} />
       <div className="mt-6">
+        <PricingCard profile={profile} />
+      </div>
+      <div className="mt-6">
         <PhotoCard profile={profile} />
       </div>
       <div className="mt-6">
@@ -76,6 +79,42 @@ function PublicationCard({ profile }: { profile: { isPublished: boolean; suspend
       >
         {setPublication.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
         {profile.isPublished ? "Unpublish" : "Publish profile"}
+      </button>
+    </div>
+  );
+}
+
+function PricingCard({ profile }: { profile: { pricePerMinute: number | null } }) {
+  const update = useUpdateAstrologerProfile();
+  const [value, setValue] = useState(profile.pricePerMinute?.toString() ?? "");
+  const [error, setError] = useState<string | null>(null);
+
+  function save() {
+    const n = Number(value);
+    if (!value.trim() || !Number.isInteger(n) || n < 1 || n > 10_000) {
+      setError("Enter a whole number between ₹1 and ₹10,000 per minute.");
+      return;
+    }
+    setError(null);
+    update.mutate({ pricePerMinute: n });
+  }
+
+  return (
+    <div className={`${card} space-y-3 p-5`}>
+      <div>
+        <p className="font-home-serif text-base font-semibold text-[#2A1A10]">Consultation pricing</p>
+        <p className="mt-1 text-sm text-[#6E5D4E]">
+          Set what you charge per minute. Your public profile hides pricing entirely until you set this — visitors never see ₹0.
+        </p>
+      </div>
+      <div className="flex max-w-xs items-center gap-2">
+        <span className="text-sm font-medium text-[#6E5D4E]">₹</span>
+        <input type="number" min={1} max={10000} className={field} value={value} onChange={(e) => setValue(e.target.value)} />
+        <span className="text-sm text-[#6E5D4E]">/min</span>
+      </div>
+      {error && <p className="text-xs text-red-700">{error}</p>}
+      <button type="button" className={btn} onClick={save} disabled={update.isPending}>
+        {update.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null} Save price
       </button>
     </div>
   );

@@ -20,7 +20,7 @@ export const astrologerApi = {
     return authRequest<AstrologerApplication>(`${BASE}/application`, { method: "PATCH", body: patch });
   },
 
-  setSpecialties(items: { specialtyOptionId: string; isPrimary?: boolean }[]) {
+  setSpecialties(items: { specialtyOptionId: string; isPrimary?: boolean; customLabel?: string }[]) {
     return authRequest<AstrologerApplication>(`${BASE}/application/specialties`, { method: "PUT", body: { specialties: items } });
   },
 

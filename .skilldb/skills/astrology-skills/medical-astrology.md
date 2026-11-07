@@ -1,0 +1,3 @@
+# medical-astrology
+
+Medical astrology — identifying health vulnerabilities, constitutional type, and timing of illness through the natal chart. Covers zodiac sign body rulerships, planetary rulerships of organs and body systems, the 6th/8th/12th houses in health, decumbiture charts (chart for the onset of illness), critical days, humoral theory (choleric/sanguine/melancholic/phlegmatic), health transits, medical elections (surgery timing), and constitutional analysis. Use when analyzing health patterns in a natal chart, timing illness or recovery, or choosing optimal timing for medical procedures.

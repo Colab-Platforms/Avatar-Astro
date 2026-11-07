@@ -32,15 +32,19 @@ export const StatusDot = ({ online }: { online: boolean }) => (
   </span>
 );
 
-export const PriceLine = ({ a }: { a: Astrologer }) => (
-  <p className="text-[#301607]">
-    {a.originalPricePerMin != null && a.originalPricePerMin > a.pricePerMin && (
-      <span className="mr-1.5 text-sm text-[#6B4A37] line-through">₹{a.originalPricePerMin}</span>
-    )}
-    <span className="text-lg font-semibold">₹{a.pricePerMin}</span>
-    <span className="text-sm text-[#6B4A37]">/min</span>
-  </p>
-);
+/** Hides entirely rather than showing ₹0 — a real, just-approved astrologer may not have set a price yet. */
+export const PriceLine = ({ a }: { a: Astrologer }) => {
+  if (a.pricePerMin == null) return <p className="text-sm text-[#6B4A37]">Pricing not set yet</p>;
+  return (
+    <p className="text-[#301607]">
+      {a.originalPricePerMin != null && a.originalPricePerMin > a.pricePerMin && (
+        <span className="mr-1.5 text-sm text-[#6B4A37] line-through">₹{a.originalPricePerMin}</span>
+      )}
+      <span className="text-lg font-semibold">₹{a.pricePerMin}</span>
+      <span className="text-sm text-[#6B4A37]">/min</span>
+    </p>
+  );
+};
 
 /** Chat and Call appear only when a consultation service is connected; otherwise nothing is shown. */
 export const ConsultButtons = ({ compact = false }: { a?: Astrologer; compact?: boolean }) => {
@@ -101,14 +105,14 @@ export const AstrologerCard = ({ a }: { a: Astrologer }) => (
         <dt className="sr-only">Experience</dt>
         <dd className="flex items-center justify-center gap-1 whitespace-nowrap font-semibold text-[#301607]">
           <Clock3 className="h-3.5 w-3.5 text-[#592209]" aria-hidden="true" />
-          {a.experienceYears} yrs
+          {a.experienceYears != null ? `${a.experienceYears} yrs` : "—"}
         </dd>
       </div>
       <div className="min-w-fit flex-1 rounded-lg bg-[#592209]/5 px-2.5 py-2">
         <dt className="sr-only">Rating</dt>
         <dd className="flex items-center justify-center gap-1 whitespace-nowrap font-semibold text-[#301607]">
           <Star className="h-3.5 w-3.5 fill-[#E58A45] text-[#E58A45]" aria-hidden="true" />
-          {a.rating.toFixed(1)}
+          {a.rating != null ? a.rating.toFixed(1) : "New"}
         </dd>
       </div>
       <div className="min-w-fit flex-1 rounded-lg bg-[#592209]/5 px-2.5 py-2">

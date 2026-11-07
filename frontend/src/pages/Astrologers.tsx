@@ -1,15 +1,8 @@
 import { useMemo, useState } from "react";
 import FeatureFaq from "@/components/FeatureFaq";
-import { Navigate } from "react-router-dom";
-import { Search } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 import AstrologerCard from "@/components/astrologers/AstrologerCard";
-import {
-  ALL_LANGUAGES,
-  ASTROLOGERS,
-  EXPERTISE_OPTIONS,
-  hasReliableStats,
-  type Expertise,
-} from "@/data/astrologers";
+import { usePublicAstrologers } from "@/features/astrologer/public/hooks";
 
 type Availability = "all" | "online" | "offline";
 type SortKey = "default" | "rating" | "experience";
@@ -17,40 +10,41 @@ type SortKey = "default" | "rating" | "experience";
 const selectCls =
   "w-full rounded-lg border border-[#592209]/30 bg-[#FBF5EC] px-3 py-2.5 text-base text-[#301607] focus:border-[#E58A45] focus:outline-none focus:ring-2 focus:ring-[#E58A45]/40";
 
-/** "Consult Astrologers": searchable, filterable directory of astrologer profiles. */
+/** "Consult Astrologers": searchable, filterable directory, backed by the real published-profile API. */
 const Astrologers = () => {
-  const [query, setQuery] = useState("");
-  const [expertise, setExpertise] = useState<Expertise | "">("");
+  const query = usePublicAstrologers({ pageSize: 50 });
+  const astrologers = query.data?.items ?? [];
+
+  const [search, setSearch] = useState("");
+  const [expertise, setExpertise] = useState("");
   const [language, setLanguage] = useState("");
   const [availability, setAvailability] = useState<Availability>("all");
   const [sort, setSort] = useState<SortKey>("default");
 
-  const sortable = hasReliableStats(ASTROLOGERS);
+  const expertiseOptions = useMemo(() => [...new Set(astrologers.flatMap((a) => a.expertise))].sort(), [astrologers]);
+  const languageOptions = useMemo(() => [...new Set(astrologers.flatMap((a) => a.languages))].sort(), [astrologers]);
 
   const shown = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const list = ASTROLOGERS.filter(
+    const q = search.trim().toLowerCase();
+    const list = astrologers.filter(
       (a) =>
         (!q || a.name.toLowerCase().includes(q)) &&
         (!expertise || a.expertise.includes(expertise)) &&
         (!language || a.languages.includes(language)) &&
         (availability === "all" || (availability === "online" ? a.online : !a.online)),
     );
-    if (sortable && sort === "rating") return [...list].sort((x, y) => y.rating - x.rating);
-    if (sortable && sort === "experience") return [...list].sort((x, y) => y.experienceYears - x.experienceYears);
+    if (sort === "rating") return [...list].sort((x, y) => (y.rating ?? -1) - (x.rating ?? -1));
+    if (sort === "experience") return [...list].sort((x, y) => (y.experienceYears ?? -1) - (x.experienceYears ?? -1));
     return list;
-  }, [query, expertise, language, availability, sort, sortable]);
+  }, [astrologers, search, expertise, language, availability, sort]);
 
   const clear = () => {
-    setQuery("");
+    setSearch("");
     setExpertise("");
     setLanguage("");
     setAvailability("all");
     setSort("default");
   };
-
-  // Nothing real to list yet: send visitors home instead of showing an empty or unfinished page.
-  if (ASTROLOGERS.length === 0) return <Navigate to="/" replace />;
 
   return (
     <section className="mx-auto w-full max-w-6xl px-4 pb-16 pt-10 sm:px-6" data-testid="astrologers-page">
@@ -77,8 +71,8 @@ const Astrologers = () => {
             id="ast-search"
             type="search"
             placeholder="Search by name"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
             className={`${selectCls} pl-9`}
           />
         </div>
@@ -86,9 +80,9 @@ const Astrologers = () => {
           <label htmlFor="ast-expertise" className="sr-only">
             Expertise
           </label>
-          <select id="ast-expertise" className={selectCls} value={expertise} onChange={(e) => setExpertise(e.target.value as Expertise | "")}>
+          <select id="ast-expertise" className={selectCls} value={expertise} onChange={(e) => setExpertise(e.target.value)}>
             <option value="">All expertise</option>
-            {EXPERTISE_OPTIONS.map((x) => (
+            {expertiseOptions.map((x) => (
               <option key={x} value={x}>
                 {x}
               </option>
@@ -101,7 +95,7 @@ const Astrologers = () => {
           </label>
           <select id="ast-language" className={selectCls} value={language} onChange={(e) => setLanguage(e.target.value)}>
             <option value="">All languages</option>
-            {ALL_LANGUAGES.map((l) => (
+            {languageOptions.map((l) => (
               <option key={l} value={l}>
                 {l}
               </option>
@@ -122,38 +116,39 @@ const Astrologers = () => {
           <label htmlFor="ast-sort" className="sr-only">
             Sort by
           </label>
-          <select
-            id="ast-sort"
-            className={selectCls}
-            value={sort}
-            disabled={!sortable}
-            title={sortable ? undefined : "Sorting is available once astrologers have real ratings and experience data"}
-            onChange={(e) => setSort(e.target.value as SortKey)}
-          >
-            <option value="default">{sortable ? "Sort: featured" : "Sort (needs real data)"}</option>
+          <select id="ast-sort" className={selectCls} value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
+            <option value="default">Sort: featured</option>
             <option value="rating">Highest rating</option>
             <option value="experience">Most experience</option>
           </select>
         </div>
       </form>
 
-      <p className="mt-4 text-sm text-[#6B4A37]" role="status" aria-live="polite" data-testid="astrologer-count">
-        {shown.length} {shown.length === 1 ? "astrologer" : "astrologers"} found
-      </p>
-
-      {shown.length > 0 ? (
-        <div className="mt-3 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {shown.map((a) => (
-            <AstrologerCard key={a.id} a={a} />
-          ))}
+      {query.isLoading ? (
+        <div className="mt-10 flex justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-[#592209]" />
         </div>
       ) : (
-        <div className="mt-6 rounded-2xl border border-[#592209]/20 bg-[#FBF5EC] p-8 text-center" data-testid="astrologers-empty">
-          <p className="text-lg text-[#301607]">No astrologers match these filters.</p>
-          <button type="button" onClick={clear} className="mt-3 text-sm font-semibold text-[#592209] underline underline-offset-2">
-            Clear filters
-          </button>
-        </div>
+        <>
+          <p className="mt-4 text-sm text-[#6B4A37]" role="status" aria-live="polite" data-testid="astrologer-count">
+            {shown.length} {shown.length === 1 ? "astrologer" : "astrologers"} found
+          </p>
+
+          {shown.length > 0 ? (
+            <div className="mt-3 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {shown.map((a) => (
+                <AstrologerCard key={a.id} a={a} />
+              ))}
+            </div>
+          ) : (
+            <div className="mt-6 rounded-2xl border border-[#592209]/20 bg-[#FBF5EC] p-8 text-center" data-testid="astrologers-empty">
+              <p className="text-lg text-[#301607]">No astrologers match these filters.</p>
+              <button type="button" onClick={clear} className="mt-3 text-sm font-semibold text-[#592209] underline underline-offset-2">
+                Clear filters
+              </button>
+            </div>
+          )}
+        </>
       )}
       <FeatureFaq feature="astrologers" className="mt-6 px-0" />
     </section>

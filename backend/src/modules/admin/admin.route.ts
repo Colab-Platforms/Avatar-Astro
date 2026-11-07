@@ -4,6 +4,7 @@ import * as adminController from "./admin.controller.js";
 import pujaRoutes from "@/modules/puja/puja.route.js";
 import chadhawaRoutes from "@/modules/chadhawa/chadhawa.route.js";
 import shopRoutes from "@/modules/shop/shop.route.js";
+import devotionLibraryRoutes from "@/modules/devotionLibrary/devotionLibrary.route.js";
 import { requireMainAdmin } from "@/middleware/mainAdmin.js";
 import { noStore } from "@/middleware/noStore.js";
 import { createAdminPanelRouter } from "./adminPanel.route.js";
@@ -28,6 +29,9 @@ router.use("/chadhawa", chadhawaRoutes);
 
 // Shop categories / products management
 router.use("/shop", shopRoutes);
+
+// Spiritual Books + Mantras & Chants library management
+router.use("/devotion-library", devotionLibraryRoutes);
 
 // Astrology Audio Manager (ElevenLabs narration + Cloudinary storage)
 router.use("/astrology/audio", createAstrologyAudioAdminRouter());

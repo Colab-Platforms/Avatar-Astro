@@ -1,0 +1,3 @@
+# psychological-astrology
+
+Psychological astrology — the Jungian/archetypal approach to chart interpretation, integrating depth psychology with astrological symbolism. Covers planets as archetypes, shadow work through the chart (Pluto, 12th house, South Node), the individuation process mapped to planetary development, projection in relationships (7th house, DSC), complexes (aspect patterns as psychological complexes), defense mechanisms by sign, inner child (Moon), inner critic (Saturn), inner rebel (Uranus), therapeutic use of astrology, and the work of Liz Greene, Howard Sasportas, and Dane Rudhyar. Use when the user wants depth-psychological chart interpretation, shadow work guidance, or therapeutic insight from their natal chart.

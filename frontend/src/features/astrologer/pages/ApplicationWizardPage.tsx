@@ -238,13 +238,15 @@ function StepProfessional({
   const [languages, setLanguages] = useState<string[]>(application.languages);
   const [langInput, setLangInput] = useState("");
 
+  const otherOption = config.specialties.find((s) => s.key === "other");
+  const [customLabel, setCustomLabel] = useState(application.specialties.find((s) => s.key === "other")?.label ?? "");
+
   const [form, setForm] = useState({
     yearsOfExperience: application.yearsOfExperience?.toString() ?? "",
     educationBackground: application.educationBackground ?? "",
     certificationsText: application.certificationsText ?? "",
     professionalIntro: application.professionalIntro ?? "",
     consultationExperience: application.consultationExperience ?? "",
-    areasOfExpertise: application.areasOfExpertise ?? "",
   });
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
@@ -271,11 +273,18 @@ function StepProfessional({
 
   async function next() {
     if (selected.size === 0) return setError("Select at least one specialty.");
+    if (otherOption && selected.has(otherOption.id) && !customLabel.trim()) return setError("Describe your specialty for \"Other\".");
     if (languages.length === 0) return setError("Add at least one language.");
     if (!form.yearsOfExperience) return setError("Years of experience is required.");
     setError(null);
     await Promise.all([
-      setSpecialties.mutateAsync(Array.from(selected).map((id) => ({ specialtyOptionId: id, isPrimary: id === primary }))),
+      setSpecialties.mutateAsync(
+        Array.from(selected).map((id) => ({
+          specialtyOptionId: id,
+          isPrimary: id === primary,
+          customLabel: otherOption && id === otherOption.id ? customLabel.trim() : undefined,
+        })),
+      ),
       update.mutateAsync({ ...form, yearsOfExperience: Number(form.yearsOfExperience), languages }),
     ]);
     onNext();
@@ -300,6 +309,18 @@ function StepProfessional({
                 <option key={id} value={id}>{config.specialties.find((s) => s.id === id)?.label}</option>
               ))}
             </select>
+          </div>
+        )}
+        {otherOption && selected.has(otherOption.id) && (
+          <div className="mt-2">
+            <label className="text-xs text-[#6B4A37]">Describe your specialty</label>
+            <input
+              className={`${inputCls} mt-1`}
+              placeholder="e.g. KP Astrology"
+              value={customLabel}
+              onChange={(e) => setCustomLabel(e.target.value)}
+            />
+            <p className="mt-1 text-xs text-[#6B4A37]">Shown on your public profile in place of "Other".</p>
           </div>
         )}
       </Field>
@@ -328,7 +349,6 @@ function StepProfessional({
       <Field label="Certifications (if any)" hint="Not required — explain your training below if you have no formal certificate"><input className={inputCls} value={form.certificationsText} onChange={set("certificationsText")} /></Field>
       <Field label="Professional introduction"><textarea className={inputCls} rows={3} value={form.professionalIntro} onChange={set("professionalIntro")} /></Field>
       <Field label="Consultation experience"><textarea className={inputCls} rows={3} value={form.consultationExperience} onChange={set("consultationExperience")} /></Field>
-      <Field label="Areas of expertise"><textarea className={inputCls} rows={3} value={form.areasOfExpertise} onChange={set("areasOfExpertise")} /></Field>
 
       {error && <p className="text-sm text-red-700">{error}</p>}
       <div className="flex justify-between gap-3">
