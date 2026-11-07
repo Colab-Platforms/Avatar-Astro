@@ -89,11 +89,24 @@ export const validateLocalDateTime = (v: LocalDateTime): void => {
   }
 };
 
-export const resolveBirthInstant = (
+/** A birth instant: the date must be a real day between 1800 and today. */
+export const resolveBirthInstant = (local: LocalDateTime, timeZone: string): ResolvedBirthInstant => {
+  validateLocalDateTime(local);
+  return resolveLocalInstant(local, timeZone);
+};
+
+/**
+ * Any real local wall-clock time at a place, past or future (for planning, e.g. Muhurat Finder). Same time-zone handling as
+ * resolveBirthInstant, without the birth-date limits.
+ */
+export const resolveLocalInstant = (
   local: LocalDateTime,
   timeZone: string,
 ): ResolvedBirthInstant => {
-  validateLocalDateTime(local);
+  const probe = new Date(Date.UTC(local.year, local.month - 1, local.day));
+  if (![local.year, local.month, local.day, local.hour, local.minute].every(Number.isInteger) || probe.getUTCMonth() !== local.month - 1 || probe.getUTCDate() !== local.day || local.hour < 0 || local.hour > 23 || local.minute < 0 || local.minute > 59) {
+    throw new BirthTimeError("Invalid date or time.");
+  }
   if (!isValidTimeZone(timeZone)) {
     throw new BirthTimeError("Unrecognised time zone for the selected birthplace.");
   }

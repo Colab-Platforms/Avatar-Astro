@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 492" role="img" aria-label="A sun rising over a lotus and a calendar page under the stars">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a1205"/>
+      <stop offset="0.6" stop-color="#5b2209"/>
+      <stop offset="1" stop-color="#c9873a"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.62" r="0.5">
+      <stop offset="0" stop-color="#ffe9b0" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#ffe9b0" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="petal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff8e4"/>
+      <stop offset="1" stop-color="#f1d9a6"/>
+    </linearGradient>
+  </defs>
+  <rect width="960" height="492" fill="url(#sky)"/>
+  <rect width="960" height="492" fill="url(#glow)"/>
+  <g fill="#ffe9b0">
+    <circle cx="110" cy="70" r="3"/><circle cx="210" cy="130" r="2"/><circle cx="330" cy="54" r="2.5"/>
+    <circle cx="640" cy="64" r="2.5"/><circle cx="760" cy="120" r="3"/><circle cx="870" cy="60" r="2"/>
+    <circle cx="500" cy="36" r="2"/><circle cx="60" cy="190" r="2"/><circle cx="900" cy="200" r="2.5"/>
+  </g>
+  <g stroke="#f7dc8a" stroke-width="5" stroke-linecap="round">
+    <line x1="480" y1="150" x2="480" y2="100"/><line x1="420" y1="168" x2="392" y2="128"/><line x1="540" y1="168" x2="568" y2="128"/>
+    <line x1="372" y1="212" x2="330" y2="190"/><line x1="588" y1="212" x2="630" y2="190"/>
+  </g>
+  <circle cx="480" cy="262" r="88" fill="#f7dc8a"/>
+  <circle cx="480" cy="262" r="70" fill="#ffe9b0"/>
+  <rect x="0" y="330" width="960" height="162" fill="#3b1706"/>
+  <g fill="url(#petal)" stroke="#c9873a" stroke-width="3">
+    <path d="M480 420 C440 400 430 350 480 318 C530 350 520 400 480 420 Z"/>
+    <path d="M470 424 C420 424 380 390 372 348 C420 352 462 380 470 424 Z"/>
+    <path d="M490 424 C540 424 580 390 588 348 C540 352 498 380 490 424 Z"/>
+    <path d="M462 430 C410 440 350 420 318 378 C372 372 430 394 462 430 Z"/>
+    <path d="M498 430 C550 440 610 420 642 378 C588 372 530 394 498 430 Z"/>
+  </g>
+  <g transform="translate(700 340)">
+    <rect width="120" height="110" rx="12" fill="#fffdf6" stroke="#c9873a" stroke-width="4"/>
+    <rect width="120" height="30" rx="12" fill="#592209"/>
+    <rect y="18" width="120" height="12" fill="#592209"/>
+    <g fill="#c9873a"><circle cx="30" cy="55" r="6"/><circle cx="60" cy="55" r="6"/><circle cx="90" cy="55" r="6"/><circle cx="30" cy="80" r="6"/><circle cx="90" cy="80" r="6"/></g>
+    <circle cx="60" cy="80" r="11" fill="#592209" stroke="#f7dc8a" stroke-width="3"/>
+  </g>
+</svg>

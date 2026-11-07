@@ -1,44 +1,12 @@
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
-import { Plus } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 import { usePublicContent } from "@/lib/publicContent";
-
-const faqs = [
-  {
-    question: "What can I explore on MyBhagya?",
-    answer:
-      "MyBhagya brings astrology and spiritual guidance together in one place. You can explore Janma Kundali, Tarot Prediction, Namank Jyotish (Lucky Name), Hasta Rekha (Palmistry), Love Compatibility, Ratna Jyotish (Lucky Gemstone), Daily Horoscope, Divya Margdarshak guidance, Live Darshan, and devotional experiences.",
-  },
-  {
-    question: "How does Janma Kundali work on MyBhagya?",
-    answer:
-      "Enter your birth details to generate your personalized Janma Kundali. MyBhagya uses your birth information to present planetary positions and astrology-based insights in an easy-to-understand format.",
-  },
-  {
-    question: "Can I use MyBhagya without knowing much about astrology?",
-    answer:
-      "Yes. MyBhagya is designed for both beginners and people who already follow astrology. Our Seva explain insights in a simple way so you can explore your chart, predictions, and spiritual guidance without needing advanced astrology knowledge.",
-  },
-  {
-    question: "What is Divya Margdarshak on MyBhagya?",
-    answer:
-      "Divya Margdarshak is your conversational spiritual guide. You can ask questions about astrology, life situations, spirituality, and personal guidance and receive personalized responses based on the information available to the experience.",
-  },
-  {
-    question: "Can I get a daily horoscope on MyBhagya?",
-    answer:
-      "Yes. MyBhagya provides daily horoscope guidance based on your zodiac sign, helping you explore themes and insights for your day.",
-  },
-  {
-    question: "What other spiritual experiences are available?",
-    answer:
-      "Along with astrology Seva, MyBhagya includes Live Darshan, temples, Daily Aarti, spiritual books, and Mantras & Chants, bringing multiple spiritual experiences together in one platform.",
-  },
-];
+import { homeFaqs } from "@/data/homeFaqs";
 
 const FaqSection = () => {
   // FAQs published from the admin panel are listed after the built-in ones.
   const published = usePublicContent("FAQ").map((f) => ({ question: f.title, answer: f.body }));
-  const allFaqs = [...faqs, ...published];
+  const allFaqs = [...homeFaqs, ...published];
   return (
   <section className="hl-section relative z-10 w-full border-t border-home-line" aria-labelledby="home-faq-h">
     <div className="container relative mx-auto px-4 md:px-6">
@@ -46,8 +14,11 @@ const FaqSection = () => {
         <div className="text-center lg:text-left">
           <p className="hl-eyebrow mb-3">Questions, Answered</p>
           <h2 id="home-faq-h" className="hl-serif text-3xl font-bold leading-tight text-home-ink sm:text-4xl md:text-[2.5rem]">
-            Start Your Journey With <span className="text-home-gerua">Clarity.</span>
+            Curious About Your <span className="text-home-gerua">Bhagya?</span>
           </h2>
+          <p className="mx-auto mt-4 max-w-sm font-home-sans text-base italic leading-relaxed text-home-muted lg:mx-0">
+            From ancient wisdom to everyday questions, find your answers here.
+          </p>
         </div>
 
         <AccordionPrimitive.Root type="single" collapsible defaultValue="faq-0" className="w-full space-y-2">
@@ -55,15 +26,16 @@ const FaqSection = () => {
             <AccordionPrimitive.Item
               key={`${i}-${faq.question}`}
               value={`faq-${i}`}
-              className="group rounded-2xl border border-home-line bg-home-ivory transition-colors data-[state=open]:border-home-gerua/40"
+              className="group rounded-2xl border border-home-line bg-home-ivory transition-[border-color,box-shadow] duration-300 hover:border-home-gerua/40 hover:shadow-[0_6px_18px_-12px_rgba(89,34,9,0.45)] data-[state=open]:border-home-gerua/40"
             >
               <AccordionPrimitive.Header>
-                <AccordionPrimitive.Trigger className="flex w-full items-center justify-between gap-4 rounded-2xl px-5 py-3 text-left">
+                <AccordionPrimitive.Trigger className="flex w-full items-center justify-between gap-4 rounded-2xl px-5 py-4 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-home-gerua">
                   <span className="font-home-sans text-base font-semibold text-home-ink sm:text-lg">
                     {faq.question}
                   </span>
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-home-line text-home-ink transition-colors duration-300 group-data-[state=open]:border-transparent group-data-[state=open]:bg-home-gerua group-data-[state=open]:text-home-ivory">
-                    <Plus className="h-4 w-4 transition-transform duration-300 group-data-[state=open]:rotate-45" />
+                    <Plus className="h-4 w-4 group-data-[state=open]:hidden" aria-hidden="true" />
+                    <Minus className="hidden h-4 w-4 group-data-[state=open]:block" aria-hidden="true" />
                   </span>
                 </AccordionPrimitive.Trigger>
               </AccordionPrimitive.Header>

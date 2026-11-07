@@ -83,7 +83,11 @@ describe("Janma Kundali panels", () => {
     expect(moon).toHaveTextContent(/birth time decides/);
     expect(screen.getByTestId("janma-nakshatra")).toHaveTextContent("Needs your exact birth time");
     expect(screen.getByTestId("kundali-panchang-uncertain")).toHaveTextContent("Moon Rashi changes");
-    expect(screen.getByTestId("kundali-basis")).toHaveTextContent(/none is assumed/);
+    // the short birth-time notice replaces the old "How this was calculated / Limits" sections; the safeguards themselves are unchanged
+    expect(screen.getByTestId("kundali-time-notice")).toHaveTextContent(/did not enter a birth time/);
+    for (const id of ["kundali-basis", "kundali-stable"]) expect(screen.queryByTestId(id)).toBeNull();
+    expect(screen.queryByText(/Grahas that stay in one Rashi/)).toBeNull();
+    expect(screen.queryByText(/How this was calculated|Limits of this reading|Terms explained/)).toBeNull();
   });
 });
 

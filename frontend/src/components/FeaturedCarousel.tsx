@@ -92,7 +92,7 @@ const FeaturedCarousel = () => {
         <div className="order-3 flex items-center justify-center lg:order-4 lg:col-span-3" role="group" aria-label="Choose slide">
           {slides.map((slide, i) => (
             <button
-              key={slide.title}
+              key={slide.title}  
               type="button"
               aria-label={`Show ${slide.title}`}
               aria-current={i === index ? "true" : undefined}

@@ -1,6 +1,5 @@
-import { useMemo, useState } from "react";
 import { Download } from "lucide-react";
-import { buildProfile, CHALDEAN_MAP, datesForNumber, numberInsight, planetForNumber, reduceNumber, type NameProfile } from "@/lib/numerology";
+import { CHALDEAN_MAP, datesForNumber, numberInsight, planetForNumber, reduceNumber, type NameProfile } from "@/lib/numerology";
 import { downloadBlueprintPDF } from "./lib/pdfExport";
 
 const heading = { fontFamily: "'Astra','Cinzel',serif" } as const;
@@ -9,62 +8,6 @@ function formatDob(dob: string) {
   const [y, m, d] = dob.split("-");
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   return `${Number(d)} ${months[Number(m) - 1]} ${y}`;
-}
-
-function SpellingLab({ profile }: { profile: NameProfile }) {
-  const [alt, setAlt] = useState("");
-  const altProfile = useMemo(() => (alt.trim() ? buildProfile(alt, profile.dob) : null), [alt, profile.dob]);
-  const valid = altProfile && !("error" in altProfile) ? altProfile : null;
-  const error = altProfile && "error" in altProfile ? altProfile.error : "";
-
-  const rows: [string, number, number | undefined][] = [
-    ["Destiny (Pythagorean)", profile.destiny.result, valid?.destiny.result],
-    ["Soul Urge", profile.soulUrge.result, valid?.soulUrge.result],
-    ["Personality", profile.personality.result, valid?.personality.result],
-    ["Naamank (Chaldean)", profile.chaldean.result, valid?.chaldean.result],
-  ];
-
-  return (
-    <section aria-labelledby="nd-lab-h" className="glass-card rounded-2xl p-6 sm:p-8">
-      <h2 id="nd-lab-h" className="text-xl sm:text-2xl text-[#592209] mb-2" style={heading}>Try Another Name Spelling</h2>
-      <p className="text-sm text-[#6B4A37] mb-5">
-        Try another spelling of your name to see what changes. Only the numbers made from your name (Naamank, Destiny, Soul Urge, Personality) can change. Mulank and Bhagyank come from your date of birth, so a new spelling never changes them.
-      </p>
-      <label htmlFor="nd-alt" className="mb-2 block text-sm font-semibold text-[#592209]">Alternative spelling</label>
-      <input
-        id="nd-alt"
-        value={alt}
-        maxLength={60}
-        onChange={(e) => setAlt(e.target.value)}
-        placeholder={profile.name}
-        className="mb-4 w-full rounded-xl border border-[#592209]/15 bg-[#592209]/5 px-4 py-3 text-base text-[#301607] placeholder:text-white/30 focus:border-[#592209] focus:outline-none"
-      />
-      {error && <p role="alert" className="mb-4 text-sm text-red-300">⚠ {error}</p>}
-      <div className="overflow-x-auto rounded-xl border border-[#592209]/15">
-        <table data-testid="nd-lab-table" className="w-full min-w-[300px] text-center text-sm">
-          <thead>
-            <tr className="bg-[#592209]/10 text-[#592209]">
-              <th scope="col" className="px-3 py-2 text-left font-semibold">Number</th>
-              <th scope="col" className="px-3 py-2 font-semibold">{profile.name}</th>
-              <th scope="col" className="px-3 py-2 font-semibold">{valid ? valid.name : "Alternative"}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map(([label, cur, other]) => (
-              <tr key={label} className="odd:bg-[#592209]/5">
-                <td className="px-3 py-2 text-left text-[#4A2E1F]">{label}</td>
-                <td className="px-3 py-2 text-[#301607]">{cur || "–"}</td>
-                <td className={`px-3 py-2 ${other !== undefined && other !== cur ? "font-bold text-[#592209]" : "text-[#4A2E1F]"}`}>{other === undefined ? "–" : other || "–"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <p className="mt-4 text-xs leading-relaxed text-[#6B4A37]">
-        A changed number only shows that the arithmetic changed. This Seva does not rate one spelling as better than another, and no spelling is proven to change a person's life.
-      </p>
-    </section>
-  );
 }
 
 /** Collapsible, plain-language walk-through of how the name becomes the Naamank (Chaldean). Uses the real name and values. */
@@ -268,8 +211,6 @@ export default function NameDestinyReport({ profile }: { profile: NameProfile })
         </div>
       </details>
 
-      <SpellingLab profile={profile} />
-
       <div className="flex justify-center">
         <button onClick={() => downloadBlueprintPDF(profile)}
           className="inline-flex items-center gap-2 rounded-full border-2 border-[#592209]/50 px-6 py-3 text-sm font-semibold uppercase tracking-wide text-[#592209] transition-colors hover:bg-[#592209]/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#592209]">
@@ -277,7 +218,7 @@ export default function NameDestinyReport({ profile }: { profile: NameProfile })
         </button>
       </div>
 
-      <p className="mx-auto max-w-2xl text-center text-sm italic leading-relaxed text-[#6B4A37]">
+      <p className="mx-auto max-w-2xl text-center text-xs leading-relaxed text-[#6B4A37]/80">
         This reading is for personal interest and reflection. Numerology is a traditional belief system that is not scientifically proven, and the result is not a prediction or professional advice.
       </p>
     </div>

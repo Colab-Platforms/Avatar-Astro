@@ -95,7 +95,7 @@ const GRAHA_TOPIC: Record<string, string> = {
 };
 
 /** A running period (Mahadasha) is traditionally read through the nature of its lord. */
-const DASHA_THEME: Record<string, string> = {
+export const DASHA_THEME: Record<string, string> = {
   Sun: "self-confidence, status and taking responsibility",
   Moon: "emotions, home life, care for others and the mind",
   Mars: "energy, effort, courage and taking action",

@@ -9,6 +9,7 @@ import Layout from "@/components/Layout";
 import { NavigationProvider } from "@/context/NavigationContext";
 import { tools } from "@/data/tools";
 import { homeBlogPosts } from "@/data/homeBlog";
+import { homeFaqs } from "@/data/homeFaqs";
 import { devotionSlides, aiGuruFeature, liveDarshanFeature } from "@/data/features";
 
 // framer-motion's whileInView needs IntersectionObserver, which jsdom lacks.
@@ -50,7 +51,7 @@ describe("homepage content and structure", () => {
       /DAILY HOROSCOPE/,
       /Read from our\s+blog\./,
       /Why do\s+You\s+need astrology\?/,
-      /Start Your Journey With\s+Clarity\./,
+      /Curious About Your\s+Bhagya\?/,
     ]) {
       expect(screen.getByRole("heading", { level: 2, name })).toBeInTheDocument();
     }
@@ -221,13 +222,40 @@ describe("homepage content and structure", () => {
     expect(container).toBeTruthy();
   });
 
-  it("FAQ keeps its content and toggles", () => {
-    renderAt("/");
-    const q = screen.getByRole("button", { name: "How does Janma Kundali work on MyBhagya?" });
-    expect(q).toHaveAttribute("aria-expanded", "false");
-    fireEvent.click(q);
-    expect(q).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByRole("button", { name: "What can I explore on MyBhagya?" })).toHaveAttribute("aria-expanded", "false");
+  it("FAQ: the five questions, one open at a time, no old content", () => {
+    const { container } = renderAt("/");
+    const section = sectionOf(/Curious About Your\s+Bhagya\?/);
+    expect(within(section).getByText("Questions, Answered")).toBeInTheDocument();
+    expect(within(section).getByText(/From ancient wisdom to everyday questions/)).toBeInTheDocument();
+    expect(homeFaqs).toHaveLength(5);
+    expect(new Set(homeFaqs.map((f) => f.question)).size).toBe(5);
+    for (const f of homeFaqs) expect(within(section).getByRole("button", { name: f.question })).toBeInTheDocument();
+    for (const old of ["How does Janma Kundali work on MyBhagya?", "Can I get a daily horoscope on MyBhagya?", "What other spiritual experiences are available?"]) {
+      expect(screen.queryByText(old)).toBeNull();
+    }
+    expect(section.textContent).not.toMatch(/Jodi Jyotish|Rashi Chakra|Tarot Drishti|Naamank/);
+
+    // each question toggles; opening one closes the other
+    const open = () => [...section.querySelectorAll("button[aria-expanded='true']")].map((b) => b.textContent);
+    expect(open()).toEqual([homeFaqs[0].question]);
+    for (const f of homeFaqs.slice(1)) {
+      const q = within(section).getByRole("button", { name: f.question });
+      fireEvent.click(q);
+      expect(q).toHaveAttribute("aria-expanded", "true");
+      expect(open()).toEqual([f.question]);
+      expect(within(section).getByText(f.answer)).toBeInTheDocument();
+    }
+    const last = within(section).getByRole("button", { name: homeFaqs[4].question });
+    fireEvent.click(last);
+    expect(last).toHaveAttribute("aria-expanded", "false");
+    expect(container.querySelectorAll("#astrology-tools").length).toBe(1);
+  }, 30000);
+
+  it("FAQ answers: short, plain, and no guaranteed-prediction or fear language", () => {
+    for (const f of homeFaqs) {
+      expect(f.answer.split(/(?<=[.!?])s+/).length, f.question).toBeLessThanOrEqual(5);
+      expect(f.answer, f.question).not.toMatch(/guarantee[sd]? (that|you)|100%|anonymous|completely secure|free trial|subscription|₹/i);
+    }
   });
 
   it("every image has an alt attribute (empty for the decorative hero art)", () => {
@@ -312,6 +340,39 @@ describe("site-wide light theme scoping", () => {
     const order = ["Home", "Astrology Seva", "Inner Voice", "Shop", "Live", "Blog", "About", "Contact", "Sign in"].map((l) => text.indexOf(l));
     expect(order.every((i) => i >= 0)).toBe(true);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
+  });
+
+  it("Astrology Seva menu is a two-column grid read left to right then down, ending with Baby Name Jyotish, Lucky Vehicle Number and Muhurat Finder; Inner Voice stays a single list", () => {
+    renderAt("/");
+    const nav = within(document.querySelector("nav")!);
+    const seva = nav.getByRole("menu", { name: "Astrology Seva" });
+    const items = within(seva).getAllByRole("menuitem");
+    expect(items.map((a) => a.textContent)).toEqual([
+      "Tarot Prediction", "Daily Horoscope", "Janma Kundali", "Love Compatibility",
+      "Hasta Rekha (Palmistry)", "Ratna Jyotish (Lucky Gemstone)", "Namank Jyotish (Lucky Name)", "Baby Name Jyotish", "Lucky Vehicle Number", "Muhurat Finder",
+    ]);
+    expect(items[7]).toHaveAttribute("href", "/baby-name-jyotish");
+    expect(items[8]).toHaveAttribute("href", "/lucky-vehicle-number");
+    expect(items[9]).toHaveAttribute("href", "/muhurat-finder");
+    const grid = items[0].parentElement as HTMLElement;
+    expect(grid.style.gridTemplateColumns).toBe("repeat(2, minmax(0, 1fr))"); // two columns: 10 items make 5 rows
+    expect(grid.className).toContain("grid");
+    const inner = within(nav.getByRole("menu", { name: "Inner Voice" })).getAllByRole("menuitem")[0].parentElement as HTMLElement;
+    expect(inner.style.gridTemplateColumns).toBe("");
+  });
+
+  it("Astrology Seva grid: arrow keys move across the two columns and down the rows", () => {
+    renderAt("/");
+    const items = within(within(document.querySelector("nav")!).getByRole("menu", { name: "Astrology Seva" })).getAllByRole("menuitem");
+    items[0].focus();
+    fireEvent.keyDown(items[0], { key: "ArrowRight" });
+    expect(document.activeElement).toBe(items[1]);
+    fireEvent.keyDown(items[1], { key: "ArrowDown" });
+    expect(document.activeElement).toBe(items[3]); // the item directly below
+    fireEvent.keyDown(items[3], { key: "ArrowUp" });
+    expect(document.activeElement).toBe(items[1]);
+    fireEvent.keyDown(items[1], { key: "ArrowLeft" });
+    expect(document.activeElement).toBe(items[0]);
   });
 
   it("mobile menu shows Shop directly (not in a dropdown) and no Devotion", () => {
