@@ -60,7 +60,7 @@ export function useUpdateApplication() {
 export function useSetSpecialties() {
   const invalidate = useInvalidateApplication();
   return useMutation({
-    mutationFn: (items: { specialtyOptionId: string; isPrimary?: boolean }[]) => astrologerApi.setSpecialties(items),
+    mutationFn: (items: { specialtyOptionId: string; isPrimary?: boolean; customLabel?: string }[]) => astrologerApi.setSpecialties(items),
     onSuccess: () => invalidate(),
     onError: (e) => toast.error(errorMessage(e, "Could not save your specialties")),
   });

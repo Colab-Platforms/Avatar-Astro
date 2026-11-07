@@ -56,13 +56,16 @@ export interface Astrologer {
   avatar: AvatarStyle;
   gallery: string[];
   online: boolean;
-  expertise: Expertise[];
+  /** Free text in practice — specialties are admin-configurable on the backend, not a closed enum. The Expertise union/EXPERTISE_OPTIONS below only constrain the static demo array. */
+  expertise: string[];
   languages: string[];
-  experienceYears: number;
-  rating: number;
-  consultations: number;
-  /** Rupees per minute. */
-  pricePerMin: number;
+  experienceYears: number | null;
+  /** Null when no reviews exist yet — e.g. a just-approved astrologer. Never render as 0. */
+  rating: number | null;
+  /** Null when no consultation history exists yet. Never render as 0. */
+  consultations: number | null;
+  /** Rupees per minute. Null until the astrologer sets one from their workspace — hide the price line, don't render ₹0. */
+  pricePerMin: number | null;
   /** Shown struck through only when a genuine earlier price exists. */
   originalPricePerMin: number | null;
   about: string;
@@ -213,8 +216,8 @@ export const ALL_LANGUAGES = [...new Set(ASTROLOGERS.flatMap((a) => a.languages)
 /** Sorting is offered only when the numbers are real (not sample placeholders). */
 export const hasReliableStats = (list: Astrologer[]): boolean => list.length > 0 && list.every((a) => !a.demo);
 
-export const formatCount = (n: number): string =>
-  n >= 1000 ? `${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k+` : String(n);
+export const formatCount = (n: number | null): string =>
+  n == null ? "—" : n >= 1000 ? `${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k+` : String(n);
 
 export const initials = (name: string): string =>
   name

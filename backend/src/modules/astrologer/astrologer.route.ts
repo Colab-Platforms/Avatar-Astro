@@ -12,6 +12,7 @@ import { uploadImageBufferWithRetry, deleteImageByPublicId, uploadPrivateDocumen
 import { matchesDeclaredType } from "@/utils/fileSignature.js";
 import { isDocumentScanningEnabled, scanBuffer } from "@/services/malwareScan.js";
 import { writeAudit } from "@/modules/admin/audit.js";
+import { sendAstrologerAdminAlertEmail } from "@/utils/mailer.js";
 import * as svc from "./astrologer.service.js";
 
 const PROFILE_PHOTO_FOLDER = "astrologers/profile-photos";
@@ -164,6 +165,14 @@ export function createAstrologerRouter(): Router {
       } catch (err) {
         void deletePrivateDocument(uploaded.publicId, uploaded.resourceType).catch((e) => console.error("[astrologer] cleanup failed for orphaned document:", uploaded.publicId, e));
         throw err;
+      }
+      if (previous?.verificationStatus === "RESUBMISSION_REQUIRED") {
+        void sendAstrologerAdminAlertEmail(
+          "Astrologer document resubmitted",
+          "A requested document was resubmitted",
+          `${app.displayName ?? app.fullLegalName ?? "An applicant"} (${app.email ?? "no email on file"}) resubmitted "${saved.fileName}" after a resubmission request.`,
+          app.id,
+        ).catch(() => {});
       }
       sendResponse(
         res,

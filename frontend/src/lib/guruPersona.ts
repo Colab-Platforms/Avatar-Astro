@@ -35,7 +35,7 @@ const FEATURE_HINT: Record<string, Expertise[]> = {
 export interface PersonaChoice {
   profile: Astrologer;
   /** Expertise areas that matched the question or feature. */
-  matched: Expertise[];
+  matched: string[];
 }
 
 /**
@@ -54,9 +54,13 @@ export function assignPersona(
   const pool = eligibleProfiles(profiles);
   if (pool.length === 0) return null;
   const hints = FEATURE_HINT[featureKey ?? ""] ?? [];
+  // expertise is free text on the type (specialties are admin-configurable, not a closed
+  // enum) — only the fixed set of Expertise keywords below is ever matched; any other
+  // label (e.g. a real astrologer's custom specialty) simply scores no keyword match.
+  const isKnownExpertise = (e: string): e is Expertise => Object.prototype.hasOwnProperty.call(KEYWORDS, e);
   const scored = pool.map((p) => {
-    const matched = p.expertise.filter((e) => KEYWORDS[e].test(question) || hints.includes(e));
-    const score = p.expertise.reduce((s, e) => s + (KEYWORDS[e].test(question) ? 2 : 0) + (hints.includes(e) ? 1 : 0), 0);
+    const matched = p.expertise.filter((e) => (isKnownExpertise(e) && KEYWORDS[e].test(question)) || hints.includes(e as Expertise));
+    const score = p.expertise.reduce((s, e) => s + (isKnownExpertise(e) && KEYWORDS[e].test(question) ? 2 : 0) + (hints.includes(e as Expertise) ? 1 : 0), 0);
     return { p, matched, score };
   });
   const top = Math.max(...scored.map((s) => s.score));

@@ -145,6 +145,11 @@ model AstrologerApplicationSpecialty {
   specialtyOptionId String  @map("specialty_option_id")
   isPrimary         Boolean @default(false) @map("is_primary")
 
+  /// Free text entered when the selected option is the catalog's "Other" entry (key
+  /// "other") — lets an applicant name a specialty that isn't in the configured list
+  /// without needing a SUPERADMIN to add it first. Null/ignored for every other option.
+  customLabel String? @map("custom_label")
+
   application AstrologerApplication     @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   specialty   AstrologerSpecialtyOption @relation(fields: [specialtyOptionId], references: [id], onDelete: Restrict)
 
@@ -324,12 +329,40 @@ model AstrologerProfile {
   applicationId String @unique @map("application_id")
   userId        String @unique @map("user_id")
 
+  /// URL-safe public identifier (route: /astrologers/:slug). Generated once at profile
+  /// creation and never reused, even if the display name later changes.
+  slug String @unique
+
   displayName         String
   bio                 String?
   profilePhotoUrl      String?  @map("profile_photo_url")
   profilePhotoPublicId String?  @map("profile_photo_public_id")
   yearsOfExperience    Int?     @map("years_of_experience")
   languages            String[]
+
+  /// Display-only snapshot of specialty labels, copied from the application at approval
+  /// time (or set directly for seeded demo entries) so the public directory never needs
+  /// to join back through AstrologerApplicationSpecialty just to render chips.
+  specialtyLabels String[] @default([]) @map("specialty_labels")
+
+  /// Astrologer's own self-serve rate (Part 10: post-approval setup). Null until they set
+  /// one from their workspace — the public card/profile must hide pricing, not show 0, when null.
+  pricePerMinute Int? @map("price_per_minute")
+
+  /// No booking/review system exists yet, so these are null/0 for every genuinely approved
+  /// astrologer — only ever populated for isDemo rows seeded for launch-content purposes.
+  /// The public UI must hide these when null rather than render a fake "0.0" / "0 chats".
+  rating             Float?   @map("rating")
+  consultationsCount Int      @default(0) @map("consultations_count")
+  recognition        String?  @map("recognition")
+  galleryUrls        String[] @default([]) @map("gallery_urls")
+  qualifications      String[] @default([]) @map("qualifications")
+
+  /// True only for rows created by prisma/seeds/astrologerDemoProfiles.ts — placeholder
+  /// launch content that never went through the real application/verification pipeline.
+  /// Never set true by the approval flow. Kept so these rows stay identifiable/removable
+  /// later as real supply grows, without needing to guess from other fields.
+  isDemo Boolean @default(false) @map("is_demo")
 
   isPublished      Boolean   @default(false) @map("is_published")
   publishedAt      DateTime? @map("published_at")

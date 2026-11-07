@@ -152,7 +152,7 @@ export default function AstrologerApplicationDetailPage() {
 
         <TabsContent value="professional">
           <dl className="grid gap-4 rounded-xl border border-[#E8E3DC] bg-white p-5 sm:grid-cols-2">
-            <Fact k="Specialties" v={a.specialties.map((s) => `${s.specialty.label}${s.isPrimary ? " (primary)" : ""}`).join(", ")} />
+            <Fact k="Specialties" v={a.specialties.map((s) => `${s.customLabel?.trim() || s.specialty.label}${s.isPrimary ? " (primary)" : ""}`).join(", ")} />
             <Fact k="Languages" v={a.languages.join(", ")} />
             <Fact k="Years of experience" v={a.yearsOfExperience?.toString()} />
             <Fact k="Education / training" v={a.educationBackground} />

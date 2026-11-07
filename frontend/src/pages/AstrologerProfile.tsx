@@ -1,7 +1,8 @@
 import { Link, useParams } from "react-router-dom";
-import { BadgeCheck, Clock3, Star, Users } from "lucide-react";
+import { BadgeCheck, Clock3, Loader2, Star, Users } from "lucide-react";
 import { AstrologerAvatar, ConsultButtons, PriceLine, StatusDot } from "@/components/astrologers/AstrologerCard";
-import { CONSULTATION_ENABLED, formatCount, getAstrologer } from "@/data/astrologers";
+import { CONSULTATION_ENABLED, formatCount } from "@/data/astrologers";
+import { usePublicAstrologer } from "@/features/astrologer/public/hooks";
 
 const Stat = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) => (
   <div className="rounded-xl border border-[#592209]/20 bg-[#FBF5EC] p-4 text-center">
@@ -20,11 +21,20 @@ const Block = ({ title, children }: { title: string; children: React.ReactNode }
   </section>
 );
 
-/** Detailed profile page for one astrologer (route: /astrologers/:slug). */
+/** Detailed profile page for one astrologer (route: /astrologers/:slug), backed by the real published-profile API. */
 const AstrologerProfile = () => {
   const { slug } = useParams();
-  const a = getAstrologer(slug);
+  const query = usePublicAstrologer(slug);
 
+  if (query.isLoading) {
+    return (
+      <section className="flex min-h-[50vh] items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-[#592209]" />
+      </section>
+    );
+  }
+
+  const a = query.data;
   if (!a) {
     return (
       <section className="mx-auto max-w-xl px-4 pb-20 pt-12 text-center" data-testid="astrologer-missing">
@@ -64,13 +74,13 @@ const AstrologerProfile = () => {
           </header>
 
           <div className="grid grid-cols-3 gap-3">
-            <Stat icon={<Clock3 className="h-5 w-5" />} label="Experience" value={`${a.experienceYears} years`} />
-            <Stat icon={<Star className="h-5 w-5" />} label="Rating" value={a.rating.toFixed(1)} />
+            <Stat icon={<Clock3 className="h-5 w-5" />} label="Experience" value={a.experienceYears != null ? `${a.experienceYears} years` : "—"} />
+            <Stat icon={<Star className="h-5 w-5" />} label="Rating" value={a.rating != null ? a.rating.toFixed(1) : "New"} />
             <Stat icon={<Users className="h-5 w-5" />} label="Consultations" value={formatCount(a.consultations)} />
           </div>
 
           <Block title="About">
-            <p>{a.about}</p>
+            <p>{a.about || "No bio provided yet."}</p>
           </Block>
           <Block title="Areas of expertise">
             <ul className="flex flex-wrap gap-2">
@@ -93,9 +103,11 @@ const AstrologerProfile = () => {
               </ul>
             </Block>
           )}
-          <Block title="Availability">
-            <p>{a.availability}</p>
-          </Block>
+          {a.availability && (
+            <Block title="Availability">
+              <p>{a.availability}</p>
+            </Block>
+          )}
           {a.gallery.length > 0 && (
             <Block title="Gallery">
               <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -115,7 +127,7 @@ const AstrologerProfile = () => {
             <div className="mt-2">
               <PriceLine a={a} />
             </div>
-            <p className="mt-1 text-sm text-[#6B4A37]">{a.availability}</p>
+            {a.availability && <p className="mt-1 text-sm text-[#6B4A37]">{a.availability}</p>}
             {CONSULTATION_ENABLED && (
               <div className="mt-4">
                 <ConsultButtons a={a} />

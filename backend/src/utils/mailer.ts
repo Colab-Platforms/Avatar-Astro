@@ -3,7 +3,7 @@ import { Resend } from "resend";
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM_EMAIL = process.env.SMTP_FROM_EMAIL;
-const APP_NAME = process.env.APP_NAME || "Astro";
+const APP_NAME = process.env.APP_NAME || "MyBhagya";
 
 if (!RESEND_API_KEY || !FROM_EMAIL) {
   console.warn(
@@ -152,3 +152,158 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
     throw error;
   }
 };
+
+/**
+ * Astrologer onboarding status emails (Part 13 of the brief). Fire-and-forget by
+ * design: a notification failing must never block or roll back the actual status
+ * change it's reporting on — callers do `void sendAstrologerStatusEmail(...)`, never
+ * await it inside a transaction. Reuses this file's existing Resend client/sender
+ * identity rather than creating a new one.
+ */
+export type AstrologerNotificationStatus =
+  | "SUBMITTED"
+  | "UNDER_REVIEW"
+  | "MORE_INFORMATION_REQUIRED"
+  | "INTERVIEW_PENDING"
+  | "APPROVED"
+  | "REJECTED"
+  | "SUSPENDED"
+  | "REINSTATED";
+
+const ASTROLOGER_STATUS_COPY: Record<AstrologerNotificationStatus, { subject: string; heading: string; body: (reason?: string | null) => string }> = {
+  SUBMITTED: {
+    subject: `Your ${APP_NAME} astrologer application was received`,
+    heading: "Application received",
+    body: () => "Thanks for applying to become an astrologer on MyBhagya. Our team manually reviews every application and document — we'll email you as soon as there's an update.",
+  },
+  UNDER_REVIEW: {
+    subject: `Your ${APP_NAME} astrologer application is under review`,
+    heading: "Application under review",
+    body: () => "Your application has moved into review. No action is needed from you right now.",
+  },
+  MORE_INFORMATION_REQUIRED: {
+    subject: `Action needed on your ${APP_NAME} astrologer application`,
+    heading: "More information needed",
+    body: (reason) => reason || "Please sign in and check your application for details on what's needed.",
+  },
+  INTERVIEW_PENDING: {
+    subject: `Interview step for your ${APP_NAME} astrologer application`,
+    heading: "Interview pending",
+    body: () => "Your application requires a short interview before a final decision. Our team will reach out to schedule it.",
+  },
+  APPROVED: {
+    subject: `You're approved as a ${APP_NAME} astrologer!`,
+    heading: "Application approved",
+    body: () => "Congratulations — your astrologer application has been approved. Sign in to set up and publish your public profile whenever you're ready.",
+  },
+  REJECTED: {
+    subject: `Update on your ${APP_NAME} astrologer application`,
+    heading: "Application not approved",
+    body: (reason) => reason || "After careful review, we're unable to approve your application at this time.",
+  },
+  SUSPENDED: {
+    subject: `Your ${APP_NAME} astrologer access has been suspended`,
+    heading: "Account suspended",
+    body: (reason) => reason || "Your astrologer access has been suspended. Contact support for more information.",
+  },
+  REINSTATED: {
+    subject: `Your ${APP_NAME} astrologer access has been reinstated`,
+    heading: "Access reinstated",
+    body: () => "Your astrologer access has been reinstated and you can publish your profile again whenever you're ready.",
+  },
+};
+
+/**
+ * SUPERADMIN-facing operational alerts (Part 13: "notify SUPERADMIN when a new
+ * application is submitted" / "requested documents are resubmitted"). Reuses the
+ * same SUPPORT_EMAIL team inbox the contact form already delivers to
+ * (routes/inquiryRoutes.ts) rather than inventing a second admin-notification
+ * channel. Silently no-ops if SUPPORT_EMAIL isn't configured — this is an
+ * operational nice-to-have, never something that should block the request that
+ * triggered it.
+ */
+export async function sendAstrologerAdminAlertEmail(subject: string, heading: string, message: string, applicationId: string): Promise<void> {
+  const to = process.env.SUPPORT_EMAIL;
+  if (!resend || !FROM_EMAIL || !to) {
+    console.warn(`[mailer] Skipping astrologer admin alert ("${subject}") — SUPPORT_EMAIL or mailer not configured.`);
+    return;
+  }
+  const reviewUrl = `${process.env.FRONTEND_URL || "http://localhost:3000"}/admin/astrologers/applications/${applicationId}`;
+  try {
+    const { data, error } = await resend.emails.send({
+      from: `${APP_NAME} <${FROM_EMAIL}>`,
+      to,
+      subject,
+      html: `
+            <div style="font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; padding: 40px 20px;">
+            <div style="background-color: #ffffff; border-radius: 24px; padding: 40px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); border: 1px solid #e2e8f0;">
+        <div style="text-align: center; margin-bottom: 32px;">
+            <h1 style="color: #0f172a; font-size: 28px; font-weight: 800; margin: 0; letter-spacing: -0.5px;">${APP_NAME} Admin</h1>
+        </div>
+
+        <h2 style="color: #0f172a; font-size: 22px; font-weight: 700; margin-top: 0; margin-bottom: 12px; line-height: 1.3;">${heading}</h2>
+        <p style="color: #64748b; font-size: 15px; line-height: 1.7; margin-top: 0; margin-bottom: 28px;">${message}</p>
+
+        <a href="${reviewUrl}" style="display: block; text-align: center; background: linear-gradient(135deg, #4f46e5, #6366f1); color: white; text-decoration: none; padding: 16px 32px; border-radius: 14px; font-weight: 700; font-size: 16px; margin-bottom: 24px;">
+            Open in admin panel →
+        </a>
+
+        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+
+        <p style="color: #94a3b8; font-size: 12px; text-align: center; margin: 0; line-height: 1.5;">
+            Or copy this link: <a href="${reviewUrl}" style="color: #6366f1;">${reviewUrl}</a>
+        </p>
+         </div>
+        </div>
+            `,
+    });
+    if (error) {
+      console.error(`[Resend Error] Failed to send astrologer admin alert to ${to}:`, error);
+      return;
+    }
+    console.log(`[Resend Success] Astrologer admin alert sent! ID: ${data?.id}`);
+  } catch (err) {
+    console.error(`[mailer] Error sending astrologer admin alert to ${to}:`, err);
+  }
+}
+
+export async function sendAstrologerStatusEmail(email: string, status: AstrologerNotificationStatus, reason?: string | null): Promise<void> {
+  if (!resend || !FROM_EMAIL) {
+    console.warn(`[mailer] Skipping astrologer ${status} email to ${email} — mailer not configured.`);
+    return;
+  }
+  const copy = ASTROLOGER_STATUS_COPY[status];
+  try {
+    const { data, error } = await resend.emails.send({
+      from: `${APP_NAME} <${FROM_EMAIL}>`,
+      to: email,
+      subject: copy.subject,
+      html: `
+            <div style="font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; padding: 40px 20px;">
+            <div style="background-color: #ffffff; border-radius: 24px; padding: 40px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); border: 1px solid #e2e8f0;">
+        <div style="text-align: center; margin-bottom: 32px;">
+            <h1 style="color: #0f172a; font-size: 28px; font-weight: 800; margin: 0; letter-spacing: -0.5px;">${APP_NAME}</h1>
+        </div>
+
+        <h2 style="color: #0f172a; font-size: 22px; font-weight: 700; margin-top: 0; margin-bottom: 12px; line-height: 1.3;">${copy.heading}</h2>
+        <p style="color: #64748b; font-size: 15px; line-height: 1.7; margin-top: 0; margin-bottom: 24px;">${copy.body(reason)}</p>
+
+        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+
+        <p style="color: #94a3b8; font-size: 12px; text-align: center; margin: 0; line-height: 1.5;">
+            Sign in to your ${APP_NAME} account to see the full details of your astrologer application.
+        </p>
+         </div>
+        </div>
+            `,
+    });
+
+    if (error) {
+      console.error(`[Resend Error] Failed to send astrologer ${status} email to ${email}:`, error);
+      return;
+    }
+    console.log(`[Resend Success] Astrologer ${status} email sent! ID: ${data?.id}`);
+  } catch (err) {
+    console.error(`[mailer] Error sending astrologer ${status} email to ${email}:`, err);
+  }
+}

@@ -3,6 +3,7 @@ import type { Prisma, AstrologerApplication, AstrologerApplicationStatus } from 
 import { ApiError } from "@/utils/ApiError.js";
 import STATUS_CODES from "@/utils/statusCodes.js";
 import { logActivity } from "@/modules/library/library.service.js";
+import { sendAstrologerStatusEmail, sendAstrologerAdminAlertEmail } from "@/utils/mailer.js";
 import { ASTROLOGER_AGREEMENT_TYPES, ASTROLOGER_AGREEMENT_VERSIONS, type AstrologerAgreementTypeKey } from "@/config/astrologerAgreements.js";
 import { REAPPLIABLE_STATUSES, isTransitionAllowed, type DocumentRequirementSnapshotItem, type ReadinessResult } from "./astrologer.types.js";
 
@@ -50,7 +51,7 @@ export function toApplicantSafe(app: ApplicationWithDetail) {
     areasOfExpertise: app.areasOfExpertise,
     languages: app.languages,
     submittedAt: app.submittedAt,
-    specialties: app.specialties.map((s) => ({ id: s.specialtyOptionId, key: s.specialty.key, label: s.specialty.label, isPrimary: s.isPrimary })),
+    specialties: app.specialties.map((s) => ({ id: s.specialtyOptionId, key: s.specialty.key, label: s.customLabel?.trim() || s.specialty.label, isPrimary: s.isPrimary })),
     documents: app.documents.map((d) => ({
       id: d.id,
       requirementId: d.requirementId,
@@ -135,17 +136,30 @@ export async function updateDraftFields(userId: string, patch: Record<string, un
   return (await getLatestApplicationForUser(userId))!;
 }
 
-export async function setSpecialties(userId: string, items: { specialtyOptionId: string; isPrimary?: boolean }[]): Promise<ApplicationWithDetail> {
+export async function setSpecialties(
+  userId: string,
+  items: { specialtyOptionId: string; isPrimary?: boolean; customLabel?: string }[],
+): Promise<ApplicationWithDetail> {
   const app = await loadEditableApplication(userId);
   if (items.length === 0) throw new ApiError("Select at least one specialty.", STATUS_CODES.BAD_REQUEST);
-  const validOptions = await prisma.astrologerSpecialtyOption.findMany({ where: { id: { in: items.map((i) => i.specialtyOptionId) }, isActive: true }, select: { id: true } });
-  const validIds = new Set(validOptions.map((o) => o.id));
-  const filtered = items.filter((i) => validIds.has(i.specialtyOptionId));
+  const validOptions = await prisma.astrologerSpecialtyOption.findMany({ where: { id: { in: items.map((i) => i.specialtyOptionId) }, isActive: true }, select: { id: true, key: true } });
+  const validById = new Map(validOptions.map((o) => [o.id, o]));
+  const filtered = items.filter((i) => validById.has(i.specialtyOptionId));
   if (filtered.length === 0) throw new ApiError("None of the selected specialties are currently valid.", STATUS_CODES.BAD_REQUEST);
+  for (const i of filtered) {
+    if (validById.get(i.specialtyOptionId)!.key === "other" && !i.customLabel?.trim()) {
+      throw new ApiError("Describe your specialty when selecting Other.", STATUS_CODES.BAD_REQUEST);
+    }
+  }
   await prisma.$transaction([
     prisma.astrologerApplicationSpecialty.deleteMany({ where: { applicationId: app.id } }),
     prisma.astrologerApplicationSpecialty.createMany({
-      data: filtered.map((i) => ({ applicationId: app.id, specialtyOptionId: i.specialtyOptionId, isPrimary: Boolean(i.isPrimary) })),
+      data: filtered.map((i) => ({
+        applicationId: app.id,
+        specialtyOptionId: i.specialtyOptionId,
+        isPrimary: Boolean(i.isPrimary),
+        customLabel: validById.get(i.specialtyOptionId)!.key === "other" ? i.customLabel!.trim().slice(0, 80) : null,
+      })),
     }),
   ]);
   return (await getLatestApplicationForUser(userId))!;
@@ -355,6 +369,13 @@ export async function submitApplication(userId: string): Promise<AstrologerAppli
     });
   });
   void logActivity({ userId, kind: "astrologer.application.submitted", title: "Astrologer application submitted" });
+  if (updated.email) void sendAstrologerStatusEmail(updated.email, "SUBMITTED").catch(() => {});
+  void sendAstrologerAdminAlertEmail(
+    "New astrologer application submitted",
+    "New application awaiting review",
+    `${updated.displayName ?? updated.fullLegalName ?? "An applicant"} (${updated.email ?? "no email on file"}) has submitted an astrologer application.`,
+    updated.id,
+  ).catch(() => {});
   return updated;
 }
 
@@ -384,7 +405,11 @@ export async function getOwnAstrologerProfile(userId: string) {
   return profile;
 }
 
-const PROFILE_EDITABLE_FIELDS = ["displayName", "bio", "yearsOfExperience", "languages"] as const;
+const PROFILE_EDITABLE_FIELDS = ["displayName", "bio", "yearsOfExperience", "languages", "pricePerMinute"] as const;
+
+/** Rupees per minute. Null (unset) is always allowed — that's how a profile hides its price line until the astrologer actually sets one. */
+const MIN_PRICE_PER_MINUTE = 1;
+const MAX_PRICE_PER_MINUTE = 10_000;
 
 export async function updateOwnAstrologerProfile(userId: string, patch: Record<string, unknown>) {
   const profile = await getOwnAstrologerProfile(userId);
@@ -394,6 +419,13 @@ export async function updateOwnAstrologerProfile(userId: string, patch: Record<s
   }
   if (Object.keys(data).length === 0) throw new ApiError("No editable fields supplied.", STATUS_CODES.BAD_REQUEST);
   if ("displayName" in data && !String(data.displayName ?? "").trim()) throw new ApiError("Display name cannot be empty.", STATUS_CODES.BAD_REQUEST);
+  if ("pricePerMinute" in data && data.pricePerMinute !== null) {
+    const price = Number(data.pricePerMinute);
+    if (!Number.isInteger(price) || price < MIN_PRICE_PER_MINUTE || price > MAX_PRICE_PER_MINUTE) {
+      throw new ApiError(`Price per minute must be a whole number between ${MIN_PRICE_PER_MINUTE} and ${MAX_PRICE_PER_MINUTE}.`, STATUS_CODES.BAD_REQUEST);
+    }
+    data.pricePerMinute = price;
+  }
   return prisma.astrologerProfile.update({ where: { id: profile.id }, data });
 }
 
