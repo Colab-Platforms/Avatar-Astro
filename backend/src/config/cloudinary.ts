@@ -151,6 +151,16 @@ export const uploadAudioBuffer = (buffer: Buffer, publicId: string): Promise<Upl
   });
 };
 
+/** Deletes an audio asset (resource_type "video", matching uploadAudioBuffer). */
+export const deleteAudioByPublicId = async (publicId: string): Promise<boolean> => {
+  assertConfigured();
+  const result = await cloudinary.uploader.destroy(publicId, {
+    resource_type: "video",
+    invalidate: true,
+  });
+  return result?.result === "ok" || result?.result === "not found";
+};
+
 /**
  * Deletes an asset. Resolves `false` (rather than throwing) when Cloudinary
  * reports anything other than success so callers can decide whether an
@@ -167,6 +177,75 @@ export const deleteImageByPublicId = async (
   });
 
   // "not found" means the asset is already gone — the desired end state.
+  return result?.result === "ok" || result?.result === "not found";
+};
+
+/**
+ * Uploads a publicly downloadable document (e.g. a spiritual book PDF) to Cloudinary.
+ * Unlike uploadPrivateDocumentBuffer, this is plain "upload" delivery (no "authenticated"
+ * type, no signed URL needed) since these files are meant to be freely downloaded from
+ * the public site. PDFs go through as resource_type "raw".
+ *
+ * `publicId` MUST include the real file extension (e.g. "...-172839.pdf"). Unlike
+ * image/video resources, Cloudinary's "raw" delivery has no separate format field — the
+ * extension has to be literally part of the public_id, or the asset is served with
+ * Content-Type: application/octet-stream and no filename extension, which is why files
+ * downloaded that way don't open (see getAttachmentUrl for the matching download path).
+ */
+export const uploadPublicDocumentBuffer = (
+  buffer: Buffer,
+  publicId: string,
+): Promise<UploadedAsset> => {
+  assertConfigured();
+
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { public_id: publicId, resource_type: "raw", overwrite: false, unique_filename: false },
+      (error, result) => {
+        if (error || !result) {
+          console.error("Cloudinary public document upload failed:", error);
+          reject(new ApiError(describeUploadError(error), STATUS_CODES.BAD_REQUEST));
+          return;
+        }
+        resolve({ url: result.secure_url, publicId: result.public_id });
+      },
+    );
+    stream.end(buffer);
+  });
+};
+
+/**
+ * Builds a forced-download URL for a public asset, with a friendly filename instead of
+ * Cloudinary's random public_id. `filename` must not contain a dot — Cloudinary appends
+ * the asset's real extension itself (works for both "raw" and "video"/audio resources).
+ * Without this, clicking a direct secure_url either streams inline (video/audio, no
+ * Content-Disposition at all) or downloads with no extension (raw PDFs with a dotless
+ * public_id), and in both cases the saved file doesn't open as what it actually is.
+ */
+export const getAttachmentUrl = (
+  publicId: string,
+  resourceType: "raw" | "video" | "image",
+  filename: string,
+): string => {
+  assertConfigured();
+  return cloudinary.url(publicId, {
+    resource_type: resourceType,
+    type: "upload",
+    flags: `attachment:${filename}`,
+    secure: true,
+  });
+};
+
+/**
+ * Deletes a public raw document asset (e.g. a spiritual book PDF). Mirrors
+ * deleteImageByPublicId but for resource_type "raw".
+ */
+export const deletePublicDocument = async (publicId: string): Promise<boolean> => {
+  assertConfigured();
+  const result = await cloudinary.uploader.destroy(publicId, {
+    resource_type: "raw",
+    invalidate: true,
+  });
   return result?.result === "ok" || result?.result === "not found";
 };
 

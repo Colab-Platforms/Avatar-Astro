@@ -92,6 +92,9 @@ const AdminShopCategoriesPage = lazy(
 const AdminShopProductsPage = lazy(
   () => import("./features/admin/pages/ShopProducts"),
 );
+const AdminDevotionLibraryPage = lazy(
+  () => import("./features/admin/pages/DevotionLibrary"),
+);
 
 const PujaPage      = lazy(() => import("./pages/Puja/index"));
 const PujaDetail    = lazy(() => import("./pages/Puja/PujaDetail"));
@@ -113,6 +116,8 @@ const ShopDetail    = lazy(() => import("./pages/Shop/ShopDetail"));
 const AvatarLivePage   = lazy(() => import("./pages/AvatarLive/index"));
 const DarshanPage      = lazy(() => import("./pages/AvatarLive/DarshanPage"));
 const DarshanDetail    = lazy(() => import("./pages/AvatarLive/DarshanDetail"));
+const SpiritualBooksPage = lazy(() => import("./pages/devotion/SpiritualBooks"));
+const MantrasChantsPage  = lazy(() => import("./pages/devotion/MantrasChants"));
 const FamilyPage       = lazy(() => import("./pages/AvatarLive/FamilyPage"));
 
 const LazyFallback = () => <div className="min-h-screen" />;
@@ -460,6 +465,26 @@ export const AnimatedRoutes = () => {
           }
         />
         <Route
+          path="/devotion/books"
+          element={
+            <PageTransition>
+              <Suspense fallback={<LazyFallback />}>
+                <SpiritualBooksPage />
+              </Suspense>
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/devotion/mantras-chants"
+          element={
+            <PageTransition>
+              <Suspense fallback={<LazyFallback />}>
+                <MantrasChantsPage />
+              </Suspense>
+            </PageTransition>
+          }
+        />
+        <Route
           path="/avatar-live/family"
           element={
             <PageTransition>
@@ -768,6 +793,14 @@ const App = () => {
                 element={
                   <Suspense fallback={<AdminLazyFallback />}>
                     <LegacyShell><AdminShopProductsPage /></LegacyShell>
+                  </Suspense>
+                }
+              />
+              <Route
+                path="devotion-library"
+                element={
+                  <Suspense fallback={<AdminLazyFallback />}>
+                    <LegacyShell><AdminDevotionLibraryPage /></LegacyShell>
                   </Suspense>
                 }
               />

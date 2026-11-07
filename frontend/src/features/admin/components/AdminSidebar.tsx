@@ -1,7 +1,7 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, Activity, Sparkles, MessageCircleHeart, MessageCircleWarning, Flame, Store, FileText, CreditCard,
-  Plug, BarChart3, ScrollText, LogOut, X, Lock, ShieldCheck, Library, History, AudioLines, UserCog, ClipboardList, Settings,
+  Plug, BarChart3, ScrollText, LogOut, X, Lock, ShieldCheck, Library, History, AudioLines, UserCog, ClipboardList, Settings, BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -53,6 +53,7 @@ const CATALOGUE: NavDef[] = [
   { to: "/admin/chadhawa", label: "Chadhawa catalogue", icon: Flame, mainOnly: true },
   { to: "/admin/shop/categories", label: "Shop categories", icon: Store, mainOnly: true },
   { to: "/admin/shop/products", label: "Shop products", icon: Store, mainOnly: true },
+  { to: "/admin/devotion-library", label: "Spiritual Books & Mantras", icon: BookOpen, mainOnly: true },
 ];
 
 interface AdminSidebarProps {

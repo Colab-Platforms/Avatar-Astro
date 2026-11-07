@@ -1,0 +1,3 @@
+# horary-astrology
+
+Horary astrology — answering specific questions by casting a chart for the moment the question is asked. Covers horary rules and protocols, significator assignment, turned houses, receptions, essential dignities in horary, perfection (how aspects complete), prohibition and frustration, translation and collection of light, void-of-course Moon judgment, strictures against judgment, and specific question types: lost objects, relationships ("will they call?"), career, real estate, health, legal, travel, competitions, and yes/no questions. Use when the user asks a specific answerable question and wants a horary chart interpretation.

@@ -1,0 +1,3 @@
+# evolutionary-astrology
+
+Evolutionary astrology — the Pluto-based soul evolution system developed by Jeff Green. Interprets the natal chart as a map of the soul's journey across lifetimes. Covers Pluto as the soul's evolutionary intent, the lunar nodes as past-life/future direction axis, the four natural evolutionary states (dimly evolved, consensus, individuated, spiritual), planetary nodes, past-life signatures in the chart, the skipped steps concept, karmic analysis through Pluto's polarity point, and soul-level interpretation of all chart factors. Use when the user wants past-life reading, soul purpose analysis, karmic interpretation, or evolutionary growth direction from their chart.
