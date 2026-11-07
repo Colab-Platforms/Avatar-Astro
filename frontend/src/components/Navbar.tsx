@@ -51,16 +51,22 @@ interface DropdownProps {
   items: { name: string; path: string }[];
   currentPath: string;
   lightNav?: boolean;
+  /** Lay the menu out as two columns, read left to right and then down, instead of one tall list. */
+  twoColumns?: boolean;
 }
 
-const NavDropdown = ({ label, menuId, items, currentPath, lightNav }: DropdownProps) => {
+const NavDropdown = ({ label, menuId, items, currentPath, lightNav, twoColumns = false }: DropdownProps) => {
   const [open, setOpen]     = useState(false);
+  const cols                = twoColumns ? 2 : 1;
   const ref                 = useRef<HTMLDivElement>(null);
   const triggerRef          = useRef<HTMLButtonElement>(null);
   const closeTimer          = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isActive            = items.some((i) => i.path === currentPath);
 
-  const openMenu      = () => { if (closeTimer.current) { clearTimeout(closeTimer.current); closeTimer.current = null; } setOpen(true); };
+  const openMenu      = () => {
+    if (closeTimer.current) { clearTimeout(closeTimer.current); closeTimer.current = null; }
+    setOpen(true);
+  };
   const scheduleClose = () => { closeTimer.current = setTimeout(() => setOpen(false), 180); };
 
   useEffect(() => () => { if (closeTimer.current) clearTimeout(closeTimer.current); }, []);
@@ -84,8 +90,16 @@ const NavDropdown = ({ label, menuId, items, currentPath, lightNav }: DropdownPr
 
   const onItemKey = (e: React.KeyboardEvent, idx: number) => {
     const nodes = Array.from(ref.current?.querySelectorAll("a") ?? []) as HTMLElement[];
-    if (e.key === "ArrowDown") { e.preventDefault(); nodes[Math.min(idx + 1, nodes.length - 1)]?.focus(); }
-    if (e.key === "ArrowUp") { e.preventDefault(); if (idx === 0) { triggerRef.current?.focus(); setOpen(false); } else nodes[idx - 1]?.focus(); }
+    if (cols > 1) {
+      // Grid menu: left and right move along a row, up and down move between the two rows.
+      if (e.key === "ArrowRight") { e.preventDefault(); nodes[Math.min(idx + 1, nodes.length - 1)]?.focus(); }
+      if (e.key === "ArrowLeft") { e.preventDefault(); if (idx === 0) { triggerRef.current?.focus(); setOpen(false); } else nodes[idx - 1]?.focus(); }
+      if (e.key === "ArrowDown") { e.preventDefault(); nodes[Math.min(idx + cols, nodes.length - 1)]?.focus(); }
+      if (e.key === "ArrowUp") { e.preventDefault(); if (idx < cols) { triggerRef.current?.focus(); setOpen(false); } else nodes[idx - cols]?.focus(); }
+    } else {
+      if (e.key === "ArrowDown") { e.preventDefault(); nodes[Math.min(idx + 1, nodes.length - 1)]?.focus(); }
+      if (e.key === "ArrowUp") { e.preventDefault(); if (idx === 0) { triggerRef.current?.focus(); setOpen(false); } else nodes[idx - 1]?.focus(); }
+    }
     if (e.key === "Escape") { setOpen(false); triggerRef.current?.focus(); }
     if (e.key === "Tab" && idx === nodes.length - 1) setOpen(false);
   };
@@ -106,19 +120,22 @@ const NavDropdown = ({ label, menuId, items, currentPath, lightNav }: DropdownPr
         {isActive && <span className="absolute -bottom-1 left-0 right-0 h-[2px] bg-[#BC6A4D] rounded-full" />}
       </button>
 
-      <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-3 w-52 ${open ? "pointer-events-auto" : "pointer-events-none"}`}>
+      <div
+        className={`absolute top-full left-1/2 -translate-x-1/2 pt-3 ${twoColumns ? "w-[30rem] max-w-[calc(100vw-2rem)]" : "w-52"} ${open ? "pointer-events-auto" : "pointer-events-none"}`}
+      >
         <div
           id={menuId} role="menu" aria-label={label}
           className={`glass-card rounded-xl border border-border/30 shadow-xl overflow-hidden transition-all duration-200 origin-top
             ${open ? "opacity-100 scale-y-100" : "opacity-0 scale-y-95"}`}
         >
-          <div className="py-2">
+          <div className={twoColumns ? "grid p-2" : "py-2"} style={twoColumns ? { gridTemplateColumns: "repeat(2, minmax(0, 1fr))" } : undefined}>
             {items.map((item, i) => (
               <Link
                 key={item.path} to={item.path} role="menuitem"
                 tabIndex={open ? 0 : -1} onKeyDown={(e) => onItemKey(e, i)}
-                className={`block px-4 py-2.5 font-body text-sm tracking-wide transition-colors duration-200
+                className={`block font-body text-sm tracking-wide transition-colors duration-200
                   focus:outline-none focus-visible:bg-[#BC6A4D]/10
+                  ${twoColumns ? "flex items-center rounded-lg px-4 py-3 leading-snug" : "px-4 py-2.5"}
                   ${currentPath === item.path ? "text-[#BC6A4D] bg-[#BC6A4D]/10" : "text-foreground/70 hover:text-[#BC6A4D] hover:bg-[#BC6A4D]/10"}`}
               >
                 {item.name}
@@ -400,7 +417,7 @@ const Navbar = () => {
               {location.pathname === "/" && <span className="absolute -bottom-1 left-0 right-0 h-[2px] bg-[#BC6A4D] rounded-full" />}
             </Link>
 
-            <NavDropdown label={ASTROLOGY_SEVA_LABEL} menuId="astrology-tools-menu" items={visibleAstrologySeva} currentPath={location.pathname} lightNav={lightNav} />
+            <NavDropdown label={ASTROLOGY_SEVA_LABEL} menuId="astrology-tools-menu" items={visibleAstrologySeva} currentPath={location.pathname} lightNav={lightNav} twoColumns />
             <NavDropdown label={INNER_VOICE_LABEL}      menuId="inner-voice-menu"     items={visibleInnerVoiceLinks} currentPath={location.pathname} lightNav={lightNav} />
 
             <Link to={shopLink.path} className={desktopLinkCls(location.pathname.startsWith(shopLink.path))}>

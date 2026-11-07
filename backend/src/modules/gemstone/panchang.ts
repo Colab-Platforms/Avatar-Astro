@@ -32,7 +32,7 @@
  */
 import * as Astronomy from "astronomy-engine";
 import { computePlanets, siderealSunLongitude } from "./chart.engine.js";
-import { BirthTimeError, resolveBirthInstant, isValidTimeZone } from "./birth.time.js";
+import { BirthTimeError, resolveBirthInstant, resolveLocalInstant, isValidTimeZone } from "./birth.time.js";
 import { sunriseOnLocalDate } from "./date.based.js";
 import { nakshatraOf } from "./analysis.js";
 
@@ -155,15 +155,48 @@ interface Snapshot {
 
 const elongationAt = (d: Date): number => norm(Astronomy.MoonPhase(d));
 
+/** The five limbs that need no month table or boundary search: cheap enough to sample thousands of times (Muhurat Finder). */
+export interface Limbs {
+  elongation: number;
+  tithiNumber: number; // 1-30
+  paksha: Paksha;
+  nakshatra: { name: string; pada: number; lord: string; index: number };
+  moonSign: string;
+  /** Sidereal (Lahiri) Sun longitude, 0-360. */
+  sunLongitude: number;
+  yoga: string;
+  karana: string;
+}
+
+export const limbsAt = (instant: Date): Limbs => {
+  const elongation = elongationAt(instant);
+  const tithiNumber = Math.floor(elongation / 12) + 1;
+  const planets = computePlanets(instant);
+  const moon = planets.Moon;
+  const nak = nakshatraOf(moon.longitude);
+  const yogaIndex = Math.floor(norm(planets.Sun.longitude + moon.longitude) / (360 / 27));
+  const karanaIndex = Math.floor(elongation / 6); // 0-59
+  const karana =
+    karanaIndex === 0 ? "Kimstughna" : karanaIndex === 57 ? "Shakuni" : karanaIndex === 58 ? "Chatushpada" : karanaIndex === 59 ? "Naga" : MOVABLE_KARANAS[(karanaIndex - 1) % 7];
+  return {
+    elongation,
+    tithiNumber,
+    paksha: tithiNumber <= 15 ? "shukla" : "krishna",
+    nakshatra: { name: nak.name, pada: nak.pada, lord: nak.lord, index: nak.index },
+    moonSign: moon.sign,
+    sunLongitude: planets.Sun.longitude,
+    yoga: YOGAS[yogaIndex],
+    karana,
+  };
+};
+
 const snapshotAt = (instant: Date): Snapshot => {
   const months = monthsAround(instant.getUTCFullYear());
   const i = months.findIndex((m) => instant >= m.start && instant < m.end);
   if (i < 0) throw new PanchangError("Could not place that instant in a lunar month.");
   const m = months[i];
 
-  const elong = elongationAt(instant);
-  const tithiNumber = Math.floor(elong / 12) + 1;
-  const paksha: Paksha = tithiNumber <= 15 ? "shukla" : "krishna";
+  const { tithiNumber, paksha, nakshatra, moonSign, yoga, karana } = limbsAt(instant);
 
   const startT = Astronomy.SearchMoonPhase(((tithiNumber - 1) * 12) % 360, new Date(instant.getTime() - 2 * MS_DAY), 2);
   const endT = Astronomy.SearchMoonPhase((tithiNumber * 12) % 360, instant, 2);
@@ -172,22 +205,6 @@ const snapshotAt = (instant: Date): Snapshot => {
   // Purnimanta: the Krishna paksha carries the name of the month that follows.
   const next = months[i + 1];
   const pm = paksha === "krishna" && next ? next : m;
-
-  const planets = computePlanets(instant);
-  const moon = planets.Moon;
-  const nak = nakshatraOf(moon.longitude);
-  const yogaIndex = Math.floor(norm(planets.Sun.longitude + moon.longitude) / (360 / 27));
-  const karanaIndex = Math.floor(elong / 6); // 0-59
-  const karana =
-    karanaIndex === 0
-      ? "Kimstughna"
-      : karanaIndex === 57
-        ? "Shakuni"
-        : karanaIndex === 58
-          ? "Chatushpada"
-          : karanaIndex === 59
-            ? "Naga"
-            : MOVABLE_KARANAS[(karanaIndex - 1) % 7];
 
   return {
     instant,
@@ -198,9 +215,9 @@ const snapshotAt = (instant: Date): Snapshot => {
     tithiNumber,
     tithiStart: startT.date,
     tithiEnd: endT.date,
-    nakshatra: { name: nak.name, pada: nak.pada, lord: nak.lord },
-    moonSign: moon.sign,
-    yoga: YOGAS[yogaIndex],
+    nakshatra: { name: nakshatra.name, pada: nakshatra.pada, lord: nakshatra.lord },
+    moonSign,
+    yoga,
     karana,
   };
 };
@@ -264,8 +281,8 @@ const localHm = (tz: string, at: Date): string =>
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-const sunsetOnLocalDate = (date: { year: number; month: number; day: number }, lat: number, lon: number, tz: string): Date | null => {
-  const noon = resolveBirthInstant({ ...date, hour: 12, minute: 0 }, tz).utc;
+export const sunsetOnLocalDate = (date: { year: number; month: number; day: number }, lat: number, lon: number, tz: string, allowFuture = false): Date | null => {
+  const noon = (allowFuture ? resolveLocalInstant : resolveBirthInstant)({ ...date, hour: 12, minute: 0 }, tz).utc;
   const t = Astronomy.SearchRiseSet(Astronomy.Body.Sun, new Astronomy.Observer(lat, lon, 0), -1, new Date(noon.getTime() - 6 * 3_600_000), 1);
   return t ? t.date : null;
 };
@@ -276,27 +293,30 @@ export interface PanchangArgs {
   /** Local birth time, or null when unknown. */
   time: { hour: number; minute: number } | null;
   place: { latitude: number; longitude: number; timezone: string };
+  /** Planning use (Muhurat Finder): accept any real date, not only birth dates. */
+  allowFuture?: boolean;
 }
 
-export const computePanchang = ({ localDate, time, place }: PanchangArgs): PanchangDetails => {
+export const computePanchang = ({ localDate, time, place, allowFuture = false }: PanchangArgs): PanchangDetails => {
+  const resolve = allowFuture ? resolveLocalInstant : resolveBirthInstant;
   const [year, month, day] = localDate.split("-").map(Number);
   const tz = place.timezone;
   if (!isValidTimeZone(tz)) throw new PanchangError("Unrecognised time zone for the selected birthplace.");
   const date = { year, month, day };
 
-  const rise = sunriseOnLocalDate(date, place.latitude, place.longitude, tz);
-  const set = sunsetOnLocalDate(date, place.latitude, place.longitude, tz);
+  const rise = sunriseOnLocalDate(date, place.latitude, place.longitude, tz, allowFuture);
+  const set = sunsetOnLocalDate(date, place.latitude, place.longitude, tz, allowFuture);
   const notes: string[] = [];
   const uncertainties: string[] = [];
 
   let instant: Date;
   let basis: PanchangDetails["basis"];
   if (time) {
-    instant = resolveBirthInstant({ ...date, ...time }, tz).utc;
+    instant = resolve({ ...date, ...time }, tz).utc;
     basis = "birth-time";
   } else {
     basis = "sunrise";
-    instant = rise ?? resolveBirthInstant({ ...date, hour: 12, minute: 0 }, tz).utc;
+    instant = rise ?? resolve({ ...date, hour: 12, minute: 0 }, tz).utc;
     notes.push(
       rise
         ? "Birth time is unknown, so the Panchang is reckoned at local sunrise on your birth date (the traditional udaya reckoning)."
@@ -304,8 +324,8 @@ export const computePanchang = ({ localDate, time, place }: PanchangArgs): Panch
     );
 
     // Sample the whole local date: anything that changes cannot be fixed without a birth time.
-    const start = resolveBirthInstant({ ...date, hour: 0, minute: 0 }, tz).utc;
-    const end = resolveBirthInstant({ ...date, hour: 23, minute: 59 }, tz).utc;
+    const start = resolve({ ...date, hour: 0, minute: 0 }, tz).utc;
+    const end = resolve({ ...date, hour: 23, minute: 59 }, tz).utc;
     const a = snapshotAt(start);
     const b = snapshotAt(end);
     const pick = (label: string, x: string, y: string) => {

@@ -1064,6 +1064,7 @@ import "@/features/ratna/ratna.css";
 import { kundaliApi } from "@/features/kundali/api";
 import KundaliPanels from "@/features/kundali/KundaliPanels";
 import KundaliGuide from "@/features/kundali/KundaliGuide";
+import KundaliGrowthGuide from "@/features/kundali/KundaliGrowthGuide";
 import FullScreenLoader from "@/components/Loader/FullScreenLoader";
 import { useBackOverride } from "../context/NavigationContext";
 import { Link } from "react-router-dom";
@@ -1633,15 +1634,7 @@ function Results({data,onReset}){
       </div>
 
       {kundali&&<div className="r-sec" style={{marginBottom:40}}><KundaliGuide k={kundali}/></div>}
-      {kundali&&<div className="r-sec" style={{marginBottom:40}}><div style={{...sectionTitle,marginBottom:16}}>The Calculations Behind It</div><KundaliPanels k={kundali}/></div>}
-
-      {/* ── HOW THIS PROFILE WAS MADE ── */}
-      <div className="r-sec" style={{...cardStyle,marginBottom:56,borderColor:"rgba(255,126,71,0.35)"}}>
-        <div style={{...smallLabel,color:"#592209"}}>How this profile was made</div>
-        <p style={{fontSize:16,lineHeight:1.7,color:"#4A2E1F"}}>
-          The Rashis, Nakshatra, Lagna and Panchang above are calculated from your birth date, time and place (Vedic sidereal zodiac, Lahiri ayanamsa); nothing is looked up from a table or generated text. The sign descriptions and insight tabs below are traditional written text for each Rashi, so people with the same Surya Rashi and Life Path read the same text. Your Life Path number is numerology, worked out by adding the digits of your birth date.
-        </p>
-      </div>
+      {kundali&&<div className="r-sec" style={{marginBottom:40}}><div style={{...sectionTitle,marginBottom:16}}>Your Chart Details</div><KundaliPanels k={kundali}/></div>}
 
       {/* ── SUN SIGN + LIFE PATH ── */}
       <div className="r-sec bcp-two">
@@ -1713,6 +1706,8 @@ function Results({data,onReset}){
           </div>
         </div>
       </div>
+
+      {kundali&&<div className="r-sec" style={{marginBottom:40}}><KundaliGrowthGuide k={kundali} sunSign={zodiac} lifePath={lifePath} name={name}/></div>}
 
       <p style={{maxWidth:640,margin:"0 auto 28px",textAlign:"center",fontSize:14,lineHeight:1.7,fontStyle:"italic",color:"#6B4A37"}}>
         This profile is for personal interest and reflection. It describes traditional themes for your Sun sign and Life Path number and is not a prediction or professional advice.

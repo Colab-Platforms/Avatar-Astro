@@ -3,6 +3,8 @@ import AskDivyaSection from "@/features/guru/AskDivyaSection";
 import { FEATURES } from "@/data/featureCatalog";
 import { useFeatureTitle } from "@/hooks/useFeatureTitle";
 import NameDestinyReport from "@/components/NameDestinyReport";
+import CelebrityCarousel from "@/components/NameDestinyReport/sections/CelebrityCarousel";
+import RecommendedSpellings from "@/components/NameDestinyReport/sections/RecommendedSpellings";
 import NameNumerologyEducation from "@/components/NameNumerologyEducation";
 import { buildProfile, checkName, type NameProfile } from "@/lib/numerology";
 import { authedFetch, requireSignIn, SignInRequiredError } from "@/lib/authedFetch";
@@ -100,6 +102,10 @@ export default function NameDestinyReportPage() {
             Explore what the letters of your name and the digits of your birth date add up to in numerology. Namank Jyotish calculates your Destiny, Soul Urge, Personality, Chaldean, Life Path and Birth numbers, shows every step of the working, and gives the traditional meaning of each.
           </p>
 
+          <div id="celebrity-name-changes" style={{ scrollMarginTop: 90 }}>
+            <CelebrityCarousel />
+          </div>
+
           <form id="destiny-form" onSubmit={handleSubmit} noValidate style={{ maxWidth: 600, margin: "0 auto", padding: "32px 0 20px", scrollMarginTop: 100 }}>
             <div style={{ textAlign: "center", marginBottom: 36 }}>
               <h2 style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: "clamp(24px,3.5vw,34px)", fontWeight: 700, color: "#301607", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>
@@ -148,20 +154,11 @@ export default function NameDestinyReportPage() {
 
       {profile && (
         <>
+          <div id="celebrity-name-changes" style={{ scrollMarginTop: 90 }}>
+            <CelebrityCarousel />
+          </div>
+          <RecommendedSpellings profile={profile} />
           <NameDestinyReport profile={profile} />
-          <button
-            onClick={() => {
-              setProfile(null);
-              setForm(emptyForm());
-            }}
-            style={{
-              display: "block", margin: "0 auto", padding: "14px 40px", background: "transparent",
-              border: "1px solid rgba(89,34,9,0.3)", borderRadius: 50, color: "#6B4A37",
-              fontSize: 13, letterSpacing: "0.1em", textTransform: "uppercase", cursor: "pointer",
-            }}
-          >
-            ✦ Analyze Another Name
-          </button>
         </>
       )}
 
