@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, ChevronDown, Radio, LogIn, LogOut, User } from "lucide-react";
 import gsap from "gsap";
+import { useTranslation } from "react-i18next";
+import LanguageSelector from "@/components/LanguageSelector";
 import { ASTROLOGY_SEVA_LABEL, ASTROLOGY_SEVA_NAV, INNER_VOICE_LABEL, INNER_VOICE_NAV } from "@/data/featureCatalog";
 import { useAuthStore } from "@/store/authStore";
 import { useFeatureFlags } from "@/lib/featureFlags";
@@ -31,17 +33,17 @@ const innerVoiceLinks = INNER_VOICE_NAV;
 
 // Avatar Live sub-pages — used by mobile accordion + isActive check
 const avatarLiveLinks = [
-  { name: "Live Darshan",     path: "/avatar-live/darshan" },
-  { name: "Family Functions", path: "/avatar-live/family"  },
+  { name: "Live Darshan",     path: "/avatar-live/darshan", key: "nav.liveDarshan" },
+  { name: "Family Functions", path: "/avatar-live/family",  key: "nav.familyFunctions" },
 ];
 
-const shopLink = { name: "Shop", path: "/shop" };
+const shopLink = { name: "Shop", path: "/shop", key: "nav.shop" };
 
 const topLinks = [
-  { name: "Become an Astrologer", path: "/become-astrologer" },
-  { name: "Blog",    path: "/blog" },
-  { name: "About",   path: "/about" },
-  { name: "Contact", path: "/contact" },
+  { name: "Become an Astrologer", path: "/become-astrologer", key: "nav.becomeAstrologer" },
+  { name: "Blog",    path: "/blog",    key: "nav.blog" },
+  { name: "About",   path: "/about",   key: "nav.about" },
+  { name: "Contact", path: "/contact", key: "nav.contact" },
 ];
 
 // ── Generic desktop dropdown ──────────────────────────────────────────────────
@@ -152,6 +154,7 @@ const NavDropdown = ({ label, menuId, items, currentPath, lightNav, twoColumns =
 interface AvatarLiveDropdownProps { currentPath: string; lightNav?: boolean; }
 
 const AvatarLiveDropdown = ({ currentPath, lightNav }: AvatarLiveDropdownProps) => {
+  const { t } = useTranslation();
   const [open, setOpen]  = useState(false);
   const ref              = useRef<HTMLDivElement>(null);
   const triggerRef       = useRef<HTMLButtonElement>(null);
@@ -192,7 +195,7 @@ const AvatarLiveDropdown = ({ currentPath, lightNav }: AvatarLiveDropdownProps) 
           focus-visible:ring-offset-background rounded-sm
           ${isActive ? "text-[#BC6A4D]" : lightNav ? "text-[#2C1810]/60 hover:text-[#BC6A4D]" : "text-foreground/70 hover:text-[#BC6A4D]"}`}
       >
-        Live
+        {t("nav.live")}
         <ChevronDown size={14} aria-hidden="true" className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
         {isActive && <span className="absolute -bottom-1 left-0 right-0 h-[2px] bg-[#BC6A4D] rounded-full" />}
       </button>
@@ -200,7 +203,7 @@ const AvatarLiveDropdown = ({ currentPath, lightNav }: AvatarLiveDropdownProps) 
       {/* Panel — positioned left-aligned so it doesn't clip */}
       <div className={`absolute top-full left-0 pt-3 ${open ? "pointer-events-auto" : "pointer-events-none"}`} style={{ width: 340 }}>
         <div
-          id="avatar-live-menu" role="menu" aria-label="Live"
+          id="avatar-live-menu" role="menu" aria-label={t("nav.live")}
           className={`rounded-2xl overflow-hidden transition-all duration-200 origin-top-left
             ${open ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
           style={{
@@ -220,12 +223,12 @@ const AvatarLiveDropdown = ({ currentPath, lightNav }: AvatarLiveDropdownProps) 
           >
             <Radio style={{ width: 13, height: 13, color: '#BC6A4D', flexShrink: 0 }} />
             <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.2em', color: '#BC6A4D', textTransform: 'uppercase', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-              Live Hub
+              {t("nav.liveHub")}
             </span>
             {/* Live pulse dot */}
             <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, color: '#E53935', fontWeight: 700, letterSpacing: '0.08em' }}>
               <span style={{ width: 6, height: 6, background: '#E53935', borderRadius: '50%', flexShrink: 0 }} />
-              LIVE
+              {t("nav.liveBadge")}
             </span>
           </Link>
 
@@ -248,7 +251,7 @@ const AvatarLiveDropdown = ({ currentPath, lightNav }: AvatarLiveDropdownProps) 
             </div>
             <div>
               <p style={{ fontSize: 15, fontWeight: 800, color: '#2C1810', marginBottom: 5, fontFamily: "'DM Sans', system-ui, sans-serif", letterSpacing: '0.04em', lineHeight: 1 }}>
-                Live Darshan
+                {t("nav.liveDarshan")}
               </p>
               <p style={{ fontSize: 12, color: 'rgba(44,24,16,0.55)', lineHeight: 1.55, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
                 Watch live temple darshans, aartis, and spiritual broadcasts from famous temples across India.
@@ -332,6 +335,7 @@ const MobileAccordion = ({ label, items, currentPath, onNavigate }: MobileAccord
 
 // ── Main Navbar ───────────────────────────────────────────────────────────────
 const Navbar = () => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen]   = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location              = useLocation();
@@ -339,8 +343,10 @@ const Navbar = () => {
   const isAuthenticated       = useAuthStore((s) => s.isAuthenticated);
   // Seva the admin switched off disappear from the menus (the API refuses them too).
   const { isPathDisabled } = useFeatureFlags();
-  const visibleAstrologySeva = astrologySeva.filter((l) => !isPathDisabled(l.path, true));
-  const visibleInnerVoiceLinks = innerVoiceLinks.filter((l) => !isPathDisabled(l.path, true));
+  const featureName = (f: { id: string; name: string }) => t(`features.${f.id}.name`, { defaultValue: f.name });
+  const visibleAstrologySeva = astrologySeva.filter((l) => !isPathDisabled(l.path, true)).map((l) => ({ ...l, name: featureName(l) }));
+  const visibleInnerVoiceLinks = innerVoiceLinks.filter((l) => !isPathDisabled(l.path, true)).map((l) => ({ ...l, name: featureName(l) }));
+  const linkName = (l: { key: string; name: string }) => t(l.key, { defaultValue: l.name });
   const user                  = useAuthStore((s) => s.user);
   const logoutMutation        = useLogoutMutation();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -348,7 +354,7 @@ const Navbar = () => {
   const displayName =
     [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
     user?.email?.split("@")[0] ||
-    "Account";
+    t("nav.account");
 
   const handleLogout = async () => {
     await logoutMutation.mutateAsync();
@@ -406,22 +412,22 @@ const Navbar = () => {
             <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-[#BC6A4D] transition-transform duration-500 group-hover:rotate-90">
               <path d="M12 2L14.8 9.2L22 12L14.8 14.8L12 22L9.2 14.8L2 12L9.2 9.2L12 2Z" />
             </svg>
-            <span className="font-home-serif text-xl font-semibold tracking-[0.02em] text-[#BC6A4D]">MyBhagya</span>
+            <span className="font-home-serif text-xl font-semibold tracking-[0.02em] text-[#BC6A4D]">Bhagya</span>
           </Link>
 
           {/* ── Desktop nav ─────────────────────────────────────────────── */}
           <div className="hidden lg:flex items-center gap-8">
 
             <Link to="/" className={desktopLinkCls(location.pathname === "/")}>
-              Home
+              {t("nav.home")}
               {location.pathname === "/" && <span className="absolute -bottom-1 left-0 right-0 h-[2px] bg-[#BC6A4D] rounded-full" />}
             </Link>
 
-            <NavDropdown label={ASTROLOGY_SEVA_LABEL} menuId="astrology-tools-menu" items={visibleAstrologySeva} currentPath={location.pathname} lightNav={lightNav} twoColumns />
-            <NavDropdown label={INNER_VOICE_LABEL}      menuId="inner-voice-menu"     items={visibleInnerVoiceLinks} currentPath={location.pathname} lightNav={lightNav} />
+            <NavDropdown label={t("nav.astrologySeva", { defaultValue: ASTROLOGY_SEVA_LABEL })} menuId="astrology-tools-menu" items={visibleAstrologySeva} currentPath={location.pathname} lightNav={lightNav} twoColumns />
+            <NavDropdown label={t("nav.innerVoice", { defaultValue: INNER_VOICE_LABEL })}      menuId="inner-voice-menu"     items={visibleInnerVoiceLinks} currentPath={location.pathname} lightNav={lightNav} />
 
             <Link to={shopLink.path} className={desktopLinkCls(location.pathname.startsWith(shopLink.path))}>
-              {shopLink.name}
+              {linkName(shopLink)}
               {location.pathname.startsWith(shopLink.path) && <span className="absolute -bottom-1 left-0 right-0 h-[2px] bg-[#BC6A4D] rounded-full" />}
             </Link>
 
@@ -430,14 +436,14 @@ const Navbar = () => {
 
             {topLinks.map((link) => (
               <Link key={link.path} to={link.path} className={desktopLinkCls(location.pathname === link.path)}>
-                {link.name}
+                {linkName(link)}
                 {location.pathname === link.path && <span className="absolute -bottom-1 left-0 right-0 h-[2px] bg-[#BC6A4D] rounded-full" />}
               </Link>
             ))}
 
             {isAuthenticated ? (
               <div className="flex items-center gap-3 pl-2 border-l border-border/30">
-                <Link to="/dashboard" title="Open your dashboard" className={`flex items-center gap-1.5 font-display text-xs tracking-wider hover:underline ${lightNav ? "text-[#2C1810]/70" : "text-foreground/70"}`}>
+                <Link to="/dashboard" title={t("nav.openDashboard")} className={`flex items-center gap-1.5 font-display text-xs tracking-wider hover:underline ${lightNav ? "text-[#2C1810]/70" : "text-foreground/70"}`}>
                   <User size={14} className="text-[#BC6A4D]" />
                   {displayName}
                 </Link>
@@ -448,7 +454,7 @@ const Navbar = () => {
                   className="inline-flex items-center gap-1.5 font-display text-xs font-semibold tracking-wider text-[#BC6A4D] transition-opacity hover:opacity-80 disabled:opacity-50"
                 >
                   <LogOut size={14} />
-                  Sign out
+                  {t("nav.signOut")}
                 </button>
               </div>
             ) : (
@@ -457,16 +463,17 @@ const Navbar = () => {
                 className="inline-flex items-center gap-1.5 rounded-full border border-[#BC6A4D]/40 bg-[#BC6A4D]/10 px-4 py-2 font-display text-xs font-semibold tracking-wider text-[#BC6A4D] transition-colors hover:bg-[#BC6A4D]/20"
               >
                 <LogIn size={14} />
-                Sign in
+                {t("nav.signIn")}
               </Link>
             )}
+            <LanguageSelector lightNav={lightNav} />
           </div>
 
           {/* Mobile hamburger */}
           <button
             onClick={() => setIsOpen((v) => !v)}
             className={`lg:hidden p-2 ${lightNav ? "text-[#2C1810]/70" : "text-foreground/70"} hover:text-primary transition-colors`}
-            aria-label={isOpen ? "Close menu" : "Open menu"}
+            aria-label={isOpen ? t("nav.closeMenu") : t("nav.openMenu")}
             aria-expanded={isOpen}
             aria-controls="mobile-menu"
           >
@@ -486,11 +493,11 @@ const Navbar = () => {
                   location.pathname === "/" ? "text-[#BC6A4D]" : "text-foreground/70 hover:text-[#BC6A4D]"
                 }`}
               >
-                Home
+                {t("nav.home")}
               </Link>
 
-              <MobileAccordion label={ASTROLOGY_SEVA_LABEL} items={visibleAstrologySeva}  currentPath={location.pathname} onNavigate={() => setIsOpen(false)} />
-              <MobileAccordion label={INNER_VOICE_LABEL}     items={visibleInnerVoiceLinks} currentPath={location.pathname} onNavigate={() => setIsOpen(false)} />
+              <MobileAccordion label={t("nav.astrologySeva", { defaultValue: ASTROLOGY_SEVA_LABEL })} items={visibleAstrologySeva}  currentPath={location.pathname} onNavigate={() => setIsOpen(false)} />
+              <MobileAccordion label={t("nav.innerVoice", { defaultValue: INNER_VOICE_LABEL })}     items={visibleInnerVoiceLinks} currentPath={location.pathname} onNavigate={() => setIsOpen(false)} />
 
               <Link
                 to={shopLink.path}
@@ -499,13 +506,13 @@ const Navbar = () => {
                   location.pathname.startsWith(shopLink.path) ? "text-[#BC6A4D]" : "text-foreground/70 hover:text-[#BC6A4D]"
                 }`}
               >
-                {shopLink.name}
+                {linkName(shopLink)}
               </Link>
 
               {/* Avatar Live accordion — links to hub + sub-pages */}
               <MobileAccordion
-                label="Live"
-                items={[{ name: "Live Hub", path: "/avatar-live" }, ...avatarLiveLinks]}
+                label={t("nav.live")}
+                items={[{ name: t("nav.liveHub"), path: "/avatar-live" }, ...avatarLiveLinks.map((l) => ({ ...l, name: linkName(l) }))]}
                 currentPath={location.pathname}
                 onNavigate={() => setIsOpen(false)}
               />
@@ -517,7 +524,7 @@ const Navbar = () => {
                     location.pathname === link.path ? "text-[#BC6A4D]" : "text-foreground/70 hover:text-[#BC6A4D]"
                   }`}
                 >
-                  {link.name}
+                  {linkName(link)}
                 </Link>
               ))}
 
@@ -527,7 +534,7 @@ const Navbar = () => {
                   onClick={() => setIsOpen(false)}
                   className="mobile-nav-link font-display text-base font-medium px-2 py-2 rounded-lg text-[#BC6A4D]"
                 >
-                  My Dashboard
+                  {t("nav.myDashboard")}
                 </Link>
               )}
               {isAuthenticated ? (
@@ -539,7 +546,7 @@ const Navbar = () => {
                   }}
                   className="mobile-nav-link font-display text-base font-medium px-2 py-2 rounded-lg text-[#BC6A4D] text-left"
                 >
-                  Sign out ({displayName})
+                  {t("nav.signOut")} ({displayName})
                 </button>
               ) : (
                 <Link
@@ -547,23 +554,24 @@ const Navbar = () => {
                   onClick={() => setIsOpen(false)}
                   className="mobile-nav-link font-display text-base font-medium px-2 py-2 rounded-lg text-[#BC6A4D]"
                 >
-                  Sign in
+                  {t("nav.signIn")}
                 </Link>
               )}
+              <div className="mobile-nav-link px-2 pt-2"><LanguageSelector variant="mobile" /></div>
             </div>
           </div>
         )}
       <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
         <AlertDialogContent className="border-[#592209]/20 bg-[#FBF5EC] text-[#301607]">
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-display text-lg tracking-wide text-[#592209]">Confirm Logout</AlertDialogTitle>
+            <AlertDialogTitle className="font-display text-lg tracking-wide text-[#592209]">{t("nav.confirmLogoutTitle")}</AlertDialogTitle>
             <AlertDialogDescription className="text-foreground/70">
-              Are you sure you want to sign out of your account?
+              {t("nav.confirmLogoutBody")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="border-[#592209]/30 bg-transparent text-[#301607] hover:bg-[#592209]/5 hover:text-[#301607]">
-              Cancel
+              {t("common.cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
@@ -572,7 +580,7 @@ const Navbar = () => {
               }}
               className="bg-[#592209] text-[#F5E9D6] hover:bg-[#461B07]"
             >
-              Sign out
+              {t("nav.signOut")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,4 +1,4 @@
-import { type Language } from "./useLanguageDetection";
+import i18n from "@/i18n";
 
 // ── Clearly off-topic — ONLY these patterns are rejected ─────────────────────
 // Anything not matching here is accepted (spiritual questions are always personal)
@@ -20,24 +20,20 @@ const OFF_TOPIC: RegExp[] = [
   /\b(translate.*document|translate.*text)\b/i,
 ];
 
-const REJECTION: Record<Language, string> = {
-  hindi:
-    "Mujhe maafi chahiye, main sirf jeevan ke personal muddon mein — career, rishte, swasthya, finances aur adhyatm mein — aapki madad kar sakta hoon.",
-  english:
-    "I am here only to listen to matters of the heart and spirit — career, relationships, health, finances, and spiritual guidance.",
-  hinglish:
-    "Main sirf aapke jeevan, career, relationships, health aur spiritual guidance se jude sawalon mein madad kar sakta hoon.",
-};
-
+/**
+ * The guard only turns away messages that are clearly off-topic (code, jokes, recipes, scores...). It no longer rejects a short
+ * message: a greeting such as "hi" or a request such as "talk in Tamil" is a real message and goes to the assistant, whose prompt
+ * already has a greeting rule. (A word-count rule here used to answer "hi" with the off-topic refusal, so it never reached the AI.)
+ */
 export function useConsultationGuard() {
   const isAllowedTopic = (text: string): boolean => {
     const q = text.toLowerCase().trim();
-    if (!q || q.split(/\s+/).length < 2) return false; // too short
-    // Reject only if clearly off-topic
+    if (!q) return false;
     return !OFF_TOPIC.some((p) => p.test(q));
   };
 
-  const getRejectionMessage = (lang: Language): string => REJECTION[lang];
+  /** The refusal, in the language chosen in the MyBhagya selector. */
+  const getRejectionMessage = (): string => i18n.t("voice.offTopic");
 
   return { isAllowedTopic, getRejectionMessage };
 }

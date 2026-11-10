@@ -1,5 +1,6 @@
 import { API_BASE_URL } from "@/lib/api";
 import { authedFetch, SignInRequiredError } from "@/lib/authedFetch";
+import i18n from "@/i18n";
 
 export interface ScreenOutcome {
   action: "ALLOW" | "ESCALATED" | "OFF_TOPIC";
@@ -22,9 +23,9 @@ export async function screenChatMessage(message: string, lastGuruReply?: string)
     });
   } catch (e) {
     if (e instanceof SignInRequiredError) throw e;
-    throw new ChatScreenError("We couldn't reach the server. Check your connection and try again.");
+    throw new ChatScreenError(i18n.t("guru.errors.screenNetwork"));
   }
   const data = await res.json().catch(() => null);
-  if (!res.ok || !data?.success) throw new ChatScreenError(data?.error || "Could not process your message. Please try again.");
+  if (!res.ok || !data?.success) throw new ChatScreenError(data?.error || i18n.t("guru.errors.screenFailed"));
   return data.data as ScreenOutcome;
 }

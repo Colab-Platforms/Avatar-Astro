@@ -3,6 +3,7 @@ import {
   generateHumanReadableInterpretation,
   generateCompatibilityAnalysis
 } from '../services/chatgptService.js';
+import { requestLanguage } from '../utils/responseLanguage.js';
 import { getDailyHoroscope, parseSign, toPlainText, HoroscopeUnavailableError } from '../services/dailyHoroscopeService.js';
 
 // Generate human-readable birth chart interpretation
@@ -17,7 +18,7 @@ export const interpretBirthChart = async (req: Request, res: Response) => {
       });
     }
 
-    const interpretation = await generateHumanReadableInterpretation(birthData);
+    const interpretation = await generateHumanReadableInterpretation(birthData, requestLanguage(req));
 
     res.json({
       success: true,
@@ -66,7 +67,8 @@ export const generateAICompatibility = async (req: Request, res: Response) => {
 
     const analysis = await generateCompatibilityAnalysis(
       sign1 as string,
-      sign2 as string
+      sign2 as string,
+      requestLanguage(req)
     );
 
     res.json({

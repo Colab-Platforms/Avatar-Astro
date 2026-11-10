@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { useAuthStore } from "@/store/authStore";
 import { refreshAccessToken } from "@/lib/authClient";
+import { APP_LANGUAGE_HEADER, chosenLanguage } from "@/i18n/aiLanguage";
 
 /** Thrown when an action needs a signed-in user and there is no valid session. */
 export class SignInRequiredError extends Error {
@@ -60,8 +61,13 @@ export function requireSignIn(resume?: () => void): boolean {
 export async function authedFetch(input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> {
   if (!requireSignIn()) throw new SignInRequiredError();
 
+  // The visitor's chosen language rides along on every account request, so the server can write AI replies in it.
+  const lang = chosenLanguage();
   const send = (token: string) =>
-    fetch(input, { ...init, headers: { ...(init.headers as Record<string, string>), Authorization: `Bearer ${token}` } });
+    fetch(input, {
+      ...init,
+      headers: { ...(init.headers as Record<string, string>), ...(lang ? { [APP_LANGUAGE_HEADER]: lang } : {}), Authorization: `Bearer ${token}` },
+    });
 
   let res = await send(useAuthStore.getState().accessToken as string);
   if (res.status === 401) {

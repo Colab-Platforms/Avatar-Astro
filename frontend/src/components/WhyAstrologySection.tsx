@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Tx from "@/i18n/Tx";
 import { ChevronDown } from "lucide-react";
 
 /** Paragraphs shown before "Read more". */
@@ -20,9 +21,9 @@ const WhyAstrologySection = () => {
     <div className="container relative mx-auto px-4 md:px-6">
       <div className="grid gap-8 lg:grid-cols-[0.8fr_1.4fr] lg:gap-16">
         <div className="text-center lg:text-left">
-          <p className="hl-eyebrow mb-3">Understand Astrology</p>
+          <p className="hl-eyebrow mb-3"><Tx k="home.why.eyebrow" /></p>
           <h2 id="home-why-h" className="hl-serif text-3xl font-bold leading-tight text-home-ink sm:text-4xl md:text-[2.5rem]">
-            Why do <span className="text-home-gerua">You</span> need astrology?
+            <Tx k="home.why.lead" /> <span className="text-home-gerua"><Tx k="home.why.accent" /></span> <Tx k="home.why.tail" />
           </h2>
           <div
             aria-hidden="true"
@@ -45,7 +46,7 @@ const WhyAstrologySection = () => {
             onClick={() => setOpen((v) => !v)}
             className="hl-btn-ghost hl-btn-sm inline-flex items-center gap-1.5"
           >
-            {open ? "Read less" : "Read more"}
+            <Tx k={open ? "common.readLess" : "common.readMore"} />
             <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden="true" />
           </button>
         </div>

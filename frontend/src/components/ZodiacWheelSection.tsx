@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import Tx from "@/i18n/Tx";
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -96,10 +97,10 @@ export const ZodiacWheelSection = () => {
             className="hl-serif mb-2 font-semibold leading-[1.15] tracking-[0.04em]"
             style={{ fontSize: 'clamp(28px, 4.6vw, 50px)' }}
           >
-            <span className="block text-home-gerua md:inline">DAILY HOROSCOPE</span>
+            <span className="block text-home-gerua md:inline"><Tx k="home.zodiac.title" /></span>
           </h2>
           <p className="font-home-sans text-base tracking-wide text-home-muted md:text-[18.5px]">
-            Explore the cosmic wisdom of each celestial sign
+            <Tx k="home.zodiac.body" />
           </p>
         </div>
 
@@ -207,7 +208,7 @@ export const ZodiacWheelSection = () => {
                   className="inline-flex h-11 items-center gap-2 px-3 font-home-sans text-base font-semibold text-home-ink transition-opacity hover:opacity-70 motion-reduce:transition-none"
                   style={{ letterSpacing: '0.1em' }}
                 >
-                  Read Full Profile
+                  <Tx k="home.zodiac.readProfile" />
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </div>

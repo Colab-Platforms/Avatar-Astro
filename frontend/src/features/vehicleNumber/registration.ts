@@ -5,6 +5,8 @@
  * The number is the last one to four digits. Leading zeros are kept: 0007 stays 0007 (it is never read as 7). A shorter number
  * typed on its own ("7", "07") is shown padded to four digits, as registration numbers are printed, and the page says so.
  */
+import i18n from "@/i18n";
+
 
 export type Scope = "number" | "rto-number" | "all";
 
@@ -41,12 +43,12 @@ const EXAMPLES = "Examples: MH 12 AB 0007, DL 3C 1234, 22 BH 0007 AB, or just 00
 
 export function parseRegistration(raw: string): ParseResult {
   const clean = (raw || "").toUpperCase().replace(/[\s\-._/]/g, "");
-  if (!clean) return { ok: false, error: "Please enter a registration number." };
-  if (!/^[A-Z0-9]+$/.test(clean)) return { ok: false, error: `Registration numbers use letters and digits only. ${EXAMPLES}` };
+  if (!clean) return { ok: false, error: i18n.t("vehicle.error.regEmpty") };
+  if (!/^[A-Z0-9]+$/.test(clean)) return { ok: false, error: `${i18n.t("vehicle.error.regChars")} ${EXAMPLES}` };
 
   const finish = (v: Omit<Registration, "padded" | "display"> & { digits: string }): ParseResult => {
     const { digits, ...rest } = v;
-    if (/^0+$/.test(digits)) return { ok: false, error: "0000 is not a registration number: numbers run from 0001 to 9999." };
+    if (/^0+$/.test(digits)) return { ok: false, error: i18n.t("vehicle.error.regZero") };
     const number = digits.padStart(4, "0");
     const display = rest.kind === "bh" ? `${rest.bhYear} BH ${number}${rest.series ? ` ${rest.series}` : ""}` : [rest.state, rest.rto, rest.series, number].filter(Boolean).join(" ");
     return { ok: true, value: { ...rest, number, padded: digits.length < 4, display } };
@@ -60,7 +62,7 @@ export function parseRegistration(raw: string): ParseResult {
   const m = STANDARD.exec(clean);
   if (m) return finish({ kind: "standard", state: m[1], rto: m[2], series: m[3] || undefined, number: "", digits: m[4] });
 
-  return { ok: false, error: `We could not read that registration number. ${EXAMPLES}` };
+  return { ok: false, error: `${i18n.t("vehicle.error.regUnreadable")} ${EXAMPLES}` };
 }
 
 /** The digits that are evaluated for a registration, and a note when the chosen scope could not be applied in full. */

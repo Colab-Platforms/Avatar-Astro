@@ -11,8 +11,10 @@ import GuruTopHeader from "@/components/ai-guru/GuruTopHeader";
 import GuruProgressBar from "@/components/ai-guru/GuruProgressBar";
 import GuruConversation from "@/components/ai-guru/GuruConversation";
 import GuruChatInput from "@/components/ai-guru/GuruChatInput";
-import LanguageControls from "@/components/ai-guru/LanguageControls";
-import { detectLanguage, buildLanguageDirective, type InputLanguageChoice, type ReplyLanguageChoice } from "@/components/ai-guru/languages";
+import { useTranslation } from "react-i18next";
+import { detectInputLanguage, replyLanguage } from "@/i18n/aiLanguage";
+import { localeInfo } from "@/i18n/languages";
+import { intlTag } from "@/features/muhurat/format";
 import { aiChat } from "@/lib/aiClient";
 import { screenChatMessage } from "@/lib/chatScreen";
 import { SignInRequiredError } from "@/lib/authedFetch";
@@ -1108,6 +1110,8 @@ function DiagnosisReport({report,onSaveMantra,userName,onAskFollowUp,onDownload,
 
 export default function InnerVoiceChat(){
   useFeatureTitle(FEATURES.guru);
+  // Every visible word and every Guru reply follows the language chosen in the MyBhagya selector (there is no separate chat language).
+  const {t,i18n}=useTranslation();
   const [activeTab,setActiveTab]=useState("consultation");
   // Guidance profile for this conversation (from the astrologer data) and the result the user came from, if any.
   const [persona,setPersona]=useState<PersonaChoice|null>(null);
@@ -1145,7 +1149,7 @@ export default function InnerVoiceChat(){
   };
   const [topic,setTopic]=useState<GuruTopic|null>(null);
   const authUser=useAuthStore(s=>s.user) as {firstName?:string;lastName?:string;email?:string}|null;
-  const displayName=[authUser?.firstName,authUser?.lastName].filter(Boolean).join(" ")||authUser?.email?.split("@")[0]||"Seeker";
+  const displayName=[authUser?.firstName,authUser?.lastName].filter(Boolean).join(" ")||authUser?.email?.split("@")[0]||t("guru.sidebar.seeker");
   const [messages,setMessages]=useState([]);
   const [input,setInput]=useState("");
   const [loading,setLoading]=useState(false);
@@ -1158,8 +1162,6 @@ export default function InnerVoiceChat(){
   const [activePanel,setActivePanel]=useState(null);
   const [sidebarOpen,setSidebarOpen]=useState(false);
   const [suggestionPulse,setSuggestionPulse]=useState(false);
-  const [inputLanguage,setInputLanguage]=useState<InputLanguageChoice>("auto");
-  const [replyLanguage,setReplyLanguage]=useState<ReplyLanguageChoice>("hinglish"); // Hinglish by default; the user can change it
   const [savedMantras,setSavedMantras]=useState(()=>{try{return JSON.parse(localStorage.getItem("iv_saved_mantras")||"[]");}catch{return [];}});
   const [chatSessions,setChatSessions]=useState(()=>{try{return JSON.parse(localStorage.getItem("iv_chat_sessions")||"[]");}catch{return [];}});
   const conversationIdRef=useRef(null); // the saved conversation this chat belongs to (set by the server)
@@ -1284,13 +1286,13 @@ export default function InnerVoiceChat(){
           setInput("");if(textareaRef.current)textareaRef.current.style.height="24px";
           setMessages(prev=>[...prev.filter(m=>!m.error),
             {role:"user",content:msg,local:true},
-            {role:"guru",local:true,escalated:outcome.action==="ESCALATED",content:{type:"gathering",message:outcome.reply||"Thank you. We will contact you shortly."}}]);
+            {role:"guru",local:true,escalated:outcome.action==="ESCALATED",content:{type:"gathering",message:screenReply(outcome)}}]);
           setLoading(false);
           return;
         }
       }catch(e){
         setLoading(false);
-        if(!(e instanceof SignInRequiredError))alert(e instanceof Error?e.message:"Could not process your message. Please try again.");
+        if(!(e instanceof SignInRequiredError))alert(e instanceof Error?e.message:t("guru.errors.screenFailed"));
         return;
       }
     }
@@ -1302,7 +1304,7 @@ export default function InnerVoiceChat(){
     }catch(e){
       setLoading(false);
       if(e instanceof DailyChatLimitError&&e.session)useDailyChatLimitStore.getState().setSession(e.session);
-      else alert(e instanceof Error?e.message:"Could not start the chat session. Please try again.");
+      else alert(e instanceof Error?e.message:t("guru.limit.startFailed"));
       return;
     }
     setInput("");if(textareaRef.current)textareaRef.current.style.height="24px";
@@ -1328,17 +1330,20 @@ export default function InnerVoiceChat(){
       // History excludes the failed-reply bubbles and the message being sent now.
       const history=buildHistory().filter(h=>h.content);
       const baseHistory=retry?history.slice(0,-1):history;
-      const detected=detectLanguage(msg);
-      const languageDirective=buildLanguageDirective(inputLanguage,replyLanguage,detected);
+      // Typing language is detected automatically and is only a hint: the reply is always in the language chosen in the selector.
+      const detected=detectInputLanguage(msg);
+      const replyIn=replyLanguage();
+      const detectedName=detected==="hinglish"?"Hinglish (Hindi in Roman letters)":localeInfo(detected).english;
+      const inputHint=`The user's latest message appears to be written in ${detectedName}. Understand it in whatever language it is written, but write your reply only in ${localeInfo(replyIn).english}.`;
       // The reply is shown only after the typing moment; a reply that arrives early waits for it, a late one is shown at once.
-      const [data]=await Promise.all([askGuru(baseHistory,msg,languageDirective,conversationIdRef.current||undefined,extraSystem,allowedReferences(grounding)),typingDone]);
+      const [data]=await Promise.all([askGuru(baseHistory,msg,inputHint,conversationIdRef.current||undefined,extraSystem,allowedReferences(grounding),replyIn),typingDone]);
       if(data.conversationId){conversationIdRef.current=data.conversationId;syncUrl(data.conversationId);}
       setMessages(prev=>[...prev.filter(m=>!m.error),{role:"guru",content:data}]);
       if(data.progress)setProgress(data.progress);
       if(data.readyForDiagnosis)setReadyForDiagnosis(true);
     }catch(e){
       console.error("[AI Guru] Consultation request failed:",e);
-      const errMsg=e instanceof GuruChatError?e.message:"Something went wrong. Please try again.";
+      const errMsg=e instanceof GuruChatError?e.message:t("common.genericError");
       setMessages(prev=>[...prev.filter(m=>!m.error),{role:"guru",error:true,retryText:msg,content:{type:"gathering",message:errMsg}}]);
     }finally{setLoading(false);setSearching(false);setPersona(personaRef.current);}
   };
@@ -1376,6 +1381,12 @@ export default function InnerVoiceChat(){
     finally{setDownloading(false);}
   };
 
+  // The fixed replies for a screened message (contact request / off-topic) are shown in the chosen language; English keeps the server's own wording.
+  const screenReply=(o:{action:string;reply?:string})=>{
+    const key=o.action==="ESCALATED"?"guru.screen.escalated":o.action==="OFF_TOPIC"?"guru.screen.offTopic":"guru.screen.thanks";
+    return i18n.language==="en"?(o.reply||t(key)):t(key);
+  };
+
   const handleFollowUp=(prompt)=>{setActiveTab("consultation");setTimeout(()=>send(prompt),100);};
   const onKeyDown=(e)=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send(input);}};
 
@@ -1399,10 +1410,10 @@ export default function InnerVoiceChat(){
   const toggleVoice=()=>{
     const speechWindow=window as unknown as {SpeechRecognition?:unknown;webkitSpeechRecognition?:unknown};
     const SR=(speechWindow.SpeechRecognition||speechWindow.webkitSpeechRecognition) as (new()=>any)|undefined; // eslint-disable-line @typescript-eslint/no-explicit-any
-    if(!SR){alert("Voice input requires Chrome or Edge browser.");return;}
+    if(!SR){alert(t("guru.composer.voiceUnsupported"));return;}
     if(listening){recognitionRef.current?.stop();setListening(false);return;}
     const rec=new SR();
-    rec.continuous=true;rec.interimResults=true;rec.lang="hi-IN";
+    rec.continuous=true;rec.interimResults=true;rec.lang=localeInfo(i18n.language).tag; // speech recognition follows the chosen language
     rec.onresult=(e)=>{const transcript=Array.from(e.results).map(r=>r[0].transcript).join(" ");setInput(transcript);setTimeout(autoResize,10);};
     rec.onerror=()=>setListening(false);rec.onend=()=>setListening(false);
     rec.start();recognitionRef.current=rec;setListening(true);
@@ -1431,8 +1442,6 @@ export default function InnerVoiceChat(){
     setReport(null);
     setSuggestionPulse(false);
     setSidebarOpen(false);
-    setInputLanguage("auto");
-    setReplyLanguage("hinglish");
     if(textareaRef.current)textareaRef.current.style.height="24px";
     requestAnimationFrame(()=>{
       mainScrollRef.current?.scrollTo({top:0,behavior:"smooth"});
@@ -1450,21 +1459,15 @@ export default function InnerVoiceChat(){
 
   const composer=(
     <>
-      <LanguageControls
-        inputLanguage={inputLanguage}
-        onInputLanguageChange={setInputLanguage}
-        replyLanguage={replyLanguage}
-        onReplyLanguageChange={setReplyLanguage}
-      />
       {chatLimit.status==="ACTIVE"&&(
         <div className="mb-2 text-right text-xs font-medium text-[#592209]" aria-live="off">
-          Free session time left: {formatRemaining(chatLimit.remainingSeconds)}
+          {t("guru.limit.timeLeft",{time:formatRemaining(chatLimit.remainingSeconds)})}
         </div>
       )}
       {limitReached&&(
         <div className="mb-2 rounded-xl border border-[#592209]/20 bg-[#592209]/5 px-4 py-2.5 text-sm text-[#592209]" role="status">
-          Your free 5-minute chat for today has ended.
-          {chatLimit.nextAvailableAt&&<> You can chat again after {new Date(chatLimit.nextAvailableAt).toLocaleString("en-IN",{timeZone:"Asia/Kolkata",dateStyle:"medium",timeStyle:"short"})} IST.</>}
+          {t("guru.limit.ended")}
+          {chatLimit.nextAvailableAt&&<> {t("guru.limit.again",{when:new Date(chatLimit.nextAvailableAt).toLocaleString(intlTag(),{timeZone:"Asia/Kolkata",dateStyle:"medium",timeStyle:"short"})})}</>}
         </div>
       )}
       <GuruChatInput
@@ -1522,11 +1525,11 @@ export default function InnerVoiceChat(){
                       <motion.div key="restoring" className="flex flex-col items-center gap-4 py-24 text-center" data-testid="guru-restoring" role="status" aria-live="polite">
                         {restore==="error"?(
                           <>
-                            <p className="text-sm text-[#592209]">We couldn't load your previous conversation. Your messages are safe.</p>
-                            <button type="button" className="rounded-xl border border-[#592209]/30 bg-[#592209]/10 px-4 py-2 text-sm font-medium text-[#592209]" onClick={()=>setRestoreTick(t=>t+1)}>Try again</button>
+                            <p className="text-sm text-[#592209]">{t("guru.chat.restoreFailed")}</p>
+                            <button type="button" className="rounded-xl border border-[#592209]/30 bg-[#592209]/10 px-4 py-2 text-sm font-medium text-[#592209]" onClick={()=>setRestoreTick(n=>n+1)}>{t("common.retry")}</button>
                           </>
                         ):(
-                          <p className="text-sm text-[#592209]/80">Restoring your conversation…</p>
+                          <p className="text-sm text-[#592209]/80">{t("guru.chat.restoring")}</p>
                         )}
                       </motion.div>
                     ) : messages.length===0&&searching ? (
@@ -1547,7 +1550,7 @@ export default function InnerVoiceChat(){
                         exit={{opacity:0}}
                         transition={{duration:0.3,ease:"easeInOut"}}
                       >
-                        {resultName&&<p className="mb-3 text-center text-xs text-muted-foreground" data-testid="result-context-note">Using your {resultName} result for this conversation.</p>}
+                        {resultName&&<p className="mb-3 text-center text-xs text-muted-foreground" data-testid="result-context-note">{t("guru.chat.resultNote",{name:resultName})}</p>}
                         <GuruConversation ref={bottomRef} messages={messages} guruName={persona?.profile.name} loading={loading&&!searching} onRetry={(t)=>send(t,{retry:true})} />
                         {searching&&<div className="mt-4"><SearchingGuru/></div>}
                       </motion.div>

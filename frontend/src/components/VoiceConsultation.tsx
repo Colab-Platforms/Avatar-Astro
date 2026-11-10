@@ -1,67 +1,21 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import { useTextToSpeech } from "../hooks/useTextToSpeech";
-import { useLanguageDetection, type Language } from "../hooks/useLanguageDetection";
 import { useConsultationGuard } from "../hooks/useConsultationGuard";
 import { API_BASE_URL } from "@/lib/api";
-import { aiChat } from "@/lib/aiClient";
-import { authedFetch, SignInRequiredError } from '@/lib/authedFetch';
+import { authedFetch } from '@/lib/authedFetch';
+import { askPandit, VoiceChatError } from "@/lib/voiceChat";
+import { replyLanguage } from "@/i18n/aiLanguage";
+import { detectLanguageRequest } from "@/i18n/languageRequest";
+import { LOCALES, isLocale, localeInfo, type LocaleCode } from "@/i18n/languages";
+import { setLanguage } from "@/i18n";
+import LanguageSelector from "@/components/LanguageSelector";
 
 // ── API ──────────────────────────────────────────────────────────────────────
 
 // Sarvam AI TTS — routed through /api/tts serverless function (no CORS issues).
 export const TTS_PROVIDER = "sarvam" as const;
-
-// ── Transliteration ──────────────────────────────────────────────────────────
-const DEVA_WORDS: Record<string, string> = {
-  "मुझे":"mujhe","मेरा":"mera","मेरी":"meri","मेरे":"mere","मैं":"main",
-  "आप":"aap","हूं":"hoon","हूँ":"hoon","है":"hai","हैं":"hain",
-  "था":"tha","थी":"thi","थे":"the","हो":"ho","होगा":"hoga","होगी":"hogi",
-  "नहीं":"nahi","क्या":"kya","क्यों":"kyun","कैसे":"kaise","कब":"kab",
-  "कहाँ":"kahan","कितना":"kitna","और":"aur","लेकिन":"lekin","क्योंकि":"kyunki",
-  "तो":"toh","पर":"par","में":"mein","से":"se","को":"ko","का":"ka","की":"ki","के":"ke",
-  "भी":"bhi","बहुत":"bahut","थोड़ा":"thoda","ज्यादा":"zyada","सिर्फ":"sirf",
-  "अभी":"abhi","पहले":"pehle","बाद":"baad","फिर":"phir","अगर":"agar",
-  "जब":"jab","हाँ":"haan","ठीक":"theek","सही":"sahi","अच्छा":"achha",
-  "नौकरी":"naukri","पैसा":"paisa","रिश्ता":"rishta","विवाह":"vivah",
-  "परिवार":"parivar","स्वास्थ्य":"swasthya","तनाव":"tanav","घर":"ghar",
-  "प्यार":"pyaar","शादी":"shaadi","जिंदगी":"zindagi","काम":"kaam",
-  "करियर":"career","जॉब":"job","प्रॉब्लम":"problem","समझ":"samajh",
-  "पंडित":"Pandit","जी":"ji","आपके":"aapke",
-  "दोस्त":"dost","भाई":"bhai","बहन":"behen","माँ":"maa","बाप":"baap",
-  "बच्चा":"bachcha","चिंता":"chinta","डर":"darr","खुश":"khush",
-  "दुखी":"dukhi","प्रेम":"prem","सोचना":"sochna",
-  "मिलता":"milta","रहना":"rehna","भविष्य":"bhavishy","शांति":"shanti",
-  "जीवन":"jeevan","आध्यात्म":"adhyatm","कर्म":"karma","मन":"mann",
-  "धर्म":"dharm","ईश्वर":"ishwar",
-};
-const DEVA_CHARS: Record<string, string> = {
-  "क":"k","ख":"kh","ग":"g","घ":"gh","ङ":"ng",
-  "च":"ch","छ":"chh","ज":"j","झ":"jh","ञ":"ny",
-  "ट":"t","ठ":"th","ड":"d","ढ":"dh","ण":"n",
-  "त":"t","थ":"th","द":"d","ध":"dh","न":"n",
-  "प":"p","फ":"ph","ब":"b","भ":"bh","म":"m",
-  "य":"y","र":"r","ल":"l","व":"v","श":"sh",
-  "ष":"sh","स":"s","ह":"h","ळ":"l",
-  "अ":"a","आ":"aa","इ":"i","ई":"ee","उ":"u","ऊ":"oo","ऋ":"ri",
-  "ए":"e","ऐ":"ai","ओ":"o","औ":"au",
-  "ा":"aa","ि":"i","ी":"ee","ु":"u","ू":"oo",
-  "े":"e","ै":"ai","ो":"o","ौ":"au",
-  "ं":"n","ः":"h","ँ":"n","्":"",
-  "।":"."," ॥":".",
-  "०":"0","१":"1","२":"2","३":"3","४":"4",
-  "५":"5","६":"6","७":"7","८":"8","९":"9",
-};
-function transliterateToRoman(text: string): string {
-  if (!/[ऀ-ॿ]/.test(text)) return text;
-  let result = text;
-  for (const [key, val] of Object.entries(DEVA_WORDS))
-    result = result.replace(new RegExp(key, "g"), val);
-  result = result.replace(/[ऀ-ॿ]+/g, (m) =>
-    m.split("").map((c) => DEVA_CHARS[c] ?? "").join("")
-  );
-  return result.replace(/\s{2,}/g, " ").trim();
-}
 
 // ── Sarvam AI TTS ─────────────────────────────────────────────────────────────
 let _sarvamAudio: HTMLAudioElement | null = null;
@@ -111,54 +65,28 @@ async function speakSarvam(
   }
 }
 
-// ── Translation helper ────────────────────────────────────────────────────────
-async function translateText(text: string, targetLang: Language): Promise<string> {
-  const instruction =
-    targetLang === "english"
-      ? "Translate the following to natural Indian English. Preserve the spiritual, warm, compassionate tone. Output ONLY the translation, no explanation."
-      : targetLang === "hindi"
-      ? "Translate the following to natural Hindi written entirely in Roman letters — absolutely NO Devanagari script. Preserve the spiritual tone. Output ONLY the translation."
-      : "Translate the following to natural Hinglish — Hindi words in Roman letters mixed with English, as spoken in urban India. Preserve the spiritual tone. Output ONLY the translation.";
-  try {
-    const res = await aiChat({
-        temperature: 0.3,
-        max_tokens: 400,
-        messages: [
-          { role: "system", content: instruction },
-          { role: "user", content: text },
-        ],
-      });
-    const data = await res.json();
-    return transliterateToRoman((data.choices?.[0]?.message?.content || "").trim()) || text;
-  } catch {
-    return text;
-  }
-}
-
 // ── System Prompt ─────────────────────────────────────────────────────────────
-const VOICE_SYSTEM_PROMPT = `You are Pandit Rameshwar Ji, a revered Jyotish Acharya and Vedic astrologer with 40 years of experience in temples, Vedic scriptures, and spiritual healing. A seeker is speaking to you live and your words will be read aloud.
+const VOICE_SYSTEM_PROMPT = `You are Pandit Rameshwar Ji, a warm, compassionate spiritual guide in the Vedic tradition. You are an AI guide, not a human pandit: you have no personal life or years of practice, and you cannot see the seeker's birth chart. A seeker is speaking to you live and your words will be read aloud.
 
 You ONLY discuss: career, job, business, relationships, marriage, family, health, finances, stress, anxiety, spirituality, karma, life purpose, emotional struggles, inner peace, future guidance. Politely refuse every other topic.
 
-LANGUAGE RULE — always match the seeker's style exactly:
-- If they used Roman Hindi / Hinglish words (meri, nahi, bahut, karo, etc.) → respond in Hinglish
-- If they spoke English → respond in English
-- Never use Devanagari script in your response — always write in Roman letters
+LANGUAGE RULE — write ONLY in the language given in the language instruction that follows, in that language's own script, whatever language the seeker speaks or types in. Earlier turns may be in another language: still answer in the instructed language. If the seeker asks you to change language, just answer in the instructed language.
 
 YOUR IDENTITY:
-You are an experienced Indian astrologer — like a Jyotish Acharya, temple priest, or Vedic guru. You speak with calm authority, deep warmth, and spiritual wisdom. You sound like a real Pandit Ji on a phone consultation — never a chatbot or life coach.
+You speak with the calm authority, deep warmth and spiritual wisdom of a Jyotish Acharya, temple priest or Vedic guru, like a caring elder of the family. You sound like a kind Pandit Ji on a phone consultation, never like a chatbot or a life coach.
+You are honest about what you are: if the seeker asks whether you are a real person, a human, a bot or an AI, say plainly, in the instructed language and in your warm voice, that you are an AI guide offering reflective guidance inspired by the Vedic tradition and not a human pandit, then gently return to their concern. Never claim to be human, never claim personal experience or years of practice, and never claim to have seen their chart.
 
 CRITICAL — GREETING RULE (highest priority):
 If the seeker says ONLY a greeting (hello, hi, namaste, namaskaar, hey, good morning, good evening, good night, how are you, or similar) with NO other concern shared:
 - Respond with ONLY a warm welcome and ONE question asking how you can help.
 - Maximum 2 sentences. Do NOT mention any planet, kundli, Shani, Rahu, dosha, remedy, puja, or emotional state.
 - Do NOT assume they have a problem, stress, or any issue.
-- Example: "Namaste beta, main Pandit Rameshwar Ji hoon, aapka swagat hai. Aaj aap kis vishay mein margdarshan chahte hain?"
+- Example (say it in the instructed language; this one is Hinglish): "Namaste beta, main Pandit Rameshwar Ji hoon, aapka swagat hai. Aaj aap kis vishay mein margdarshan chahte hain?"
 
 RESPONSE STRUCTURE — only after the seeker shares a real concern:
 1. Acknowledge what they shared with empathy (1 sentence, like a grandfather would speak)
 2. Ask ONE focused follow-up question to understand their situation better — do NOT jump to remedies immediately
-3. Only after gathering enough context (2–3 exchanges): give a Vedic astrological interpretation and remedy
+3. Only after gathering enough context (2–3 exchanges): give a Vedic astrological interpretation and remedy, offered as a traditional perspective for reflection, never as a certain prediction
 
 RULES:
 - MAXIMUM 5 sentences total — this is read aloud
@@ -171,21 +99,20 @@ RULES:
 - For anxiety / stress → Gayatri Mantra, Mahamrityunjaya Mantra, Pranayam, Surya Arghya
 - For financial problems → Lakshmi puja, Kubera mantra, feeding crows on Saturday
 - Your guidance comes from: Bhagavad Gita, Vedas, Brihat Parashara Hora Shastra, Lal Kitab, temple traditions
-- Never mention AI, ChatGPT, OpenAI, or any technology
-- Never say you are artificial, a bot, or a program
-- You are Pandit Rameshwar Ji — a real, wise, compassionate human Vedic astrologer`;
+- Never name any AI company, model or product, and never describe how you work internally
+- Never use fear or guilt, never give certain predictions, and never say a paid ritual or remedy is required
+- You are Pandit Rameshwar Ji, a wise, compassionate AI spiritual guide: warm, calm and honest`;
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type MicState = "idle" | "listening" | "processing" | "speaking" | "error";
 
 interface ConvEntry {
   role: "user" | "pandit";
-  text: string;          // original text in detectedLang
-  ttsLang: string;       // TTS lang for original
-  detectedLang: Language;
-  translations: Partial<Record<Language, string>>; // translation cache
-  displayLang: Language; // language shown in text bubble
-  audioLang: Language;   // language used for playback
+  text: string;
+  /** BCP 47 tag used for speech output of this entry (the language it was written in). */
+  ttsLang: string;
+  /** The language the entry was written in (sets the lang attribute, so the right font is used). */
+  lang: LocaleCode;
 }
 
 interface AudioState {
@@ -273,6 +200,38 @@ const VC_CSS = `
 @keyframes vc-sb{0%,100%{transform:scaleY(.3);opacity:.45;}50%{transform:scaleY(1);opacity:1;}}
 `;
 
+/** Additions for the language selector row, the typed-message box, the typing indicator and the error state. */
+const VC_CSS_EXTRA = `
+.vc-topbar{flex-wrap:wrap;}
+.vc-lang-full{width:100%;order:9;}
+.vc-form{display:flex;gap:8px;width:100%;max-width:460px;}
+.vc-input{flex:1;min-width:0;padding:10px 14px;border-radius:10px;border:1px solid rgba(89,34,9,0.3);background:#fff;color:#301607;font-size:15px;outline:none;}
+.vc-input:focus{border-color:#592209;box-shadow:0 0 0 3px rgba(229,138,69,0.2);}
+.vc-input:disabled{opacity:.6;}
+.vc-send{padding:10px 16px;border-radius:10px;border:1px solid rgba(89,34,9,.6);background:#592209;color:#F5E9D6;font-size:14px;font-weight:600;cursor:pointer;}
+.vc-send:disabled{opacity:.45;cursor:default;}
+.vc-typing{display:flex;align-items:center;gap:5px;padding:12px 16px;background:#FBF5EC;border:1px solid rgba(89,34,9,0.1);border-radius:4px 14px 14px 14px;color:#6B4A37;font-size:13px;font-style:italic;}
+.vc-dot{width:6px;height:6px;border-radius:50%;background:#592209;animation:vc-dot 0.9s ease-in-out infinite;}
+.vc-dot:nth-child(3){animation-delay:.15s;}
+.vc-dot:nth-child(4){animation-delay:.3s;}
+@keyframes vc-dot{0%,100%{opacity:.3;transform:translateY(0);}50%{opacity:1;transform:translateY(-3px);}}
+.vc-error{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:12px 16px;background:#FBF5EC;border:1px solid rgba(155,44,29,0.35);border-radius:4px 14px 14px 14px;color:#7A2417;font-size:14px;}
+.vc-retry{padding:6px 14px;border-radius:999px;border:1px solid rgba(89,34,9,.5);background:#fff;color:#592209;font-size:13px;font-weight:600;cursor:pointer;}
+.vc-retry:hover{background:#F5E9D6;}
+.vc-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px;}
+.vc-chips-label{width:100%;font-size:12px;color:#6B4A37;}
+.vc-chip{padding:7px 13px;border-radius:999px;border:1px solid rgba(89,34,9,.3);background:#fff;color:#301607;font-size:13px;cursor:pointer;text-align:left;}
+.vc-chip:hover{border-color:#E58A45;background:#F5E9D6;}
+.vc-notice{max-width:460px;text-align:center;font-size:12px;color:#6B4A37;}
+.vc-msg-text{overflow-wrap:anywhere;white-space:pre-line;}
+/* This screen's own rules name DM Sans directly, which would override the Indic font of the chosen language. */
+html[data-indic] .vc-root,html[data-indic] .vc-root *{font-family:var(--indic-sans),'DM Sans',system-ui,sans-serif;}
+.vc-mic-area{padding:12px 20px 14px;gap:8px;}
+.vc-mic-ring{width:72px;height:72px;}
+.vc-mic-icon{font-size:28px;}
+@media (max-width:640px){.vc-mic-area{padding:14px 14px 20px;}.vc-msg-body{max-width:90%;}}
+`;
+
 const WAVE_HEIGHTS = [
   0.35,0.55,0.80,0.65,0.90,0.50,1.00,0.70,0.45,0.85,
   0.60,0.95,0.40,0.75,0.55,0.88,0.45,0.70,0.60,0.38,
@@ -286,36 +245,88 @@ function estimateDuration(text: string) {
   return Math.max((text.replace(/\s+/g," ").length / 5) / (130 / 60), 2);
 }
 
+/** Chrome writes Punjabi (Gurmukhi) speech as pa-Guru-IN; the other nine are language-IN. */
+const speechTag = (code: LocaleCode): string => (code === "pa" ? "pa-Guru-IN" : localeInfo(code).tag);
+const ttsTag = (code: LocaleCode): string => localeInfo(code).tag;
+const nativeNameForTag = (tag: string): string => LOCALES.find((l) => l.tag === tag)?.native ?? tag;
+
+/** True on a narrow phone screen, where the language selector gets its own full-width row. */
+function useNarrow(): boolean {
+  const query = "(max-width: 640px)";
+  const [narrow, setNarrow] = useState(() => typeof window !== "undefined" && !!window.matchMedia?.(query)?.matches);
+  useEffect(() => {
+    const mq = window.matchMedia?.(query);
+    if (!mq) return;
+    const on = () => setNarrow(mq.matches);
+    mq.addEventListener?.("change", on);
+    return () => mq.removeEventListener?.("change", on);
+  }, []);
+  return narrow;
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function VoiceConsultation() {
+  // The ONE language preference of the whole site. There is no language state of its own here: the selector below is the shared one,
+  // and this component only reads it.
+  const { t, i18n } = useTranslation();
+  const lang: LocaleCode = isLocale(i18n.language) ? i18n.language : "en";
+  const narrow = useNarrow();
+
   const [micState, setMicState]       = useState<MicState>("idle");
   const [transcript, setTranscript]   = useState("");
   const [conversation, setConversation] = useState<ConvEntry[]>([]);
   const [errorMsg, setErrorMsg]       = useState("");
+  const [notice, setNotice]           = useState("");
+  const [input, setInput]             = useState("");
+  /** The message whose reply failed, shown with a Retry button. The message itself is already in the conversation. */
+  const [failure, setFailure]         = useState<{ text: string; message: string } | null>(null);
   const [audio, setAudio]             = useState<AudioState>({
     playingIdx: null, paused: false, progress: 0, elapsed: 0, duration: 0,
   });
-  const [translating, setTranslating] = useState<Record<string, boolean>>({});
 
   const transcriptRef  = useRef("");
   const abortRef       = useRef(false);
+  const busyRef        = useRef(false); // one message at a time: blocks a double tap, a double Enter, and mic + typing at once
   const historyRef     = useRef<HTMLDivElement>(null);
   const audioTimerRef  = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioStartRef  = useRef(0);
   const audioPauseElRef = useRef(0);
-  const convRef        = useRef(conversation);
-  useEffect(() => { convRef.current = conversation; }, [conversation]);
+  const inputRef       = useRef<HTMLInputElement>(null);
+  const convRef        = useRef<ConvEntry[]>([]);
+  const rootRef        = useRef<HTMLDivElement>(null);
 
   const tts = useTextToSpeech();
-  const { detectLanguage, getTTSLang } = useLanguageDetection();
   const { isAllowedTopic, getRejectionMessage } = useConsultationGuard();
+
+  const pushEntry = (entry: ConvEntry): number => {
+    convRef.current = [...convRef.current, entry];
+    setConversation(convRef.current);
+    return convRef.current.length - 1;
+  };
+
+  // The page around this screen is taller than the window (the site adds 32px of top padding to a full-height page), which cut off
+  // the microphone. Fit the screen to what is actually visible, now and whenever the window or its toolbars change size.
+  useLayoutEffect(() => {
+    const fit = () => {
+      const el = rootRef.current;
+      if (!el) return;
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      const visible = Math.max(360, window.innerHeight - top);
+      const room = el.parentElement?.clientHeight ?? 0;
+      el.style.height = `${room > 0 ? Math.min(room, visible) : visible}px`;
+    };
+    fit();
+    window.addEventListener("resize", fit);
+    window.addEventListener("orientationchange", fit);
+    return () => { window.removeEventListener("resize", fit); window.removeEventListener("orientationchange", fit); };
+  }, []);
 
   // CSS injection
   useEffect(() => {
     const id = "vc-style-tag";
     if (!document.getElementById(id)) {
       const s = document.createElement("style");
-      s.id = id; s.textContent = VC_CSS;
+      s.id = id; s.textContent = VC_CSS + VC_CSS_EXTRA;
       document.head.appendChild(s);
     }
     return () => { document.getElementById(id)?.remove(); };
@@ -323,8 +334,8 @@ export default function VoiceConsultation() {
 
   // Auto-scroll
   useEffect(() => {
-    historyRef.current?.scrollTo({ top: historyRef.current.scrollHeight, behavior: "smooth" });
-  }, [conversation]);
+    historyRef.current?.scrollTo?.({ top: historyRef.current.scrollHeight, behavior: "smooth" });
+  }, [conversation, micState, failure]);
 
   // ── Audio helpers ─────────────────────────────────────────────────────────
   const clearAudioTimer = useCallback(() => {
@@ -373,10 +384,12 @@ export default function VoiceConsultation() {
       if (result === "error") {
         console.error("[TTS] Sarvam TTS failed — no fallback voice used.");
         setAudio((a) => ({ ...a, playingIdx: null, paused: false }));
+        // The text reply stays on screen; the visitor is told, in their language, that no voice was played.
+        setNotice(t("voice.ttsUnavailable", { language: nativeNameForTag(ttsLang) }));
         onDone?.();
       }
     });
-  }, [clearAudioTimer]);
+  }, [clearAudioTimer, t]);
 
   const pauseAudio = useCallback(() => {
     if (_sarvamAudio && !_sarvamAudio.paused) _sarvamAudio.pause();
@@ -408,150 +421,85 @@ export default function VoiceConsultation() {
     setAudio({ playingIdx: null, paused: false, progress: 0, elapsed: 0, duration: 0 });
   }, [clearAudioTimer]);
 
-  // ── Language switching ────────────────────────────────────────────────────
-  const handleDisplayLangChange = useCallback(async (idx: number, lang: Language) => {
-    const entry = convRef.current[idx];
-    if (!entry) return;
-    // Already cached or it's the original
-    if (lang === entry.detectedLang || entry.translations[lang]) {
-      setConversation((c) => c.map((e, i) => i === idx ? { ...e, displayLang: lang } : e));
-      return;
-    }
-    setTranslating((t) => ({ ...t, [`${idx}-display`]: true }));
-    const translated = await translateText(entry.text, lang);
-    setConversation((c) => c.map((e, i) =>
-      i === idx ? { ...e, displayLang: lang, translations: { ...e.translations, [lang]: translated } } : e
-    ));
-    setTranslating((t) => { const n = { ...t }; delete n[`${idx}-display`]; return n; });
-  }, []);
-
-  const handleAudioLangChange = useCallback(async (idx: number, lang: Language) => {
-    const entry = convRef.current[idx];
-    if (!entry) return;
-    if (lang === entry.detectedLang || entry.translations[lang]) {
-      setConversation((c) => c.map((e, i) => i === idx ? { ...e, audioLang: lang } : e));
-      return;
-    }
-    setTranslating((t) => ({ ...t, [`${idx}-audio`]: true }));
-    const translated = await translateText(entry.text, lang);
-    setConversation((c) => c.map((e, i) =>
-      i === idx ? { ...e, audioLang: lang, translations: { ...e.translations, [lang]: translated } } : e
-    ));
-    setTranslating((t) => { const n = { ...t }; delete n[`${idx}-audio`]; return n; });
-  }, []);
-
-  // ── Speech recognition ─────────────────────────────────────────────────────
+  // ── Speech recognition (in the chosen language) ─────────────────────────────────────────────────────────────────────
   const { start, stop, supported } = useSpeechRecognition({
-    lang: "en-IN",
+    lang: speechTag(lang),
     onResult: (text) => {
-      const roman = transliterateToRoman(text);
-      setTranscript(roman);
-      transcriptRef.current = roman;
+      setTranscript(text);
+      transcriptRef.current = text;
     },
     onEnd: () => {
       const text = transcriptRef.current.trim();
       transcriptRef.current = "";
       setTranscript("");
-      if (!text) { setMicState("idle"); return; }
-      processUserSpeech(text);
+      if (!text) { setMicState((s) => (s === "listening" ? "idle" : s)); return; }
+      void submit(text);
     },
     onError: (err) => {
-      const msg = err === "no-speech"
-        ? "No speech detected. Please tap and try again."
-        : "Microphone error. Please check permissions.";
+      // The browser may not know this language: say so and keep the typed chat working.
+      if (err === "language-not-supported") {
+        setNotice(t("voice.speechLanguage", { language: localeInfo(lang).native }));
+        setMicState("idle");
+        return;
+      }
+      const msg = err === "no-speech" ? t("voice.noSpeech") : t("voice.micError");
       setErrorMsg(msg);
       setMicState("error");
       setTimeout(() => { setMicState("idle"); setErrorMsg(""); }, 3500);
     },
   });
 
-  // ── Main handler ──────────────────────────────────────────────────────────
-  async function processUserSpeech(text: string) {
-    if (abortRef.current) return;
-    const lang = detectLanguage(text);
-    const ttsLang = getTTSLang(lang);
-    const userEntry: ConvEntry = {
-      role: "user", text, ttsLang,
-      detectedLang: lang,
-      translations: { [lang]: text },
-      displayLang: lang,
-      audioLang: lang,
-    };
-    const updatedConv = [...convRef.current, userEntry];
-    setConversation(updatedConv);
-
-    if (!isAllowedTopic(text)) {
-      const rejection = getRejectionMessage(lang);
-      if (abortRef.current) return;
-      const newIdx = updatedConv.length;
-      const pandEntry: ConvEntry = {
-        role: "pandit", text: rejection, ttsLang,
-        detectedLang: lang,
-        translations: { [lang]: rejection },
-        displayLang: lang, audioLang: lang,
-      };
-      setConversation((c) => [...c, pandEntry]);
-      setMicState("speaking");
-      speakWithControls(newIdx, rejection, ttsLang, () => {
-        if (!abortRef.current) setMicState("idle");
-      });
-      return;
-    }
-
-    setMicState("processing");
+  // ── Main handler: one typed or spoken message ───────────────────────────────────────────────────────────────────────
+  async function submit(raw: string, retry = false) {
+    const text = raw.trim();
+    if (!text || abortRef.current || busyRef.current) return; // never two at once, never an empty or duplicate submit
+    busyRef.current = true;
     try {
-      const history = updatedConv.map((e) => ({
+      setFailure(null);
+      setNotice("");
+
+      // An explicit request ("talk in Tamil") changes the ONE site-wide language. An ordinary message never does.
+      let chosen: LocaleCode = replyLanguage();
+      if (!retry) {
+        const asked = detectLanguageRequest(text);
+        if (asked && asked !== chosen && (await setLanguage(asked))) chosen = asked;
+      }
+
+      if (!retry) pushEntry({ role: "user", text, ttsLang: ttsTag(chosen), lang: chosen });
+
+      if (!isAllowedTopic(text)) {
+        const rejection = getRejectionMessage();
+        const idx = pushEntry({ role: "pandit", text: rejection, ttsLang: ttsTag(chosen), lang: chosen });
+        setMicState("speaking");
+        speakWithControls(idx, rejection, ttsTag(chosen), () => { if (!abortRef.current) setMicState("idle"); });
+        return;
+      }
+
+      setMicState("processing");
+      const history = convRef.current.map((e) => ({
         role: e.role === "user" ? ("user" as const) : ("assistant" as const),
         content: e.text,
       }));
-      const res = await aiChat({
-          temperature: 0.75,
-          max_tokens: 380,
-          messages: [{ role: "system", content: VOICE_SYSTEM_PROMPT }, ...history],
-        });
+      const reply = await askPandit(history, chosen, VOICE_SYSTEM_PROMPT);
       if (abortRef.current) return;
-      const data = await res.json();
-      if (data.error) throw new Error(data.error.message);
-      const reply = transliterateToRoman((data.choices?.[0]?.message?.content || "").trim());
-      if (!reply) throw new Error("Empty response");
-      const replyLang = detectLanguage(reply);
-      const replyTtsLang = getTTSLang(replyLang);
-      const newIdx = updatedConv.length;
-      const pandEntry: ConvEntry = {
-        role: "pandit", text: reply, ttsLang: replyTtsLang,
-        detectedLang: replyLang,
-        translations: { [replyLang]: reply },
-        displayLang: replyLang, audioLang: replyLang,
-      };
-      setConversation((c) => [...c, pandEntry]);
+      const idx = pushEntry({ role: "pandit", text: reply, ttsLang: ttsTag(chosen), lang: chosen });
       setMicState("speaking");
-      speakWithControls(newIdx, reply, replyTtsLang, () => {
-        if (!abortRef.current) setMicState("idle");
-      });
-    } catch {
+      speakWithControls(idx, reply, ttsTag(chosen), () => { if (!abortRef.current) setMicState("idle"); });
+    } catch (e) {
       if (abortRef.current) return;
-      const fallback = "Kshama karein, kuch technical samasya aayi hai. Kripaya thodi der baad dobara prayaas karein.";
-      const newIdx = updatedConv.length;
-      const pandEntry: ConvEntry = {
-        role: "pandit", text: fallback, ttsLang: "hi-IN",
-        detectedLang: "hinglish",
-        translations: { hinglish: fallback },
-        displayLang: "hinglish", audioLang: "hinglish",
-      };
-      setConversation((c) => [...c, pandEntry]);
-      setMicState("speaking");
-      speakWithControls(newIdx, fallback, "hi-IN", () => {
-        if (!abortRef.current) setMicState("idle");
-      });
+      // A failure is shown as a failure, with Retry. It is never replaced by a made-up reply or the welcome text.
+      setFailure({ text, message: e instanceof VoiceChatError ? e.message : t("voice.replyFailed") });
+      setMicState("idle");
+    } finally {
+      busyRef.current = false;
     }
   }
 
   // ── Mic controls ──────────────────────────────────────────────────────────
   const handleMicClick = () => {
     if (!supported) {
-      setErrorMsg("Speech recognition requires Chrome or Edge browser.");
-      setMicState("error");
-      setTimeout(() => { setMicState("idle"); setErrorMsg(""); }, 3500);
+      // Typing still works; only the microphone is unavailable.
+      setNotice(t("voice.speechUnsupported"));
       return;
     }
     if (micState === "processing") return;
@@ -561,6 +509,7 @@ export default function VoiceConsultation() {
     transcriptRef.current = "";
     setTranscript("");
     setErrorMsg("");
+    setNotice("");
     start();
     setMicState("listening");
   };
@@ -569,12 +518,24 @@ export default function VoiceConsultation() {
     abortRef.current = true;
     stopAudio();
     stop();
+    convRef.current = [];
     setConversation([]);
+    setFailure(null);
+    setNotice("");
+    setInput("");
     transcriptRef.current = "";
     setTranscript("");
     setMicState("idle");
     setErrorMsg("");
-    setTimeout(() => { abortRef.current = false; }, 60);
+    setTimeout(() => { abortRef.current = false; busyRef.current = false; }, 60);
+  };
+
+  const onSubmitForm = (e: React.FormEvent) => {
+    e.preventDefault();
+    const v = input;
+    if (!v.trim() || micState === "processing" || busyRef.current) return;
+    setInput("");
+    void submit(v);
   };
 
   // ── Display ───────────────────────────────────────────────────────────────
@@ -586,89 +547,91 @@ export default function VoiceConsultation() {
     processing: "#592209", speaking: "#592209", error: "#f87171",
   };
   const micLabel =
-    micState === "error"      ? (errorMsg || "⚠️ Please try again") :
-    micState === "idle"       ? "🎤 Tap to Speak" :
-    micState === "listening"  ? "🌟 I am listening..." :
-    micState === "processing" ? "🔮 Understanding your situation..." :
-    "🕉️ Pandit Ji is speaking...";
+    micState === "error"      ? (errorMsg || `⚠️ ${t("voice.micTryAgain")}`) :
+    micState === "idle"       ? `🎤 ${t("voice.micIdle")}` :
+    micState === "listening"  ? `🌟 ${t("voice.micListening")}` :
+    micState === "processing" ? `🔮 ${t("voice.micProcessing")}` :
+    `🕉️ ${t("voice.micSpeaking")}`;
 
-  const WELCOME = "🕉️ Namaste.\n\nPlease share what troubles your heart — whether it is career, relationships, health, finances, or spiritual matters — and I will listen carefully.\n\nYou may speak in Hindi, English, or Hinglish.";
+  const processing = micState === "processing";
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="vc-root">
+    <div className="vc-root" ref={rootRef}>
       <div className="vc-topbar">
-        <span className="vc-topbar-title">Voice Session</span>
+        <span className="vc-topbar-title">{t("voice.title")}</span>
+        {!narrow && <LanguageSelector />}
         <button className={`vc-ctrl-btn${tts.muted ? " vc-muted" : ""}`} onClick={tts.toggleMute}>
-          {tts.muted ? "🔇 Unmute" : "🔊 Voice On"}
+          {tts.muted ? `🔇 ${t("voice.unmute")}` : `🔊 ${t("voice.voiceOn")}`}
         </button>
         {micState === "listening" && (
-          <button className="vc-ctrl-btn" onClick={() => stop()}>⏹ Stop</button>
+          <button className="vc-ctrl-btn" onClick={() => stop()}>⏹ {t("voice.stop")}</button>
         )}
         {micState === "speaking" && (
-          <button className="vc-ctrl-btn" onClick={() => { stopAudio(); setMicState("idle"); }}>⏹ Stop</button>
+          <button className="vc-ctrl-btn" onClick={() => { stopAudio(); setMicState("idle"); }}>⏹ {t("voice.stop")}</button>
         )}
         {conversation.length > 0 && (
-          <button className="vc-ctrl-btn" onClick={newSession}>🔄 New</button>
+          <button className="vc-ctrl-btn" onClick={newSession}>🔄 {t("voice.newSession")}</button>
         )}
+        {narrow && <div className="vc-lang-full"><LanguageSelector variant="mobile" /></div>}
       </div>
 
-      <div className="vc-history" ref={historyRef}>
+      <div className="vc-history" ref={historyRef} role="log" aria-live="polite">
         {conversation.length === 0 ? (
           <div className="vc-welcome">
             <div className="vc-welcome-om">🕉️</div>
-            <div className="vc-welcome-text">{WELCOME}</div>
+            <div className="vc-welcome-text" data-testid="vc-welcome">{t("voice.welcome")}</div>
+            <div className="vc-chips">
+              <span className="vc-chips-label">{t("voice.startWith")}</span>
+              {(["s1", "s2", "s3"] as const).map((k) => (
+                <button key={k} type="button" className="vc-chip" onClick={() => { setInput(t(`voice.${k}`)); inputRef.current?.focus(); }}>
+                  {t(`voice.${k}`)}
+                </button>
+              ))}
+            </div>
           </div>
         ) : (
-          conversation.map((entry, i) => {
-            const displayText = entry.role === "pandit"
-              ? (entry.translations[entry.displayLang] ?? entry.text)
-              : entry.text;
-            return (
-              <div key={i} className={`vc-msg vc-msg-${entry.role}`}>
-                <div className="vc-msg-av">{entry.role === "user" ? "🙏" : "🧘"}</div>
-                <div className="vc-msg-body">
-                  <div className="vc-msg-text">{displayText}</div>
-
-                  {entry.role === "pandit" && (
-                    <>
-                      {/* Text language selector */}
-                      <div className="vc-lang-row">
-                        <span className="vc-lang-label">🌐</span>
-                        <select
-                          className="vc-lang-select"
-                          value={entry.displayLang}
-                          onChange={(e) => handleDisplayLangChange(i, e.target.value as Language)}
-                        >
-                          <option value="english">English</option>
-                          <option value="hinglish">Hinglish</option>
-                          <option value="hindi">Hindi</option>
-                        </select>
-                        {translating[`${i}-display`] && (
-                          <span className="vc-lang-loading">translating…</span>
-                        )}
-                      </div>
-
-                      {/* Audio player with language selector */}
-                      <AudioPlayer
-                        idx={i}
-                        entry={entry}
-                        audio={audio}
-                        translatingAudio={!!translating[`${i}-audio`]}
-                        getTTSLangFn={getTTSLang}
-                        onPlay={(text, lang) => speakWithControls(i, text, lang)}
-                        onPause={pauseAudio}
-                        onResume={(text, lang) => resumeAudio(i, text, lang)}
-                        onStop={stopAudio}
-                        onReplay={(text, lang) => speakWithControls(i, text, lang)}
-                        onAudioLangChange={(lang) => handleAudioLangChange(i, lang)}
-                      />
-                    </>
-                  )}
-                </div>
+          conversation.map((entry, i) => (
+            <div key={i} className={`vc-msg vc-msg-${entry.role}`}>
+              <div className="vc-msg-av">{entry.role === "user" ? "🙏" : "🧘"}</div>
+              <div className="vc-msg-body">
+                <div className="vc-msg-text" lang={localeInfo(entry.lang).tag.split("-")[0]}>{entry.text}</div>
+                {entry.role === "pandit" && (
+                  <AudioPlayer
+                    idx={i}
+                    entry={entry}
+                    audio={audio}
+                    onPlay={(text, l) => speakWithControls(i, text, l)}
+                    onPause={pauseAudio}
+                    onResume={(text, l) => resumeAudio(i, text, l)}
+                    onStop={stopAudio}
+                    onReplay={(text, l) => speakWithControls(i, text, l)}
+                  />
+                )}
               </div>
-            );
-          })
+            </div>
+          ))
+        )}
+
+        {processing && (
+          <div className="vc-msg vc-msg-pandit" role="status" data-testid="vc-typing">
+            <div className="vc-msg-av">🧘</div>
+            <div className="vc-msg-body">
+              <div className="vc-typing"><span>{t("voice.typing")}</span><i className="vc-dot" /><i className="vc-dot" /><i className="vc-dot" /></div>
+            </div>
+          </div>
+        )}
+
+        {failure && (
+          <div className="vc-msg vc-msg-pandit" data-testid="vc-failure">
+            <div className="vc-msg-av">🧘</div>
+            <div className="vc-msg-body">
+              <div className="vc-error" role="alert">
+                <span>{failure.message}</span>
+                <button type="button" className="vc-retry" onClick={() => void submit(failure.text, true)}>{t("common.retry")}</button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
 
@@ -681,6 +644,22 @@ export default function VoiceConsultation() {
         {transcript && micState === "listening" && (
           <div className="vc-transcript-box">{transcript}</div>
         )}
+        {notice && <div className="vc-notice" role="status" data-testid="vc-notice">{notice}</div>}
+        <form className="vc-form" onSubmit={onSubmitForm}>
+          <input
+            ref={inputRef}
+            className="vc-input"
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder={t("voice.inputPlaceholder")}
+            aria-label={t("voice.inputLabel")}
+            maxLength={500}
+            disabled={processing}
+            autoComplete="off"
+          />
+          <button type="submit" className="vc-send" disabled={!input.trim() || processing}>{t("voice.send")}</button>
+        </form>
         <div
           className={`vc-mic-ring vc-mic-${micState}`}
           onClick={handleMicClick}
@@ -700,48 +679,28 @@ interface AudioPlayerProps {
   idx: number;
   entry: ConvEntry;
   audio: AudioState;
-  translatingAudio: boolean;
-  getTTSLangFn: (lang: Language) => string;
   onPlay: (text: string, ttsLang: string) => void;
   onPause: () => void;
   onResume: (text: string, ttsLang: string) => void;
   onStop: () => void;
   onReplay: (text: string, ttsLang: string) => void;
-  onAudioLangChange: (lang: Language) => void;
 }
 
-function AudioPlayer({
-  idx, entry, audio, translatingAudio, getTTSLangFn,
-  onPlay, onPause, onResume, onStop, onReplay, onAudioLangChange,
-}: AudioPlayerProps) {
+function AudioPlayer({ idx, entry, audio, onPlay, onPause, onResume, onStop, onReplay }: AudioPlayerProps) {
+  const { t } = useTranslation();
   const isThisActive = audio.playingIdx === idx;
   const isPlaying    = isThisActive && !audio.paused;
   const isPaused     = isThisActive && audio.paused;
 
-  const audioText    = entry.translations[entry.audioLang] ?? entry.text;
-  const audioTtsLang = getTTSLangFn(entry.audioLang);
+  const audioText    = entry.text;
+  const audioTtsLang = entry.ttsLang;
 
   const progress = isThisActive ? audio.progress : 0;
   const elapsed  = isThisActive ? audio.elapsed  : 0;
-  const duration = isThisActive ? audio.duration : estimateDuration(entry.translations[entry.audioLang] ?? entry.text);
+  const duration = isThisActive ? audio.duration : estimateDuration(entry.text);
 
   return (
     <div className="vc-audio-card">
-      {/* Audio language selector */}
-      <div className="vc-audio-lang-row">
-        <span className="vc-lang-label">🎧 Listen in:</span>
-        <select
-          className="vc-lang-select"
-          value={entry.audioLang}
-          onChange={(e) => onAudioLangChange(e.target.value as Language)}
-        >
-          <option value="english">English</option>
-          <option value="hinglish">Hinglish</option>
-          <option value="hindi">Hindi</option>
-        </select>
-        {translatingAudio && <span className="vc-lang-loading">loading…</span>}
-      </div>
-
       {/* Waveform */}
       <div className="vc-audio-wave">
         {WAVE_HEIGHTS.map((h, i) => (
@@ -772,22 +731,22 @@ function AudioPlayer({
       <div className="vc-audio-btns">
         {!isThisActive && (
           <button className="vc-ab vc-ab-play" onClick={() => onPlay(audioText, audioTtsLang)}>
-            ▶ Play
+            ▶ {t("voice.play")}
           </button>
         )}
         {isPlaying && (
-          <button className="vc-ab vc-ab-pause" onClick={onPause}>⏸ Pause</button>
+          <button className="vc-ab vc-ab-pause" onClick={onPause}>⏸ {t("voice.pause")}</button>
         )}
         {isPaused && (
           <button className="vc-ab vc-ab-play" onClick={() => onResume(audioText, audioTtsLang)}>
-            ▶ Resume
+            ▶ {t("voice.resume")}
           </button>
         )}
         {isThisActive && (
-          <button className="vc-ab vc-ab-stop" onClick={onStop}>⏹ Stop</button>
+          <button className="vc-ab vc-ab-stop" onClick={onStop}>⏹ {t("voice.stop")}</button>
         )}
         <button className="vc-ab vc-ab-replay" onClick={() => onReplay(audioText, audioTtsLang)}>
-          🔁 Replay
+          🔁 {t("voice.replay")}
         </button>
       </div>
     </div>

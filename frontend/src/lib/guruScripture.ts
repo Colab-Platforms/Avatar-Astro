@@ -142,7 +142,23 @@ export function groundingPrompt(g: Grounding): string {
   return parts.join("\n\n");
 }
 
-const CONTEXT = /(gita|bhagavad|bhagwad|bhagavata|bhagwat|verse|shloka|sloka|chapter|adhyay|canto|skandha)/i;
+/**
+ * Words that introduce a scripture reference, in all ten languages (and the Latin spellings people use): Gita, Bhagavata, Kural, Veda,
+ * Upanishad, Purana, shloka/verse, chapter. A number pair after one of these is judged as a chapter and verse.
+ */
+const SCRIPTURE_WORDS =
+  "gita|bhagavad|bhagwad|bhagavata|bhagwat|kural|thirukkural|veda|upanishad|purana|sutra|verse|shloka|sloka|chapter|adhyay|canto|skandha" +
+  "|गीता|भगवद|भागवत|कुरल|वेद|उपनिषद|पुराण|सूत्र|श्लोक|अध्याय|स्कंध" + // Hindi, Marathi
+  "|கீதை|பகவத்|குறள்|திருக்குறள்|வேதம்|உபநிடதம்|புராணம்|சூத்திரம்|ஸ்லோகம்|சுலோகம்|அத்தியாயம்" + // Tamil
+  "|గీత|భగవద్|కురళ్|వేదం|ఉపనిషత్|పురాణం|సూత్రం|శ్లోకం|అధ్యాయం" + // Telugu
+  "|ગીતા|ભગવદ્|ભાગવત|કુરલ|વેદ|ઉપનિષદ|પુરાણ|સૂત્ર|શ્લોક|અધ્યાય" + // Gujarati
+  "|গীতা|ভগবদ্|ভাগবত|কুরল|বেদ|উপনিষদ|পুরাণ|সূত্র|শ্লোক|অধ্যায়" + // Bengali
+  "|ಗೀತೆ|ಗೀತಾ|ಭಗವದ್|ಕುರಲ್|ವೇದ|ಉಪನಿಷತ್|ಪುರಾಣ|ಸೂತ್ರ|ಶ್ಲೋಕ|ಅಧ್ಯಾಯ" + // Kannada
+  "|ഗീത|ഭഗവദ്|കുറൾ|വേദം|ഉപനിഷത്|പുരാണം|സൂത്രം|ശ്ലോകം|അധ്യായം" + // Malayalam
+  "|ਗੀਤਾ|ਭਗਵਦ|ਕੁਰਲ|ਵੇਦ|ਉਪਨਿਸ਼ਦ|ਪੁਰਾਣ|ਸੂਤਰ|ਸ਼ਲੋਕ|ਅਧਿਆਇ";
+const CONTEXT = new RegExp(`(${SCRIPTURE_WORDS})`, "iu");
+const CHAPTER_WORDS = "chapter|adhyay|adhyaya|अध्याय|அத்தியாயம்|అధ్యాయం|અધ્યાય|অধ্যায়|ಅಧ್ಯಾಯ|അധ്യായം|ਅਧਿਆਇ";
+const VERSE_WORDS = "verse|verses|shloka|sloka|श्लोक|ஸ்லோகம்|சுலோகம்|శ్లోకం|શ્લોક|শ্লোক|ಶ್ಲೋಕ|ശ്ലോകം|ਸ਼ਲੋਕ";
 
 /**
  * Chapter/verse numbers that a reply cites but that were not handed to it. A reply with any of these is refused,
@@ -156,7 +172,7 @@ export function findUnverifiedReferences(text: string, allowed: string[]): strin
   const judged: [number, number][] = []; // spans already judged as a full "Chapter M, Verse N"
   const inJudged = (i: number) => judged.some(([a, b]) => i >= a && i < b);
 
-  for (const m of text.matchAll(/chapter\s*(\d{1,2})\s*[,;:\-–]?\s*(?:and\s*)?verse(?:s)?\s*(\d{1,3})/gi)) {
+  for (const m of text.matchAll(new RegExp(`(?:${CHAPTER_WORDS})\\s*(\\d{1,2})\\s*[,;:\\-–]?\\s*(?:and\\s*)?(?:${VERSE_WORDS})\\s*(\\d{1,3})`, "giu"))) {
     judged.push([m.index ?? 0, (m.index ?? 0) + m[0].length]);
     if (!ok.has(`${m[1]}.${m[2]}`)) bad.push(`Chapter ${m[1]}, Verse ${m[2]}`);
   }
@@ -164,10 +180,11 @@ export function findUnverifiedReferences(text: string, allowed: string[]): strin
     const before = text.slice(Math.max(0, (m.index ?? 0) - 40), m.index ?? 0);
     if (!inJudged(m.index ?? 0) && CONTEXT.test(before) && !ok.has(`${m[1]}.${m[2]}`)) bad.push(`${m[1]}.${m[2]}`);
   }
-  for (const m of text.matchAll(/\b(?:chapter|adhyay|adhyaya)\s*(\d{1,2})\b(?!\s*[,;:\-–]?\s*(?:and\s*)?verse)/gi)) {
+  // (\b does not work next to Indic letters, so these use the word lists with a plain "not followed by another digit".)
+  for (const m of text.matchAll(new RegExp(`(?:${CHAPTER_WORDS})\\s*(\\d{1,2})(?!\\d)(?!\\s*[,;:\\-–]?\\s*(?:and\\s*)?(?:${VERSE_WORDS}))`, "giu"))) {
     if (!inJudged(m.index ?? 0) && !okChapters.has(m[1])) bad.push(`Chapter ${m[1]}`);
   }
-  for (const m of text.matchAll(/\bverse(?:s)?\s*(\d{1,3})\b/gi)) {
+  for (const m of text.matchAll(new RegExp(`(?:${VERSE_WORDS})\\s*(\\d{1,3})(?!\\d)`, "giu"))) {
     if (!inJudged(m.index ?? 0) && !okVerses.has(m[1])) bad.push(`Verse ${m[1]}`);
   }
   for (const m of text.matchAll(/\b(?:canto|skandha)\s*(\d{1,2})\b/gi)) bad.push(`Canto ${m[1]}`);

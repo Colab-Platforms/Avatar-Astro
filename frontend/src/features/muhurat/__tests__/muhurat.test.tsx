@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
@@ -9,7 +11,8 @@ import { EVENT_CARDS, GROUPS } from "../events";
 import { addDays, addMonths, daysBetween, longDate, placeLabel, range12, time12, todayAt, windowText } from "../format";
 import { buildIcs } from "../sharing";
 import { savedId } from "../saved";
-import type { DayResult, MuhuratPlace, MuhuratResult, MuhuratWindow } from "../types";
+import type { DayPanchang, DayResult, Festival, MuhuratPlace, MuhuratResult, MuhuratWindow } from "../types";
+import { sequenceText } from "../MuhuratResults";
 
 vi.mock("@/features/ratna/LocationPicker", () => ({
   default: ({ value, onSelect }: { value: unknown; onSelect: (p: unknown) => void }) => (
@@ -29,33 +32,44 @@ const win = (date: string, weekday: string, s: string, e: string, extra: Partial
   startUtc: `${date}T${String(Number(s.slice(0, 2)) - 5).padStart(2, "0")}:${s.slice(3)}:00.000Z`, endUtc: `${date}T${String(Number(e.slice(0, 2)) - 5).padStart(2, "0")}:${e.slice(3)}:00.000Z`,
   durationMinutes: 100, score: 90, scoreParts: [{ label: "Meets every rule for this event", points: 32 }, { label: "Revati: a first-choice nakshatra", points: 30 }, { label: "Thursday: a first-choice weekday", points: 20 }, { label: "Length of the window", points: 8 }],
   panchang: { tithi: "Panchami", paksha: "Shukla", nakshatra: "Revati", pada: 2, yoga: "Sadhya", karana: "Bava" },
-  changes: [], avoidedPeriods: [{ label: "Rahu Kalam", startLocal: "14:18", endLocal: "15:44" }, { label: "Yamaganda", startLocal: "07:09", endLocal: "08:34" }, { label: "Gulika Kalam", startLocal: "10:00", endLocal: "11:26" }],
+  status: "suitable", observances: [], changes: [], avoidedPeriods: [{ label: "Rahu Kalam", startLocal: "14:18", endLocal: "15:44" }, { label: "Yamaganda", startLocal: "07:09", endLocal: "08:34" }, { label: "Gulika Kalam", startLocal: "10:00", endLocal: "11:26" }],
   why: ["Nakshatra Revati is a first-choice nakshatra for griha pravesh.", "Shukla Panchami is one of the tithis this tradition accepts for it.", "Thursday is a first-choice weekday.", "Yoga Sadhya and the Bava karana are not among the avoided ones.", "The window lies outside Rahu Kalam, Yamaganda and Gulika Kalam for this place and date."],
   ...extra,
 });
-const day = (date: string, weekday: string, windows: MuhuratWindow[], blockers: string[] = []): DayResult => ({
-  date, weekday, sunrise: "07:09", sunset: "18:05", windows, bestScore: windows[0]?.score ?? 0, blockers,
-  avoidedPeriods: windows[0]?.avoidedPeriods ?? [], abhijit: { startLocal: "12:13", endLocal: "12:57" },
+const PANCHANG: DayPanchang = {
+  vikramSamvat: 2083, masa: { name: "Magha", adhika: false }, purnimantaMasa: { name: "Magha", adhika: false }, paksha: "Shukla", vara: "Thursday",
+  tithi: [{ name: "Shukla Panchami", until: "03:18", untilNextDay: true }, { name: "Shukla Shashthi", until: null, untilNextDay: false }],
+  nakshatra: [{ name: "Revati", until: "05:42", untilNextDay: true }, { name: "Ashwini", until: null, untilNextDay: false }],
+  yoga: [{ name: "Sadhya", until: "20:20", untilNextDay: false }, { name: "Shubha", until: null, untilNextDay: false }],
+  karana: [{ name: "Bava", until: "15:15", untilNextDay: false }, { name: "Balava", until: "03:18", untilNextDay: true }, { name: "Kaulava", until: null, untilNextDay: false }],
+  panchak: { from: null, until: "05:42" },
+};
+const VASANT: Festival = { id: "vasant-panchami", name: "Vasant Panchami", kind: "festival", note: "Magha Shukla Panchami, present in the madhyahna." };
+const day = (date: string, weekday: string, windows: MuhuratWindow[], blockers: string[] = [], festivals: Festival[] = []): DayResult => ({
+  date, weekday, sunrise: "07:09", sunset: "18:05", windows, bestScore: windows.length ? Math.max(...windows.map((w) => w.score)) : 0, blockers,
+  avoidedPeriods: windows[0]?.avoidedPeriods ?? [], abhijit: { startLocal: "12:13", endLocal: "12:57" }, festivals, panchang: windows.length ? PANCHANG : null, analysis: null,
 });
 const best = win("2027-02-11", "Thursday", "11:27", "14:18", { score: 99 });
 const o1 = win("2027-01-15", "Friday", "07:14", "08:37", { score: 94 });
 const o2 = win("2027-02-22", "Monday", "15:47", "18:01", { score: 91 });
-const second = win("2027-02-11", "Thursday", "08:40", "09:55", { score: 70 });
+const second = win("2027-02-11", "Thursday", "08:40", "09:55", { score: 70, observances: ["Vasant Panchami"] });
 
 const result = (over: Partial<MuhuratResult> = {}): MuhuratResult => ({
   event: { id: "griha-pravesh", label: "Griha Pravesh Muhurat", confidence: "consensus", basis: "Fixed and gentle nakshatras rank first.", limitations: ["Rules differ for a newly built home."] },
   place: MUMBAI, startDate: "2027-01-10", endDate: "2027-03-10",
   method: { id: "m", label: "Drik Panchang · Lahiri sidereal · Amanta months · Muhurta Chintamani conventions", note: "Tithi, nakshatra, yoga and karana come from the real Sun and Moon positions." },
-  evaluated: ["Tithi and paksha", "Nakshatra", "Yoga", "Karana", "Vedic weekday (Vara), from local sunrise", "Sunrise and sunset at the event location", "Rahu Kalam", "Yamaganda", "Gulika Kalam", "Kharmas (the Sun's sidereal sign)"],
+  seasonNotes: [],
+  evaluated: ["Hindu festivals and observances (information only)", "Tithi and paksha", "Nakshatra", "Yoga", "Karana", "Vedic weekday (Vara), from local sunrise", "Sunrise and sunset at the event location", "Rahu Kalam", "Yamaganda", "Gulika Kalam", "Kharmas (the Sun's sidereal sign)"],
   rules: ["Nakshatra, first choice: Rohini.", "Weekday, first choice: Monday, Thursday, Friday."],
-  best: { ...best, windows: undefined } as unknown as MuhuratWindow, others: [o1, o2],
+  convention: { panchang: { id: "m", label: "Drik Panchang · Lahiri sidereal · Amanta months · Muhurta Chintamani conventions", note: "Rules use Amanta months." }, festivals: { id: "f", label: "Drik Panchang · Smarta tithi rules · festival months labelled Purnimanta", note: "Month names on festivals are Purnimanta." }, dayBoundary: "The Vedic day runs from local sunrise to the next local sunrise." },
+  best,
   days: [
     day("2027-01-14", "Thursday", [], ["Nakshatra Bharani is not among the suitable nakshatras"]),
     day("2027-01-15", "Friday", [o1]),
-    day("2027-02-11", "Thursday", [best, second]),
+    day("2027-02-11", "Thursday", [second, best], [], [VASANT]),
     day("2027-02-22", "Monday", [o2]),
   ],
-  totals: { days: 4, daysWithWindows: 3, windows: 4 }, notes: [],
+  totals: { days: 4, daysWithWindows: 3, windows: 4, festivalDays: 1 }, notes: [],
   ...over,
 });
 
@@ -216,26 +230,77 @@ describe("results", () => {
     render(<MuhuratResults result={result()} saver={saver()} onExpand={() => {}} onAgain={() => {}} />);
     const s = screen.getByTestId("search-summary");
     expect(s).toHaveTextContent("Griha Pravesh Muhurat"); expect(s).toHaveTextContent("Mumbai, Maharashtra, India"); expect(s).toHaveTextContent("Asia/Kolkata");
-    expect(s).toHaveTextContent("10 Jan 2027 to 10 Mar 2027"); expect(s).toHaveTextContent("Lahiri sidereal");
-    expect(s).toHaveTextContent("4 suitable windows on 3 of 4 days");
+    expect(s).toHaveTextContent("10 Jan 2027 to 10 Mar 2027");
+    expect(screen.getByTestId("convention")).toHaveTextContent("Lahiri sidereal"); expect(s).toHaveTextContent("Festivals: Drik Panchang · Smarta tithi rules");
+    expect(screen.getByTestId("total-dates")).toHaveTextContent("3 of 4"); expect(screen.getByTestId("total-windows")).toHaveTextContent("4");
+    expect(s).toHaveTextContent("Festival and observance days"); expect(s).toHaveTextContent("Qualifying time windows");
   });
   it("shows the best Muhurat with the exact local window, Panchang, avoided periods and why", () => {
     render(<MuhuratResults result={result()} saver={saver()} onExpand={() => {}} onAgain={() => {}} />);
     const b = screen.getByTestId("best-muhurat");
-    expect(b).toHaveTextContent("Your Suitable Muhurat");
+    expect(b).toHaveTextContent("Best-ranked Muhurat"); expect(b).toHaveTextContent("Suitable");
     expect(b).toHaveTextContent("Thursday, 11 February 2027");
     expect(within(b).getByTestId("window-time")).toHaveTextContent("11:27 AM – 2:18 PM");
     expect(b).toHaveTextContent("Mumbai, Maharashtra, India"); expect(b).toHaveTextContent(/local time/);
     for (const t of ["Shukla Panchami", "Revati", "Sadhya", "Bava"]) expect(b).toHaveTextContent(t);
     expect(b).toHaveTextContent("Rahu Kalam 2:18 PM – 3:44 PM"); expect(b).toHaveTextContent("Yamaganda 7:09 AM – 8:34 AM");
-    expect(b).toHaveTextContent("Why this Muhurat?"); expect(b).toHaveTextContent("Nakshatra Revati is a first-choice nakshatra");
+    expect(b).toHaveTextContent("Why this Muhurat is suitable"); expect(b).toHaveTextContent("Nakshatra Revati is a first-choice nakshatra");
   });
-  it("lists the other suitable dates, each with date, weekday, times and Panchang", () => {
+  it("states how many suitable windows were found, on how many dates", () => {
     render(<MuhuratResults result={result()} saver={saver()} onExpand={() => {}} onAgain={() => {}} />);
-    const cards = screen.getAllByTestId("other-muhurat");
-    expect(cards).toHaveLength(2);
-    expect(cards[0]).toHaveTextContent("Friday, 15 January 2027"); expect(cards[0]).toHaveTextContent("7:14 AM – 8:37 AM"); expect(cards[0]).toHaveTextContent("Friday");
-    expect(cards[1]).toHaveTextContent("3:47 PM – 6:01 PM");
+    expect(screen.getByTestId("result-count")).toHaveTextContent("4 suitable Muhurat windows found");
+    expect(screen.getByTestId("result-count")).toHaveTextContent("on 3 dates");
+    cleanup();
+    const one = result({ totals: { days: 4, daysWithWindows: 1, windows: 1, festivalDays: 0 } });
+    render(<MuhuratResults result={one} saver={saver()} onExpand={() => {}} onAgain={() => {}} />);
+    expect(screen.getByTestId("result-count")).toHaveTextContent("1 suitable Muhurat window found");
+  });
+  it("lists EVERY date with a window, in date order, and every window under its date: nothing is hidden behind the best one", () => {
+    render(<MuhuratResults result={result()} saver={saver()} onExpand={() => {}} onAgain={() => {}} />);
+    const cards = screen.getAllByTestId("date-card");
+    expect(cards.map((c) => c.getAttribute("aria-label"))).toEqual(["Friday, 15 January 2027", "Thursday, 11 February 2027", "Monday, 22 February 2027"]); // by calendar date
+    expect(cards[0]).toHaveTextContent("7:14 AM – 8:37 AM");
+    expect(within(cards[0]).getAllByTestId("window-row")).toHaveLength(1);
+    // two windows on 11 Feb, in time order, both marked Suitable, only one marked Best-ranked
+    const rows = within(cards[1]).getAllByTestId("window-row");
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toHaveTextContent("8:40 AM – 9:55 AM"); expect(rows[1]).toHaveTextContent("11:27 AM – 2:18 PM");
+    expect(cards[1]).toHaveTextContent("2 suitable windows");
+    for (const r of rows) expect(r).toHaveTextContent("Suitable");
+    expect(screen.getAllByText("Best-ranked").filter((e) => e.tagName === "SPAN" && e.className.includes("bg-[#C9873A]"))).toHaveLength(1);
+    expect(within(rows[1]).getByText("Best-ranked")).toBeInTheDocument();
+    expect(cards[2]).toHaveTextContent("3:47 PM – 6:01 PM");
+    expect(screen.getAllByTestId("window-row")).toHaveLength(4); // all four windows are on the page
+  });
+  it("shows a compact Panchang summary per date, with each element's exact change times, never one fixed value for the date", () => {
+    render(<MuhuratResults result={result()} saver={saver()} onExpand={() => {}} onAgain={() => {}} />);
+    const p = within(screen.getAllByTestId("date-card")[1]).getByTestId("panchang-summary");
+    expect(p).toHaveTextContent("Thursday · Shukla paksha · Magha masa (Amanta) · Vikram Samvat 2083");
+    expect(p).toHaveTextContent("Sunrise 7:09 AM, sunset 6:05 PM");
+    expect(p).toHaveTextContent("Tithi: Shukla Panchami until 3:18 AM (next day), then Shukla Shashthi");
+    expect(p).toHaveTextContent("Nakshatra: Revati until 5:42 AM (next day), then Ashwini");
+    expect(p).toHaveTextContent("Yoga: Sadhya until 8:20 PM, then Shubha");
+    expect(p).toHaveTextContent("Karana: Bava until 3:15 PM, then Balava until 3:18 AM (next day), then Kaulava");
+    expect(p).toHaveTextContent("Panchak: running at sunrise, until 5:42 AM");
+  });
+  it("sequenceText reads a single running element and a changing one", () => {
+    expect(sequenceText([{ name: "Revati", until: null, untilNextDay: false }])).toBe("Revati");
+    expect(sequenceText([{ name: "A", until: "09:05", untilNextDay: false }, { name: "B", until: null, untilNextDay: false }])).toBe("A until 9:05 AM, then B");
+  });
+  it("labels festivals and observances on their date, and says they do not decide suitability", () => {
+    render(<MuhuratResults result={result()} saver={saver()} onExpand={() => {}} onAgain={() => {}} />);
+    const cards = screen.getAllByTestId("date-card");
+    expect(within(cards[1]).getByTestId("date-festivals")).toHaveTextContent("Vasant Panchami");
+    expect(within(cards[0]).queryByTestId("date-festivals")).toBeNull();
+    expect(screen.getByTestId("evaluated")).toHaveTextContent("Hindu festivals and observances (information only)");
+  });
+  it("lists the dates with no suitable window as Not suitable, each with its reason", () => {
+    render(<MuhuratResults result={result()} saver={saver()} onExpand={() => {}} onAgain={() => {}} />);
+    const n = screen.getByTestId("not-suitable");
+    expect(n).toHaveTextContent("1 date with no suitable window, and why");
+    const li = within(n).getByTestId("not-suitable-date");
+    expect(li).toHaveTextContent("Thursday, 14 January 2027"); expect(li).toHaveTextContent("Not suitable"); expect(li).toHaveTextContent("Nakshatra Bharani is not among the suitable nakshatras");
+    expect(screen.queryAllByTestId("date-card").some((c) => c.getAttribute("aria-label") === "Thursday, 14 January 2027")).toBe(false);
   });
   it("has expandable calculation details with Panchang, avoided periods and the ranking", () => {
     render(<MuhuratResults result={result()} saver={saver()} onExpand={() => {}} onAgain={() => {}} />);
@@ -258,21 +323,68 @@ describe("results", () => {
     render(<MuhuratResults result={result({ event: { ...result().event, confidence: "general" } })} saver={saver()} onExpand={() => {}} onAgain={() => {}} />);
     expect(screen.getByTestId("confidence")).toHaveTextContent(/no extra event-specific rule has been added/);
   });
-  it("shows a friendly no-result message with reasons, never a fabricated result, and can expand the range", () => {
-    const onExpand = vi.fn();
-    const r = result({ best: null, others: [], days: [day("2027-01-14", "Thursday", [], ["Chaturmas (Devshayani to Prabodhini Ekadashi) is avoided"]), day("2027-01-15", "Friday", [], ["Chaturmas (Devshayani to Prabodhini Ekadashi) is avoided"])], totals: { days: 2, daysWithWindows: 0, windows: 0 } });
-    render(<MuhuratResults result={r} saver={saver()} onExpand={onExpand} onAgain={() => {}} />);
-    expect(screen.queryByTestId("best-muhurat")).toBeNull(); expect(screen.queryByTestId("other-muhurat")).toBeNull();
+  // Taken from the real calculation for Mundan, Vasai, 11 Nov 2026 (abbreviated to the intervals that matter).
+  const CHATURMAS = "Chaturmas (Devshayani to Prabodhini Ekadashi) is avoided", ATIGANDA = "Yoga Atiganda is avoided", JYESHTHA = "Nakshatra Jyeshtha is not among the suitable nakshatras";
+  const analysed = (date: string, weekday: string): DayResult => ({
+    ...day(date, weekday, [], [CHATURMAS, ATIGANDA, JYESHTHA], [{ id: "bhai-dooj", name: "Bhai Dooj", kind: "festival", note: "Kartika Shukla Dwitiya." }]),
+    analysis: {
+      intervals: [
+        { startLocal: "06:45", endLocal: "08:08", reasons: [CHATURMAS, ATIGANDA] },
+        { startLocal: "08:09", endLocal: "09:33", reasons: [CHATURMAS, "Yamaganda", ATIGANDA] },
+        { startLocal: "11:38", endLocal: "12:22", reasons: [CHATURMAS, "Gulika Kalam", JYESHTHA, ATIGANDA] },
+        { startLocal: "13:48", endLocal: "18:00", reasons: [CHATURMAS, JYESHTHA, ATIGANDA] },
+      ],
+      scopes: [
+        { reason: CHATURMAS, scope: "whole day", spans: [] }, { reason: ATIGANDA, scope: "whole day", spans: [] },
+        { reason: "Yamaganda", scope: "part of the day", spans: [{ startLocal: "08:09", endLocal: "09:33" }] },
+        { reason: JYESHTHA, scope: "part of the day", spans: [{ startLocal: "11:38", endLocal: "12:22" }, { startLocal: "13:48", endLocal: "18:00" }] },
+      ],
+      needs: ["A date after Chaturmas ends, which is when Kartika Shukla Ekadashi (Prabodhini) ends.", "A yoga outside the nine avoided ones (Vishkambha, Atiganda, Shula, Ganda, Vyaghata, Vajra, Vyatipata, Parigha, Vaidhriti)."],
+    },
+  });
+  const zero = (over: Partial<MuhuratResult> = {}) => result({
+    best: null, event: { ...result().event, id: "mundan", label: "Mundan Muhurat" }, startDate: "2026-11-10", endDate: "2026-11-12",
+    seasonNotes: ["Chaturmas (Devshayani Ekadashi to Prabodhini Ekadashi) is in force. It ends when Kartika Shukla Ekadashi ends: Sat, 21 Nov 2026, 06:32 local time. Dates after that are free of this restriction."],
+    days: [analysed("2026-11-10", "Tuesday"), analysed("2026-11-11", "Wednesday"), analysed("2026-11-12", "Thursday")], totals: { days: 3, daysWithWindows: 0, windows: 0, festivalDays: 2 }, ...over,
+  });
+  it("explains a zero result: a clear heading, every date checked, each condition with its scope, what would need to differ", () => {
+    const onExpand = vi.fn(), onAgain = vi.fn();
+    render(<MuhuratResults result={zero()} saver={saver()} onExpand={onExpand} onAgain={onAgain} />);
+    expect(screen.queryByTestId("best-muhurat")).toBeNull(); expect(screen.queryByTestId("date-card")).toBeNull();
     const n = screen.getByTestId("no-muhurat");
-    expect(n).toHaveTextContent("No suitable window in this period"); expect(n).toHaveTextContent(/under the selected method/); expect(n).toHaveTextContent(/Chaturmas/); expect(n).toHaveTextContent("(2 days)");
-    fireEvent.click(within(n).getByRole("button", { name: /Search until/ }));
-    expect(onExpand).toHaveBeenCalledWith("2027-06-08"); // 90 days after 10 Mar 2027
+    expect(n).toHaveTextContent("No suitable Mundan Muhurat found in these dates");
+    expect(n).toHaveTextContent("We checked every date from 10 Nov 2026 to 12 Nov 2026"); expect(n).toHaveTextContent("interval by interval");
+    expect(screen.getByTestId("season-notes")).toHaveTextContent("ends when Kartika Shukla Ekadashi ends: Sat, 21 Nov 2026, 06:32 local time");
+    const dates = screen.getAllByTestId("checked-date");
+    expect(dates).toHaveLength(3);
+    expect(dates[1]).toHaveTextContent("Wednesday, 11 November 2026"); expect(dates[1]).toHaveTextContent("Not suitable"); expect(dates[1]).toHaveTextContent("Bhai Dooj");
+    const cond = within(dates[1]).getAllByTestId("condition");
+    const text = (re: RegExp) => cond.find((c) => re.test(c.textContent!))!;
+    expect(text(/Atiganda/)).toHaveTextContent("whole date");
+    expect(text(/Chaturmas/)).toHaveTextContent("whole date");
+    expect(text(/Yamaganda/)).toHaveTextContent("part of the date"); expect(text(/Yamaganda/)).toHaveTextContent("8:09 AM – 9:33 AM");
+    expect(text(/Jyeshtha/)).toHaveTextContent("part of the date"); expect(text(/Jyeshtha/)).toHaveTextContent("11:38 AM – 12:22 PM, 1:48 PM – 6:00 PM");
+    const iv = within(dates[1]).getAllByTestId("interval");
+    expect(iv[0]).toHaveTextContent("6:45 AM – 8:08 AM"); expect(iv[0]).toHaveTextContent("Yoga Atiganda is avoided");
+    expect(screen.getByTestId("needs")).toHaveTextContent("A date after Chaturmas ends"); expect(screen.getByTestId("needs")).toHaveTextContent("A yoga outside the nine avoided ones");
+    expect(screen.getByTestId("needs")).toHaveTextContent("traditional rules are not changed to produce a result");
+    // the three actions
+    fireEvent.click(within(n).getByRole("button", { name: /Search a longer period/ }));
+    expect(onExpand).toHaveBeenCalledWith("2027-02-10"); // 90 days after 12 Nov 2026
+    fireEvent.click(within(n).getByRole("button", { name: "Change date range" })); fireEvent.click(within(n).getByRole("button", { name: "Change location" }));
+    expect(onAgain).toHaveBeenCalledTimes(2);
+  });
+  it("still explains a zero result when the server gave only date-level reasons (long searches)", () => {
+    const r = result({ best: null, days: [day("2027-01-14", "Thursday", [], [CHATURMAS]), day("2027-01-15", "Friday", [], [CHATURMAS])], totals: { days: 2, daysWithWindows: 0, windows: 0, festivalDays: 0 } });
+    render(<MuhuratResults result={r} saver={saver()} onExpand={() => {}} onAgain={() => {}} />);
+    expect(screen.getAllByTestId("checked-date")).toHaveLength(2);
+    expect(screen.getAllByTestId("condition")[0]).toHaveTextContent("Chaturmas");
   });
   it("does not offer to expand a search that is already a year long", () => {
-    const r = result({ best: null, others: [], days: [], startDate: "2027-01-01", endDate: "2028-01-01", totals: { days: 366, daysWithWindows: 0, windows: 0 } });
+    const r = result({ best: null, days: [], startDate: "2027-01-01", endDate: "2028-01-01", totals: { days: 366, daysWithWindows: 0, windows: 0, festivalDays: 0 } });
     render(<MuhuratResults result={r} saver={saver()} onExpand={() => {}} onAgain={() => {}} />);
     expect(screen.getByTestId("no-muhurat")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Search until/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Search a longer period/ })).toBeNull();
   });
 });
 
@@ -336,7 +448,7 @@ describe("calendar view", () => {
     day("2027-02-12", "Friday", [], ["Tuesday is not a suitable weekday for this event"]), day("2027-03-02", "Tuesday", []),
   ];
   const cal = () => render(<MuhuratCalendar days={days} startDate="2027-01-28" endDate="2027-03-02" />);
-  const cellFor = (n: number) => screen.getAllByTestId("calendar-day").find((c) => c.querySelector("span")?.textContent === String(n))!;
+  const cellFor = (n: number) => screen.getAllByTestId("calendar-day").find((c) => c.querySelector("span")?.textContent?.replace("✦", "") === String(n))!;
 
   it("starts at the first month and navigates within the search range only", () => {
     cal();
@@ -362,6 +474,17 @@ describe("calendar view", () => {
     expect(cellFor(28)).toHaveAttribute("data-state", "none");
     expect(cellFor(27)).toHaveAttribute("data-state", "not-calculated"); // before the range
   });
+  it("marks festival dates with a star, names them in the day panel, and does not change the date's state", () => {
+    const withFest = days.map((d) => (d.date === "2027-02-11" ? { ...d, festivals: [VASANT] } : d));
+    render(<MuhuratCalendar days={withFest} startDate="2027-01-28" endDate="2027-03-02" />);
+    fireEvent.click(screen.getByRole("button", { name: "Next month" }));
+    expect(cellFor(11)).toHaveAttribute("data-state", "multiple");
+    expect(within(cellFor(11)).getByTestId("festival-mark")).toBeInTheDocument();
+    expect(cellFor(11)).toHaveAttribute("aria-label", expect.stringContaining("Vasant Panchami"));
+    expect(within(cellFor(12)).queryByTestId("festival-mark")).toBeNull();
+    fireEvent.click(cellFor(11));
+    expect(screen.getByTestId("panel-festivals")).toHaveTextContent("Vasant Panchami");
+  });
   it("describes each day for screen readers, and does not colour a whole date", () => {
     cal();
     expect(cellFor(29)).toHaveAttribute("aria-label", "Friday, 29 January 2027: 1 suitable window");
@@ -386,9 +509,9 @@ describe("calendar view", () => {
     fireEvent.click(screen.getByRole("tab", { name: "Calendar view" }));
     expect(screen.getByTestId("calendar-month")).toHaveTextContent("February 2027");
     expect(screen.getByTestId("calendar-day-panel")).toHaveTextContent("11:27 AM – 2:18 PM");
-    expect(screen.queryByTestId("other-muhurat")).toBeNull();
-    fireEvent.click(screen.getByRole("tab", { name: "Best dates" }));
-    expect(screen.getAllByTestId("other-muhurat")).toHaveLength(2);
+    expect(screen.queryByTestId("date-card")).toBeNull();
+    fireEvent.click(screen.getByRole("tab", { name: "By date" }));
+    expect(screen.getAllByTestId("date-card")).toHaveLength(3);
   });
 });
 
@@ -427,6 +550,41 @@ describe("page flow", () => {
     await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("Please search at most 366 days"));
     expect(screen.getByTestId("form-event")).toBeInTheDocument();
     vi.doUnmock("@/features/muhurat/api"); vi.doUnmock("@/lib/authedFetch");
+  });
+});
+
+describe("the Muhurat logo asset", () => {
+  const file = path.resolve(__dirname, "../../../../public/images/muhurat-logo.png");
+  const present = fs.existsSync(file);
+  it("is referenced from the page header and from the Astro Seva card by the same public path", async () => {
+    const { tools } = await import("@/data/tools");
+    expect(tools.find((t) => t.path === "/muhurat-finder")!.logo).toBe("/images/muhurat-logo.png");
+    expect(fs.readFileSync(path.resolve(__dirname, "../../../pages/MuhuratFinder.tsx"), "utf8")).toContain('src="/images/muhurat-logo.png"');
+  });
+  it("the Astro Seva card shows the logo over its image, and hides it (never substitutes) if the file is missing", async () => {
+    class IO { observe() {} unobserve() {} disconnect() {} takeRecords() { return []; } }
+    vi.stubGlobal("IntersectionObserver", IO);
+    const { default: ToolCard } = await import("@/components/ToolCard");
+    const { tools } = await import("@/data/tools");
+    render(<MemoryRouter><ToolCard tool={tools.find((t) => t.path === "/muhurat-finder")!} index={0} /></MemoryRouter>);
+    const logo = screen.getByTestId("tool-logo") as HTMLImageElement;
+    expect(logo.getAttribute("src")).toBe("/images/muhurat-logo.png");
+    expect(logo.className).toContain("object-contain");
+    fireEvent.error(logo);
+    expect(logo.style.display).toBe("none");
+    vi.unstubAllGlobals();
+  });
+  // These run only when the supplied logo has been placed in the repository.
+  it.skipIf(!present)("is a PNG with an alpha channel (a transparent background), not a flattened image", () => {
+    const b = fs.readFileSync(file);
+    expect([...b.subarray(0, 8)]).toEqual([137, 80, 78, 71, 13, 10, 26, 10]);
+    const colourType = b[25];
+    expect([4, 6]).toContain(colourType); // greyscale+alpha or RGBA
+  });
+  it.skipIf(!present)("has sensible dimensions for a logo and is not stretched in the page", () => {
+    const b = fs.readFileSync(file);
+    const w = b.readUInt32BE(16), h = b.readUInt32BE(20);
+    expect(w).toBeGreaterThanOrEqual(128); expect(h).toBeGreaterThanOrEqual(128);
   });
 });
 

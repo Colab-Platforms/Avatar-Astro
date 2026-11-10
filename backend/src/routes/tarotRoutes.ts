@@ -2,6 +2,10 @@ import { Router, Request, Response } from "express";
 import express from "express";
 import { createRateLimiter } from "../utils/rateLimit.js";
 import { auth } from "../middleware/authMiddleware.js";
+import { languageRule, requestLanguage, tokenBudget } from "../utils/responseLanguage.js";
+
+const HINGLISH_DEFAULT_RULE =
+  "\n\nLanguage: write every human-readable text value in natural Hinglish (Roman-script Hindi mixed with English, the way people actually speak). Keep JSON keys, fixed values and any Sanskrit verses or mantras exactly as specified. Only if the person wrote in Devanagari Hindi, answer in Hindi instead.";
 
 /**
  * Tarot reading endpoint. The browser draws the cards (random draw from the 22
@@ -178,6 +182,9 @@ router.post("/reading", async (req: Request, res: Response) => {
     return fail(res, 503, "The reading service is not configured");
   }
 
+  // The visitor's chosen language, if any; otherwise the reading stays in Hinglish as before.
+  const lang = requestLanguage(req);
+
   try {
     const upstream = await fetch(OPENROUTER_URL, {
       method: "POST",
@@ -188,8 +195,8 @@ router.post("/reading", async (req: Request, res: Response) => {
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: 2000,
-        messages: [{ role: "user", content: buildPrompt(mode, names, category) + "\n\nLanguage: write every human-readable text value in natural Hinglish (Roman-script Hindi mixed with English, the way people actually speak). Keep JSON keys, fixed values and any Sanskrit verses or mantras exactly as specified. Only if the person wrote in Devanagari Hindi, answer in Hindi instead." }],
+        max_tokens: tokenBudget(2000, lang),
+        messages: [{ role: "user", content: buildPrompt(mode, names, category) + languageRule(lang, HINGLISH_DEFAULT_RULE) }],
       }),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });

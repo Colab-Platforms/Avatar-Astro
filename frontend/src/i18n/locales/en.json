@@ -1,0 +1,1093 @@
+{
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "saved": "Saved",
+    "remove": "Remove",
+    "copy": "Copy",
+    "share": "Share",
+    "back": "Back",
+    "close": "Close",
+    "retry": "Try again",
+    "search": "Search",
+    "loading": "Loading…",
+    "calculating": "Calculating…",
+    "optional": "Optional",
+    "required": "Required",
+    "readMore": "Read more",
+    "readLess": "Read less",
+    "temporarilyUnavailable": "Temporarily unavailable",
+    "startAgain": "Start Again",
+    "newSearch": "New Search",
+    "yes": "Yes",
+    "no": "No",
+    "none": "None",
+    "viewMore": "View More",
+    "viewLess": "View Less",
+    "download": "Download",
+    "signInToContinue": "Please sign in to continue.",
+    "genericError": "Something went wrong. Please try again.",
+    "dateOfBirth": "Date of Birth",
+    "timeOfBirth": "Time of Birth",
+    "placeOfBirth": "Place of Birth",
+    "copied": "Copied",
+    "copyFailed": "Could not copy",
+    "shared": "Shared",
+    "shareCopied": "Sharing is not available here, so the text was copied",
+    "shareFailed": "Could not share"
+  },
+  "language": {
+    "label": "Language",
+    "choose": "Choose a language",
+    "draft": "draft translation",
+    "loadFailed": "That language could not be loaded. Please try again."
+  },
+  "nav": {
+    "home": "Home",
+    "astrologySeva": "Astrology Seva",
+    "innerVoice": "Inner Voice",
+    "live": "Live",
+    "liveHub": "Live Hub",
+    "liveBadge": "LIVE",
+    "liveDarshan": "Live Darshan",
+    "familyFunctions": "Family Functions",
+    "shop": "Shop",
+    "becomeAstrologer": "Become an Astrologer",
+    "blog": "Blog",
+    "about": "About",
+    "contact": "Contact",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "account": "Account",
+    "openDashboard": "Open your dashboard",
+    "myDashboard": "My Dashboard",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "confirmLogoutTitle": "Confirm Logout",
+    "confirmLogoutBody": "Are you sure you want to sign out of your account?"
+  },
+  "home": {
+    "hero": {
+      "line1": "Discover Clarity,",
+      "line2": "Align Your Energy,",
+      "line3": "Create a Better Tomorrow",
+      "body": "Get accurate astrology insights, personalised guidance, and powerful Seva to help you make better decisions in love, career, health and life.",
+      "cta": "Explore Astrology Seva",
+      "tryGuru": "Try {{name}}"
+    },
+    "astrologers": {
+      "eyebrow": "Consult Astrologers",
+      "lead": "Talk to an",
+      "accent": "Astrologer",
+      "body": "Browse astrologers by expertise and language, and read each profile before you decide.",
+      "viewAll": "View all astrologers"
+    },
+    "why": {
+      "eyebrow": "Understand Astrology",
+      "lead": "Why do",
+      "accent": "You",
+      "tail": "need astrology?"
+    },
+    "faq": {
+      "eyebrow": "Questions, Answered",
+      "lead": "Curious About Your",
+      "accent": "Bhagya?",
+      "body": "From ancient wisdom to everyday questions, find your answers here."
+    },
+    "blog": {
+      "eyebrow": "Insights & Stories",
+      "lead": "Read from our",
+      "accent": "blog.",
+      "viewAll": "View all blogs"
+    },
+    "zodiac": {
+      "title": "DAILY HOROSCOPE",
+      "body": "Explore the cosmic wisdom of each celestial sign",
+      "readProfile": "Read Full Profile"
+    },
+    "slides": {
+      "badge": "Devotion & Spirituality",
+      "temples": {
+        "title": "Temples",
+        "description": "Visit India's sacred temples through live darshan and feel divine blessings from anywhere.",
+        "button": "Watch Live Darshan"
+      },
+      "daily-aarti": {
+        "title": "Daily Aarti",
+        "description": "Begin and end your day with devotion by joining the aarti as it happens.",
+        "button": "Join the Aarti"
+      },
+      "spiritual-books": {
+        "title": "Spiritual Books",
+        "description": "Read sacred verses with their meanings and timeless wisdom for everyday life.",
+        "button": "Read Divya Shloka"
+      },
+      "mantras-chants": {
+        "title": "Mantras & Chants",
+        "description": "Discover mantras, chants and verses to bring peace and focus to your day.",
+        "button": "Explore Mantras"
+      }
+    },
+    "live": {
+      "title": "Live Darshan",
+      "badge": "LIVE",
+      "description": "Watch live darshan from India's sacred temples and feel divine blessings from anywhere.",
+      "button": "Watch Live"
+    },
+    "guru": {
+      "placeholder": "Ask your question...",
+      "button": "Talk to Divya Margdarshak"
+    },
+    "seva": {
+      "lead": "Explore Our",
+      "accent": "Astrology Seva"
+    }
+  },
+  "features": {
+    "tarot": {
+      "name": "Tarot Prediction",
+      "subtitle": "Discover the messages within the cards and find clarity for the questions on your mind."
+    },
+    "zodiac": {
+      "name": "Daily Horoscope",
+      "subtitle": "Explore your zodiac sign, planetary influences and the qualities that shape your personality."
+    },
+    "birth-chart": {
+      "name": "Janma Kundali",
+      "subtitle": "Understand your life's cosmic blueprint through the positions of planets at your birth."
+    },
+    "compatibility": {
+      "name": "Love Compatibility",
+      "subtitle": "Explore your connection, compatibility and relationship harmony through Vedic astrology."
+    },
+    "palm-reading": {
+      "name": "Hasta Rekha (Palmistry)",
+      "subtitle": "Discover what the lines and patterns of your palm reveal in traditional palmistry."
+    },
+    "ratna-jyotish": {
+      "name": "Ratna Jyotish (Lucky Gemstone)",
+      "subtitle": "Know your Rashi Ratna and explore traditional gemstone guidance based on your Kundali."
+    },
+    "name-numerology": {
+      "name": "Namank Jyotish (Lucky Name)",
+      "subtitle": "Discover what your name and date of birth reveal through traditional numerology."
+    },
+    "know-your-karma": {
+      "name": "Know Your Karma",
+      "subtitle": "Reflect on your actions, choices and the karmic patterns shaping your journey."
+    },
+    "ai-guru": {
+      "name": "Divya Margdarshak",
+      "subtitle": "Find thoughtful spiritual guidance and answers to the questions guiding your life."
+    },
+    "karma-score": {
+      "name": "Karma Sankhya",
+      "subtitle": "Explore your karma score through your actions, intentions and personal reflections."
+    },
+    "future-life-path": {
+      "name": "Bhavishya Marg",
+      "subtitle": "Explore possible life paths and discover traditional astrological insights for your future."
+    },
+    "sacred-shloka": {
+      "name": "Divya Shloka",
+      "subtitle": "Discover sacred verses, their meanings and timeless wisdom for everyday life."
+    },
+    "baby-name-jyotish": {
+      "name": "Baby Name Jyotish",
+      "subtitle": "Discover a meaningful name for your little one through Nakshatra and Vedic naming traditions."
+    },
+    "lucky-vehicle-number": {
+      "name": "Lucky Vehicle Number",
+      "subtitle": "Find meaningful vehicle number combinations inspired by your birth details and traditional numerology."
+    },
+    "muhurat-finder": {
+      "name": "Muhurat Finder",
+      "subtitle": "Find an auspicious time for life's important beginnings."
+    }
+  },
+  "seva": {
+    "birth-chart": {
+      "title": "Janma Kundali",
+      "description": "Understand your life's cosmic blueprint through the positions of planets at your birth.",
+      "button": "Generate"
+    },
+    "tarot": {
+      "title": "Tarot Prediction",
+      "description": "Discover the messages within the cards and find clarity for the questions on your mind.",
+      "button": "Try Now"
+    },
+    "compatibility": {
+      "title": "Love Compatibility",
+      "description": "Explore your connection, compatibility and relationship harmony through Vedic astrology.",
+      "button": "Check Now"
+    },
+    "palm-reading": {
+      "title": "Hasta Rekha (Palmistry)",
+      "description": "Discover what the lines and patterns of your palm reveal in traditional palmistry.",
+      "button": "Analyze"
+    },
+    "name-destiny-report": {
+      "title": "Namank Jyotish (Lucky Name)",
+      "description": "Discover what your name and date of birth reveal through traditional numerology.",
+      "button": "Explore Now"
+    },
+    "horoscopes": {
+      "title": "Daily Horoscope",
+      "description": "Read personalized daily horoscope predictions based on your zodiac sign.",
+      "button": "Read Now"
+    },
+    "baby-name-jyotish": {
+      "title": "Baby Name Jyotish",
+      "description": "Discover a meaningful name for your little one through Nakshatra and Vedic naming traditions.",
+      "button": "Find a Name"
+    },
+    "lucky-vehicle-number": {
+      "title": "Lucky Vehicle Number",
+      "description": "Find meaningful vehicle number combinations inspired by your birth details and traditional numerology.",
+      "button": "Find My Number"
+    },
+    "muhurat-finder": {
+      "title": "Muhurat Finder",
+      "description": "Explore suitable dates and timings for important events based on Hindu Panchang.",
+      "button": "Find a Muhurat"
+    }
+  },
+  "babyName": {
+    "page": {
+      "calcError": "We could not calculate the Nakshatra. Please check the details and try again.",
+      "imageAlt": "Baby Name Jyotish: a newborn's feet held in two hands",
+      "intro": "Enter your baby’s birth details. We calculate the Janma Nakshatra and Pada, find the traditional naming syllable, and suggest names that begin with it.",
+      "another": "Check Another Birth"
+    },
+    "form": {
+      "title": "Baby’s Details",
+      "preferredName": "Preferred name",
+      "preferredPlaceholder": "Only if you already have a name in mind",
+      "exactTime": "Exact Time of Birth",
+      "approx": "I am not sure the birth time is exact. We will show every Pada the Moon was in within an hour either side.",
+      "namePreference": "Name preference",
+      "prefBoy": "Baby Boy",
+      "prefGirl": "Baby Girl",
+      "prefNeutral": "Gender-neutral names",
+      "prefAll": "Show all",
+      "submit": "Find Auspicious Names"
+    },
+    "error": {
+      "nameFormat": "Please use English letters, spaces, hyphens or apostrophes (2 to 60 characters).",
+      "dobMissing": "Please enter the baby's date of birth.",
+      "dobFuture": "The date of birth cannot be in the future.",
+      "dobOld": "Please enter a date from 1900 onwards.",
+      "tobMissing": "Please enter the exact time of birth. The naming syllable depends on it.",
+      "placeMissing": "Please choose the birthplace from the suggestions. Its coordinates and time zone are needed for the calculation."
+    },
+    "kind": {
+      "all": "All styles",
+      "modern": "Modern",
+      "traditional": "Traditional",
+      "spiritual": "Spiritual",
+      "short": "Short names",
+      "unique": "Unique",
+      "nature": "Nature-inspired",
+      "mythology": "Mythology"
+    },
+    "card": {
+      "boy": "Boy",
+      "girl": "Girl",
+      "neutral": "Gender-neutral",
+      "verifySource": "Listed in AstroMedha name lists",
+      "verifyWeb": "Checked in name dictionaries",
+      "verifyEditorial": "Editorial pick: meaning to be confirmed",
+      "copied": "Copied",
+      "copyFailed": "Could not copy",
+      "removeFav": "Remove {{name}} from favourites",
+      "saveFav": "Save {{name}} to favourites",
+      "meaning": "Meaning",
+      "pronunciation": "Pronunciation",
+      "syllable": "Naming syllable",
+      "origin": "Origin",
+      "stop": "Stop",
+      "listen": "Listen",
+      "copyName": "Copy {{name}}",
+      "shareName": "Share {{name}}"
+    },
+    "results": {
+      "genderAll": "All",
+      "viewMore": "View More Names ({{count}})",
+      "noMatch": "We could not match {{nakshatra}}, Pada {{pada}} to a naming syllable, so no names are shown. Please try again or ask your family priest.",
+      "born": "Born {{date}} at {{time}} in {{place}}",
+      "birthStar": "Your Baby’s Birth Star",
+      "lord": "Lord: {{planet}}",
+      "pada": "Pada {{n}}",
+      "hinduMonth": "Hindu Month",
+      "adhika": "Adhika",
+      "vedicWeekday": "Vedic Weekday",
+      "calculatedFrom": "Calculated from the exact date, time and birthplace.",
+      "syllableTitle": "Recommended Naming Syllable",
+      "syllableBasis": "{{nakshatra}}, Pada {{pada}}: names traditionally begin with the sound “{{syllable}}”.",
+      "otherSyllable": "Other syllable for this pada:",
+      "uncertainTitle": "The syllable may depend on the exact minute",
+      "nearBoundary": "The Moon changes Pada within {{minutes}} minutes of this birth time, so a small difference in the recorded time could change the syllable.",
+      "approxSame": "You said the birth time is approximate. Within {{minutes}} minutes either side, the Moon stays in the same Pada, so the syllable is the same across that window.",
+      "eachPada": "The syllables for each Pada the Moon was in are:",
+      "notInTable": "not in table",
+      "confirmTime": "Please confirm the birth time from the birth record or hospital certificate if you can.",
+      "preferredName": "Your preferred name: {{name}}",
+      "fits": "It begins with “{{syllable}}”, which matches the traditional syllable for this birth.",
+      "noFit": "It does not begin with “{{syllable}}”, the traditional syllable for this birth. Many families still keep a cherished name and use the syllable for the formal naming (Namakarana) name.",
+      "spellingOnly": "This checks the spelling only; a priest may judge by sound.",
+      "picksSub": "Begin with “{{syllable}}”, have a checked meaning, and are short and easy to say.",
+      "picksTitle": "Modern Picks for Your Little One",
+      "collectionSub": "A curated list, not a generated one. Every name has its Devanagari spelling, a meaning, its origin and how it was checked.",
+      "collectionTitle": "The Complete Collection: “{{syllable}}”",
+      "searchLabel": "Search names or meanings",
+      "searchPlaceholder": "Search by name or meaning",
+      "filterGender": "Filter by gender",
+      "filterStyle": "Filter by style",
+      "countOne": "{{count}} name begins with “{{syllable}}”",
+      "countMany": "{{count}} names begin with “{{syllable}}”",
+      "withFilters": "with your current filters.",
+      "noneForPreference": "We do not yet have an established name beginning with “{{syllable}}” for this preference.",
+      "noneForFilters": "No names match these filters or this search. Try “All” or clear the search.",
+      "otherTradition": "Other tradition: {{label}}",
+      "otherTraditionNote": "Some traditions give this syllable for the same Pada.",
+      "otherPadaOf": "Other Pada of {{nakshatra}}",
+      "favourites": "Your Favourite Names",
+      "savedHere": "Saved in this browser only."
+    }
+  },
+  "vehicle": {
+    "error": {
+      "regEmpty": "Please enter a registration number.",
+      "regChars": "Registration numbers use letters and digits only.",
+      "regZero": "0000 is not a registration number: numbers run from 0001 to 9999.",
+      "regUnreadable": "We could not read that registration number.",
+      "dobMissing": "Please enter your date of birth.",
+      "tobMissing": "Please enter your exact time of birth. Your Nakshatra and Pada depend on it.",
+      "placeMissing": "Please choose your birthplace from the suggestions. Its coordinates and time zone are needed for the calculation.",
+      "compareMin": "Please enter at least two numbers to compare (up to three).",
+      "preferred": "Please enter a number from 1 to 9999, for example 0007."
+    },
+    "page": {
+      "calcError": "We could not calculate your birth profile. Please check the details and try again.",
+      "imageAlt": "Lucky Vehicle Number: a car and a registration plate under the stars",
+      "intro": "Enter your birth details. We calculate your birth profile, Birth Number and Life Path, then read vehicle numbers against them with a method we show you step by step."
+    },
+    "form": {
+      "modeFind": "Find a new lucky number",
+      "modeCheck": "Check my existing vehicle number",
+      "modeCompare": "Compare multiple vehicle numbers",
+      "title": "Your Details",
+      "aboutYou": "About you",
+      "fullName": "Full name",
+      "namePlaceholder": "Not needed for the calculation",
+      "yourVehicle": "Your vehicle",
+      "vehicleType": "Vehicle type",
+      "vehicleTypeNote": "Shown with your result. The traditional method is the same for every type of vehicle.",
+      "whatToDo": "What would you like to do?",
+      "existingNumber": "Existing registration number",
+      "existingPlaceholder": "e.g. MH 12 AB 0007",
+      "numbersToCompare": "Numbers to compare",
+      "twoOrThree": "two or three",
+      "numberN": "Number {{n}} to compare",
+      "preferredNumber": "Preferred number",
+      "preferredPlaceholder": "e.g. 0007",
+      "preferredRange": "Preferred range",
+      "rangeFrom": "Range from",
+      "rangeTo": "to",
+      "rangeToLabel": "Range to",
+      "whichDigits": "Which digits should be evaluated?",
+      "digitsToEvaluate": "Digits to evaluate",
+      "digitsNote": "New numbers are always suggested as four-digit registration numbers. This choice applies to a registration you enter.",
+      "submit": "Find My Lucky Numbers"
+    },
+    "card": {
+      "everyday": "Everyday Number",
+      "practical": "Practical number",
+      "numberTotal": "Number Total",
+      "numerologyNumber": "Numerology Number",
+      "interpretation": "Traditional Interpretation",
+      "why": "Why It Matches Your Profile",
+      "removeSaved": "Remove {{number}} from saved numbers",
+      "saveNumber": "Save {{number}}",
+      "copyNumber": "Copy {{number}}",
+      "shareNumber": "Share {{number}}",
+      "removeCompare": "Remove {{number}} from comparison",
+      "compareNumber": "Compare {{number}}",
+      "added": "Added",
+      "compare": "Compare"
+    },
+    "source": {
+      "Your preferred number": "Your preferred number",
+      "From your date of birth": "From your date of birth",
+      "In your preferred range": "In your preferred range",
+      "Everyday number": "Everyday number"
+    },
+    "label": {
+      "Strong match": "Strong match",
+      "Good match": "Good match",
+      "Neutral match": "Neutral match",
+      "Less aligned": "Less aligned"
+    },
+    "type": {
+      "two-wheeler": "Two-wheeler",
+      "four-wheeler": "Four-wheeler",
+      "commercial": "Commercial vehicle",
+      "other": "Other"
+    },
+    "scope": {
+      "number": "The registration number only (last four digits)",
+      "rto-number": "RTO code and registration number",
+      "all": "Every digit in the registration"
+    },
+    "compare": {
+      "sub": "Up to three numbers, side by side, all read with exactly the same rules.",
+      "title": "Compare Numbers",
+      "addLabel": "Add a number to compare",
+      "addPlaceholder": "Add a number, e.g. 0786 or MH 12 AB 0007",
+      "add": "Add",
+      "empty": "Add a number above, or press Compare on any suggested number."
+    },
+    "results": {
+      "digitsEvaluated": "Digits evaluated",
+      "digitSum": "Digit sum",
+      "numerologyNumber": "Numerology number",
+      "planet": "Planet",
+      "bornNamed": "{{name}}, born {{date}} at {{time}} in {{place}}",
+      "born": "Born {{date}} at {{time}} in {{place}}",
+      "birthProfile": "Your Birth Profile",
+      "birthNumber": "Birth Number",
+      "dayOfBirth": "Day of birth",
+      "lifePathNumber": "Life Path Number",
+      "lifePath": "Life Path",
+      "vehicleType": "Vehicle type",
+      "profileTitle": "Your Vehicle Number Profile",
+      "profileSub": "How a vehicle number is read, and the two numbers of yours it is read against.",
+      "steps": {
+        "digits": "Digits",
+        "digitsNote": "The evaluated digits, leading zeros kept",
+        "total": "Total",
+        "totalNote": "Add the digits",
+        "reduce": "Reduce",
+        "reduceNote": "Add again to one digit (11, 22, 33 stay)",
+        "planet": "Planet",
+        "planetNote": "Each digit has its planet"
+      },
+      "friendly": "Numbers friendly to it:",
+      "evaluating": "Evaluating: {{scope}}.",
+      "notGuarantee": "This is traditional numerology, not a guarantee of any outcome.",
+      "existingTitle": "Your Existing Vehicle Number",
+      "masterNumber": "A master number",
+      "removeFromComparison": "Remove from comparison",
+      "compareWithOthers": "Compare with other numbers",
+      "recSubFind": "Everyday four-digit numbers, best matches first, each worked out with the same rule used to check an existing number.",
+      "recSubOther": "Other everyday numbers you could explore, worked out with the same rule.",
+      "recTitle": "Your Recommended Vehicle Numbers",
+      "rangeNote": "There are no everyday numbers in your preferred range, so we looked across all four-digit numbers instead.",
+      "recNone": "We could not find a number to suggest for this profile.",
+      "leftOutTitle": "Which numbers are left out, and why?",
+      "showFewer": "Show Fewer Numbers",
+      "viewMore": "View More Numbers ({{count}})",
+      "availability": "These are numerology-based suggestions. Actual registration-number availability and allocation depend on your RTO.",
+      "savedTitle": "Your Saved Numbers",
+      "compareSaved": "Compare saved number {{number}}",
+      "inComparison": "In comparison",
+      "savedNote": "Saved in this browser only. They are not attached to your MyBhagya account.",
+      "disclaimer": "Numerology is a traditional belief system and is not scientifically proven. A traditional reading of a number does not promise good or bad fortune for you or your vehicle, and it should never be a reason to worry about the number you have."
+    }
+  },
+  "muhurat": {
+    "picker": {
+      "title": "What are you planning?",
+      "kinds": "Kinds of events"
+    },
+    "groups": {
+      "personal": "Personal & family",
+      "home": "Home & property",
+      "vehicle": "Vehicle & travel",
+      "business": "Business & career"
+    },
+    "events": {
+      "marriage": {
+        "label": "Marriage Muhurat",
+        "summary": "Vivah: a day and time for the wedding."
+      },
+      "engagement": {
+        "label": "Engagement Muhurat",
+        "summary": "Sagai: the betrothal ceremony."
+      },
+      "namkaran": {
+        "label": "Namkaran Muhurat",
+        "summary": "The baby naming ceremony."
+      },
+      "annaprashan": {
+        "label": "Annaprashan Muhurat",
+        "summary": "A baby's first solid food."
+      },
+      "mundan": {
+        "label": "Mundan Muhurat",
+        "summary": "The first haircut ceremony."
+      },
+      "griha-pravesh": {
+        "label": "Griha Pravesh Muhurat",
+        "summary": "House-warming: first entry into a new home."
+      },
+      "property-purchase": {
+        "label": "Property Purchase Muhurat",
+        "summary": "Buying or registering land or a house."
+      },
+      "house-construction": {
+        "label": "House Construction Muhurat",
+        "summary": "Bhoomi pujan and the start of building."
+      },
+      "vehicle-purchase": {
+        "label": "Vehicle Purchase Muhurat",
+        "summary": "Buying a new car, bike or other vehicle."
+      },
+      "vehicle-delivery": {
+        "label": "Vehicle Delivery Muhurat",
+        "summary": "Taking delivery of a vehicle you booked."
+      },
+      "travel": {
+        "label": "Travel Muhurat",
+        "summary": "Starting a journey (Yatra)."
+      },
+      "business-opening": {
+        "label": "Business Opening Muhurat",
+        "summary": "Starting a business or an office."
+      },
+      "shop-opening": {
+        "label": "New Shop Opening Muhurat",
+        "summary": "Opening a new shop or store."
+      },
+      "business-launch": {
+        "label": "New Business Launch Muhurat",
+        "summary": "Launching a venture, product or website."
+      },
+      "work-beginning": {
+        "label": "Important Work Beginning Muhurat",
+        "summary": "Starting a job, project or important task."
+      }
+    },
+    "form": {
+      "next30": "Next 30 days",
+      "next3m": "Next 3 months",
+      "next6m": "Next 6 months",
+      "custom": "Custom dates",
+      "errBoth": "Please choose both a start and an end date.",
+      "errOrder": "The end date must be on or after the start date.",
+      "errPast": "The start date cannot be in the past at the event location.",
+      "errLong": "Please search at most 366 days at a time.",
+      "errPlace": "Please choose the event location from the search results.",
+      "changeEvent": "Change event",
+      "intro": "Tell us where the event will take place and when you would like to search. No birth details are needed.",
+      "whereLegend": "Where will it take place?",
+      "eventLocation": "Event location",
+      "city": "City",
+      "state": "State",
+      "country": "Country",
+      "latitude": "Latitude",
+      "longitude": "Longitude",
+      "timeZone": "Time zone",
+      "placeHelp": "Search for the city, then pick it from the list. Sunrise, sunset and all timings are calculated for that place, not for where you are now.",
+      "whenLegend": "When should we look?",
+      "dateRange": "Date range",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "datesNote": "Dates are counted in the event location's time zone. You can search up to 366 days at a time.",
+      "preferences": "Preferences",
+      "preferredWeekdays": "Preferred weekdays",
+      "weekdaysNote": "Only weekdays this event's tradition already accepts can be returned.",
+      "timeOfDay": "Time of day",
+      "todAny": "Any time between sunrise and sunset",
+      "todMorning": "Morning (until 12:00)",
+      "todAfternoon": "Afternoon (12:00 until sunset)",
+      "direction": "Direction of travel",
+      "notSpecified": "Not specified",
+      "directionNote": "If given, the weekday on which that direction is unfavourable (Dishashool) is left out.",
+      "submit": "Find Muhurat"
+    },
+    "weekdayShort": {
+      "sun": "Sun",
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat"
+    },
+    "direction": {
+      "North": "North",
+      "East": "East",
+      "South": "South",
+      "West": "West"
+    },
+    "page": {
+      "calculatingTitle": "Calculating the Panchang…",
+      "calculatingBody": "Checking sunrise, tithi, nakshatra, yoga and karana for every day, at your event location.",
+      "calcError": "We could not calculate the Muhurat. Please check the details and try again.",
+      "yourMuhurat": "Your Muhurat",
+      "imageAlt": "A sun rising over a lotus and a calendar",
+      "intro": "Explore suitable dates and timings for important events based on Hindu Panchang, calculated for your event location.",
+      "savedTitle": "Saved Muhurats",
+      "savedNote": "Kept in this browser only. They are not attached to your account.",
+      "copyTiming": "Copy {{event}} timing",
+      "downloadCal": "Download calendar file for {{event}}",
+      "removeSaved": "Remove saved {{event}}"
+    },
+    "calendar": {
+      "label": "Calendar view",
+      "prev": "Previous month",
+      "next": "Next month",
+      "notCalculated": "not calculated",
+      "noWindow": "no qualifying window",
+      "oneWindow": "1 suitable window",
+      "nWindows": "{{count}} suitable windows",
+      "nShort": "{{count}} windows",
+      "oneShort": "1 window",
+      "noneShort": "none",
+      "legend": "Legend",
+      "legendWindow": "Suitable window (the gold part shows when, between sunrise and sunset)",
+      "legendMany": "“2 windows”: more than one suitable window that day",
+      "legendFestival": "a festival or observance (it does not make the date suitable or unsuitable)",
+      "legendNone": "“none”: no qualifying window under this method",
+      "legendFaded": "Faded: outside your search, not calculated",
+      "noWindowDate": "No qualifying window on this date under the selected method.",
+      "select": "Select a date to see its suitable timings."
+    },
+    "seq": {
+      "until": "{{name}} until {{time}}",
+      "untilNext": "{{name}} until {{time}} (next day)",
+      "then": "then"
+    },
+    "summary": {
+      "location": "Location",
+      "rangeText": "{{start}} to {{end}} ({{count}} days)",
+      "convention": "Calendar convention",
+      "festivals": "Festivals",
+      "dates": "Qualifying dates",
+      "windows": "Qualifying time windows",
+      "festivalDays": "Festival and observance days",
+      "xOfY": "{{a}} of {{b}}"
+    },
+    "results": {
+      "confidenceConsensus": "The core lists for this event (tithi, nakshatra, weekday) agree across the Panchang references consulted.",
+      "confidenceGeneral": "This event follows the general auspicious-time conventions. The references consulted give no separate list for it, so no extra event-specific rule has been added.",
+      "removedSaved": "Removed from saved.",
+      "savedHere": "Saved in this browser.",
+      "copied": "Timing copied.",
+      "copyFailedSelect": "Could not copy. Please select the text and copy it.",
+      "copyFailed": "Could not copy.",
+      "shared": "Shared.",
+      "shareCopied": "Sharing is not available here, so the text was copied.",
+      "shareFailed": "Could not share.",
+      "icsDone": "Calendar file downloaded. Open it to add the event to your calendar.",
+      "icsFailed": "Could not create the calendar file.",
+      "addToCalendar": "Add to calendar",
+      "calcDetails": "Calculation details",
+      "weekday": "Weekday",
+      "pada": "pada {{n}}",
+      "sunrise": "Sunrise",
+      "sunset": "Sunset",
+      "sunsetLc": "sunset",
+      "valuesAtStart": "Values at the start of the window, {{time}} local time.",
+      "changesInside": "Changes inside this window",
+      "excludedPeriods": "Excluded periods that day",
+      "rankedAs": "How this window was ranked ({{score}} of 100)",
+      "detailsFoot": "All times are local time at the event location. The ranking only orders windows that already qualify; it is not a classical grade.",
+      "bestMuhurat": "Best-ranked Muhurat",
+      "localTime": "local time",
+      "suitable": "Suitable",
+      "goldNote": "Gold: every suitable window that day, between sunrise {{sunrise}} and sunset {{sunset}}",
+      "excludedThatDay": "Excluded that day:",
+      "outsideAll": "This window lies outside all three.",
+      "whyTitle": "Why this Muhurat is suitable",
+      "whyIntro": "Each point below comes from the Panchang calculated for {{place}} on this date.",
+      "masaAmanta": "masa (Amanta)",
+      "panchakFrom": "from {{time}}",
+      "panchakRunning": "running at sunrise",
+      "panchakUntil": "until {{time}}",
+      "bestShort": "Best-ranked",
+      "minutes": "{{count}} min",
+      "whyWindow": "Why this window is suitable",
+      "notSuitable": "Not suitable",
+      "countOne": "1 suitable Muhurat window found",
+      "countMany": "{{count}} suitable Muhurat windows found",
+      "onOneDate": "on 1 date, listed by date below",
+      "onDates": "on {{count}} dates, listed by date below",
+      "byDate": "By date",
+      "views": "Result views",
+      "allDates": "All suitable dates",
+      "notSuitableOne": "1 date with no suitable window, and why",
+      "notSuitableMany": "{{count}} dates with no suitable window, and why",
+      "calcMethod": "Calculation method",
+      "elementsRules": "Panchang elements and rules evaluated",
+      "evaluatedFor": "Evaluated for {{event}}",
+      "rulesApplied": "Rules applied",
+      "restOn": "What these rules rest on",
+      "limits": "Limits and uncertainty"
+    },
+    "noResult": {
+      "title": "No suitable {{event}} found in these dates",
+      "body": "We checked every date from {{start}} to {{end}} at {{place}}, interval by interval, using the Panchang calculated for that place. Nothing qualified under the selected method. This does not mean the event cannot be held; it means no time met every rule below.",
+      "datesChecked": "Dates checked, and what ruled each one out",
+      "wholeDate": "whole date",
+      "partDate": "part of the date",
+      "intervals": "Interval by interval",
+      "needsTitle": "What would need to be different",
+      "needsNote": "The event's traditional rules are not changed to produce a result. Another date, place or period is what can change the outcome.",
+      "longer": "Search a longer period (until {{date}})",
+      "changeRange": "Change date range",
+      "changeLocation": "Change location"
+    },
+    "share": {
+      "text": "{{event}}: {{date}}, {{range}} ({{place}}, local time). Tithi {{paksha}} {{tithi}}, Nakshatra {{nakshatra}}. Traditional Jyotish guidance, not a guarantee. Found with Muhurat Finder on MyBhagya.",
+      "localTime": "local time at the event location",
+      "yogaKarana": "{{yoga}} yoga  ·  {{karana}} karana",
+      "note1": "Traditional Jyotish guidance for personal and cultural",
+      "note2": "use. Not a prediction or a guarantee of any outcome.",
+      "icsDescription": "{{range}} local time. {{paksha}} {{tithi}}, {{nakshatra}}. Traditional Jyotish guidance, not a guarantee. Confirm the final time with your priest or jyotishi."
+    }
+  },
+  "guru": {
+    "welcome": {
+      "greeting": "Namaste, {{name}}",
+      "quote": "Trust the universe. Your karma guides you, and your inner voice shows the way.",
+      "startAria": "Start a conversation",
+      "prompt": "What would you like guidance on?",
+      "topicGroup": "Topic"
+    },
+    "topic": {
+      "career": {
+        "title": "Career & Finance",
+        "s1": "I feel stuck in my career. How should I think about my next step?",
+        "s2": "How can I approach money decisions with more calm?"
+      },
+      "relationships": {
+        "title": "Relationships",
+        "s1": "I am having conflict in my relationship. How can I approach it?",
+        "s2": "How can I bring more understanding into my family life?"
+      },
+      "health": {
+        "title": "Health",
+        "s1": "I feel drained lately. How can I bring more balance into my day?",
+        "s2": "What simple routines support a calmer mind?"
+      },
+      "spiritual": {
+        "title": "Spiritual Growth",
+        "s1": "How can I begin a simple daily spiritual practice?",
+        "s2": "What does karma mean for the choices I make today?"
+      },
+      "lifePath": {
+        "title": "Life Path",
+        "s1": "I am unsure about my direction in life. Where do I begin?",
+        "s2": "How can I tell what truly matters to me?"
+      }
+    },
+    "composer": {
+      "sessionEnded": "Your daily session has ended",
+      "listening": "Listening… speak now",
+      "placeholder": "Ask Divya Margdarshak anything...",
+      "inputLabel": "Message Divya Margdarshak",
+      "voiceStop": "Stop voice input",
+      "voiceStart": "Start voice input",
+      "send": "Send message",
+      "hint": "Press Enter to send · Shift + Enter for a new line · use the microphone to speak",
+      "voiceUnsupported": "Voice input requires Chrome or Edge browser."
+    },
+    "chat": {
+      "typingNamed": "{{name}} is typing",
+      "typing": "Typing",
+      "resultNote": "Using your {{name}} result for this conversation.",
+      "restoring": "Restoring your conversation…",
+      "restoreFailed": "We couldn't load your previous conversation. Your messages are safe."
+    },
+    "search": {
+      "title": "Searching for an available Guru...",
+      "status1": "Finding an available Guru...",
+      "status2": "Checking the right guidance...",
+      "status3": "Preparing your conversation...",
+      "none": "No Guru is currently available.",
+      "noneBody": "Please try again shortly."
+    },
+    "header": {
+      "openMenu": "Open menu",
+      "goBack": "Go back"
+    },
+    "sidebar": {
+      "home": "Home",
+      "voice": "Voice Consultation",
+      "report": "Diagnosis & Remedies",
+      "navigation": "Navigation",
+      "remedies": "Remedies Library",
+      "newConsultation": "New Consultation",
+      "close": "Close sidebar",
+      "recentChats": "Recent Chats",
+      "conversations": "{{count}} conversations",
+      "noHistory": "No history yet",
+      "noRecent": "No recent chats yet.",
+      "savedRemedies": "Saved Remedies",
+      "savedCount": "{{count}} saved",
+      "noneSaved": "None saved yet",
+      "noSaved": "No saved remedies yet.",
+      "mantra": "Mantra",
+      "seeker": "Seeker",
+      "vedicGuidance": "Vedic Guidance"
+    },
+    "persona": {
+      "verified": "Verified",
+      "expertise": "Expertise",
+      "years": "{{count}} years of experience",
+      "guidedLabel": "Guided response based on this astrologer's area of expertise",
+      "guided": "Guided"
+    },
+    "progress": {
+      "title": "Spiritual Assessment Progress",
+      "complete": "{{progress}}% Complete",
+      "generate": "Generate Diagnosis Report"
+    },
+    "limit": {
+      "timeLeft": "Free session time left: {{time}}",
+      "ended": "Your free 5-minute chat for today has ended.",
+      "again": "You can chat again after {{when}} IST.",
+      "startFailed": "Could not start the chat session. Please try again.",
+      "cannotCheck": "Could not check today's chat session.",
+      "cannotReach": "Could not reach the chat session service.",
+      "reached": "Your daily astrology chat limit has been reached."
+    },
+    "errors": {
+      "network": "We couldn't reach Divya Margdarshak. Check your connection and try again.",
+      "tooMany": "Too many messages. Please wait a minute and try again.",
+      "unavailable": "Divya Margdarshak is unavailable right now. Please try again in a moment.",
+      "incomplete": "Divya Margdarshak's reply came back incomplete. Please try again.",
+      "unverified": "That reply could not be checked against our verified sources. Please ask again.",
+      "wrongLanguage": "The reply did not come in your chosen language. Please try again.",
+      "screenNetwork": "We couldn't reach the server. Check your connection and try again.",
+      "screenFailed": "Could not process your message. Please try again."
+    },
+    "screen": {
+      "escalated": "Thank you for reaching out 🙏 Your message has been passed to our team and someone will contact you personally and shortly. Until then, you are welcome to continue with any astrology or spiritual question here.",
+      "offTopic": "I can only help with astrology, Vedic wisdom, karma and spiritual guidance. Please ask me something in that space, such as your kundli, a planet's influence, a mantra or a life concern you'd like a spiritual perspective on.",
+      "thanks": "Thank you. We will contact you shortly."
+    }
+  },
+  "voice": {
+    "title": "Voice Session",
+    "voiceOn": "Voice On",
+    "unmute": "Unmute",
+    "stop": "Stop",
+    "newSession": "New",
+    "welcome": "Namaste.\n\nPlease share what troubles your heart — whether it is career, relationships, health, finances, or spiritual matters — and I will listen carefully.\n\nYou may speak or type in any language you are comfortable with. I will reply in the language chosen above.",
+    "startWith": "You can start with:",
+    "s1": "I feel worried about my career.",
+    "s2": "I have a question about my relationship.",
+    "s3": "How can I find peace of mind?",
+    "micIdle": "Tap to Speak",
+    "micListening": "I am listening...",
+    "micProcessing": "Understanding your situation...",
+    "micSpeaking": "Pandit Ji is speaking...",
+    "micTryAgain": "Please try again",
+    "noSpeech": "No speech detected. Please tap and try again.",
+    "micError": "Microphone error. Please check permissions.",
+    "speechUnsupported": "Speech recognition is not available in this browser. You can type your message instead.",
+    "speechLanguage": "This browser cannot recognise {{language}} speech. You can type your message instead.",
+    "inputPlaceholder": "Type your message…",
+    "inputLabel": "Your message",
+    "send": "Send",
+    "typing": "Pandit Ji is typing…",
+    "replyFailed": "Pandit Ji could not reply just now. Please try again.",
+    "ttsUnavailable": "Voice playback is not available in {{language}} right now. The text reply is shown.",
+    "offTopic": "I am here only to listen to matters of the heart and spirit — career, relationships, health, finances, and spiritual guidance.",
+    "play": "Play",
+    "pause": "Pause",
+    "resume": "Resume",
+    "replay": "Replay"
+  },
+  "glossary": {
+    "weekday": {
+      "Sunday": "Sunday",
+      "Monday": "Monday",
+      "Tuesday": "Tuesday",
+      "Wednesday": "Wednesday",
+      "Thursday": "Thursday",
+      "Friday": "Friday",
+      "Saturday": "Saturday"
+    },
+    "paksha": {
+      "Shukla": "Shukla",
+      "Krishna": "Krishna"
+    },
+    "tithi": {
+      "Pratipada": "Pratipada",
+      "Dwitiya": "Dwitiya",
+      "Tritiya": "Tritiya",
+      "Chaturthi": "Chaturthi",
+      "Panchami": "Panchami",
+      "Shashthi": "Shashthi",
+      "Saptami": "Saptami",
+      "Ashtami": "Ashtami",
+      "Navami": "Navami",
+      "Dashami": "Dashami",
+      "Ekadashi": "Ekadashi",
+      "Dwadashi": "Dwadashi",
+      "Trayodashi": "Trayodashi",
+      "Chaturdashi": "Chaturdashi",
+      "Purnima": "Purnima",
+      "Amavasya": "Amavasya"
+    },
+    "nakshatra": {
+      "Ashwini": "Ashwini",
+      "Bharani": "Bharani",
+      "Krittika": "Krittika",
+      "Rohini": "Rohini",
+      "Mrigashira": "Mrigashira",
+      "Ardra": "Ardra",
+      "Punarvasu": "Punarvasu",
+      "Pushya": "Pushya",
+      "Ashlesha": "Ashlesha",
+      "Magha": "Magha",
+      "Purva Phalguni": "Purva Phalguni",
+      "Uttara Phalguni": "Uttara Phalguni",
+      "Hasta": "Hasta",
+      "Chitra": "Chitra",
+      "Swati": "Swati",
+      "Vishakha": "Vishakha",
+      "Anuradha": "Anuradha",
+      "Jyeshtha": "Jyeshtha",
+      "Mula": "Mula",
+      "Purva Ashadha": "Purva Ashadha",
+      "Uttara Ashadha": "Uttara Ashadha",
+      "Shravana": "Shravana",
+      "Dhanishta": "Dhanishta",
+      "Shatabhisha": "Shatabhisha",
+      "Purva Bhadrapada": "Purva Bhadrapada",
+      "Uttara Bhadrapada": "Uttara Bhadrapada",
+      "Revati": "Revati"
+    },
+    "yoga": {
+      "Vishkambha": "Vishkambha",
+      "Priti": "Priti",
+      "Ayushman": "Ayushman",
+      "Saubhagya": "Saubhagya",
+      "Shobhana": "Shobhana",
+      "Atiganda": "Atiganda",
+      "Sukarma": "Sukarma",
+      "Dhriti": "Dhriti",
+      "Shula": "Shula",
+      "Ganda": "Ganda",
+      "Vriddhi": "Vriddhi",
+      "Dhruva": "Dhruva",
+      "Vyaghata": "Vyaghata",
+      "Harshana": "Harshana",
+      "Vajra": "Vajra",
+      "Siddhi": "Siddhi",
+      "Vyatipata": "Vyatipata",
+      "Variyana": "Variyana",
+      "Parigha": "Parigha",
+      "Shiva": "Shiva",
+      "Siddha": "Siddha",
+      "Sadhya": "Sadhya",
+      "Shubha": "Shubha",
+      "Shukla": "Shukla",
+      "Brahma": "Brahma",
+      "Indra": "Indra",
+      "Vaidhriti": "Vaidhriti"
+    },
+    "karana": {
+      "Bava": "Bava",
+      "Balava": "Balava",
+      "Kaulava": "Kaulava",
+      "Taitila": "Taitila",
+      "Gara": "Gara",
+      "Vanija": "Vanija",
+      "Vishti": "Vishti",
+      "Kimstughna": "Kimstughna",
+      "Shakuni": "Shakuni",
+      "Chatushpada": "Chatushpada",
+      "Naga": "Naga"
+    },
+    "masa": {
+      "Chaitra": "Chaitra",
+      "Vaishakha": "Vaishakha",
+      "Jyeshtha": "Jyeshtha",
+      "Ashadha": "Ashadha",
+      "Shravana": "Shravana",
+      "Bhadrapada": "Bhadrapada",
+      "Ashvina": "Ashvina",
+      "Kartika": "Kartika",
+      "Margashirsha": "Margashirsha",
+      "Pausha": "Pausha",
+      "Magha": "Magha",
+      "Phalguna": "Phalguna"
+    },
+    "rashi": {
+      "Aries": "Aries",
+      "Taurus": "Taurus",
+      "Gemini": "Gemini",
+      "Cancer": "Cancer",
+      "Leo": "Leo",
+      "Virgo": "Virgo",
+      "Libra": "Libra",
+      "Scorpio": "Scorpio",
+      "Sagittarius": "Sagittarius",
+      "Capricorn": "Capricorn",
+      "Aquarius": "Aquarius",
+      "Pisces": "Pisces"
+    },
+    "planet": {
+      "Sun": "Sun",
+      "Moon": "Moon",
+      "Mars": "Mars",
+      "Mercury": "Mercury",
+      "Jupiter": "Jupiter",
+      "Venus": "Venus",
+      "Saturn": "Saturn",
+      "Rahu": "Rahu",
+      "Ketu": "Ketu"
+    },
+    "festival": {
+      "makar-sankranti": "Makar Sankranti",
+      "vasant-panchami": "Vasant Panchami",
+      "maha-shivaratri": "Maha Shivaratri",
+      "ugadi": "Ugadi / Gudi Padwa",
+      "rama-navami": "Rama Navami",
+      "guru-purnima": "Guru Purnima",
+      "buddha-purnima": "Buddha Purnima",
+      "raksha-bandhan": "Raksha Bandhan",
+      "ganesh-chaturthi": "Ganesh Chaturthi",
+      "navratri": "Sharad Navratri begins",
+      "dussehra": "Dussehra",
+      "karwa-chauth": "Karwa Chauth",
+      "narak-chaturdashi": "Narak Chaturdashi",
+      "diwali": "Diwali (Lakshmi Puja)",
+      "govardhan-puja": "Govardhan Puja",
+      "bhai-dooj": "Bhai Dooj",
+      "chhath": "Chhath Puja",
+      "kartika-purnima": "Kartika Purnima (Guru Nanak Jayanti)"
+    },
+    "term": {
+      "Paksha": "Paksha",
+      "paksha": "paksha",
+      "Tithi": "Tithi",
+      "Nakshatra": "Nakshatra",
+      "Yoga": "Yoga",
+      "Karana": "Karana",
+      "Janma Nakshatra": "Janma Nakshatra",
+      "Nakshatra Pada": "Nakshatra Pada",
+      "Chandra Rashi": "Chandra Rashi",
+      "Vikram Samvat": "Vikram Samvat",
+      "Panchak": "Panchak",
+      "Rahu Kalam": "Rahu Kalam",
+      "Yamaganda": "Yamaganda",
+      "Gulika Kalam": "Gulika Kalam",
+      "Rahu Kaal": "Rahu Kaal",
+      "Muhurat": "Muhurat",
+      "Panchang": "Panchang",
+      "Rashi": "Rashi",
+      "Pada": "Pada",
+      "Lagna": "Lagna",
+      "Graha": "Graha",
+      "Dasha": "Dasha",
+      "Abhijit": "Abhijit"
+    }
+  }
+}

@@ -1,5 +1,6 @@
 import { OPENROUTER_MODEL } from '../config/aiModels.js';
 import axios from 'axios';
+import { languageRule, tokenBudget, type ResponseLanguage } from '../utils/responseLanguage.js';
 
 interface BirthChartData {
   sign?: string;
@@ -24,7 +25,8 @@ interface HumanReadableInterpretation {
 const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
 
 export const generateHumanReadableInterpretation = async (
-  birthData: BirthChartData
+  birthData: BirthChartData,
+  lang?: ResponseLanguage
 ): Promise<HumanReadableInterpretation> => {
   try {
     const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
@@ -33,7 +35,7 @@ export const generateHumanReadableInterpretation = async (
       throw new Error('OPENROUTER_API_KEY is not set in environment variables');
     }
 
-    const prompt = `You are an expert astrologer. Based on the following birth chart data, provide a detailed but easy-to-understand interpretation in simple Hindi-English mix (Hinglish). Make it relatable and practical.
+    const prompt = `You are an expert astrologer. Based on the following birth chart data, provide a detailed but easy-to-understand interpretation${lang ? '' : ' in simple Hindi-English mix (Hinglish)'}. Make it relatable and practical.
 
 Birth Chart Data:
 ${JSON.stringify(birthData, null, 2)}
@@ -49,7 +51,7 @@ Please provide the response in this exact JSON format:
   "lifeAdvice": "A paragraph with practical life advice based on their chart"
 }
 
-Use simple, conversational language. Avoid complex astrological jargon. Make it feel personal and helpful.`;
+Use simple, conversational language. Avoid complex astrological jargon. Make it feel personal and helpful.${languageRule(lang, '')}`;
 
     const response = await axios.post(
       `${OPENROUTER_BASE_URL}/chat/completions`,
@@ -66,7 +68,7 @@ Use simple, conversational language. Avoid complex astrological jargon. Make it 
           }
         ],
         temperature: 0.7,
-        max_tokens: 1500
+        max_tokens: tokenBudget(1500, lang)
       },
       {
         headers: {
@@ -172,7 +174,8 @@ Keep it positive, practical, and easy to understand. Use Hinglish (Hindi-English
 
 export const generateCompatibilityAnalysis = async (
   sign1: string,
-  sign2: string
+  sign2: string,
+  lang?: ResponseLanguage
 ): Promise<string> => {
   try {
     const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
@@ -190,7 +193,7 @@ Provide:
 4. Tips for a successful relationship
 5. Best areas of connection
 
-Use simple, encouraging language. Make it practical and relatable. Use Hinglish for better understanding.`;
+Use simple, encouraging language. Make it practical and relatable.${languageRule(lang, ' Use Hinglish for better understanding.')}`;
 
     const response = await axios.post(
       `${OPENROUTER_BASE_URL}/chat/completions`,
@@ -207,7 +210,7 @@ Use simple, encouraging language. Make it practical and relatable. Use Hinglish 
           }
         ],
         temperature: 0.7,
-        max_tokens: 1000
+        max_tokens: tokenBudget(1000, lang)
       },
       {
         headers: {

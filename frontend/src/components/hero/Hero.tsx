@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import Tx from "@/i18n/Tx";
 import { ArrowRight } from "lucide-react";
 import { useReducedMotion } from "framer-motion";
 import { useFeatureFlags } from "@/lib/featureFlags";
@@ -64,23 +65,23 @@ const Hero = () => {
       <div className="container relative mx-auto flex flex-1 flex-col justify-center px-4 pb-16 pt-6 md:px-6 lg:pb-28 lg:pt-24">
         <div className="hl-rise max-w-[640px] lg:max-w-[min(60vw,860px)]">
           <h1 className="hl-serif mb-5 text-[1.85rem] font-semibold leading-[1.14] tracking-[-0.005em] text-home-ink sm:text-[2.4rem] lg:mb-7 lg:whitespace-nowrap lg:text-[clamp(2.4rem,3.3vw,3.4rem)] lg:leading-[1.1]">
-            <span className="block">Discover Clarity,</span>
-            <span className="block">Align Your Energy,</span>
-            <span className="block text-home-gerua">Create a Better Tomorrow</span>
+            <span className="block"><Tx k="home.hero.line1" /></span>
+            <span className="block"><Tx k="home.hero.line2" /></span>
+            <span className="block text-home-gerua"><Tx k="home.hero.line3" /></span>
           </h1>
 
           <p className="mb-6 max-w-[34rem] font-home-sans text-base leading-relaxed text-home-muted md:text-lg lg:mb-7">
-            Get accurate astrology insights, personalised guidance, and powerful Seva to help you make better decisions in love, career, health and life.
+            <Tx k="home.hero.body" />
           </p>
 
           <div className="flex flex-col gap-3 sm:flex-row">
             <a href={`#${NEXT_SECTION_ID}`} onClick={scrollToNext} className="hl-btn group w-full sm:w-auto">
-              Explore Astrology Seva
+              <Tx k="home.hero.cta" />
               <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
             </a>
             {!isPathDisabled(FEATURES.guru.path) && (
               <Link to={FEATURES.guru.path} className="hl-btn-ghost w-full sm:w-auto">
-                Try {FEATURES.guru.name}
+                <Tx k="home.hero.tryGuru" values={{ name: FEATURES.guru.name }} def={`Try ${FEATURES.guru.name}`} />
               </Link>
             )}
           </div>
