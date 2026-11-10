@@ -1,7 +1,7 @@
 import { Link, useParams } from "react-router-dom";
 import { BadgeCheck, Clock3, Loader2, Star, Users } from "lucide-react";
 import { AstrologerAvatar, ConsultButtons, PriceLine, StatusDot } from "@/components/astrologers/AstrologerCard";
-import { CONSULTATION_ENABLED, formatCount } from "@/data/astrologers";
+import { CHAT_ENABLED, CONSULTATION_ENABLED, formatCount } from "@/data/astrologers";
 import { usePublicAstrologer } from "@/features/astrologer/public/hooks";
 
 const Stat = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) => (
@@ -128,7 +128,7 @@ const AstrologerProfile = () => {
               <PriceLine a={a} />
             </div>
             {a.availability && <p className="mt-1 text-sm text-[#6B4A37]">{a.availability}</p>}
-            {CONSULTATION_ENABLED && (
+            {(CHAT_ENABLED || CONSULTATION_ENABLED) && (
               <div className="mt-4">
                 <ConsultButtons a={a} />
               </div>

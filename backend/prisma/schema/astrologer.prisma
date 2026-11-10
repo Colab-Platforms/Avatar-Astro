@@ -85,12 +85,12 @@ model AstrologerApplication {
   profilePhotoPublicId String? @map("profile_photo_public_id")
 
   // Step 2 — professional details
-  yearsOfExperience      Int?    @map("years_of_experience")
-  educationBackground    String? @map("education_background")
-  certificationsText     String? @map("certifications_text")
-  professionalIntro      String? @map("professional_intro")
-  consultationExperience String? @map("consultation_experience")
-  areasOfExpertise       String? @map("areas_of_expertise")
+  yearsOfExperience      Int?     @map("years_of_experience")
+  educationBackground    String?  @map("education_background")
+  certificationsText     String?  @map("certifications_text")
+  professionalIntro      String?  @map("professional_intro")
+  consultationExperience String?  @map("consultation_experience")
+  areasOfExpertise       String?  @map("areas_of_expertise")
   languages              String[]
 
   /// Frozen copy of the active AstrologerDocumentRequirement rows at the moment of
@@ -162,16 +162,16 @@ model AstrologerApplicationSpecialty {
 /// documents (Passport / Driving Licence / Voter ID / ...) share one required slot —
 /// the applicant picks any one from the group, not all of them.
 model AstrologerDocumentRequirement {
-  id    String                      @id @default(cuid())
-  group String
-  key   String                      @unique
-  label String
+  id                String                     @id @default(cuid())
+  group             String
+  key               String                     @unique
+  label             String
   category          AstrologerDocumentCategory
-  acceptedMimeTypes String[]                    @map("accepted_mime_types")
-  maxSizeMb         Int                         @default(10) @map("max_size_mb")
-  isRequired        Boolean                     @default(false) @map("is_required")
-  isActive          Boolean                     @default(true) @map("is_active")
-  sortOrder         Int                         @default(0) @map("sort_order")
+  acceptedMimeTypes String[]                   @map("accepted_mime_types")
+  maxSizeMb         Int                        @default(10) @map("max_size_mb")
+  isRequired        Boolean                    @default(false) @map("is_required")
+  isActive          Boolean                    @default(true) @map("is_active")
+  sortOrder         Int                        @default(0) @map("sort_order")
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @updatedAt @map("updated_at")
@@ -333,8 +333,8 @@ model AstrologerProfile {
   /// creation and never reused, even if the display name later changes.
   slug String @unique
 
-  displayName         String
-  bio                 String?
+  displayName          String
+  bio                  String?
   profilePhotoUrl      String?  @map("profile_photo_url")
   profilePhotoPublicId String?  @map("profile_photo_public_id")
   yearsOfExperience    Int?     @map("years_of_experience")
@@ -347,7 +347,18 @@ model AstrologerProfile {
 
   /// Astrologer's own self-serve rate (Part 10: post-approval setup). Null until they set
   /// one from their workspace — the public card/profile must hide pricing, not show 0, when null.
+  /// `pricePerMinute == null` means "not priced yet, hidden" — it NEVER means free. The only
+  /// sanctioned free path is isComplimentary below.
   pricePerMinute Int? @map("price_per_minute")
+
+  /// Fully free, unmetered-up-to-a-cap consultations. Settable ONLY by SUPERADMIN (never by the
+  /// astrologer's own profile-edit endpoints) — enforced in the service layer, not by a DB
+  /// constraint, since Prisma has no column-level write-permission concept.
+  isComplimentary Boolean @default(false) @map("is_complimentary")
+  /// Per-astrologer override of the platform-wide complimentary session cap (PlatformSetting key
+  /// "chat.complimentaryMaxSeconds", default 900s/15min — see chat.service.ts). Null = use the
+  /// platform default; set here only if THIS astrologer has a superadmin-granted exception.
+  complimentaryMaxSeconds Int? @map("complimentary_max_seconds")
 
   /// No booking/review system exists yet, so these are null/0 for every genuinely approved
   /// astrologer — only ever populated for isDemo rows seeded for launch-content purposes.
@@ -356,7 +367,7 @@ model AstrologerProfile {
   consultationsCount Int      @default(0) @map("consultations_count")
   recognition        String?  @map("recognition")
   galleryUrls        String[] @default([]) @map("gallery_urls")
-  qualifications      String[] @default([]) @map("qualifications")
+  qualifications     String[] @default([]) @map("qualifications")
 
   /// True only for rows created by prisma/seeds/astrologerDemoProfiles.ts — placeholder
   /// launch content that never went through the real application/verification pipeline.
@@ -369,11 +380,20 @@ model AstrologerProfile {
   suspendedAt      DateTime? @map("suspended_at")
   suspensionReason String?   @map("suspension_reason")
 
+  /// Live chat presence. Driven by the Socket.IO connection count for this astrologer
+  /// (see realtime/socketServer.ts) plus the manual override in chat.astrologer.route.ts's
+  /// PATCH /online — not a static demo value. Never trust this alone for anything billing-
+  /// related; it only affects what visitors see on the public card.
+  isOnline   Boolean   @default(false) @map("is_online")
+  lastSeenAt DateTime? @map("last_seen_at")
+
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @updatedAt @map("updated_at")
 
   application AstrologerApplication @relation(fields: [applicationId], references: [id], onDelete: Restrict)
   user        User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  chatSessions ChatSession[]
 
   @@index([isPublished])
   @@map("astrologer_profiles")

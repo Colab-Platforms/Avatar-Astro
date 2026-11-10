@@ -61,6 +61,9 @@ export const useAuthStore = create<AuthState>()(
 
       logout: () => {
         clearPersonalLocalData();
+        // Lazy import avoids a hard module cycle (chat/socket.ts reads this store for its
+        // auth token) — only resolved when someone actually logs out.
+        import("@/features/chat/lib/socket").then(({ disconnectSocket }) => disconnectSocket()).catch(() => {});
         set({
           user: null,
           accessToken: null,

@@ -12,6 +12,8 @@ export interface AstrologerProfileSelf {
   /** Rupees per minute. Null until they've set one — the public profile hides pricing until then. */
   pricePerMinute: number | null;
   isPublished: boolean;
+  /** Live chat presence — driven by Socket.IO connections plus the manual toggle in the chat workspace. */
+  isOnline: boolean;
   publishedAt: string | null;
   suspendedAt: string | null;
   suspensionReason: string | null;

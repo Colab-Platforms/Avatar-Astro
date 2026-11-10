@@ -1,4 +1,5 @@
 import express, { Request, Response, NextFunction } from "express";
+import { createServer } from "http";
 import cors from "cors";
 import dotenv from "dotenv";
 import axios from "axios";
@@ -30,6 +31,12 @@ import publicShopRoutes from "./modules/shop/shop.public.route.js";
 import gemstoneRoutes from "./modules/gemstone/gemstone.route.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { startDarshanRefreshLoop } from "./modules/darshan/darshan.refresh.js";
+import { createWalletRouter } from "./modules/payment/wallet.route.js";
+import { createChatRouter } from "./modules/chat/chat.route.js";
+import { createAstrologerChatRouter } from "./modules/chat/chat.astrologer.route.js";
+import { resumeAllActiveSessions } from "./modules/chat/billing.js";
+import { initSocketServer } from "./realtime/socketServer.js";
+import { isOriginAllowed } from "./utils/corsOrigins.js";
 
 dotenv.config();
 
@@ -50,35 +57,11 @@ const app = express();
 app.set("trust proxy", 1);
 const PORT = process.env.PORT || 5001;
 
-// Middleware
-const EXPLICIT_ALLOWED_ORIGINS = [
-  "http://localhost:5173",
-  "http://127.0.0.1:5173",
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
-  "http://localhost:8081",
-  "http://192.168.1.126:8081",
-  "https://avatar-astro.vercel.app",
-];
-// This project's actual Vite dev port (see frontend/vite.config.ts) — kept
-// in addition to the explicit list above since that's what's really running.
-// Also allows LAN IPs (192.168.x.x / 10.x.x.x / 172.16-31.x.x) so phones and
-// other devices on the same WiFi can hit a locally-running backend during dev.
-const LOCAL_DEV_ORIGIN_REGEX =
-  /^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})(:\d+)?$/;
-// Optional production origin, set via env — unrelated to local dev, unchanged.
-const PRODUCTION_ORIGIN = process.env.CORS_ORIGIN;
-
+// Middleware — origin allow-list lives in utils/corsOrigins.ts (shared with Socket.IO's CORS config).
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (server-to-server proxy, curl, mobile)
-      if (!origin) return callback(null, true);
-      if (EXPLICIT_ALLOWED_ORIGINS.includes(origin))
-        return callback(null, true);
-      if (LOCAL_DEV_ORIGIN_REGEX.test(origin)) return callback(null, true);
-      if (PRODUCTION_ORIGIN && origin === PRODUCTION_ORIGIN)
-        return callback(null, true);
+      if (isOriginAllowed(origin)) return callback(null, true);
       console.warn(`✗ CORS rejected origin: ${origin}`);
       callback(Object.assign(new Error("Not allowed by CORS"), { statusCode: 403 }));
     },
@@ -331,6 +314,12 @@ app.use("/api/darshan", darshanRoutes);
 app.use("/api/astrologer", createAstrologerRouter());
 app.use("/api/astrologers", createAstrologerPublicRouter());
 
+// Wallet (mock-gateway recharge) and the real-time astrologer chat REST surface — live
+// message delivery and billing ticks happen over Socket.IO (see realtime/socketServer.ts).
+app.use("/api/wallet", createWalletRouter());
+app.use("/api/chat", createChatRouter());
+app.use("/api/astrologer/chat", createAstrologerChatRouter());
+
 // Published astrology About-section audio (public, read-only; never calls ElevenLabs)
 app.use("/api/astrology", createAstrologyAudioPublicRouter());
 
@@ -517,13 +506,20 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     .json({ success: false, error: err.message || "Internal Server Error" });
 });
 
+// Wrapped (rather than a bare app.listen) so Socket.IO can attach to the same HTTP
+// server/port — Render only exposes one port per service.
+const httpServer = createServer(app);
+initSocketServer(httpServer);
+
 // Start server
 function startServer() {
   startDarshanRefreshLoop();
+  resumeAllActiveSessions().catch((err) => console.error("[chat.billing] failed to resume active sessions:", err));
 
-  app.listen(PORT, () => {
+  httpServer.listen(PORT, () => {
     console.log(`✓ Server running on http://localhost:${PORT}`);
     console.log(`✓ API available at http://localhost:${PORT}/api`);
+    console.log(`✓ Socket.IO ready on the same port`);
   });
 }
 

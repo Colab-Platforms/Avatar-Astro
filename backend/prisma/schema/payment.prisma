@@ -1,0 +1,204 @@
+// Rupee wallet + recharge ledger. The payment gateway is intentionally mocked for now
+// (see modules/payment/payment.provider.ts) — PaymentOrder's create→confirm shape mirrors
+// what a real gateway needs (order creation, then a webhook/callback flipping it to
+// SUCCESS), so wiring up Razorpay later only changes how `status` becomes SUCCESS, not
+// the Wallet/WalletTransaction ledger around it.
+
+enum WalletTransactionType {
+  CREDIT
+  DEBIT
+}
+
+enum WalletTransactionReason {
+  RECHARGE
+  CHAT_CONSUMPTION
+  REFUND
+  ADJUSTMENT
+  SIGNUP_BONUS
+  TOOL_EXECUTION
+  RESERVATION_RELEASE
+}
+
+enum PaymentProvider {
+  MOCK
+  RAZORPAY
+}
+
+enum PaymentOrderStatus {
+  CREATED
+  SUCCESS
+  FAILED
+}
+
+/// Which balance a WalletTransaction's money actually moved into/out of. PURCHASED = ever came from a
+/// real (or mock) recharge; PROMOTIONAL = ever came from a promotional grant (signup bonus today).
+enum WalletBalanceBucket {
+  PURCHASED
+  PROMOTIONAL
+}
+
+/// One row per user — created lazily (upsert) on first wallet read, never by migration seed.
+/// Invariant (enforced by a raw-SQL CHECK constraint, not expressible as `@@check` in this Prisma
+/// version): balancePaise == purchasedBalancePaise + promotionalBalancePaise, and
+/// reservedBalancePaise <= balancePaise. See prisma/migrations/.../migration.sql.
+model Wallet {
+  id String @id @default(cuid())
+
+  userId String @unique @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Integer paise, never a float — avoids rounding drift across thousands of per-tick debits.
+  /// Always purchasedBalancePaise + promotionalBalancePaise.
+  balancePaise Int @default(0) @map("balance_paise")
+
+  /// Portion of balancePaise that came from a recharge (mock today, Razorpay later).
+  purchasedBalancePaise Int @default(0) @map("purchased_balance_paise")
+  /// Portion of balancePaise that came from a promotional grant (signup bonus today). Never withdrawable/transferable.
+  promotionalBalancePaise Int @default(0) @map("promotional_balance_paise")
+  /// Held by in-flight WalletReservation rows (introduced in a later migration). Always 0 until that ships —
+  /// the column and its CHECK constraint exist now so that migration doesn't have to touch Wallet again.
+  reservedBalancePaise Int @default(0) @map("reserved_balance_paise")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  transactions WalletTransaction[]
+  reservations WalletReservation[]
+
+  @@map("wallets")
+}
+
+/// Append-only ledger. balanceAfterPaise is a denormalized snapshot so the transaction
+/// history page never needs to replay the whole ledger just to show a running balance.
+/// amountPaise == sum(allocations[].amountPaise) for the corresponding row in WalletLedgerAllocation —
+/// enforced in the service layer (wallet.service.ts), since allocations are written in the same
+/// transaction as this row, not by a DB trigger.
+model WalletTransaction {
+  id String @id @default(cuid())
+
+  walletId String @map("wallet_id")
+  wallet   Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  type              WalletTransactionType
+  reason            WalletTransactionReason
+  amountPaise       Int                     @map("amount_paise")
+  balanceAfterPaise Int                     @map("balance_after_paise")
+
+  /// PaymentOrder id for RECHARGE, ChatSession id for CHAT_CONSUMPTION/REFUND, ToolExecution.executionId for TOOL_EXECUTION.
+  referenceId String? @map("reference_id")
+
+  /// Dedupes a retried settlement call (e.g. a re-processed billing tick, a retried recharge confirm) —
+  /// the service layer checks for an existing row with this key BEFORE mutating any balance, so a retry
+  /// is a safe no-op that returns the original row instead of double-crediting/debiting. Nullable because
+  /// not every historical/manual transaction needs one; Postgres never treats two NULLs as conflicting.
+  idempotencyKey String? @unique @map("idempotency_key")
+
+  /// Set on a REFUND row: the id of the original DEBIT transaction being reversed. A refund mirrors that
+  /// original transaction's bucket allocations exactly — it never re-runs the promotional-first debit policy.
+  reversalOfId String? @map("reversal_of_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  allocations WalletLedgerAllocation[]
+
+  @@index([walletId, createdAt])
+  @@index([referenceId])
+  @@map("wallet_transactions")
+}
+
+/// Splits one WalletTransaction across the bucket(s) it actually drew from or credited to. A single
+/// charge that draws partly from promotional and partly from purchased coins produces TWO rows here;
+/// a pure-promotional signup bonus credit produces exactly one. A refund's allocations are a verbatim
+/// copy of the original transaction's allocations (see WalletTransaction.reversalOfId).
+model WalletLedgerAllocation {
+  id String @id @default(cuid())
+
+  transactionId String            @map("transaction_id")
+  transaction   WalletTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  bucket      WalletBalanceBucket
+  amountPaise Int                 @map("amount_paise") // always > 0
+
+  @@index([transactionId])
+  @@map("wallet_ledger_allocations")
+}
+
+/// Exactly-once signup bonus grant. The @unique on userId is the ENTIRE enforcement mechanism for
+/// "exactly once per eligible account" — the service layer never relies on a check-then-insert race;
+/// it does `INSERT ... ON CONFLICT (user_id) DO NOTHING RETURNING id` and only credits the wallet when
+/// that insert actually lands a row. See signupBonus.service.ts.
+model SignupBonusGrant {
+  id          String   @id @default(cuid())
+  userId      String   @unique @map("user_id")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amountPaise Int      @map("amount_paise")
+  grantedAt   DateTime @default(now()) @map("granted_at")
+
+  @@map("signup_bonus_grants")
+}
+
+enum WalletReservationPurpose {
+  TOOL_EXECUTION
+  CHAT_LOOKAHEAD
+}
+
+enum WalletReservationStatus {
+  HELD
+  SETTLED
+  RELEASED
+  RECONCILIATION_REQUIRED
+}
+
+/// A database-backed hold against a wallet's balance — raises Wallet.reservedBalancePaise so a
+/// concurrent operation on the SAME wallet (another tool execution, another chat session) can
+/// never spend coins this one is already counting on. Reservation creation never moves money
+/// between buckets (that only happens at settlement, via the normal promotional-first debit
+/// policy) — it only shrinks what `balancePaise - reservedBalancePaise` reports as truly available.
+///
+/// CHAT_LOOKAHEAD reservations are "rolling": created at session start for a short lookahead
+/// window (chat.constants.ts's CHAT_RESERVATION_LOOKAHEAD_SECONDS), partially settled and
+/// topped back up on every billing tick (see chat/billing.ts), and released for whatever's left
+/// unused when the session ends. TOOL_EXECUTION reservations are one-shot: created once per
+/// ToolExecution, settled or released exactly once.
+model WalletReservation {
+  id String @id @default(cuid())
+
+  walletId String @map("wallet_id")
+  wallet   Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  amountPaise Int                      @map("amount_paise") // currently-held amount; shrinks as it's settled, grows on top-up
+  purpose     WalletReservationPurpose
+  /// ChatSession.id for CHAT_LOOKAHEAD, ToolExecution.executionId for TOOL_EXECUTION.
+  referenceId String                   @map("reference_id")
+  status      WalletReservationStatus  @default(HELD)
+
+  createdAt  DateTime  @default(now()) @map("created_at")
+  resolvedAt DateTime? @map("resolved_at")
+
+  @@index([walletId, status])
+  @@index([referenceId])
+  @@map("wallet_reservations")
+}
+
+/// A recharge attempt. CREATED until the gateway (mock today, a real one later) confirms
+/// it; confirmation is the only thing allowed to credit the wallet, and confirming an
+/// already-SUCCESS order is a no-op so a retried/duplicate callback can never double-credit.
+model PaymentOrder {
+  id String @id @default(cuid())
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  amountPaise Int                @map("amount_paise")
+  provider    PaymentProvider    @default(MOCK)
+  status      PaymentOrderStatus @default(CREATED)
+
+  providerOrderId   String? @map("provider_order_id")
+  providerPaymentId String? @map("provider_payment_id")
+
+  createdAt   DateTime  @default(now()) @map("created_at")
+  completedAt DateTime? @map("completed_at")
+
+  @@index([userId, status])
+  @@map("payment_orders")
+}

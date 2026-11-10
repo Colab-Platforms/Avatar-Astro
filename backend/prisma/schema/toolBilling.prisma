@@ -1,0 +1,51 @@
+// Premium AI tool coin pricing + per-execution billing. Schema-only in this checkpoint — no route
+// is wired to charge coins yet (that's a later checkpoint), and every ToolPrice starts inactive so
+// nothing can be charged until prices are explicitly reviewed and approved. See the coin-wallet
+// architecture plan, Section 9/9a/12.
+
+/// One row per tool, superadmin-managed. isActive defaults to false — a price must be deliberately
+/// flipped on, never activated implicitly by this migration or by seed data.
+model ToolPrice {
+  toolKey           String   @id @map("tool_key")
+  coinPriceSubunits Int      @map("coin_price_subunits")
+  version           Int      @default(1)
+  isActive          Boolean  @default(false) @map("is_active")
+  updatedBy         String?  @map("updated_by")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("tool_prices")
+}
+
+enum ToolExecutionStatus {
+  PRICE_QUOTED
+  COINS_RESERVED
+  EXECUTING
+  COMPLETED
+  SETTLED
+  FAILED
+  CANCELLED
+  RELEASED
+  RECONCILIATION_REQUIRED
+}
+
+/// One row per user-confirmed action. executionId is CLIENT-GENERATED — every internal retry
+/// (client-side or server-side) of that same action reuses it, so a route can look up an
+/// in-flight or already-settled execution by this id instead of ever charging twice for one
+/// click. resultPayload lets a client that lost the original HTTP response retrieve the already-
+/// paid-for result on retry instead of re-calling the provider or being charged again.
+model ToolExecution {
+  id                  String               @id @default(cuid())
+  userId              String               @map("user_id")
+  toolKey             String               @map("tool_key")
+  executionId         String               @unique @map("execution_id")
+  quotedPriceSubunits Int                  @map("quoted_price_subunits")
+  reservationId       String?              @unique @map("reservation_id")
+  status              ToolExecutionStatus  @default(PRICE_QUOTED)
+  resultPayload       Json?                @map("result_payload")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId, status])
+  @@map("tool_executions")
+}

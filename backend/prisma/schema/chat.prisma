@@ -1,0 +1,160 @@
+// Real-time astrologer chat. Billing is server-authoritative — the same idiom as
+// DailyChatUsage (innerVoice.prisma): only the backend writes lastBilledAt/billedSeconds,
+// so the client's clock can only ever display what the server has already committed,
+// never extend it. See modules/chat/billing.ts for the per-session timer that advances
+// these fields every few seconds while a session is ACTIVE.
+
+enum ChatSessionType {
+  PAID
+  /// Legacy — the old "7 minutes free, once per astrologer" mechanism. No new session of this
+  /// type is ever created going forward (removed from the eligibility/creation path per the
+  /// finalized decision); kept only so historical rows remain queryable, per "preserve historical
+  /// trial records."
+  FREE_TRIAL
+  /// A superadmin-approved astrologer's fully free, unmetered-up-to-a-cap consultation. Consumes
+  /// neither coins nor the global ChatFreeAllowance.
+  COMPLIMENTARY
+}
+
+enum ChatSessionStatus {
+  REQUESTED
+  ACTIVE
+  PAUSED
+  ENDED
+}
+
+enum ChatEndReason {
+  USER_ENDED
+  ASTROLOGER_ENDED
+  BALANCE_EXHAUSTED
+  FREE_LIMIT_REACHED
+  TIMEOUT
+  REJECTED
+  DISCONNECTED
+}
+
+enum ChatSenderRole {
+  USER
+  ASTROLOGER
+}
+
+model ChatSession {
+  id String @id @default(cuid())
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  astrologerProfileId String            @map("astrologer_profile_id")
+  astrologerProfile   AstrologerProfile @relation(fields: [astrologerProfileId], references: [id], onDelete: Cascade)
+
+  type   ChatSessionType
+  status ChatSessionStatus @default(REQUESTED)
+
+  /// Snapshot of the astrologer's price-per-minute (in paise) at the moment this request was
+  /// created — a later price change never retroactively changes a requested/active consultation's rate.
+  ratePerMinutePaise Int  @default(0) @map("rate_per_minute_paise")
+  /// Only set for FREE_TRIAL (legacy, 420 = 7 minutes) or COMPLIMENTARY (the astrologer's cap,
+  /// snapshotted at request time). Null for PAID, which is bounded by wallet balance instead.
+  freeLimitSeconds   Int? @map("free_limit_seconds")
+  /// How many of this session's elapsed seconds were drawn from the user's GLOBAL
+  /// ChatFreeAllowance (not this session's own quota — there is no such thing anymore). Tracked
+  /// per-session so the cumulative-ceil billing formula can compute
+  /// billableSecondsCumulative = billedSeconds - freeSecondsUsed without re-deriving it from the
+  /// allowance table on every tick. Always 0 for FREE_TRIAL/COMPLIMENTARY sessions, which never
+  /// touch the wallet or the allowance at all.
+  freeSecondsUsed    Int  @default(0) @map("free_seconds_used")
+
+  /// When this request was created. requestExpiresAt (requestedAt + the acceptance timeout,
+  /// set at creation — never computed in memory) is the durable deadline the periodic sweep in
+  /// billing.ts checks; a setTimeout is only ever a prompt to re-check, never the source of truth.
+  requestedAt      DateTime  @default(now()) @map("requested_at")
+  requestExpiresAt DateTime? @map("request_expires_at")
+  /// When the astrologer accepted — the moment this request actually became ACTIVE.
+  acceptedAt       DateTime? @map("accepted_at")
+
+  /// Set when either participant's presence lapses (billing.ts) — the session is PAUSED, not
+  /// ENDED, and `lastBilledAt` is frozen so the paused interval is never billed, whether it
+  /// resolves by reconnection or by the grace window expiring.
+  pausedAt            DateTime? @map("paused_at")
+  /// pausedAt + the reconnect grace window, set at the moment of pausing — the durable deadline
+  /// the periodic sweep checks, same reasoning as requestExpiresAt above.
+  presenceGraceEndsAt DateTime? @map("presence_grace_ends_at")
+
+  startedAt     DateTime @default(now()) @map("started_at")
+  /// Last instant the billing timer actually charged/accounted for elapsed time — the
+  /// source of truth for resuming billing after a server restart (see billing.ts).
+  lastBilledAt  DateTime @default(now()) @map("last_billed_at")
+  billedSeconds Int      @default(0) @map("billed_seconds")
+  amountPaise   Int      @default(0) @map("amount_paise")
+
+  /// Set once the single low-balance / low-time warning has been emitted for this
+  /// session, so the client is never spammed with repeated warnings on every tick.
+  warningIssued Boolean @default(false) @map("warning_issued")
+
+  endedAt     DateTime?      @map("ended_at")
+  endedReason ChatEndReason? @map("ended_reason")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  messages ChatMessage[]
+
+  @@index([userId])
+  @@index([astrologerProfileId, status])
+  @@index([status])
+  @@map("chat_sessions")
+}
+
+model ChatMessage {
+  id String @id @default(cuid())
+
+  sessionId String      @map("session_id")
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  senderRole ChatSenderRole @map("sender_role")
+  /// Either the User.id or the astrologer's own User.id (not the AstrologerProfile id) —
+  /// both participants are rows in the same `users` table.
+  senderId   String         @map("sender_id")
+
+  content String
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  readAt    DateTime? @map("read_at")
+
+  @@index([sessionId, createdAt])
+  @@map("chat_messages")
+}
+
+/// One row per user — created lazily (upsert) on first claim, exactly like Wallet. The single
+/// global lifetime free-chat allowance: 60 seconds, once, across every astrologer, carried
+/// forward indefinitely. Replaces ChatFreeTrialUsage's per-astrologer 7-minute mechanism for all
+/// NEW sessions (that table is kept, read-only, for history — see ChatSessionType.FREE_TRIAL).
+/// Invariant (raw-SQL CHECK, same reasoning as Wallet's bucket invariants):
+/// 0 <= consumedSeconds <= totalSeconds.
+model ChatFreeAllowance {
+  userId String @id @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  totalSeconds    Int @default(60) @map("total_seconds")
+  consumedSeconds Int @default(0) @map("consumed_seconds")
+
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("chat_free_allowances")
+}
+
+/// Enforces "7 minutes free, once per (user, astrologer)" at the database level, not just
+/// in application logic — a unique row is the eligibility check itself.
+model ChatFreeTrialUsage {
+  id String @id @default(cuid())
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  astrologerProfileId String @map("astrologer_profile_id")
+
+  usedAt DateTime @default(now()) @map("used_at")
+
+  @@unique([userId, astrologerProfileId])
+  @@map("chat_free_trial_usages")
+}

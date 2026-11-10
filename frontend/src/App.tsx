@@ -107,6 +107,9 @@ const AstrologerProfile = lazy(() => import("./pages/AstrologerProfile"));
 const BecomeAstrologerPage = lazy(() => import("./features/astrologer/pages/BecomeAstrologerPage"));
 const ApplicationWizardPage = lazy(() => import("./features/astrologer/pages/ApplicationWizardPage"));
 const AstrologerDashboardPage = lazy(() => import("./features/astrologer/workspace/pages/AstrologerDashboardPage"));
+const AstrologerChatPage = lazy(() => import("./features/astrologer/workspace/pages/AstrologerChatPage"));
+const UserChatPage = lazy(() => import("./features/chat/pages/UserChatPage"));
+const UserConversationsPage = lazy(() => import("./features/chat/pages/UserConversationsPage"));
 const AdminAstrologersOverviewPage = lazy(() => import("./features/admin/astrologers/pages/AstrologersOverviewPage"));
 const AdminAstrologerApplicationsPage = lazy(() => import("./features/admin/astrologers/pages/AstrologerApplicationsPage"));
 const AdminAstrologerApplicationDetailPage = lazy(() => import("./features/admin/astrologers/pages/AstrologerApplicationDetailPage"));
@@ -840,6 +843,22 @@ const App = () => {
             <Route
               path="/astrologer-dashboard"
               element={<Suspense fallback={<LazyFallback />}><AstrologerDashboardPage /></Suspense>}
+            />
+            <Route
+              path="/astrologer-dashboard/chat"
+              element={<Suspense fallback={<LazyFallback />}><AstrologerChatPage /></Suspense>}
+            />
+            <Route
+              path="/astrologer-dashboard/chat/:sessionId"
+              element={<Suspense fallback={<LazyFallback />}><AstrologerChatPage /></Suspense>}
+            />
+            <Route
+              path="/my-chats"
+              element={<Suspense fallback={<LazyFallback />}><UserConversationsPage /></Suspense>}
+            />
+            <Route
+              path="/chat/:sessionId"
+              element={<Suspense fallback={<LazyFallback />}><UserChatPage /></Suspense>}
             />
           </Route>
 

@@ -35,10 +35,10 @@ model User {
   isActive        Boolean @default(true) @map("is_active")
   isDeleted       Boolean @default(false) @map("is_deleted")
 
-  deletedAt DateTime? @map("deleted_at")
+  deletedAt   DateTime? @map("deleted_at")
   /// Who created this account from the admin panel (null = self-registered) and who deleted it.
-  createdById String? @map("created_by_id")
-  deletedById String? @map("deleted_by_id")
+  createdById String?   @map("created_by_id")
+  deletedById String?   @map("deleted_by_id")
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @updatedAt @map("updated_at")
@@ -58,6 +58,14 @@ model User {
   passwordResets   PasswordResetToken[]
   dailyChatUsages  DailyChatUsage[]
 
+  // Wallet + astrologer chat — additive, see payment.prisma / chat.prisma.
+  wallet              Wallet?
+  paymentOrders       PaymentOrder[]
+  chatSessions        ChatSession[]
+  chatFreeTrialUsages ChatFreeTrialUsage[]
+  chatFreeAllowance   ChatFreeAllowance?
+  signupBonusGrant    SignupBonusGrant?
+
   @@index([email])
   @@index([isActive])
   @@map("users")
@@ -66,12 +74,12 @@ model User {
 model OtpVerification {
   id String @id @default(cuid())
 
-  email   String
-  otpCode String  @map("otp_code")
-  type    OtpType
-  used    Boolean @default(false)
+  email    String
+  otpCode  String  @map("otp_code")
+  type     OtpType
+  used     Boolean @default(false)
   /// Verification attempts spent against this OTP; it is burned once the limit is reached.
-  attempts Int @default(0)
+  attempts Int     @default(0)
 
   userId String? @map("user_id")
   user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
