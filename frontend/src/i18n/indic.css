@@ -1,0 +1,82 @@
+/*
+ * Typography for the Indian scripts. Applies only when a regional language is active (html[data-indic]); English is untouched.
+ *
+ * Why this exists: the site's fonts (DM Sans, Cinzel) have no Indian-script glyphs, so without these rules the browser falls back to
+ * whatever each device happens to have. Wide letter-spacing, used on many headings and labels, pulls apart conjunct consonants and
+ * vowel signs. Tight line heights clip the signs that sit above and below the line.
+ */
+html[data-script="devanagari"] { --indic-sans: "Noto Sans Devanagari"; --indic-serif: "Noto Serif Devanagari"; }
+html[data-script="tamil"]      { --indic-sans: "Noto Sans Tamil";      --indic-serif: "Noto Serif Tamil"; }
+html[data-script="telugu"]     { --indic-sans: "Noto Sans Telugu";     --indic-serif: "Noto Serif Telugu"; }
+html[data-script="gujarati"]   { --indic-sans: "Noto Sans Gujarati";   --indic-serif: "Noto Serif Gujarati"; }
+html[data-script="bengali"]    { --indic-sans: "Noto Sans Bengali";    --indic-serif: "Noto Serif Bengali"; }
+html[data-script="kannada"]    { --indic-sans: "Noto Sans Kannada";    --indic-serif: "Noto Serif Kannada"; }
+html[data-script="malayalam"]  { --indic-sans: "Noto Sans Malayalam";  --indic-serif: "Noto Serif Malayalam"; }
+html[data-script="gurmukhi"]   { --indic-sans: "Noto Sans Gurmukhi";   --indic-serif: "Noto Serif Gurmukhi"; }
+
+/* Text: the script's Sans first, then the site's Sans for any Latin letters and digits inside the text. */
+html[data-indic] body,
+html[data-indic] button,
+html[data-indic] input,
+html[data-indic] select,
+html[data-indic] textarea,
+html[data-indic] .font-home-sans,
+html[data-indic] .font-display,
+html[data-indic] .font-astra,
+html[data-indic] .font-body {
+  font-family: var(--indic-sans), "DM Sans", system-ui, sans-serif;
+}
+
+/* Headings and anything set in the site's serif: the script's Serif, then Cinzel for Latin letters. */
+html[data-indic] h1,
+html[data-indic] h2,
+html[data-indic] h3,
+html[data-indic] .hl-serif,
+html[data-indic] .font-home-serif {
+  font-family: var(--indic-serif), "Cinzel", Georgia, serif;
+}
+
+/* Letter-spacing breaks conjuncts and detaches vowel signs. */
+html[data-indic] *,
+html[data-indic] *::before,
+html[data-indic] *::after {
+  letter-spacing: normal !important;
+}
+
+/* Room for the signs above and below the line; headings need the most. */
+html[data-indic] body { line-height: 1.7; }
+html[data-indic] h1,
+html[data-indic] h2,
+html[data-indic] h3,
+html[data-indic] h4,
+html[data-indic] h5,
+html[data-indic] h6 { line-height: 1.5 !important; }
+html[data-indic] p,
+html[data-indic] li,
+html[data-indic] dd,
+html[data-indic] dt,
+html[data-indic] label,
+html[data-indic] summary,
+html[data-indic] button,
+html[data-indic] a,
+html[data-indic] td,
+html[data-indic] th,
+html[data-indic] span { line-height: 1.65 !important; }
+
+/* Translated text is often longer: let it wrap instead of overflowing buttons, chips and headings. */
+html[data-indic] body { overflow-wrap: break-word; }
+html[data-indic] h1,
+html[data-indic] h2,
+html[data-indic] h3,
+html[data-indic] .whitespace-nowrap,
+html[data-indic] .lg\:whitespace-nowrap {
+  white-space: normal !important;
+}
+html[data-indic] button,
+html[data-indic] a { overflow-wrap: anywhere; }
+
+/* Devanagari names (the baby-name spellings) inside a page in another script: a Devanagari-capable font, not whatever the page's script font lacks. */
+html[data-indic] [lang="hi"]:not(html),
+html[data-indic] [lang="mr"]:not(html) {
+  font-family: "Noto Sans Devanagari", "Nirmala UI", "Mangal", system-ui, sans-serif;
+}

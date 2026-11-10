@@ -1,5 +1,6 @@
 import { API_BASE_URL } from "@/lib/api";
 import { authedFetch, SignInRequiredError } from "@/lib/authedFetch";
+import i18n from "@/i18n";
 
 export type DailyChatStatus = "NOT_STARTED" | "ACTIVE" | "EXPIRED";
 
@@ -28,7 +29,7 @@ export class DailyChatLimitError extends Error {
 export async function fetchDailyChatStatus(): Promise<DailyChatSession> {
   const res = await authedFetch(`${API_BASE_URL}/inner-voice/chat/status`);
   const data = await res.json().catch(() => null);
-  if (!res.ok || !data?.success) throw new DailyChatLimitError("Could not check today's chat session.");
+  if (!res.ok || !data?.success) throw new DailyChatLimitError(i18n.t("guru.limit.cannotCheck"));
   return data.data as DailyChatSession;
 }
 
@@ -43,15 +44,15 @@ export async function consumeDailyChatSession(): Promise<DailyChatSession> {
     res = await authedFetch(`${API_BASE_URL}/inner-voice/chat/consume`, { method: "POST" });
   } catch (e) {
     if (e instanceof SignInRequiredError) throw e;
-    throw new DailyChatLimitError("Could not reach the chat session service.");
+    throw new DailyChatLimitError(i18n.t("guru.limit.cannotReach"));
   }
   const data = await res.json().catch(() => null);
   if (res.status === 429 || data?.code === "DAILY_CHAT_LIMIT_REACHED") {
     throw new DailyChatLimitError(
-      data?.message || "Your daily astrology chat limit has been reached.",
+      i18n.language === "en" ? data?.message || i18n.t("guru.limit.reached") : i18n.t("guru.limit.reached"),
       (data?.data as DailyChatSession) ?? null,
     );
   }
-  if (!res.ok || !data?.success) throw new DailyChatLimitError("Could not start the chat session.");
+  if (!res.ok || !data?.success) throw new DailyChatLimitError(i18n.t("guru.limit.startFailed"));
   return data.data as DailyChatSession;
 }

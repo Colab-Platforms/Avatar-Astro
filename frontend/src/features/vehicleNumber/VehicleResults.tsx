@@ -1,4 +1,7 @@
 import { useMemo, useState } from "react";
+import i18n from "@/i18n";
+import { useGlossary } from "@/i18n/glossary";
+import { useTranslation } from "react-i18next";
 import { ChevronDown, Heart, Plus, Star, X } from "lucide-react";
 import { birthNumberWorking, lifePathWorking, PLANET_BY_DIGIT, reduceNumber, themeFor } from "@/lib/numerology";
 import NumberCard, { LABEL_STYLE, reducedText } from "./NumberCard";
@@ -31,7 +34,7 @@ const Fact = ({ label, value, sub }: { label: string; value: string; sub?: strin
 );
 
 const LabelChip = ({ compat }: { compat: Compatibility }) => (
-  <span data-testid="compat-label" className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-bold ${LABEL_STYLE[compat.label]}`}>{compat.label}</span>
+  <span data-testid="compat-label" className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-bold ${LABEL_STYLE[compat.label]}`}>{i18n.t(`vehicle.label.${compat.label}`, { defaultValue: compat.label })}</span>
 );
 
 /** One registration, evaluated with the same rules as every other number on the page. */
@@ -63,6 +66,7 @@ const friendlyDigits = (refNumber: number) => {
 };
 
 function ComparePanel({ entries, onRemove, onAdd }: { entries: Entry[]; onRemove: (k: string) => void; onAdd: (raw: string) => string | null }) {
+  const { t } = useTranslation();
   const [text, setText] = useState("");
   const [err, setErr] = useState("");
   const add = () => {
@@ -72,33 +76,33 @@ function ComparePanel({ entries, onRemove, onAdd }: { entries: Entry[]; onRemove
   };
   return (
     <section data-testid="compare-panel" aria-labelledby="veh-cmp-h" className="rounded-[2rem] border border-[#C9873A]/50 bg-gradient-to-b from-[#FFF7E6] to-[#FBF5EC] p-5 sm:p-8">
-      <SectionTitle id="veh-cmp-h" sub="Up to three numbers, side by side, all read with exactly the same rules.">Compare Numbers</SectionTitle>
+      <SectionTitle id="veh-cmp-h" sub={t("vehicle.compare.sub")}>{t("vehicle.compare.title")}</SectionTitle>
       {entries.length < MAX_COMPARE && (
         <div className="mx-auto mb-5 flex max-w-md items-start gap-2">
           <div className="min-w-0 flex-1">
-            <label htmlFor="veh-cmp-add" className="sr-only">Add a number to compare</label>
-            <input id="veh-cmp-add" value={text} maxLength={20} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }} placeholder="Add a number, e.g. 0786 or MH 12 AB 0007" className="w-full rounded-xl border border-[#592209]/25 bg-white/70 px-4 py-2.5 text-[15px] text-[#301607] outline-none focus:border-[#592209]" />
+            <label htmlFor="veh-cmp-add" className="sr-only">{t("vehicle.compare.addLabel")}</label>
+            <input id="veh-cmp-add" value={text} maxLength={20} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }} placeholder={t("vehicle.compare.addPlaceholder")} className="w-full rounded-xl border border-[#592209]/25 bg-white/70 px-4 py-2.5 text-[15px] text-[#301607] outline-none focus:border-[#592209]" />
             {err && <p role="alert" className="mt-1 text-sm text-[#9B2C1D]">⚠ {err}</p>}
           </div>
-          <button type="button" onClick={add} className="inline-flex items-center gap-1.5 rounded-xl bg-[#592209] px-4 py-2.5 text-sm font-bold text-[#F5E9D6]"><Plus size={14} aria-hidden="true" /> Add</button>
+          <button type="button" onClick={add} className="inline-flex items-center gap-1.5 rounded-xl bg-[#592209] px-4 py-2.5 text-sm font-bold text-[#F5E9D6]"><Plus size={14} aria-hidden="true" /> {t("vehicle.compare.add")}</button>
         </div>
       )}
       {entries.length === 0 ? (
-        <p className="text-center text-sm text-[#4A2E1F]">Add a number above, or press Compare on any suggested number.</p>
+        <p className="text-center text-sm text-[#4A2E1F]">{t("vehicle.compare.empty")}</p>
       ) : (
         <ul className={`grid grid-cols-1 gap-5 ${entries.length === 1 ? "" : entries.length === 2 ? "md:grid-cols-2" : "md:grid-cols-3"}`}>
           {entries.map((e) => (
             <li key={e.key} data-testid="compare-column" className="flex flex-col gap-3 rounded-3xl border border-[#592209]/15 bg-[#FFFCF5] p-4 shadow-sm">
               <div className="flex items-center justify-between gap-2">
                 <LabelChip compat={e.compat} />
-                <button type="button" onClick={() => onRemove(e.key)} aria-label={`Remove ${e.display} from comparison`} className="rounded-full p-1 text-[#592209] hover:bg-[#592209]/10"><X size={16} aria-hidden="true" /></button>
+                <button type="button" onClick={() => onRemove(e.key)} aria-label={t("vehicle.card.removeCompare", { number: e.display })} className="rounded-full p-1 text-[#592209] hover:bg-[#592209]/10"><X size={16} aria-hidden="true" /></button>
               </div>
               <NumberPlate number={e.display} size="sm" />
               <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
-                <div><dt className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-[#8A5A1E]">Digits evaluated</dt><dd className="font-semibold text-[#301607]">{e.digits}</dd></div>
-                <div><dt className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-[#8A5A1E]">Digit sum</dt><dd className="font-semibold text-[#301607]">{e.ev.total}</dd></div>
-                <div><dt className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-[#8A5A1E]">Numerology number</dt><dd className="font-semibold text-[#301607]">{reducedText(e.ev)}</dd></div>
-                <div><dt className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-[#8A5A1E]">Planet</dt><dd className="font-semibold text-[#301607]">{e.ev.symbol} {e.ev.planet}</dd></div>
+                <div><dt className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-[#8A5A1E]">{t("vehicle.results.digitsEvaluated")}</dt><dd className="font-semibold text-[#301607]">{e.digits}</dd></div>
+                <div><dt className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-[#8A5A1E]">{t("vehicle.results.digitSum")}</dt><dd className="font-semibold text-[#301607]">{e.ev.total}</dd></div>
+                <div><dt className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-[#8A5A1E]">{t("vehicle.results.numerologyNumber")}</dt><dd className="font-semibold text-[#301607]">{reducedText(e.ev)}</dd></div>
+                <div><dt className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-[#8A5A1E]">{t("vehicle.results.planet")}</dt><dd className="font-semibold text-[#301607]">{e.ev.symbol} {e.ev.planet}</dd></div>
               </dl>
               <p className="text-sm text-[#301607]"><span className="font-semibold text-[#592209]">{e.ev.theme.keywords}.</span> {e.ev.theme.text}</p>
               <ul className="space-y-1 text-[13.5px] leading-snug text-[#4A2E1F]">{explain(e.ev, e.compat).map((l) => <li key={l}>{l}</li>)}</ul>
@@ -112,6 +116,8 @@ function ComparePanel({ entries, onRemove, onAdd }: { entries: Entry[]; onRemove
 }
 
 export default function VehicleResults({ profile, query }: { profile: VehicleProfileResult; query: VehicleQuery }) {
+  const { t } = useTranslation();
+  const { g } = useGlossary();
   const fav = useVehicleFavourites();
   const [more, setMore] = useState(false);
   const bw = useMemo(() => birthNumberWorking(query.dateOfBirth), [query.dateOfBirth]);
@@ -173,31 +179,31 @@ export default function VehicleResults({ profile, query }: { profile: VehiclePro
     <div data-testid="vehicle-results" className="space-y-12">
       {/* A. Your birth profile */}
       <section aria-labelledby="veh-birth-h" className="rounded-[2rem] border border-[#C9873A]/45 bg-gradient-to-b from-[#FFF7E6] to-[#FBF5EC] p-5 shadow-[0_18px_44px_-30px_rgba(89,34,9,0.5)] sm:p-8">
-        <SectionTitle id="veh-birth-h" sub={`${first ? `${first}, born` : "Born"} ${profile.birth.dateOfBirth} at ${profile.birth.timeOfBirth} in ${profile.birth.place}`}>Your Birth Profile</SectionTitle>
+        <SectionTitle id="veh-birth-h" sub={first ? t("vehicle.results.bornNamed", { name: first, date: profile.birth.dateOfBirth, time: profile.birth.timeOfBirth, place: profile.birth.place }) : t("vehicle.results.born", { date: profile.birth.dateOfBirth, time: profile.birth.timeOfBirth, place: profile.birth.place })}>{t("vehicle.results.birthProfile")}</SectionTitle>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
-          <Fact label="Janma Nakshatra" value={nakshatra.name} sub={`Lord: ${nakshatra.lord}`} />
-          <Fact label="Nakshatra Pada" value={`Pada ${nakshatra.pada}`} />
-          <Fact label="Chandra Rashi" value={moonRashi} />
-          <Fact label="Tithi" value={tithi.name} sub={`${paksha === "shukla" ? "Shukla" : "Krishna"} Paksha`} />
-          <Fact label="Hindu Month" value={`${masa.adhika ? "Adhika " : ""}${masa.name}`} sub={`Vikram Samvat ${vikramSamvat}`} />
-          <Fact label="Vedic Weekday" value={vara.name} />
+          <Fact label={g("term", "Janma Nakshatra")} value={g("nakshatra", nakshatra.name)} sub={t("babyName.results.lord", { planet: g("planet", nakshatra.lord) })} />
+          <Fact label={g("term", "Nakshatra Pada")} value={t("babyName.results.pada", { n: nakshatra.pada })} />
+          <Fact label={g("term", "Chandra Rashi")} value={g("rashi", moonRashi)} />
+          <Fact label={g("term", "Tithi")} value={g("tithi", tithi.name)} sub={`${g("paksha", paksha === "shukla" ? "Shukla" : "Krishna")} ${g("term", "Paksha")}`} />
+          <Fact label={t("babyName.results.hinduMonth")} value={`${masa.adhika ? t("babyName.results.adhika") + " " : ""}${g("masa", masa.name)}`} sub={`${g("term", "Vikram Samvat")} ${vikramSamvat}`} />
+          <Fact label={t("babyName.results.vedicWeekday")} value={g("weekday", vara.name)} />
         </div>
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div data-testid="birth-number" className="rounded-2xl border border-[#592209]/12 bg-white/75 p-4 text-center">
-            <p className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-[#8A5A1E]">Birth Number</p>
+            <p className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-[#8A5A1E]">{t("vehicle.results.birthNumber")}</p>
             <p className="text-3xl font-bold text-[#301607]" style={heading}>{person.birth}</p>
-            <p className="text-xs text-[#6B4A37]">Day of birth {bw.day}{bw.chain.length > 1 ? ` → ${bw.chain.slice(1).join(" → ")}` : ""} · {PLANET_BY_DIGIT[birthRoot].symbol} {PLANET_BY_DIGIT[birthRoot].planet}</p>
+            <p className="text-xs text-[#6B4A37]">{t("vehicle.results.dayOfBirth")} {bw.day}{bw.chain.length > 1 ? ` → ${bw.chain.slice(1).join(" → ")}` : ""} · {PLANET_BY_DIGIT[birthRoot].symbol} {g("planet", PLANET_BY_DIGIT[birthRoot].planet)}</p>
           </div>
           <div data-testid="life-path" className="rounded-2xl border border-[#592209]/12 bg-white/75 p-4 text-center">
-            <p className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-[#8A5A1E]">Life Path Number</p>
+            <p className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-[#8A5A1E]">{t("vehicle.results.lifePathNumber")}</p>
             <p className="text-3xl font-bold text-[#301607]" style={heading}>{person.lifePath}</p>
-            <p className="text-xs text-[#6B4A37]">{lw.digits.join(" + ")} = {lw.total}{lw.chain.length > 1 ? ` → ${lw.chain.slice(1).join(" → ")}` : ""} · {PLANET_BY_DIGIT[lifeRoot].symbol} {PLANET_BY_DIGIT[lifeRoot].planet}</p>
+            <p className="text-xs text-[#6B4A37]">{lw.digits.join(" + ")} = {lw.total}{lw.chain.length > 1 ? ` → ${lw.chain.slice(1).join(" → ")}` : ""} · {PLANET_BY_DIGIT[lifeRoot].symbol} {g("planet", PLANET_BY_DIGIT[lifeRoot].planet)}</p>
           </div>
         </div>
         <p className="mt-4 text-center text-sm leading-relaxed text-[#4A2E1F]">
           Your Nakshatra, Pada, Rashi, Tithi, month and weekday are calculated from your exact date, time and birthplace ({profile.method}). Your Birth Number and Life Path come from your date of birth. The Panchang details describe you; they are not part of the number calculation, because no verified traditional rule links a Nakshatra to registration digits.
         </p>
-        {query.vehicleType && <p className="mt-1 text-center text-xs text-[#6B4A37]">Vehicle type: {VEHICLE_TYPE_LABEL[query.vehicleType]}</p>}
+        {query.vehicleType && <p className="mt-1 text-center text-xs text-[#6B4A37]">{t("vehicle.results.vehicleType")}: {t(`vehicle.type.${query.vehicleType}`, { defaultValue: VEHICLE_TYPE_LABEL[query.vehicleType] })}</p>}
       </section>
 
       {/* B. Your vehicle number profile */}
@@ -208,26 +214,26 @@ export default function VehicleResults({ profile, query }: { profile: VehiclePro
           <circle cx="200" cy="200" r="110" fill="none" stroke="currentColor" strokeWidth="1" />
         </svg>
         <div className="relative">
-          <h2 id="veh-method-h" className="text-center text-2xl font-bold text-[#FFF4DA] sm:text-3xl" style={heading}>Your Vehicle Number Profile</h2>
-          <p className="mx-auto mt-1 max-w-2xl text-center text-sm text-[#F5E9D6]/85">How a vehicle number is read, and the two numbers of yours it is read against.</p>
+          <h2 id="veh-method-h" className="text-center text-2xl font-bold text-[#FFF4DA] sm:text-3xl" style={heading}>{t("vehicle.results.profileTitle")}</h2>
+          <p className="mx-auto mt-1 max-w-2xl text-center text-sm text-[#F5E9D6]/85">{t("vehicle.results.profileSub")}</p>
 
           <ol className="mx-auto mt-6 grid max-w-4xl grid-cols-2 gap-3 text-center sm:grid-cols-4">
-            {[["Digits", "The evaluated digits, leading zeros kept"], ["Total", "Add the digits"], ["Reduce", "Add again to one digit (11, 22, 33 stay)"], ["Planet", "Each digit has its planet"]].map(([t, d], i) => (
-              <li key={t} className="rounded-2xl bg-white/10 px-3 py-3">
+            {[["steps.digits", "steps.digitsNote"], ["steps.total", "steps.totalNote"], ["steps.reduce", "steps.reduceNote"], ["steps.planet", "steps.planetNote"]].map(([title, note], i) => (
+              <li key={title} className="rounded-2xl bg-white/10 px-3 py-3">
                 <span className="mx-auto mb-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#C9873A] text-sm font-bold text-[#301607]">{i + 1}</span>
-                <p className="font-semibold text-[#F7DC8A]">{t}</p>
-                <p className="text-xs leading-snug text-[#F5E9D6]/85">{d}</p>
+                <p className="font-semibold text-[#F7DC8A]">{t(`vehicle.results.${title}`)}</p>
+                <p className="text-xs leading-snug text-[#F5E9D6]/85">{t(`vehicle.results.${note}`)}</p>
               </li>
             ))}
           </ol>
 
           <div className="mx-auto mt-6 grid max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2">
-            {[["Birth Number", person.birth, birthTheme, birthRoot], ["Life Path", person.lifePath, lifeTheme, lifeRoot]].map(([label, n, theme, root]) => (
+            {[[t("vehicle.results.birthNumber"), person.birth, birthTheme, birthRoot], [t("vehicle.results.lifePath"), person.lifePath, lifeTheme, lifeRoot]].map(([label, n, theme, root]) => (
               <div key={label as string} className="rounded-2xl bg-white/10 p-4">
-                <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#F7DC8A]">{label as string} {n as number} · {PLANET_BY_DIGIT[root as number].symbol} {PLANET_BY_DIGIT[root as number].planet}</p>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#F7DC8A]">{label as string} {n as number} · {PLANET_BY_DIGIT[root as number].symbol} {g("planet", PLANET_BY_DIGIT[root as number].planet)}</p>
                 <p className="mt-1 text-sm font-semibold">{(theme as { keywords: string }).keywords}</p>
                 <p className="mt-1 text-sm leading-snug text-[#F5E9D6]/90">{(theme as { text: string }).text}</p>
-                <p className="mt-2 text-xs text-[#F7DC8A]">Numbers friendly to it: {friendlyDigits(n as number).join(", ")}</p>
+                <p className="mt-2 text-xs text-[#F7DC8A]">{t("vehicle.results.friendly")} {friendlyDigits(n as number).join(", ")}</p>
               </div>
             ))}
           </div>
@@ -236,20 +242,20 @@ export default function VehicleResults({ profile, query }: { profile: VehiclePro
             <strong>Numerology method, not a Panchang calculation.</strong> A number's digits are added and reduced to one number, which maps to a planet by the common Indian numerology table (1 Sun, 2 Moon, 3 Jupiter, 4 Rahu, 5 Mercury, 6 Venus, 7 Ketu, 8 Saturn, 9 Mars). That planet is compared with the planets of your Birth Number and your Life Path using natural planetary friendship from Brihat Parashara Hora Shastra. The scoring (the same number +2, a natural friend +1, neutral 0, not a natural friend −1) and the labels (3 or 4 Strong, 2 Good, 0 or 1 Neutral, below 0 Less aligned) are MyBhagya's own way of summarising that comparison, not a classical rule. No percentages are used.
             {nodeNote && " Rahu (4) and Ketu (7) are not in that text, so they are read by a common convention, like Saturn and Mars."}
           </p>
-          <p className="mx-auto mt-2 max-w-4xl text-center text-xs text-[#F5E9D6]/75">Evaluating: {SCOPE_LABEL[query.scope].toLowerCase()}. This is traditional numerology, not a guarantee of any outcome.</p>
+          <p className="mx-auto mt-2 max-w-4xl text-center text-xs text-[#F5E9D6]/75">{t("vehicle.results.evaluating", { scope: t(`vehicle.scope.${query.scope}`, { defaultValue: SCOPE_LABEL[query.scope] }).toLowerCase() })} {t("vehicle.results.notGuarantee")}</p>
         </div>
       </section>
 
       {/* D. Check an existing vehicle number */}
       {query.mode === "check" && existing && !("error" in existing) && (
         <section data-testid="existing-check" aria-labelledby="veh-existing-h" className="rounded-[2rem] border border-[#C9873A]/60 bg-gradient-to-b from-[#FFF3D6] to-[#FBF5EC] p-5 shadow-[0_18px_44px_-30px_rgba(89,34,9,0.5)] sm:p-8">
-          <SectionTitle id="veh-existing-h">Your Existing Vehicle Number</SectionTitle>
+          <SectionTitle id="veh-existing-h">{t("vehicle.results.existingTitle")}</SectionTitle>
           <NumberPlate number={existing.display} size="lg" />
           <div className="mx-auto mt-5 grid max-w-4xl grid-cols-2 gap-3 md:grid-cols-4">
-            <Fact label="Digits evaluated" value={existing.digits} />
-            <Fact label="Digit sum" value={String(existing.ev.total)} sub={working(existing.ev)} />
-            <Fact label="Numerology number" value={reducedText(existing.ev)} sub={existing.ev.master ? "A master number" : undefined} />
-            <Fact label="Planet" value={`${existing.ev.symbol} ${existing.ev.planet}`} />
+            <Fact label={t("vehicle.results.digitsEvaluated")} value={existing.digits} />
+            <Fact label={t("vehicle.results.digitSum")} value={String(existing.ev.total)} sub={working(existing.ev)} />
+            <Fact label={t("vehicle.results.numerologyNumber")} value={reducedText(existing.ev)} sub={existing.ev.master ? t("vehicle.results.masterNumber") : undefined} />
+            <Fact label={t("vehicle.results.planet")} value={`${existing.ev.symbol} ${g("planet", existing.ev.planet)}`} />
           </div>
           {existing.note && <p className="mt-3 text-center text-xs text-[#6B4A37]">{existing.note}</p>}
           <div className="mx-auto mt-5 max-w-4xl space-y-3 rounded-2xl bg-white/70 p-5">
@@ -265,7 +271,7 @@ export default function VehicleResults({ profile, query }: { profile: VehiclePro
               This is traditional numerology, not a guarantee of any outcome.
             </p>
             <div className="flex gap-2">
-              <button type="button" onClick={() => toggleCompare(existing.key)} className="rounded-full border border-[#592209]/30 px-4 py-1.5 text-sm font-semibold text-[#592209] hover:bg-[#592209]/10">{compare.some((x) => x.key === existing.key) ? "Remove from comparison" : "Compare with other numbers"}</button>
+              <button type="button" onClick={() => toggleCompare(existing.key)} className="rounded-full border border-[#592209]/30 px-4 py-1.5 text-sm font-semibold text-[#592209] hover:bg-[#592209]/10">{compare.some((x) => x.key === existing.key) ? t("vehicle.results.removeFromComparison") : t("vehicle.results.compareWithOthers")}</button>
             </div>
           </div>
         </section>
@@ -276,18 +282,18 @@ export default function VehicleResults({ profile, query }: { profile: VehiclePro
 
       {/* C. Your recommended vehicle numbers */}
       <section aria-labelledby="veh-rec-h">
-        <SectionTitle id="veh-rec-h" sub={query.mode === "find" ? "Everyday four-digit numbers, best matches first, each worked out with the same rule used to check an existing number." : "Other everyday numbers you could explore, worked out with the same rule."}>
-          <span className="inline-flex items-center gap-2"><Star size={22} aria-hidden="true" className="text-[#C9873A]" fill="currentColor" /> Your Recommended Vehicle Numbers</span>
+        <SectionTitle id="veh-rec-h" sub={query.mode === "find" ? t("vehicle.results.recSubFind") : t("vehicle.results.recSubOther")}>
+          <span className="inline-flex items-center gap-2"><Star size={22} aria-hidden="true" className="text-[#C9873A]" fill="currentColor" /> {t("vehicle.results.recTitle")}</span>
         </SectionTitle>
-        {info.rangeFallback && <p data-testid="range-note" className="mx-auto mb-4 max-w-2xl rounded-xl bg-[#FFF1CC]/70 p-3 text-center text-sm text-[#4A2E1F]">There are no everyday numbers in your preferred range, so we looked across all four-digit numbers instead.</p>}
+        {info.rangeFallback && <p data-testid="range-note" className="mx-auto mb-4 max-w-2xl rounded-xl bg-[#FFF1CC]/70 p-3 text-center text-sm text-[#4A2E1F]">{t("vehicle.results.rangeNote")}</p>}
         {info.preferredFancy.length > 0 && <p data-testid="preferred-note" className="mx-auto mb-4 max-w-2xl rounded-xl bg-[#FFF1CC]/70 p-3 text-center text-sm text-[#4A2E1F]">Your preferred number {query.preferred} is a special-pattern number ({info.preferredFancy.join(", ").toLowerCase()}). Numbers like this are often premium, so we do not recommend them, but you can still read it with “Check my existing vehicle number” or add it to Compare.</p>}
         {recs.length === 0 ? (
-          <p data-testid="rec-none" className="mx-auto max-w-xl rounded-2xl border border-[#592209]/20 bg-white/70 p-4 text-center text-sm text-[#4A2E1F]">We could not find a number to suggest for this profile.</p>
+          <p data-testid="rec-none" className="mx-auto max-w-xl rounded-2xl border border-[#592209]/20 bg-white/70 p-4 text-center text-sm text-[#4A2E1F]">{t("vehicle.results.recNone")}</p>
         ) : (
           <>
             <ul data-testid="rec-list" className={GRID}>{shown.map(cardFor)}</ul>
             <details data-testid="left-out" className="mx-auto mt-5 max-w-2xl rounded-xl border border-[#592209]/15 bg-white/50 p-3 text-sm text-[#4A2E1F]">
-              <summary className="cursor-pointer text-center font-semibold text-[#592209]">Which numbers are left out, and why?</summary>
+              <summary className="cursor-pointer text-center font-semibold text-[#592209]">{t("vehicle.results.leftOutTitle")}</summary>
               <p className="mt-2">We suggest everyday numbers. These patterns are often sold as premium or fancy numbers, so we leave them out of the suggestions. You can still check any of them yourself.</p>
               <ul className="mt-2 grid gap-1 sm:grid-cols-2">{FANCY_RULES.map((r) => <li key={r.id}><span className="font-semibold">{r.label}</span>, {r.description}</li>)}</ul>
               <p className="mt-2 text-xs text-[#6B4A37]">A number that simply contains a repeated digit, such as 2655 or 3118, is not left out.</p>
@@ -295,7 +301,7 @@ export default function VehicleResults({ profile, query }: { profile: VehiclePro
             {recs.length > FIRST && (
               <div className="mt-6 text-center">
                 <button type="button" aria-expanded={more} onClick={() => setMore((v) => !v)} className="inline-flex items-center gap-2 rounded-full border-2 border-[#592209]/50 bg-white/60 px-7 py-2.5 text-sm font-bold uppercase tracking-wide text-[#592209] transition-colors hover:bg-[#592209] hover:text-[#F5E9D6]">
-                  {more ? "Show Fewer Numbers" : `View More Numbers (${recs.length - FIRST})`}
+                  {more ? t("vehicle.results.showFewer") : t("vehicle.results.viewMore", { count: recs.length - FIRST })}
                   <ChevronDown size={16} aria-hidden="true" className={more ? "rotate-180" : ""} />
                 </button>
               </div>
@@ -303,7 +309,7 @@ export default function VehicleResults({ profile, query }: { profile: VehiclePro
           </>
         )}
         <p data-testid="availability-note" className="mx-auto mt-5 max-w-2xl text-center text-xs leading-relaxed text-[#6B4A37]">
-          These are numerology-based suggestions. Actual registration-number availability and allocation depend on your RTO.
+          {t("vehicle.results.availability")}
         </p>
       </section>
 
@@ -312,25 +318,25 @@ export default function VehicleResults({ profile, query }: { profile: VehiclePro
       {/* Saved numbers */}
       {savedEntries.length > 0 && (
         <section data-testid="saved-numbers" aria-labelledby="veh-saved-h" className="rounded-3xl border border-[#C9873A]/50 bg-[#FFF7E6] p-5">
-          <h2 id="veh-saved-h" className="mb-3 flex items-center justify-center gap-2 text-xl font-bold text-[#301607]"><Heart size={20} aria-hidden="true" fill="currentColor" /> Your Saved Numbers</h2>
+          <h2 id="veh-saved-h" className="mb-3 flex items-center justify-center gap-2 text-xl font-bold text-[#301607]"><Heart size={20} aria-hidden="true" fill="currentColor" /> {t("vehicle.results.savedTitle")}</h2>
           <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {savedEntries.map((e) => (
               <li key={e.key} className="flex flex-col items-center gap-2 rounded-2xl border border-[#592209]/15 bg-white/70 p-3">
                 <NumberPlate number={e.display} size="sm" />
                 <LabelChip compat={e.compat} />
                 <div className="flex gap-2">
-                  <button type="button" onClick={() => toggleCompare(e.key)} disabled={!compare.some((x) => x.key === e.key) && compare.length >= MAX_COMPARE} aria-label={`Compare saved number ${e.display}`} className="rounded-full border border-[#592209]/30 px-3 py-1 text-xs font-semibold text-[#592209] hover:bg-[#592209]/10 disabled:opacity-50">{compare.some((x) => x.key === e.key) ? "In comparison" : "Compare"}</button>
-                  <button type="button" onClick={() => fav.toggle(e.key)} aria-label={`Remove ${e.display} from saved numbers`} className="rounded-full border border-[#592209]/30 px-3 py-1 text-xs font-semibold text-[#592209] hover:bg-[#592209]/10">Remove</button>
+                  <button type="button" onClick={() => toggleCompare(e.key)} disabled={!compare.some((x) => x.key === e.key) && compare.length >= MAX_COMPARE} aria-label={t("vehicle.results.compareSaved", { number: e.display })} className="rounded-full border border-[#592209]/30 px-3 py-1 text-xs font-semibold text-[#592209] hover:bg-[#592209]/10 disabled:opacity-50">{compare.some((x) => x.key === e.key) ? t("vehicle.results.inComparison") : t("vehicle.card.compare")}</button>
+                  <button type="button" onClick={() => fav.toggle(e.key)} aria-label={t("vehicle.card.removeSaved", { number: e.display })} className="rounded-full border border-[#592209]/30 px-3 py-1 text-xs font-semibold text-[#592209] hover:bg-[#592209]/10">{t("common.remove")}</button>
                 </div>
               </li>
             ))}
           </ul>
-          <p className="mt-3 text-center text-xs text-[#6B4A37]">Saved in this browser only. They are not attached to your MyBhagya account.</p>
+          <p className="mt-3 text-center text-xs text-[#6B4A37]">{t("vehicle.results.savedNote")}</p>
         </section>
       )}
 
       <p className="mx-auto max-w-2xl text-center text-xs leading-relaxed text-[#6B4A37]">
-        Numerology is a traditional belief system and is not scientifically proven. A traditional reading of a number does not promise good or bad fortune for you or your vehicle, and it should never be a reason to worry about the number you have.
+        {t("vehicle.results.disclaimer")}
       </p>
     </div>
   );

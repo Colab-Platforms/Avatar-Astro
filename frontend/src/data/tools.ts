@@ -8,6 +8,8 @@ export interface AstrologyTool {
   image: string;
   /** CSS object-position for the card photo (default: centre). Used where the artwork is taller than the card. */
   imagePosition?: string;
+  /** A brand logo shown over the card image (transparent PNG under /public). Hidden, never replaced, if the file is missing. */
+  logo?: string;
   button: string;
   path: string;
 }
@@ -75,6 +77,7 @@ export const tools: AstrologyTool[] = [
     title: MUHURAT_FEATURE.name,
     description: "Explore suitable dates and timings for important events based on Hindu Panchang.",
     image: "/images/tools/muhurat-finder-card.png",
+    logo: "/images/muhurat-logo.png",
     button: "Find a Muhurat",
     path: MUHURAT_FEATURE.path,
   },

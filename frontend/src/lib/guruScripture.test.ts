@@ -65,3 +65,30 @@ describe("scripture references in a reply", () => {
     expect(allowedReferences(buildGrounding("hello", null))).toEqual([]);
   });
 });
+
+describe("the invented-reference guard works in every language", () => {
+  const cases: [string, string, string[]][] = [
+    ["ta Kural 2:47 (seen in a real reply)", "குறள் 2:47 போல, செயலைச் செய்ய வேண்டும்.", []],
+    ["ta Gita", "கீதை 4.7 சொல்கிறது", []],
+    ["hi Gita", "गीता 2:47 में कहा गया है", []],
+    ["hi chapter and verse", "अध्याय 3, श्लोक 21 के अनुसार", []],
+    ["mr", "भगवद्गीता 18.66 म्हणते", []],
+    ["te", "భగవద్గీత 2:20 చెబుతుంది", []],
+    ["gu", "ગીતા 6.5 કહે છે", []],
+    ["bn", "গীতা 9.22 বলে", []],
+    ["kn", "ಗೀತೆ 2.14 ಹೇಳುತ್ತದೆ", []],
+    ["ml", "ഗീത 3.35 പറയുന്നു", []],
+    ["pa", "ਗੀਤਾ 2.47 ਕਹਿੰਦੀ ਹੈ", []],
+  ];
+  it.each(cases)("%s is refused when the verse was not handed to the model", (_n, text) => {
+    expect(findUnverifiedReferences(text, []).length).toBeGreaterThan(0);
+  });
+  it("is allowed when that exact verse was handed over, in any language", () => {
+    expect(findUnverifiedReferences("கீதை 2:47 சொல்கிறது", ["2.47"])).toEqual([]);
+    expect(findUnverifiedReferences("गीता 2.47 में कहा गया है", ["2.47"])).toEqual([]);
+  });
+  it("ordinary times and numbers are not mistaken for references", () => {
+    expect(findUnverifiedReferences("தினமும் 10 நிமிடம் தியானம் செய்யுங்கள். காலை 5:30 மணிக்கு எழுங்கள்.", [])).toEqual([]);
+    expect(findUnverifiedReferences("रोज़ 108 बार जप करें और 5:30 बजे उठें।", [])).toEqual([]);
+  });
+});

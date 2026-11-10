@@ -89,7 +89,7 @@ describe("every event searches and every window truly qualifies", () => {
           for (const p of w.avoidedPeriods) assert.ok(w.endLocal <= p.startLocal || w.startLocal >= p.endLocal, `${w.date} ${w.startLocal}-${w.endLocal} overlaps ${p.label} ${p.startLocal}-${p.endLocal}`);
         }
       }
-      if (r.best) assert.ok(r.others.every((o) => o.score <= r.best!.score));
+      if (r.best) assert.ok(r.days.every((d) => d.windows.every((w) => w.score <= r.best!.score)), "best is the highest score of every window");
     });
   }
 });
@@ -199,13 +199,14 @@ describe("results, ranking, honesty", () => {
     const run = () => JSON.stringify(searchMuhurat({ event: "vehicle-purchase", place: DELHI, startDate: "2026-12-01", endDate: "2027-02-28" }));
     assert.equal(run(), run());
   });
-  it("best is the top score; others are best-first, on other dates, and at most five", () => {
+  it("best is the top score and is also present, unchanged, in the dated list; no window is dropped or capped", () => {
     const r = searchMuhurat({ event: "griha-pravesh", place: MUMBAI, startDate: "2026-12-01", endDate: "2027-04-30" });
     assert.ok(r.best);
-    assert.ok(r.others.length <= 5 && r.others.length > 0);
-    const scores = [r.best!, ...r.others].map((w) => w.score);
-    assert.deepEqual(scores, [...scores].sort((a, b) => b - a));
-    assert.equal(new Set([r.best!, ...r.others].map((w) => w.date)).size, 1 + r.others.length);
+    const all = r.days.flatMap((d) => d.windows);
+    assert.equal(all.length, r.totals.windows);
+    assert.ok(all.length > 6, "more than the old five-date cap");
+    assert.deepEqual(all.find((w) => w.startUtc === r.best!.startUtc), r.best);
+    assert.equal(Math.max(...all.map((w) => w.score)), r.best!.score);
   });
   it("score parts add up to the score", () => {
     const w = searchMuhurat({ event: "marriage", place: MUMBAI, startDate: "2026-11-20", endDate: "2027-05-30" }).best!;
@@ -213,7 +214,7 @@ describe("results, ranking, honesty", () => {
   });
   it("when nothing qualifies there is no best, no invented result, and the reasons are listed", () => {
     const r = searchMuhurat({ event: "marriage", place: MUMBAI, startDate: "2026-12-20", endDate: "2026-12-25" });
-    assert.equal(r.best, null); assert.deepEqual(r.others, []); assert.equal(r.totals.windows, 0);
+    assert.equal(r.best, null); assert.equal(r.totals.windows, 0); assert.equal(r.totals.daysWithWindows, 0);
     assert.ok(r.days.every((d) => d.blockers.length > 0));
   });
   it("carries the method, what was evaluated, the rules and the limits; never promises an outcome; has no long disclaimer", () => {

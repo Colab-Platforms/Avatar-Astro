@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { createRateLimiter } from "../utils/rateLimit.js";
 import { auth } from "../middleware/authMiddleware.js";
+import { languageRule, requestLanguage, tokenBudget } from "../utils/responseLanguage.js";
 
 const router = Router();
 router.use(auth("USER"));
@@ -78,6 +79,7 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
   ]
 }`;
 
+    const lang = requestLanguage(req); // the visitor's chosen language, if any; otherwise English as before
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -88,8 +90,8 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
       },
       body: JSON.stringify({
         model: "google/gemma-4-31b-it:free",
-        max_tokens: 1800,
-        messages: [{ role: "user", content: prompt }],
+        max_tokens: tokenBudget(1800, lang),
+        messages: [{ role: "user", content: prompt + languageRule(lang, "") }],
       }),
     });
 
@@ -134,6 +136,7 @@ Answer the following question with COMPLETE SPECIFICITY to this person's zodiac,
 
 Question: "${question}"`;
 
+    const lang = requestLanguage(req);
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -144,8 +147,8 @@ Question: "${question}"`;
       },
       body: JSON.stringify({
         model: "google/gemma-4-31b-it:free",
-        max_tokens: 400,
-        messages: [{ role: "user", content: prompt }],
+        max_tokens: tokenBudget(400, lang),
+        messages: [{ role: "user", content: prompt + languageRule(lang, "") }],
       }),
     });
 

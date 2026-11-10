@@ -1,5 +1,6 @@
 import { aiChat } from "@/lib/aiClient";
 import { SignInRequiredError } from "@/lib/authedFetch";
+import { chosenLanguage } from "@/i18n/aiLanguage";
 import { SHLOKAS, SHLOKA_BY_ID, type Shloka } from "@/data/shlokaCatalog";
 
 export const MAX_SITUATION_CHARS = 600;
@@ -95,6 +96,7 @@ export async function fetchWisdom(situation: string, scripture: string): Promise
       max_tokens: 900,
       json: true,
       library: { feature: "shloka" },
+      language: chosenLanguage(), // the reflection is written in the language the visitor chose (nothing is sent if they never chose one)
       messages: [
         { role: "system", content: buildPrompt(scripture) },
         { role: "user", content: `My situation: ${situation.trim().slice(0, MAX_SITUATION_CHARS)}` },

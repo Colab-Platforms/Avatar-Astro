@@ -1,4 +1,5 @@
 import { memo } from "react";
+import Tx from "@/i18n/Tx";
 import { motion } from "framer-motion";
 import { liveDarshanFeature } from "@/data/features";
 import FeatureButton from "./FeatureButton";
@@ -17,14 +18,14 @@ const LiveDarshanCard = ({ index }: LiveDarshanCardProps) => (
   >
     <div className="mb-1 flex items-center gap-2">
       <h3 className="hl-serif text-xl font-semibold normal-case leading-tight tracking-[0.03em] text-home-ink">
-        {liveDarshanFeature.title}
+        <Tx k="home.live.title" def={liveDarshanFeature.title} />
       </h3>
       <span className="inline-flex items-center gap-1 rounded-full bg-home-gerua px-2 py-0.5 font-home-sans text-[10px] font-bold tracking-wide text-home-ivory">
         <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-home-gold motion-reduce:animate-none" aria-hidden="true" />
-        {liveDarshanFeature.liveLabel}
+        <Tx k="home.live.badge" def={liveDarshanFeature.liveLabel} />
       </span>
     </div>
-    <p className="mb-2 font-home-sans text-[0.9rem] leading-[1.45] text-home-muted">{liveDarshanFeature.description}</p>
+    <p className="mb-2 font-home-sans text-[0.9rem] leading-[1.45] text-home-muted"><Tx k="home.live.description" def={liveDarshanFeature.description} /></p>
 
     <div className="hl-img-zoom mb-2 h-[110px] w-full overflow-hidden rounded-lg">
       <img
@@ -43,7 +44,7 @@ const LiveDarshanCard = ({ index }: LiveDarshanCardProps) => (
       ))}
     </div>
 
-    <FeatureButton to={liveDarshanFeature.buttonPath} label={liveDarshanFeature.buttonLabel} className="mt-auto self-start" />
+    <FeatureButton to={liveDarshanFeature.buttonPath} label={<Tx k="home.live.button" def={liveDarshanFeature.buttonLabel} />} className="mt-auto self-start" />
   </motion.div>
 );
 

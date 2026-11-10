@@ -62,6 +62,8 @@ export interface EventRule {
     chaturmas: boolean;
     /** Amanta Bhadrapada Krishna paksha. Observed in many regions, not all. */
     pitruPaksha: boolean;
+    /** Panchak: the Moon in the second half of Dhanishta through Revati. Left out only where the tradition for the event says so. */
+    panchak?: boolean;
     /** Planets whose combustion (asta) rules the date out. */
     asta: ("Venus" | "Jupiter")[];
   };
@@ -161,7 +163,7 @@ export const EVENTS: EventRule[] = [
     confidence: "general", basis: "Follows the Muhurta conventions for foundations: fixed nakshatras rank first. Kharmas, Adhika, Chaturmas, Rikta tithis and Amavasya are avoided.",
     nakshatras: { best: [...NAK.fixed], good: [...NAK.gentle, "Pushya", "Dhanishta", "Shatabhisha"] },
     tithis: { avoid: [4, 9, 14] }, weekdays: { best: [1, 4, 5], ok: [3] }, shuklaPreferred: true,
-    avoid: { kharmas: true, adhika: true, chaturmas: true, pitruPaksha: true, asta: NO_ASTA },
+    avoid: { kharmas: true, adhika: true, chaturmas: true, pitruPaksha: true, panchak: true, asta: NO_ASTA },
     limitations: ["Vastu considerations (plot direction, the position of the Sun on the plot) and the owner's own chart are not evaluated."],
   }),
   mk({

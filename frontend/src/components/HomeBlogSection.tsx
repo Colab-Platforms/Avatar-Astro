@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import Tx from "@/i18n/Tx";
 import { ArrowRight } from "lucide-react";
 import { homeBlogPosts } from "@/data/homeBlog";
 
@@ -16,17 +17,17 @@ const HomeBlogSection = () => (
       <div className="mb-8 flex flex-col gap-5 text-center sm:flex-row sm:items-end sm:justify-between sm:text-left">
         <div>
           <p className="mb-2 font-home-sans text-xs font-semibold uppercase tracking-[0.25em] text-home-gerua">
-            Insights &amp; Stories
+            <Tx k="home.blog.eyebrow" />
           </p>
           <h2
             id="home-blog-h"
             className="hl-serif text-3xl font-semibold normal-case leading-[1.15] tracking-[0.02em] text-home-ink sm:text-4xl md:text-[2.6rem]"
           >
-            Read from our <span className="text-home-gerua">blog.</span>
+            <Tx k="home.blog.lead" /> <span className="text-home-gerua"><Tx k="home.blog.accent" /></span>
           </h2>
         </div>
         <Link to="/blog" className="hl-btn group h-11 shrink-0 self-center px-6 text-sm sm:self-auto">
-          View all blogs
+          <Tx k="home.blog.viewAll" />
           <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1 motion-reduce:transition-none" />
         </Link>
       </div>

@@ -14,6 +14,9 @@ import { limbsAt, computePanchang, sunsetOnLocalDate, tithiName, type Limbs } fr
 import { sunriseOnLocalDate } from "../gemstone/date.based.js";
 import { computePlanets, assertValidLocation } from "../gemstone/chart.engine.js";
 import { isValidTimeZone } from "../gemstone/birth.time.js";
+import { FestivalCalendar, FESTIVAL_CONVENTION, type Festival } from "./festivals.js";
+import { dayPanchang, isPanchak, type DayPanchang } from "./calendar.js";
+import { sunTimes } from "./sun.js";
 import { DISHASHOOL, WEEKDAYS, periodsFor, inPeriod, type Direction, type DayPeriods, type Period } from "./periods.js";
 import { EVENT_BY_ID, METHOD, UNIVERSAL, type EventRule } from "./rules.js";
 
@@ -65,11 +68,26 @@ export interface MuhuratWindow {
   /** Elements that change inside the window, in words. */
   changes: string[];
   avoidedPeriods: AvoidedPeriod[];
+  /** Always "suitable": a window is returned only when every required condition holds. There is no partial class. */
+  status: "suitable";
+  /** Festivals and observances on this date, and Panchak when it overlaps the window. Information only. */
+  observances: string[];
   /** Why the window qualifies: only statements backed by the calculated values. */
   why: string[];
 }
 
+/** Why a date has no suitable window, interval by interval. Only built for dates with no window. */
+export interface DayAnalysis {
+  /** The daytime split wherever the set of failing conditions changes, with exact local times. */
+  intervals: { startLocal: string; endLocal: string; reasons: string[] }[];
+  /** Each failing condition, and whether it covers the whole daytime or only part of it (with the times). */
+  scopes: { reason: string; scope: "whole day" | "part of the day"; spans: { startLocal: string; endLocal: string }[] }[];
+  /** What would have to be different for a window to qualify, derived from the conditions that failed. */
+  needs: string[];
+}
+
 export interface DayResult {
+  analysis: DayAnalysis | null;
   date: string;
   weekday: string;
   sunrise: string | null;
@@ -80,6 +98,10 @@ export interface DayResult {
   blockers: string[];
   avoidedPeriods: AvoidedPeriod[];
   abhijit: { startLocal: string; endLocal: string } | null;
+  /** Festivals and observances calculated for this date and place. */
+  festivals: Festival[];
+  /** The day Panchang with the exact time each element changes (only for dates that have a suitable window). */
+  panchang: DayPanchang | null;
 }
 
 export interface MuhuratResult {
@@ -90,11 +112,15 @@ export interface MuhuratResult {
   method: { id: string; label: string; note: string };
   /** The Panchang elements and conditions that were actually evaluated for this event. */
   evaluated: string[];
+  /** The calendar conventions in force, stated so nothing is mixed silently. */
+  convention: { panchang: { id: string; label: string; note: string }; festivals: { id: string; label: string; note: string }; dayBoundary: string };
+  /** Notes on seasonal restrictions in force during the search, with their exact local end time where it can be calculated. */
+  seasonNotes: string[];
   rules: string[];
+  /** The highest-ranked window. It is also present, unchanged, in days. */
   best: MuhuratWindow | null;
-  others: MuhuratWindow[];
   days: DayResult[];
-  totals: { days: number; daysWithWindows: number; windows: number };
+  totals: { days: number; daysWithWindows: number; windows: number; festivalDays: number };
   notes: string[];
 }
 
@@ -181,6 +207,8 @@ interface DayCtx {
   masaRise: { name: string; adhika: boolean } | null;
   masaSet: { name: string; adhika: boolean } | null;
   risePaksha: Limbs["paksha"];
+  /** Panchak is excluded for this search (the event rules, or Travel towards the south). */
+  panchakAvoid: boolean;
   /** Reasons that rule out the whole day (weekday, combustion, ...). */
   dayFails: string[];
 }
@@ -189,12 +217,13 @@ const sepDeg = (a: number, b: number) => { const d = Math.abs(((a - b) % 360 + 3
 
 const needsMonth = (r: EventRule) => r.avoid.adhika || r.avoid.chaturmas || r.avoid.pitruPaksha;
 
-const dayContext = (rule: EventRule, req: MuhuratRequest, date: string): DayCtx | { date: string; noSun: true } => {
+/** `full`: keep evaluating a date that already failed a day-level rule, so every disqualifier is reported (used for short searches). */
+const dayContext = (rule: EventRule, req: MuhuratRequest, date: string, full = false): DayCtx | { date: string; noSun: true } => {
   const { place } = req;
   const ymd = parseYmd(date);
-  const rise = sunriseOnLocalDate(ymd, place.latitude, place.longitude, place.timezone, true);
-  const set = sunsetOnLocalDate(ymd, place.latitude, place.longitude, place.timezone, true);
-  if (!rise || !set || set <= rise) return { date, noSun: true };
+  const sun = sunTimes(place, date);
+  if (!sun) return { date, noSun: true };
+  const { rise, set } = sun;
   const weekdayIndex = new Date(Date.UTC(ymd.year, ymd.month - 1, ymd.day)).getUTCDay();
   const dayFails: string[] = [];
 
@@ -212,7 +241,7 @@ const dayContext = (rule: EventRule, req: MuhuratRequest, date: string): DayCtx 
   let masaRise: DayCtx["masaRise"] = null;
   let masaSet: DayCtx["masaSet"] = null;
   const risePaksha = limbsAt(rise).paksha;
-  if (!dayFails.length && needsMonth(rule)) {
+  if ((!dayFails.length || full) && needsMonth(rule)) {
     const p = computePanchang({ localDate: date, time: null, place, allowFuture: true });
     masaRise = { name: p.masa.name, adhika: p.masa.adhika };
     masaSet = masaRise;
@@ -221,13 +250,21 @@ const dayContext = (rule: EventRule, req: MuhuratRequest, date: string): DayCtx 
       masaSet = { name: q.masa.name, adhika: q.masa.adhika };
     }
   }
-  return { date, weekdayIndex, rise, set, periods: periodsFor(weekdayIndex, rise, set), masaRise, masaSet, risePaksha, dayFails };
+  const panchakAvoid = !!rule.avoid.panchak || (rule.id === "travel" && dir === "South");
+  return { date, weekdayIndex, rise, set, periods: periodsFor(weekdayIndex, rise, set), masaRise, masaSet, risePaksha, panchakAvoid, dayFails };
 };
 
 /* ---------------- eligibility ---------------- */
 
 const inWithin = (l: Limbs) => ((l.tithiNumber - 1) % 15) + 1;
 const isKharmas = (sunLongitude: number) => { const sign = Math.floor((((sunLongitude % 360) + 360) % 360) / 30); return sign === 8 || sign === 11; };
+
+/**
+ * Chaturmas: Ashadha Shukla Ekadashi (Devshayani) through Kartika Shukla Ekadashi (Prabodhini), by Amanta month, paksha and the
+ * tithi within the paksha. Both Ekadashi tithis are inside it, so a date is free of Chaturmas only once Kartika Shukla Ekadashi ends.
+ */
+export const inChaturmas = (masa: string, paksha: "shukla" | "krishna", tithiInPaksha: number): boolean =>
+  (masa === "Ashadha" && paksha === "shukla" && tithiInPaksha >= 11) || masa === "Shravana" || masa === "Bhadrapada" || masa === "Ashvina" || (masa === "Kartika" && paksha === "shukla" && tithiInPaksha <= 11);
 
 /** Reasons this instant does NOT qualify. Empty = suitable. */
 export const evaluate = (rule: EventRule, ctx: DayCtx, t: Date, tz: string, timeOfDay: TimeOfDay = "any"): string[] => {
@@ -250,12 +287,11 @@ export const evaluate = (rule: EventRule, ctx: DayCtx, t: Date, tz: string, time
     if (rule.avoid.adhika && masa.adhika) fails.push("Adhika masa (the extra month) is avoided");
     if (rule.avoid.pitruPaksha && !masa.adhika && masa.name === "Bhadrapada" && l.paksha === "krishna") fails.push("Pitru Paksha is avoided");
     if (rule.avoid.chaturmas) {
-      const m = masa.name;
-      const inChaturmas = (m === "Ashadha" && l.paksha === "shukla" && n >= 11) || m === "Shravana" || m === "Bhadrapada" || m === "Ashvina" || (m === "Kartika" && l.paksha === "shukla" && n <= 11);
-      if (inChaturmas && !masa.adhika) fails.push("Chaturmas (Devshayani to Prabodhini Ekadashi) is avoided");
+      if (inChaturmas(masa.name, l.paksha, n) && !masa.adhika) fails.push("Chaturmas (Devshayani to Prabodhini Ekadashi) is avoided");
     }
   }
 
+  if (ctx.panchakAvoid && isPanchak(l)) fails.push("Panchak (the Moon from Dhanishta pada 3 to Revati) is avoided");
   if (inPeriod(t, ctx.periods.rahuKalam)) fails.push("Rahu Kalam");
   if (inPeriod(t, ctx.periods.yamaganda)) fails.push("Yamaganda");
   if (inPeriod(t, ctx.periods.gulika)) fails.push("Gulika Kalam");
@@ -338,7 +374,7 @@ const changesWithin = (start: Date, end: Date, tz: string): string[] => {
 
 const fmtPeriod = (label: string, p: Period, tz: string): AvoidedPeriod => ({ label, startLocal: hm(tz, p.start), endLocal: hm(tz, p.end) });
 
-const whyLines = (rule: EventRule, weekdayIndex: number, l: Limbs, w: { tithiChanged: boolean }): string[] => {
+const whyLines = (rule: EventRule, weekdayIndex: number, l: Limbs, w: { tithiChanged: boolean; festivals: Festival[] }): string[] => {
   const n = inWithin(l);
   const tn = tithiName(l.paksha, n).name;
   const lines: string[] = [];
@@ -347,7 +383,9 @@ const whyLines = (rule: EventRule, weekdayIndex: number, l: Limbs, w: { tithiCha
   lines.push(`${WEEKDAYS[weekdayIndex]} is ${rule.weekdays.best.includes(weekdayIndex) ? "a first-choice" : "an accepted"} weekday.`);
   lines.push(`Yoga ${l.yoga} and the ${l.karana} karana are not among the avoided ones.`);
   lines.push("The window lies outside Rahu Kalam, Yamaganda and Gulika Kalam for this place and date.");
+  if (rule.avoid.panchak) lines.push("The Moon is outside Panchak, which this event tradition avoids.");
   if (w.tithiChanged) lines.push("The tithi changes inside this window; both tithis are suitable.");
+  if (w.festivals.length) lines.push(`${w.festivals.map((f) => f.name).join(", ")} is observed on this date. The event rules were applied as usual: a festival day is not treated as auspicious or inauspicious by itself.`);
   return lines;
 };
 
@@ -360,7 +398,7 @@ export const describeRules = (rule: EventRule, prefs?: MuhuratRequest["preferenc
   out.push(rule.tithis.allowed ? `Tithi (within each paksha): ${rule.tithis.allowed.join(", ")} only.` : `Tithi: all except ${(rule.tithis.avoid ?? UNIVERSAL.defaultAvoidTithis).join(", ")} (Rikta) and Amavasya.`);
   out.push(`Weekday, first choice: ${rule.weekdays.best.map((d) => WEEKDAYS[d]).join(", ")}; also accepted: ${rule.weekdays.ok.length ? rule.weekdays.ok.map((d) => WEEKDAYS[d]).join(", ") : "none"}.`);
   out.push(`Always avoided: ${UNIVERSAL.avoidYogas.join(", ")} yogas; Vishti (Bhadra) karana; Amavasya; ${UNIVERSAL.periods.join(", ")}.`);
-  const seasons = [rule.avoid.kharmas && "Kharmas", rule.avoid.adhika && "Adhika masa", rule.avoid.chaturmas && "Chaturmas", rule.avoid.pitruPaksha && "Pitru Paksha", ...rule.avoid.asta.map((p) => `${p === "Venus" ? "Shukra" : "Guru"} asta`)].filter(Boolean);
+  const seasons = [rule.avoid.kharmas && "Kharmas", rule.avoid.panchak && "Panchak", rule.avoid.adhika && "Adhika masa", rule.avoid.chaturmas && "Chaturmas", rule.avoid.pitruPaksha && "Pitru Paksha", ...rule.avoid.asta.map((p) => `${p === "Venus" ? "Shukra" : "Guru"} asta`)].filter(Boolean);
   out.push(seasons.length ? `Seasons and conditions avoided: ${seasons.join(", ")}.` : "No seasonal restriction is applied to this event.");
   if (prefs?.weekdays?.length) out.push(`Your weekday preference: ${prefs.weekdays.map((d) => WEEKDAYS[d]).join(", ")}.`);
   if (prefs?.timeOfDay && prefs.timeOfDay !== "any") out.push(`Your time of day preference: ${prefs.timeOfDay}.`);
@@ -368,10 +406,86 @@ export const describeRules = (rule: EventRule, prefs?: MuhuratRequest["preferenc
   return out;
 };
 
+/** What would have to be different, in words, for each kind of failing condition. Never suggests changing the event rules. */
+export const needsFor = (rule: EventRule, reasons: string[]): string[] => {
+  const out = new Set<string>();
+  const wd = (a: number[]) => a.map((d) => WEEKDAYS[d]).join(", ");
+  for (const r of reasons) {
+    if (/preferred weekdays/.test(r)) out.add("A weekday you have chosen that this event also accepts.");
+    else if (/not a suitable weekday/.test(r)) out.add("A weekday this event accepts: " + wd([...rule.weekdays.best, ...rule.weekdays.ok].sort()) + ".");
+    else if (/Dishashool/.test(r)) out.add("A weekday on which your direction of travel is not Dishashool.");
+    else if (/^Nakshatra .* not among/.test(r)) out.add("The Moon in an accepted nakshatra: " + [...rule.nakshatras.best, ...rule.nakshatras.good].join(", ") + ".");
+    else if (/^Tithi/.test(r) || /Amavasya/.test(r)) out.add(rule.tithis.allowed ? "One of the accepted tithis (within each paksha): " + rule.tithis.allowed.join(", ") + ", and not Amavasya." : "A tithi other than the Rikta tithis (4, 9, 14) and Amavasya.");
+    else if (/^Yoga/.test(r)) out.add("A yoga outside the nine avoided ones (" + UNIVERSAL.avoidYogas.join(", ") + ").");
+    else if (/Vishti|Bhadra/.test(r)) out.add("A time outside Bhadra (Vishti karana).");
+    else if (/Chaturmas/.test(r)) out.add("A date after Chaturmas ends, which is when Kartika Shukla Ekadashi (Prabodhini) ends.");
+    else if (/Kharmas/.test(r)) out.add("A date when the Sun is not in sidereal Dhanu or Meena.");
+    else if (/Adhika/.test(r)) out.add("A date outside the Adhika (extra) lunar month.");
+    else if (/Pitru Paksha/.test(r)) out.add("A date outside Pitru Paksha.");
+    else if (/combust/.test(r)) out.add("A date when " + (/Venus/.test(r) ? "Venus (Shukra)" : "Jupiter (Guru)") + " is no longer combust.");
+    else if (/Panchak/.test(r)) out.add("A time when the Moon is outside Panchak.");
+    else if (/Rahu Kalam|Yamaganda|Gulika/.test(r)) out.add("A time outside Rahu Kalam, Yamaganda and Gulika Kalam.");
+    else if (/preferred time of day/.test(r)) out.add("A time of day that matches your preference.");
+  }
+  return [...out];
+};
+
+const flipBy = (lo: number, hi: number, same: (t: number) => boolean): number => {
+  while (hi - lo > 1000) { const mid = Math.floor((lo + hi) / 2); if (same(mid)) lo = mid; else hi = mid; }
+  return hi;
+};
+
+/** Splits the daytime wherever the set of failing conditions changes, and reports each condition's scope. */
+const analyseDay = (times: Date[], fails: string[][], ctx: DayCtx, tz: string, sigAt: (t: number) => string): DayAnalysis => {
+  const sig = fails.map((f) => [...f].sort().join("|"));
+  const groups: { from: number; to: number; reasons: string[] }[] = [];
+  for (let i = 0; i < times.length; i++) {
+    const last = groups[groups.length - 1];
+    if (last && sig[i] === sig[i - 1]) { last.to = times[i].getTime(); continue; }
+    const from = i === 0 ? ctx.rise.getTime() : flipBy(times[i - 1].getTime(), times[i].getTime(), (t) => sigAt(t) === sig[i - 1]);
+    if (last) last.to = from;
+    groups.push({ from, to: times[i].getTime(), reasons: fails[i] });
+  }
+  groups[groups.length - 1].to = ctx.set.getTime();
+  const intervals = groups.map((g) => ({ startLocal: hm(tz, ceilMinute(new Date(g.from))), endLocal: hm(tz, floorMinute(new Date(g.to))), reasons: [...g.reasons].sort() }));
+  const all = new Set(intervals.flatMap((i) => i.reasons));
+  const scopes = [...all].map((reason) => {
+    const spans = intervals.filter((i) => i.reasons.includes(reason)).map((i) => ({ startLocal: i.startLocal, endLocal: i.endLocal }));
+    return { reason, scope: (intervals.every((i) => i.reasons.includes(reason)) ? "whole day" : "part of the day") as "whole day" | "part of the day", spans };
+  });
+  scopes.sort((a, b) => (a.scope === b.scope ? 0 : a.scope === "whole day" ? -1 : 1));
+  return { intervals, scopes, needs: [] };
+};
+
+/** Local time at which Chaturmas ends (the end of Kartika Shukla Ekadashi), searching forward from `date`. Null if it cannot be found. */
+const chaturmasEnd = (req: MuhuratRequest, date: string): { local: string; date: string } | null => {
+  const tz = req.place.timezone;
+  for (let i = 0; i <= 200; i++) {
+    const d = addDays(date, i);
+    const w = sunTimes(req.place, d);
+    if (!w) continue;
+    const p = computePanchang({ localDate: d, time: null, place: req.place, allowFuture: true });
+    const l = limbsAt(w.rise);
+    const n = ((l.tithiNumber - 1) % 15) + 1;
+    if (!p.masa.adhika && inChaturmas(p.masa.name, l.paksha, n)) continue;
+    // Not in Chaturmas at this sunrise. The end falls between the previous sunrise and this one.
+    const prev = sunTimes(req.place, addDays(d, -1));
+    if (!prev) return null;
+    const at = flipBy(prev.rise.getTime(), w.rise.getTime(), (t) => { const x = limbsAt(new Date(t)); return x.paksha === "shukla" && x.tithiNumber <= 11; });
+    const e = new Date(at);
+    const fmt = new Intl.DateTimeFormat("en-GB", { timeZone: tz, weekday: "short", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(e);
+    return { local: fmt, date: new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(e) };
+  }
+  return null;
+};
+
 /** What the engine actually looked at for this event: only things that were really evaluated are listed. */
 export const describeEvaluated = (rule: EventRule, prefs?: MuhuratRequest["preferences"]): string[] => {
   const out = ["Tithi and paksha", "Nakshatra", "Yoga", "Karana", "Vedic weekday (Vara), from local sunrise", "Sunrise and sunset at the event location", "Rahu Kalam", "Yamaganda", "Gulika Kalam"];
+  out.push("Bhadra (Vishti karana)");
+  out.push("Hindu festivals and observances (information only)");
   if (rule.avoid.kharmas) out.push("Kharmas (the Sun's sidereal sign)");
+  if (rule.avoid.panchak || (rule.id === "travel" && prefs?.direction === "South")) out.push("Panchak (the Moon from Dhanishta pada 3 to Revati)");
   if (rule.avoid.adhika || rule.avoid.chaturmas || rule.avoid.pitruPaksha) out.push("Hindu lunar month (Adhika masa" + (rule.avoid.chaturmas ? ", Chaturmas" : "") + (rule.avoid.pitruPaksha ? ", Pitru Paksha" : "") + ")");
   for (const p of rule.avoid.asta) out.push(`${p === "Venus" ? "Shukra" : "Guru"} (${p}) combustion`);
   if (rule.id === "travel" && prefs?.direction) out.push("Dishashool for the chosen direction");
@@ -386,32 +500,38 @@ export const searchMuhurat = (req: MuhuratRequest): MuhuratResult => {
   const count = daysBetween(req.startDate, req.endDate) + 1;
   const days: DayResult[] = [];
   const notes: string[] = [];
+  const festCal = new FestivalCalendar(req.place);
+  // A short search lists every disqualifier of every date, interval by interval. A long one keeps the cheaper day-level shortcut.
+  const fullAnalysis = count <= 31;
 
   for (let i = 0; i < count; i++) {
     const date = addDays(req.startDate, i);
-    const ctx = dayContext(rule, req, date);
+    const ctx = dayContext(rule, req, date, fullAnalysis);
     if ("noSun" in ctx) {
-      days.push({ date, weekday: WEEKDAYS[new Date(`${date}T00:00:00Z`).getUTCDay()], sunrise: null, sunset: null, windows: [], bestScore: 0, blockers: ["No sunrise or sunset could be calculated here on this date"], avoidedPeriods: [], abhijit: null });
+      days.push({ date, weekday: WEEKDAYS[new Date(`${date}T00:00:00Z`).getUTCDay()], sunrise: null, sunset: null, windows: [], bestScore: 0, blockers: ["No sunrise or sunset could be calculated here on this date"], avoidedPeriods: [], abhijit: null, festivals: [], panchang: null, analysis: null });
       notes.push(`${date}: no sunrise or sunset could be calculated at this latitude, so the day was skipped.`);
       continue;
     }
     const avoidedPeriods = [fmtPeriod("Rahu Kalam", ctx.periods.rahuKalam, tz), fmtPeriod("Yamaganda", ctx.periods.yamaganda, tz), fmtPeriod("Gulika Kalam", ctx.periods.gulika, tz)];
-    const base: Omit<DayResult, "windows" | "bestScore" | "blockers"> = {
-      date, weekday: WEEKDAYS[ctx.weekdayIndex], sunrise: hm(tz, ctx.rise), sunset: hm(tz, ctx.set), avoidedPeriods,
+    const festivals = festCal.on(date);
+    const base: Omit<DayResult, "windows" | "bestScore" | "blockers" | "panchang" | "analysis"> = {
+      date, weekday: WEEKDAYS[ctx.weekdayIndex], sunrise: hm(tz, ctx.rise), sunset: hm(tz, ctx.set), avoidedPeriods, festivals,
       abhijit: { startLocal: hm(tz, ctx.periods.abhijit.start), endLocal: hm(tz, ctx.periods.abhijit.end) },
     };
-    if (ctx.dayFails.length) { days.push({ ...base, windows: [], bestScore: 0, blockers: ctx.dayFails }); continue; }
+    if (ctx.dayFails.length && !fullAnalysis) {
+      const whole = { startLocal: hm(tz, ceilMinute(ctx.rise)), endLocal: hm(tz, floorMinute(ctx.set)) };
+      days.push({ ...base, windows: [], bestScore: 0, blockers: ctx.dayFails, panchang: null, analysis: { intervals: [{ ...whole, reasons: ctx.dayFails }], scopes: ctx.dayFails.map((reason) => ({ reason, scope: "whole day" as const, spans: [whole] })), needs: needsFor(rule, ctx.dayFails) } });
+      continue;
+    }
 
     const okAt = (t: Date) => evaluate(rule, ctx, t, tz, timeOfDay).length === 0;
     const failCounts = new Map<string, number>();
     const times: Date[] = [];
     for (let t = ctx.rise.getTime(); t < ctx.set.getTime(); t += SAMPLE_MIN * MIN) times.push(new Date(t));
     times.push(ctx.set);
-    const ok = times.map((t) => {
-      const f = evaluate(rule, ctx, t, tz, timeOfDay);
-      for (const r of f) failCounts.set(r, (failCounts.get(r) ?? 0) + 1);
-      return f.length === 0;
-    });
+    const fails = times.map((t) => [...ctx.dayFails, ...evaluate(rule, ctx, t, tz, timeOfDay)]);
+    for (const f of fails) for (const r of f) failCounts.set(r, (failCounts.get(r) ?? 0) + 1);
+    const ok = fails.map((f) => f.length === 0);
 
     const windows: MuhuratWindow[] = [];
     for (let a = 0; a < times.length; a++) {
@@ -430,16 +550,29 @@ export const searchMuhurat = (req: MuhuratRequest): MuhuratResult => {
       windows.push({
         date, weekday: base.weekday, startLocal: hm(tz, start), endLocal: hm(tz, end), startUtc: start.toISOString(), endUtc: end.toISOString(),
         durationMinutes: minutes, score, scoreParts: parts, panchang: panchangValues(l), changes, avoidedPeriods,
-        why: whyLines(rule, ctx.weekdayIndex, l, { tithiChanged: changes.some((c) => c.startsWith("Tithi")) }),
+        status: "suitable",
+        observances: [...festivals.map((f) => f.name), ...(!ctx.panchakAvoid && (isPanchak(l) || isPanchak(limbsAt(end))) ? ["Panchak is running (not excluded for this event)"] : [])],
+        why: whyLines(rule, ctx.weekdayIndex, l, { tithiChanged: changes.some((c) => c.startsWith("Tithi")), festivals }),
       });
     }
-    windows.sort((x, y) => y.score - x.score || x.startUtc.localeCompare(y.startUtc));
+    windows.sort((x, y) => x.startUtc.localeCompare(y.startUtc)); // every window on a date, in time order
     const blockers = windows.length ? [] : [...failCounts.entries()].sort((x, y) => y[1] - x[1]).slice(0, 3).map(([r]) => r);
-    days.push({ ...base, windows, bestScore: windows[0]?.score ?? 0, blockers });
+    let analysis: DayAnalysis | null = null;
+    if (!windows.length) {
+      analysis = analyseDay(times, fails, ctx, tz, (t) => [...ctx.dayFails, ...evaluate(rule, ctx, new Date(t), tz, timeOfDay)].sort().join("|"));
+      analysis.needs = needsFor(rule, analysis.scopes.map((x) => x.reason));
+    }
+    days.push({ ...base, windows, bestScore: windows.length ? Math.max(...windows.map((w) => w.score)) : 0, blockers, panchang: windows.length ? dayPanchang(req.place, date) : null, analysis });
   }
 
-  const bestPerDay = days.filter((d) => d.windows.length).map((d) => d.windows[0]);
-  const ranked = [...bestPerDay].sort((x, y) => y.score - x.score || x.date.localeCompare(y.date) || x.startUtc.localeCompare(y.startUtc));
+  const seasonNotes: string[] = [];
+  const firstChaturmas = days.find((d) => d.analysis?.scopes.some((x) => /Chaturmas/.test(x.reason)));
+  if (firstChaturmas) {
+    const end = chaturmasEnd(req, firstChaturmas.date);
+    seasonNotes.push(end ? "Chaturmas (Devshayani Ekadashi to Prabodhini Ekadashi) is in force. It ends when Kartika Shukla Ekadashi ends: " + end.local + " local time. Dates after that are free of this restriction." : "Chaturmas (Devshayani Ekadashi to Prabodhini Ekadashi) is in force; its end could not be calculated within a search window of 200 days.");
+  }
+  const all = days.flatMap((d) => d.windows);
+  const best = [...all].sort((x, y) => y.score - x.score || x.startUtc.localeCompare(y.startUtc))[0] ?? null;
   const withWindows = days.filter((d) => d.windows.length);
   return {
     event: { id: rule.id, label: rule.label, confidence: rule.confidence, basis: rule.basis, limitations: rule.limitations },
@@ -449,11 +582,12 @@ export const searchMuhurat = (req: MuhuratRequest): MuhuratResult => {
     method: METHOD,
     evaluated: describeEvaluated(rule, req.preferences),
     rules: describeRules(rule, req.preferences),
-    best: ranked[0] ?? null,
-    others: ranked.slice(1, 6),
+    convention: { panchang: METHOD, festivals: FESTIVAL_CONVENTION, dayBoundary: "The Vedic day runs from local sunrise to the next local sunrise; times are local to the event place." },
+    best,
     days,
-    totals: { days: days.length, daysWithWindows: withWindows.length, windows: withWindows.reduce((a, d) => a + d.windows.length, 0) },
+    totals: { days: days.length, daysWithWindows: withWindows.length, windows: all.length, festivalDays: days.filter((d) => d.festivals.length).length },
     notes,
+    seasonNotes,
   };
 };
 

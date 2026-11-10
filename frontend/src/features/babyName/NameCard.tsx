@@ -1,16 +1,19 @@
 import { useRef, useState } from "react";
+import { useGlossary } from "@/i18n/glossary";
+import { useTranslation } from "react-i18next";
 import { BadgeCheck, Check, Copy, Heart, Share2, Volume2 } from "lucide-react";
 import { useTextToSpeech } from "@/hooks/useTextToSpeech";
 import type { BabyName } from "./names";
 import type { Syllable } from "./syllables";
 
-const GENDER: Record<BabyName["gender"], string> = { boy: "Boy", girl: "Girl", neutral: "Gender-neutral" };
-const EXTRA: Partial<Record<BabyName["styles"][number], string>> = { spiritual: "Spiritual", nature: "Nature-inspired", mythology: "Mythology", unique: "Unique" };
+const GENDER: Record<BabyName["gender"], string> = { boy: "babyName.card.boy", girl: "babyName.card.girl", neutral: "babyName.card.neutral" };
+const EXTRA: Partial<Record<BabyName["styles"][number], string>> = { spiritual: "babyName.kind.spiritual", nature: "babyName.kind.nature", mythology: "babyName.kind.mythology", unique: "babyName.kind.unique" };
 const VERIFY: Record<BabyName["verification"]["status"], string> = {
-  "source-listed": "Listed in AstroMedha name lists",
-  "web-checked": "Checked in name dictionaries",
-  editorial: "Editorial pick: meaning to be confirmed",
+  "source-listed": "babyName.card.verifySource",
+  "web-checked": "babyName.card.verifyWeb",
+  editorial: "babyName.card.verifyEditorial",
 };
+const POPULARITY: Record<BabyName["popularity"], string> = { Modern: "babyName.kind.modern", Traditional: "babyName.kind.traditional" };
 
 const Chip = ({ children, tone = "plain" }: { children: string; tone?: "plain" | "gold" }) => (
   <span className={`whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${tone === "gold" ? "bg-[#C9873A]/30 text-[#592209]" : "bg-[#592209]/10 text-[#592209]"}`}>{children}</span>
@@ -49,6 +52,7 @@ async function copyToClipboard(text: string): Promise<boolean> {
 }
 
 export default function NameCard({ n, syllable, saved, onToggle }: { n: BabyName; syllable: Syllable; saved: boolean; onToggle: (name: string) => void }) {
+  const { t } = useTranslation();
   const tts = useTextToSpeech();
   const [note, setNote] = useState("");
   const timer = useRef<ReturnType<typeof setTimeout>>();
@@ -57,7 +61,7 @@ export default function NameCard({ n, syllable, saved, onToggle }: { n: BabyName
     clearTimeout(timer.current);
     timer.current = setTimeout(() => setNote(""), 2000);
   };
-  const copy = async () => say((await copyToClipboard(shareText(n))) ? "Copied" : "Could not copy");
+  const copy = async () => say((await copyToClipboard(shareText(n))) ? t("babyName.card.copied") : t("babyName.card.copyFailed"));
   const share = async () => {
     const nav = navigator as Navigator & { share?: (d: { title: string; text: string; url?: string }) => Promise<void> };
     if (typeof nav.share === "function") {
@@ -71,7 +75,7 @@ export default function NameCard({ n, syllable, saved, onToggle }: { n: BabyName
     await copy(); // browsers without a share sheet: copy the text instead
   };
   // At most three tags so every card reads the same: gender, era, and one more.
-  const extra = n.styles.map((s) => EXTRA[s]).find(Boolean) ?? (n.name.length <= 5 ? "Short" : undefined);
+  const extra = n.styles.map((s) => EXTRA[s]).find(Boolean) ?? (n.name.length <= 5 ? "babyName.kind.short" : undefined);
 
   return (
     <li data-testid="name-card" className="flex h-full flex-col overflow-hidden rounded-3xl border border-[#592209]/15 bg-[#FFFCF5] shadow-[0_14px_34px_-22px_rgba(89,34,9,0.55)] transition-shadow hover:shadow-[0_18px_40px_-20px_rgba(89,34,9,0.6)]">
@@ -85,43 +89,43 @@ export default function NameCard({ n, syllable, saved, onToggle }: { n: BabyName
             type="button"
             onClick={() => onToggle(n.name)}
             aria-pressed={saved}
-            aria-label={saved ? `Remove ${n.name} from favourites` : `Save ${n.name} to favourites`}
+            aria-label={saved ? t("babyName.card.removeFav", { name: n.name }) : t("babyName.card.saveFav", { name: n.name })}
             className="shrink-0 rounded-full border border-[#592209]/25 bg-white/70 p-2 text-[#592209] transition-colors hover:bg-[#592209]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C9873A] aria-pressed:border-[#592209] aria-pressed:bg-[#592209] aria-pressed:text-[#F7DC8A]"
           >
             <Heart size={18} aria-hidden="true" fill={saved ? "currentColor" : "none"} />
           </button>
         </div>
         <div className="mt-3 flex flex-wrap gap-1.5">
-          <Chip tone="gold">{GENDER[n.gender]}</Chip>
-          <Chip>{n.popularity}</Chip>
-          {extra && <Chip>{extra}</Chip>}
+          <Chip tone="gold">{t(GENDER[n.gender])}</Chip>
+          <Chip>{t(POPULARITY[n.popularity])}</Chip>
+          {extra && <Chip>{t(extra)}</Chip>}
         </div>
       </div>
 
       <div className="flex flex-1 flex-col px-5 pb-5 pt-4">
         <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
-          <Row label="Meaning" wide>{n.meaning}</Row>
-          <Row label="Pronunciation"><span className="font-semibold">{n.pronunciation}</span></Row>
-          <Row label="Naming syllable">{syllable.roman} <span lang="hi">({syllable.deva})</span></Row>
-          <Row label="Origin" wide>{n.origin}</Row>
+          <Row label={t("babyName.card.meaning")} wide>{n.meaning}</Row>
+          <Row label={t("babyName.card.pronunciation")}><span className="font-semibold">{n.pronunciation}</span></Row>
+          <Row label={t("babyName.card.syllable")}>{syllable.roman} <span lang="hi">({syllable.deva})</span></Row>
+          <Row label={t("babyName.card.origin")} wide>{n.origin}</Row>
         </dl>
 
         <p data-testid="name-verification" className="mt-4 flex items-center gap-1.5 text-xs text-[#6B4A37]" title={n.verification.source}>
           <BadgeCheck size={14} aria-hidden="true" className={n.verification.status === "editorial" ? "text-[#8A5A1E]/60" : "text-[#2F7D4F]"} />
-          {VERIFY[n.verification.status]}
+          {t(VERIFY[n.verification.status])}
         </p>
 
         <div className={`mt-auto grid gap-2 pt-4 ${tts.supported ? "grid-cols-3" : "grid-cols-2"}`}>
           {tts.supported && (
             <button type="button" onClick={() => (tts.speaking ? tts.stop() : tts.speak(n.deva, "hi-IN"))} className={action}>
-              <Volume2 size={14} aria-hidden="true" /> {tts.speaking ? "Stop" : "Listen"}
+              <Volume2 size={14} aria-hidden="true" /> {tts.speaking ? t("babyName.card.stop") : t("babyName.card.listen")}
             </button>
           )}
-          <button type="button" onClick={copy} className={action} aria-label={`Copy ${n.name}`}>
-            <Copy size={14} aria-hidden="true" /> Copy
+          <button type="button" onClick={copy} className={action} aria-label={t("babyName.card.copyName", { name: n.name })}>
+            <Copy size={14} aria-hidden="true" /> {t("common.copy")}
           </button>
-          <button type="button" onClick={share} className={action} aria-label={`Share ${n.name}`}>
-            <Share2 size={14} aria-hidden="true" /> Share
+          <button type="button" onClick={share} className={action} aria-label={t("babyName.card.shareName", { name: n.name })}>
+            <Share2 size={14} aria-hidden="true" /> {t("common.share")}
           </button>
         </div>
         <p role="status" aria-live="polite" className="mt-1.5 h-4 text-center text-xs font-semibold text-[#592209]">{note && <><Check size={12} className="mr-1 inline" aria-hidden="true" />{note}</>}</p>

@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react";
+import { useGlossary } from "@/i18n/glossary";
+import { useTranslation } from "react-i18next";
 import { AlertTriangle, ChevronDown, Heart, Moon, Search, Sparkles, Star } from "lucide-react";
 import { BABY_NAMES, type BabyName } from "./names";
 import { filterKind, modernPicks, possibleSyllables, preferredNameFit, searchNames, suggestionsFor, KIND_LABEL, MIN_NAMES, type KindFilter } from "./matchNames";
@@ -13,10 +15,10 @@ const STEP = 12;
 
 const STYLE_FILTERS: KindFilter[] = ["all", "modern", "traditional", "spiritual", "short", "unique", "nature", "mythology"];
 const GENDER_FILTERS: { value: NamePreference; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "boy", label: "Boy" },
-  { value: "girl", label: "Girl" },
-  { value: "neutral", label: "Gender-neutral" },
+  { value: "all", label: "babyName.results.genderAll" },
+  { value: "boy", label: "babyName.card.boy" },
+  { value: "girl", label: "babyName.card.girl" },
+  { value: "neutral", label: "babyName.card.neutral" },
 ];
 
 const GRID = "grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3";
@@ -39,6 +41,7 @@ const SectionTitle = ({ id, children, sub }: { id: string; children: React.React
 
 /** A run of cards: the first ten, then "View More Names" reveals the rest in steps. */
 function Group({ title, note, names, syllable, fav, first = FIRST }: { title?: string; note?: string; names: BabyName[]; syllable: Syllable; fav: ReturnType<typeof useFavourites>; first?: number }) {
+  const { t } = useTranslation();
   const [shown, setShown] = useState(first);
   return (
     <div className="mt-8 first:mt-6">
@@ -54,7 +57,7 @@ function Group({ title, note, names, syllable, fav, first = FIRST }: { title?: s
             onClick={() => setShown((s) => s + STEP)}
             className="inline-flex items-center gap-2 rounded-full border-2 border-[#592209]/50 bg-white/60 px-7 py-2.5 text-sm font-bold uppercase tracking-wide text-[#592209] transition-colors hover:bg-[#592209] hover:text-[#F5E9D6]"
           >
-            View More Names ({names.length - shown})
+            {t("babyName.results.viewMore", { count: names.length - shown })}
             <ChevronDown size={16} aria-hidden="true" />
           </button>
         </div>
@@ -64,6 +67,9 @@ function Group({ title, note, names, syllable, fav, first = FIRST }: { title?: s
 }
 
 export default function BabyNameResults({ result, preference, preferredName }: { result: BabyNameResult; preference: NamePreference; preferredName: string }) {
+  const { t } = useTranslation();
+  const { g } = useGlossary();
+  const gl = g; // the group loops below name their loop variable `g`
   const fav = useFavourites();
   const [gender, setGender] = useState<NamePreference>(preference);
   const [kind, setKind] = useState<KindFilter>("all");
@@ -78,7 +84,7 @@ export default function BabyNameResults({ result, preference, preferredName }: {
   if (!sg) {
     return (
       <section role="alert" className="mx-auto max-w-2xl rounded-2xl border border-[#9B2C1D]/30 p-5 text-center text-[#9B2C1D]">
-        We could not match {nakshatra.name}, Pada {nakshatra.pada} to a naming syllable, so no names are shown. Please try again or ask your family priest.
+        {t("babyName.results.noMatch", { nakshatra: g("nakshatra", nakshatra.name), pada: nakshatra.pada })}
       </section>
     );
   }
@@ -94,16 +100,16 @@ export default function BabyNameResults({ result, preference, preferredName }: {
     <div data-testid="baby-results" className="space-y-12">
       {/* 1. The calculated birth details */}
       <section aria-labelledby="baby-birth-h" className="rounded-[2rem] border border-[#C9873A]/45 bg-gradient-to-b from-[#FFF7E6] to-[#FBF5EC] p-5 shadow-[0_18px_44px_-30px_rgba(89,34,9,0.5)] sm:p-8">
-        <SectionTitle id="baby-birth-h" sub={`Born ${result.birth.dateOfBirth} at ${result.birth.timeOfBirth} in ${result.birth.place}`}>Your Baby&rsquo;s Birth Star</SectionTitle>
+        <SectionTitle id="baby-birth-h" sub={t("babyName.results.born", { date: result.birth.dateOfBirth, time: result.birth.timeOfBirth, place: result.birth.place })}>{t("babyName.results.birthStar")}</SectionTitle>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
-          <Fact label="Janma Nakshatra" value={nakshatra.name} sub={`Lord: ${nakshatra.lord}`} />
-          <Fact label="Nakshatra Pada" value={`Pada ${nakshatra.pada}`} />
-          <Fact label="Chandra Rashi" value={moonRashi} />
-          <Fact label="Tithi" value={tithi.name} sub={`${paksha === "shukla" ? "Shukla" : "Krishna"} Paksha`} />
-          <Fact label="Hindu Month" value={`${masa.adhika ? "Adhika " : ""}${masa.name}`} sub={`Vikram Samvat ${vikramSamvat}`} />
-          <Fact label="Vedic Weekday" value={vara.name} />
+          <Fact label={g("term", "Janma Nakshatra")} value={g("nakshatra", nakshatra.name)} sub={t("babyName.results.lord", { planet: g("planet", nakshatra.lord) })} />
+          <Fact label={g("term", "Nakshatra Pada")} value={t("babyName.results.pada", { n: nakshatra.pada })} />
+          <Fact label={g("term", "Chandra Rashi")} value={g("rashi", moonRashi)} />
+          <Fact label={g("term", "Tithi")} value={g("tithi", tithi.name)} sub={`${g("paksha", paksha === "shukla" ? "Shukla" : "Krishna")} ${g("term", "Paksha")}`} />
+          <Fact label={t("babyName.results.hinduMonth")} value={`${masa.adhika ? t("babyName.results.adhika") + " " : ""}${g("masa", masa.name)}`} sub={`${g("term", "Vikram Samvat")} ${vikramSamvat}`} />
+          <Fact label={t("babyName.results.vedicWeekday")} value={g("weekday", vara.name)} />
         </div>
-        <p className="mt-4 text-center text-xs text-[#6B4A37]">Calculated from the exact date, time and birthplace. {result.method}.</p>
+        <p className="mt-4 text-center text-xs text-[#6B4A37]">{t("babyName.results.calculatedFrom")} {result.method}.</p>
       </section>
 
       {/* 2. The naming syllable */}
@@ -123,14 +129,14 @@ export default function BabyNameResults({ result, preference, preferredName }: {
             </p>
           </div>
           <div className="min-w-0">
-            <h2 id="baby-syl-h" className="text-xs font-bold uppercase tracking-[0.24em] text-[#F7DC8A]">Recommended Naming Syllable</h2>
+            <h2 id="baby-syl-h" className="text-xs font-bold uppercase tracking-[0.24em] text-[#F7DC8A]">{t("babyName.results.syllableTitle")}</h2>
             <p className="mt-2 text-5xl font-bold leading-none" style={heading}>{syl.roman}</p>
             <p className="mt-3 max-w-md text-[15px] leading-relaxed text-[#F5E9D6]/90" data-testid="baby-syllable-basis">
-              {nakshatra.name}, Pada {nakshatra.pada}: names traditionally begin with the sound &ldquo;{syl.roman}&rdquo;.
+              {t("babyName.results.syllableBasis", { nakshatra: g("nakshatra", nakshatra.name), pada: nakshatra.pada, syllable: syl.roman })}
             </p>
             {sg.principal.alternates.length > 0 && (
               <p data-testid="baby-syllable-alt" className="mt-3 max-w-lg rounded-xl bg-white/10 p-3 text-sm leading-relaxed">
-                {sg.principal.note} Other syllable for this pada: {sg.principal.alternates.map((a) => `${a.roman} (${a.deva})`).join(", ")}.
+                {sg.principal.note} {t("babyName.results.otherSyllable")} {sg.principal.alternates.map((a) => `${a.roman} (${a.deva})`).join(", ")}.
               </p>
             )}
           </div>
@@ -140,35 +146,35 @@ export default function BabyNameResults({ result, preference, preferredName }: {
       {/* 3. Honest uncertainty */}
       {uncertain && (
         <section data-testid="baby-uncertain" role="note" className="rounded-2xl border border-[#C9873A] bg-[#FFF1CC] p-5 text-[#301607]">
-          <h3 className="mb-1 flex items-center gap-2 font-bold"><AlertTriangle size={18} aria-hidden="true" /> The syllable may depend on the exact minute</h3>
+          <h3 className="mb-1 flex items-center gap-2 font-bold"><AlertTriangle size={18} aria-hidden="true" /> {t("babyName.results.uncertainTitle")}</h3>
           <p className="text-sm">
             {result.nearPadaBoundary
-              ? `The Moon changes Pada within ${result.window.minutesEitherSide} minutes of this birth time, so a small difference in the recorded time could change the syllable.`
-              : `You said the birth time is approximate. Within ${result.window.minutesEitherSide} minutes either side, the Moon stays in the same Pada, so the syllable is the same across that window.`}
-            {result.window.padas.length > 1 && " The syllables for each Pada the Moon was in are:"}
+              ? t("babyName.results.nearBoundary", { minutes: result.window.minutesEitherSide })
+              : t("babyName.results.approxSame", { minutes: result.window.minutesEitherSide })}
+            {result.window.padas.length > 1 && ` ${t("babyName.results.eachPada")}`}
           </p>
           {result.window.padas.length > 1 && (
             <ul className="mt-2 flex flex-wrap gap-2 text-sm">
               {possible.map(({ ref, entry }) => (
                 <li key={`${ref.nakshatra}${ref.pada}`} className="rounded-full bg-white/70 px-3 py-1">
-                  {ref.nakshatra} Pada {ref.pada}: <strong>{entry ? `${entry.syllable.roman} (${entry.syllable.deva})` : "not in table"}</strong>
+                  {g("nakshatra", ref.nakshatra)} {t("babyName.results.pada", { n: ref.pada })}: <strong>{entry ? `${entry.syllable.roman} (${entry.syllable.deva})` : t("babyName.results.notInTable")}</strong>
                 </li>
               ))}
             </ul>
           )}
-          <p className="mt-2 text-sm">Please confirm the birth time from the birth record or hospital certificate if you can.</p>
+          <p className="mt-2 text-sm">{t("babyName.results.confirmTime")}</p>
         </section>
       )}
 
       {/* 4. The parent's own name, if given */}
       {fit && (
         <section data-testid="baby-fit" className="rounded-2xl border border-[#592209]/20 bg-white/70 p-4 text-[#301607]">
-          <h3 className="font-bold text-[#592209]">Your preferred name: {preferredName}</h3>
+          <h3 className="font-bold text-[#592209]">{t("babyName.results.preferredName", { name: preferredName })}</h3>
           <p className="text-sm">
             {fit.fits
-              ? `It begins with “${fit.matched!.roman}”, which matches the traditional syllable for this birth.`
-              : `It does not begin with “${syl.roman}”, the traditional syllable for this birth. Many families still keep a cherished name and use the syllable for the formal naming (Namakarana) name.`}{" "}
-            <span className="text-[#6B4A37]">This checks the spelling only; a priest may judge by sound.</span>
+              ? t("babyName.results.fits", { syllable: fit.matched!.roman })
+              : t("babyName.results.noFit", { syllable: syl.roman })}{" "}
+            <span className="text-[#6B4A37]">{t("babyName.results.spellingOnly")}</span>
           </p>
         </section>
       )}
@@ -176,8 +182,8 @@ export default function BabyNameResults({ result, preference, preferredName }: {
       {/* 5. Modern picks: matching the sound, checked meaning, modern, short (hidden when it would only repeat the list) */}
       {picks.length > 0 && picks.length < sg.primary.length && !filtering && (
         <section data-testid="modern-picks" aria-labelledby="baby-picks-h" className="rounded-[2rem] border border-[#C9873A]/60 bg-gradient-to-b from-[#FFF3D6] to-[#FBF5EC] p-5 shadow-[0_18px_44px_-30px_rgba(89,34,9,0.5)] sm:p-8">
-          <SectionTitle id="baby-picks-h" sub={`Begin with “${syl.roman}”, have a checked meaning, and are short and easy to say.`}>
-            <span className="inline-flex items-center gap-2"><Star size={22} aria-hidden="true" className="text-[#C9873A]" fill="currentColor" /> Modern Picks for Your Little One</span>
+          <SectionTitle id="baby-picks-h" sub={t("babyName.results.picksSub", { syllable: syl.roman })}>
+            <span className="inline-flex items-center gap-2"><Star size={22} aria-hidden="true" className="text-[#C9873A]" fill="currentColor" /> {t("babyName.results.picksTitle")}</span>
           </SectionTitle>
           <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
             {picks.map((n) => <NameCard key={n.name} n={n} syllable={syl} saved={fav.isSaved(n.name)} onToggle={fav.toggle} />)}
@@ -187,27 +193,27 @@ export default function BabyNameResults({ result, preference, preferredName }: {
 
       {/* 6. The names */}
       <section aria-labelledby="baby-names-h">
-        <SectionTitle id="baby-names-h" sub="A curated list, not a generated one. Every name has its Devanagari spelling, a meaning, its origin and how it was checked.">
-          The Complete Collection: &ldquo;{syl.roman}&rdquo;
+        <SectionTitle id="baby-names-h" sub={t("babyName.results.collectionSub")}>
+          {t("babyName.results.collectionTitle", { syllable: syl.roman })}
         </SectionTitle>
 
         <div className="mx-auto rounded-3xl border border-[#592209]/12 bg-white/55 p-4 shadow-sm sm:p-5">
-          <label htmlFor="baby-search" className="sr-only">Search names or meanings</label>
+          <label htmlFor="baby-search" className="sr-only">{t("babyName.results.searchLabel")}</label>
           <div className="relative mx-auto max-w-xl">
             <Search size={16} aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#6B4A37]" />
-            <input id="baby-search" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by name or meaning" className="w-full rounded-full border border-[#592209]/25 bg-[#FBF5EC] py-2.5 pl-10 pr-4 text-[15px] text-[#301607] outline-none focus:border-[#592209]" />
+            <input id="baby-search" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("babyName.results.searchPlaceholder")} className="w-full rounded-full border border-[#592209]/25 bg-[#FBF5EC] py-2.5 pl-10 pr-4 text-[15px] text-[#301607] outline-none focus:border-[#592209]" />
           </div>
-          <div role="group" aria-label="Filter by gender" className="mt-3 flex flex-wrap justify-center gap-2">
+          <div role="group" aria-label={t("babyName.results.filterGender")} className="mt-3 flex flex-wrap justify-center gap-2">
             {GENDER_FILTERS.map((f) => (
               <button key={f.value} type="button" aria-pressed={gender === f.value} onClick={() => setGender(f.value)} className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition-colors ${gender === f.value ? "border-[#592209] bg-[#592209] text-[#F5E9D6]" : "border-[#592209]/30 bg-white/60 text-[#592209] hover:bg-[#592209]/10"}`}>
-                {f.label}
+                {t(f.label)}
               </button>
             ))}
           </div>
-          <div role="group" aria-label="Filter by style" className="mt-2 flex flex-wrap justify-center gap-2">
+          <div role="group" aria-label={t("babyName.results.filterStyle")} className="mt-2 flex flex-wrap justify-center gap-2">
             {STYLE_FILTERS.map((k) => (
               <button key={k} type="button" aria-pressed={kind === k} onClick={() => setKind(k)} className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition-colors ${kind === k ? "border-[#C9873A] bg-[#C9873A] text-[#301607]" : "border-[#592209]/30 bg-white/60 text-[#592209] hover:bg-[#592209]/10"}`}>
-                {KIND_LABEL[k]}
+                {t(`babyName.kind.${k}`, { defaultValue: KIND_LABEL[k] })}
               </button>
             ))}
           </div>
@@ -217,7 +223,7 @@ export default function BabyNameResults({ result, preference, preferredName }: {
         </div>
 
         <p data-testid="baby-count" className="mt-5 text-center text-sm font-semibold text-[#592209]">
-          {primary.length} {primary.length === 1 ? "name begins" : "names begin"} with &ldquo;{syl.roman}&rdquo;{gender !== "all" || filtering ? " with your current filters" : ""}.
+          {t(primary.length === 1 ? "babyName.results.countOne" : "babyName.results.countMany", { count: primary.length, syllable: syl.roman })}{gender !== "all" || filtering ? ` ${t("babyName.results.withFilters")}` : ""}
         </p>
 
         {primary.length > 0 ? (
@@ -225,8 +231,8 @@ export default function BabyNameResults({ result, preference, preferredName }: {
         ) : (
           <p data-testid="baby-none" className="mx-auto mt-6 max-w-xl rounded-2xl border border-[#592209]/20 bg-white/70 p-4 text-center text-sm text-[#4A2E1F]">
             {sg.primary.length === 0
-              ? `We do not yet have an established name beginning with “${syl.roman}” for this preference.`
-              : "No names match these filters or this search. Try “All” or clear the search."}
+              ? t("babyName.results.noneForPreference", { syllable: syl.roman })
+              : t("babyName.results.noneForFilters")}
           </p>
         )}
 
@@ -237,26 +243,26 @@ export default function BabyNameResults({ result, preference, preferredName }: {
         )}
 
         {sg.alternates.map((g) => (
-          <Group key={`${g.label}|${gender}|${kind}|${query}`} title={`Other tradition: ${g.label}`} note="Some traditions give this syllable for the same Pada." names={refine(g.names)} syllable={g.syllable} fav={fav} />
+          <Group key={`${g.label}|${gender}|${kind}|${query}`} title={t("babyName.results.otherTradition", { label: g.label })} note={t("babyName.results.otherTraditionNote")} names={refine(g.names)} syllable={g.syllable} fav={fav} />
         ))}
         {sg.otherPadas.map((g) => (
-          <Group key={`${g.label}|${gender}|${kind}|${query}`} title={`Other Pada of ${nakshatra.name}`} note={g.label} names={refine(g.names)} syllable={g.syllable} fav={fav} />
+          <Group key={`${g.label}|${gender}|${kind}|${query}`} title={t("babyName.results.otherPadaOf", { nakshatra: gl("nakshatra", nakshatra.name) })} note={g.label} names={refine(g.names)} syllable={g.syllable} fav={fav} />
         ))}
       </section>
 
       {/* 7. Favourites */}
       {savedNames.length > 0 && (
         <section data-testid="baby-favourites" aria-labelledby="baby-fav-h" className="rounded-3xl border border-[#C9873A]/50 bg-[#FFF7E6] p-5">
-          <h2 id="baby-fav-h" className="mb-3 flex items-center justify-center gap-2 text-xl font-bold text-[#301607]"><Heart size={20} aria-hidden="true" fill="currentColor" /> Your Favourite Names</h2>
+          <h2 id="baby-fav-h" className="mb-3 flex items-center justify-center gap-2 text-xl font-bold text-[#301607]"><Heart size={20} aria-hidden="true" fill="currentColor" /> {t("babyName.results.favourites")}</h2>
           <ul className="flex flex-wrap justify-center gap-2">
             {savedNames.map((n) => (
               <li key={n.name} className="inline-flex items-center gap-2 rounded-full bg-[#592209] py-1 pl-4 pr-1 text-sm text-[#F5E9D6]">
                 {n.name} <span lang="hi" className="opacity-80">{n.deva}</span>
-                <button type="button" onClick={() => fav.toggle(n.name)} aria-label={`Remove ${n.name} from favourites`} className="rounded-full px-2 py-0.5 hover:bg-white/20">×</button>
+                <button type="button" onClick={() => fav.toggle(n.name)} aria-label={t("babyName.card.removeFav", { name: n.name })} className="rounded-full px-2 py-0.5 hover:bg-white/20">×</button>
               </li>
             ))}
           </ul>
-          <p className="mt-2 text-center text-xs text-[#6B4A37]">Saved in this browser only.</p>
+          <p className="mt-2 text-center text-xs text-[#6B4A37]">{t("babyName.results.savedHere")}</p>
         </section>
       )}
 

@@ -7,6 +7,7 @@ import { getDailyChatStatus, consumeDailyChatSession } from "../utils/dailyChatS
 import { screenMessage, ESCALATION_REPLY, OFF_TOPIC_REPLY } from "../utils/chatScreening.js";
 import prisma from "@root/prisma.js";
 import { OPENROUTER_MODEL } from "../config/aiModels.js";
+import { languageRule, matchesResponseLanguage, namesCalendarTermIn, requestLanguage, tokenBudget } from "../utils/responseLanguage.js";
 
 const router = Router();
 // Life path readings and TTS are generated per user and spend provider credits.
@@ -172,7 +173,8 @@ Analyze this through the lens of karma and dharma. Respond ONLY with valid JSON 
   "affirmation": "A short, powerful spiritual affirmation (1-2 sentences) personalized to this situation"
 }`;
 
-    const raw = await callAI(apiKey, prompt, 900);
+    const lang = requestLanguage(req);
+    const raw = await callAI(apiKey, prompt, tokenBudget(900, lang), currentModel(), languageRule(lang, HINGLISH_RULE));
     const result = parseJSON(raw);
     return res.json(result);
   } catch (err: any) {
@@ -225,7 +227,8 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
   "question": "One caring follow-up question a real Pandit Ji would ask to understand the seeker's situation better."
 }`;
 
-    const raw = await callAI(apiKey, prompt, 800);
+    const lang = requestLanguage(req);
+    const raw = await callAI(apiKey, prompt, tokenBudget(800, lang), currentModel(), languageRule(lang, HINGLISH_RULE));
     const result = parseJSON(raw);
     return res.json(result);
   } catch (err: any) {
@@ -258,7 +261,8 @@ Analyze this journal entry for karmic patterns, emotional states, and spiritual 
   "affirmation": "A personalized short affirmation (1 sentence) based on the content of this entry"
 }`;
 
-    const raw = await callAI(apiKey, prompt, 700);
+    const lang = requestLanguage(req);
+    const raw = await callAI(apiKey, prompt, tokenBudget(700, lang), currentModel(), languageRule(lang, HINGLISH_RULE));
     const result = parseJSON(raw);
     return res.json(result);
   } catch (err: any) {
@@ -296,7 +300,8 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
   "mantra": "A short mantra or phrase from this verse the seeker can repeat for contemplation"
 }`;
 
-    const raw = await callAI(apiKey, prompt, 900);
+    const lang = requestLanguage(req);
+    const raw = await callAI(apiKey, prompt, tokenBudget(900, lang), currentModel(), languageRule(lang, HINGLISH_RULE));
     const result = parseJSON(raw);
     return res.json(result);
   } catch (err: any) {
@@ -339,7 +344,8 @@ export function shortText(v: unknown, max: number): string {
   const t = v.replace(/\s+/g, " ").trim();
   if (t.length <= max) return t;
   const cut = t.slice(0, max);
-  const end = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf("! "), cut.lastIndexOf("? "));
+  // "।" and "॥" (danda) end a sentence in Hindi and Marathi; the other Indian languages use the full stop.
+  const end = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf("! "), cut.lastIndexOf("? "), cut.lastIndexOf("। "), cut.lastIndexOf("॥ "));
   return end > 0 ? cut.slice(0, end + 1) : "";
 }
 
@@ -399,11 +405,13 @@ router.post("/life-path", createRateLimiter({ windowMs: 60_000, max: 10 }), asyn
       `Life path number ${facts.number}: ${LIFE_PATH_IDEAS[facts.number] ?? "your own steady growth"}`,
     ];
 
+    // The language the visitor chose, if any. Without a choice the reading is in plain English, as before.
+    const lang = requestLanguage(req);
     const prompt = `Write very short guidance for reflection for someone interested in: ${focus}.
 Use only these ideas:
 - ${ideas.join("\n- ")}
 
-Rules: do not name any tithi, nakshatra, yoga, karana, month, weekday, festival or date. Do not say what any of them means. Do not quote scripture. No fear, no certain predictions: say "may" or "can". Very simple everyday English that a child can follow, short sentences.
+Rules: do not name any tithi, nakshatra, yoga, karana, month, weekday, festival or date. Do not say what any of them means. Do not quote scripture. No fear, no certain predictions: say "may" or "can". Very simple everyday ${lang && lang !== "en" ? "language" : "English"} that a child can follow, short sentences.
 
 Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this structure:
 {
@@ -416,7 +424,7 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
     const askModel = async (): Promise<string> => {
       for (let attempt = 0; ; attempt++) {
         try {
-          return await callAI(apiKey, prompt, LIFE_PATH_MAX_TOKENS, OPENROUTER_MODEL, PLAIN_ENGLISH_RULE);
+          return await callAI(apiKey, prompt, tokenBudget(LIFE_PATH_MAX_TOKENS, lang, 8000), OPENROUTER_MODEL, languageRule(lang, PLAIN_ENGLISH_RULE));
         } catch (err: any) {
           if (!(err instanceof ProviderError && err.status === 429) || attempt >= 2) throw err;
           await sleep(LIFE_PATH_RETRY_DELAY_MS * 2 * (attempt + 1));
@@ -437,13 +445,18 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
           unreadable = true;
           continue;
         }
+        // Indian-language text is longer in characters than English for the same idea, so the same limits are stretched by half.
+        const stretch = lang && lang !== "en" ? 1.5 : 1;
         const t = {
-          guidance: shortText(result?.guidance, LIFE_PATH_LIMITS.guidance),
-          step: shortText(result?.step, LIFE_PATH_LIMITS.step),
-          thought: shortText(result?.thought, LIFE_PATH_LIMITS.thought),
+          guidance: shortText(result?.guidance, Math.round(LIFE_PATH_LIMITS.guidance * stretch)),
+          step: shortText(result?.step, Math.round(LIFE_PATH_LIMITS.step * stretch)),
+          thought: shortText(result?.thought, Math.round(LIFE_PATH_LIMITS.thought * stretch)),
         };
         const all = Object.values(t).join(" ");
-        if (t.guidance && t.step && !namesCalendarTerm(all) && !citesScripture(all) && !contradictsFacts(all, facts.number)) text = t;
+        // The English checks still run (a Latin calendar word is wrong in any language). For another language the same checks
+        // are repeated with that language's own calendar words, and the reply must actually be in its script.
+        const inChosenLanguage = !lang || lang === "en" || (matchesResponseLanguage(all, lang) && !namesCalendarTermIn(all, lang));
+        if (t.guidance && t.step && inChosenLanguage && !namesCalendarTerm(all) && !citesScripture(all) && !contradictsFacts(all, facts.number)) text = t;
         else unreadable = false;
       }
     } catch (err: any) {

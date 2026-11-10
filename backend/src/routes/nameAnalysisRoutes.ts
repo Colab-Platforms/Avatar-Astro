@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { createRateLimiter } from "../utils/rateLimit.js";
 import { auth } from "../middleware/authMiddleware.js";
+import { languageRule, requestLanguage, tokenBudget } from "../utils/responseLanguage.js";
 
 const router = Router();
 router.use(auth("USER"));
@@ -107,6 +108,7 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
   "topVariantExplanation": "1-2 sentence explanation of why the recommended spelling may score higher, non-definitive phrasing"
 }`;
 
+    const lang = requestLanguage(req); // the visitor's chosen language, if any; otherwise English as before
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -117,8 +119,8 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
       },
       body: JSON.stringify({
         model: "google/gemma-4-31b-it:free",
-        max_tokens: 900,
-        messages: [{ role: "user", content: prompt }],
+        max_tokens: tokenBudget(900, lang),
+        messages: [{ role: "user", content: prompt + languageRule(lang, "") }],
       }),
     });
 

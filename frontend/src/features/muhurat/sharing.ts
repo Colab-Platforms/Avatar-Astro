@@ -1,5 +1,7 @@
 /** Copy, share (as a drawn result card where the browser can) and a calendar file for a Muhurat window. */
 import { copyText } from "@/features/vehicleNumber/sharing";
+import i18n from "@/i18n";
+import { glossName } from "@/i18n/glossary";
 import { longDate, placeLabel, range12, windowText } from "./format";
 import type { MuhuratPlace, MuhuratWindow } from "./types";
 
@@ -22,17 +24,20 @@ export async function renderMuhuratCard(eventLabel: string, place: MuhuratPlace,
   ctx.lineWidth = 8;
   ctx.strokeRect(36, 36, c.width - 72, c.height - 72);
   ctx.textAlign = "center";
-  const line = (text: string, y: number, font: string, color: string) => { ctx.font = font; ctx.fillStyle = color; ctx.fillText(text, c.width / 2, y, c.width - 160); };
-  line("Muhurat Finder", 150, "600 42px Georgia, serif", "#8A5A1E");
+  // Draw with the active script's font (set by the page's language), then Georgia for Latin letters.
+  const indic = (typeof getComputedStyle === "function" ? getComputedStyle(document.documentElement).getPropertyValue("--indic-serif").trim() : "").replace(/"/g, "");
+  const face = indic ? `"${indic}", Georgia, serif` : "Georgia, serif";
+  const line = (text: string, y: number, font: string, color: string) => { ctx.font = font.replace(/Georgia, serif/, face); ctx.fillStyle = color; ctx.fillText(text, c.width / 2, y, c.width - 160); };
+  line(i18n.t("features.muhurat-finder.name"), 150, "600 42px Georgia, serif", "#8A5A1E");
   line(eventLabel, 250, "700 62px Georgia, serif", "#592209");
   line(longDate(w.date), 420, "600 54px Georgia, serif", "#301607");
   line(range12(w.startLocal, w.endLocal), 560, "700 96px Georgia, serif", "#C9873A");
   line(placeLabel(place), 650, "36px Georgia, serif", "#4A2E1F");
-  line("local time at the event location", 700, "italic 28px Georgia, serif", "#6B4A37");
-  line(`${w.panchang.paksha} ${w.panchang.tithi}  ·  ${w.panchang.nakshatra}`, 820, "600 46px Georgia, serif", "#592209");
-  line(`${w.panchang.yoga} yoga  ·  ${w.panchang.karana} karana`, 890, "36px Georgia, serif", "#4A2E1F");
-  line("Traditional Jyotish guidance for personal and cultural", 1150, "italic 28px Georgia, serif", "#6B4A37");
-  line("use. Not a prediction or a guarantee of any outcome.", 1192, "italic 28px Georgia, serif", "#6B4A37");
+  line(i18n.t("muhurat.share.localTime"), 700, "italic 28px Georgia, serif", "#6B4A37");
+  line(`${glossName("paksha", w.panchang.paksha)} ${glossName("tithi", w.panchang.tithi)}  ·  ${glossName("nakshatra", w.panchang.nakshatra)}`, 820, "600 46px Georgia, serif", "#592209");
+  line(i18n.t("muhurat.share.yogaKarana", { yoga: glossName("yoga", w.panchang.yoga), karana: glossName("karana", w.panchang.karana) }), 890, "36px Georgia, serif", "#4A2E1F");
+  line(i18n.t("muhurat.share.note1"), 1150, "italic 28px Georgia, serif", "#6B4A37");
+  line(i18n.t("muhurat.share.note2"), 1192, "italic 28px Georgia, serif", "#6B4A37");
   line("MyBhagya", 1280, "600 34px Georgia, serif", "#592209");
   return new Promise((resolve) => c.toBlob((b) => resolve(b), "image/png"));
 }
@@ -78,7 +83,7 @@ export const buildIcs = (eventLabel: string, place: MuhuratPlace, w: MuhuratWind
     `DTEND:${icsStamp(w.endUtc)}`,
     `SUMMARY:${icsText(eventLabel)}`,
     `LOCATION:${icsText(placeLabel(place))}`,
-    `DESCRIPTION:${icsText(`${range12(w.startLocal, w.endLocal)} local time. ${w.panchang.paksha} ${w.panchang.tithi}, ${w.panchang.nakshatra}. Traditional Jyotish guidance, not a guarantee. Confirm the final time with your priest or jyotishi.`)}`,
+    `DESCRIPTION:${icsText(i18n.t("muhurat.share.icsDescription", { range: range12(w.startLocal, w.endLocal), paksha: glossName("paksha", w.panchang.paksha), tithi: glossName("tithi", w.panchang.tithi), nakshatra: glossName("nakshatra", w.panchang.nakshatra) }))}`,
     "END:VEVENT",
     "END:VCALENDAR",
   ].join("\r\n");

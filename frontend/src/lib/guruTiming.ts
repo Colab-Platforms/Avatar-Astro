@@ -36,3 +36,8 @@ export function statusAt(elapsedMs: number, every = guruTiming.statusEveryMs): s
   const i = Math.min(SEARCH_STATUSES.length - 1, Math.floor(Math.max(0, elapsedMs) / Math.max(1, every)));
   return SEARCH_STATUSES[i];
 }
+
+/** The same step as statusAt, as a 0-based index, so the screen can show it in the visitor's language. */
+export function statusIndexAt(elapsedMs: number, every = guruTiming.statusEveryMs): number {
+  return Math.min(SEARCH_STATUSES.length - 1, Math.floor(Math.max(0, elapsedMs) / Math.max(1, every)));
+}

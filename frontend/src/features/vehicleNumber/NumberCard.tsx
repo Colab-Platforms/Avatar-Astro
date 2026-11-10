@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Check, Copy, GitCompareArrows, Heart, Share2 } from "lucide-react";
 import NumberPlate from "./NumberPlate";
 import { explain, type Compatibility, type Evaluation, type Label } from "./vehicleNumerology";
@@ -43,14 +44,15 @@ export interface NumberCardProps {
 }
 
 export default function NumberCard({ number, evaluation: ev, compat, tag, everyday, saved, onToggleSave, inCompare, compareFull, onToggleCompare }: NumberCardProps) {
+  const { t } = useTranslation();
   const [note, setNote] = useState("");
   const timer = useRef<ReturnType<typeof setTimeout>>();
   const say = (m: string) => { setNote(m); clearTimeout(timer.current); timer.current = setTimeout(() => setNote(""), 2200); };
   const input = shareInputFor(number, ev, compat);
-  const copy = async () => say((await copyText(shareText(input))) ? "Copied" : "Could not copy");
+  const copy = async () => say((await copyText(shareText(input))) ? t("common.copied") : t("common.copyFailed"));
   const share = async () => {
     const r = await shareNumber(input);
-    say(r === "shared" ? "Shared" : r === "copied" ? "Sharing is not available here, so the text was copied" : r === "cancelled" ? "" : "Could not share");
+    say(r === "shared" ? t("common.shared") : r === "copied" ? t("common.shareCopied") : r === "cancelled" ? "" : t("common.shareFailed"));
   };
 
   return (
@@ -58,46 +60,46 @@ export default function NumberCard({ number, evaluation: ev, compat, tag, everyd
       <div className="bg-gradient-to-br from-[#FFF6DD] to-[#F8E7C4] px-4 pb-3 pt-3">
         <div className="mb-2.5 flex min-h-[1.75rem] flex-wrap items-center justify-between gap-2">
           <span className="flex flex-wrap items-center gap-1.5">
-            {everyday && <span data-testid="everyday-label" className="rounded-full border border-[#8A5A1E]/40 bg-white/60 px-2.5 py-0.5 text-[11px] font-bold text-[#592209]">Everyday Number</span>}
-            {tag && <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8A5A1E]">{tag}</span>}
+            {everyday && <span data-testid="everyday-label" className="rounded-full border border-[#8A5A1E]/40 bg-white/60 px-2.5 py-0.5 text-[11px] font-bold text-[#592209]">{t("vehicle.card.everyday")}</span>}
+            {tag && <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8A5A1E]">{t(`vehicle.source.${tag}`, { defaultValue: tag })}</span>}
           </span>
-          <span data-testid="compat-label" className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-bold ${LABEL_STYLE[compat.label]}`}>{compat.label}</span>
+          <span data-testid="compat-label" className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-bold ${LABEL_STYLE[compat.label]}`}>{t(`vehicle.label.${compat.label}`, { defaultValue: compat.label })}</span>
         </div>
         <NumberPlate number={number} size="md" />
-        {everyday && <p className="mt-1.5 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8A5A1E]">Practical number</p>}
+        {everyday && <p className="mt-1.5 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8A5A1E]">{t("vehicle.card.practical")}</p>}
       </div>
 
       <div className="flex flex-1 flex-col gap-3 px-4 pb-4 pt-3">
         <div className="grid grid-cols-2 gap-3">
-          <Stat label="Number Total" value={String(ev.total)} />
-          <Stat label="Numerology Number" value={reducedText(ev)} />
+          <Stat label={t("vehicle.card.numberTotal")} value={String(ev.total)} />
+          <Stat label={t("vehicle.card.numerologyNumber")} value={reducedText(ev)} />
         </div>
 
         <div>
-          <p className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-[#8A5A1E]">Traditional Interpretation</p>
+          <p className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-[#8A5A1E]">{t("vehicle.card.interpretation")}</p>
           <p className="mt-0.5 text-sm font-semibold text-[#592209]">{ev.symbol} {ev.planet} · {ev.theme.keywords}</p>
           <p className="mt-1 text-sm leading-snug text-[#301607]">{ev.theme.text}</p>
         </div>
 
         <div>
-          <p className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-[#8A5A1E]">Why It Matches Your Profile</p>
+          <p className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-[#8A5A1E]">{t("vehicle.card.why")}</p>
           <ul className="mt-1 space-y-1 text-[13.5px] leading-snug text-[#301607]">
             {explain(ev, compat).map((l) => <li key={l}>{l}</li>)}
           </ul>
         </div>
 
         <div className="mt-auto grid grid-cols-2 gap-2 pt-1 sm:grid-cols-4">
-          <button type="button" onClick={() => onToggleSave(number)} aria-pressed={saved} aria-label={saved ? `Remove ${number} from saved numbers` : `Save ${number}`} className={action}>
-            <Heart size={14} aria-hidden="true" fill={saved ? "currentColor" : "none"} /> {saved ? "Saved" : "Save"}
+          <button type="button" onClick={() => onToggleSave(number)} aria-pressed={saved} aria-label={saved ? t("vehicle.card.removeSaved", { number }) : t("vehicle.card.saveNumber", { number })} className={action}>
+            <Heart size={14} aria-hidden="true" fill={saved ? "currentColor" : "none"} /> {saved ? t("common.saved") : t("common.save")}
           </button>
-          <button type="button" onClick={copy} aria-label={`Copy ${number}`} className={action}>
-            <Copy size={14} aria-hidden="true" /> Copy
+          <button type="button" onClick={copy} aria-label={t("vehicle.card.copyNumber", { number })} className={action}>
+            <Copy size={14} aria-hidden="true" /> {t("common.copy")}
           </button>
-          <button type="button" onClick={share} aria-label={`Share ${number}`} className={action}>
-            <Share2 size={14} aria-hidden="true" /> Share
+          <button type="button" onClick={share} aria-label={t("vehicle.card.shareNumber", { number })} className={action}>
+            <Share2 size={14} aria-hidden="true" /> {t("common.share")}
           </button>
-          <button type="button" onClick={() => onToggleCompare(number)} aria-pressed={inCompare} disabled={!inCompare && compareFull} aria-label={inCompare ? `Remove ${number} from comparison` : `Compare ${number}`} className={`${action} disabled:cursor-not-allowed disabled:opacity-50`}>
-            <GitCompareArrows size={14} aria-hidden="true" /> {inCompare ? "Added" : "Compare"}
+          <button type="button" onClick={() => onToggleCompare(number)} aria-pressed={inCompare} disabled={!inCompare && compareFull} aria-label={inCompare ? t("vehicle.card.removeCompare", { number }) : t("vehicle.card.compareNumber", { number })} className={`${action} disabled:cursor-not-allowed disabled:opacity-50`}>
+            <GitCompareArrows size={14} aria-hidden="true" /> {inCompare ? t("vehicle.card.added") : t("vehicle.card.compare")}
           </button>
         </div>
         <p role="status" aria-live="polite" className="h-4 text-center text-xs font-semibold text-[#592209]">{note && <><Check size={12} className="mr-1 inline" aria-hidden="true" />{note}</>}</p>

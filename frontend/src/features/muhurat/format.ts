@@ -1,8 +1,16 @@
+import i18n from "@/i18n";
+import { localeInfo } from "@/i18n/languages";
+import { glossName } from "@/i18n/glossary";
 import type { MuhuratPlace, MuhuratWindow } from "./types";
+
+const isEnglish = (): boolean => !i18n.language || i18n.language === "en";
+/** The Intl locale for the chosen language, always with Latin digits. English keeps the en-GB layout used before. */
+export const intlTag = (): string => (isEnglish() ? "en-GB" : `${localeInfo(i18n.language).tag}-u-nu-latn`);
 
 /** "13:05" -> "1:05 PM". */
 export const time12 = (hhmm: string): string => {
   const [h, m] = hhmm.split(":").map(Number);
+  if (!isEnglish()) return new Intl.DateTimeFormat(intlTag(), { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "UTC" }).format(new Date(Date.UTC(2000, 0, 1, h, m)));
   return `${h % 12 === 0 ? 12 : h % 12}:${String(m).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`;
 };
 
@@ -12,10 +20,10 @@ const ymd = (s: string) => { const [y, m, d] = s.split("-").map(Number); return 
 
 /** "Friday, 18 December 2026". The date is a calendar date, so it is formatted in UTC and never shifts with the viewer's zone. */
 export const longDate = (s: string): string =>
-  new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(ymd(s));
+  new Intl.DateTimeFormat(intlTag(), { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(ymd(s));
 
 export const shortDate = (s: string): string =>
-  new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(ymd(s));
+  new Intl.DateTimeFormat(intlTag(), { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(ymd(s));
 
 export const placeLabel = (p: MuhuratPlace): string => [p.name, p.admin1, p.country].filter(Boolean).join(", ");
 
@@ -48,5 +56,7 @@ export const daysBetween = (a: string, b: string): number => Math.round((ymd(b).
 
 /** One line that says everything needed to act on a window. */
 export const windowText = (w: MuhuratWindow, eventLabel: string, place: MuhuratPlace): string =>
-  `${eventLabel}: ${longDate(w.date)}, ${range12(w.startLocal, w.endLocal)} (${placeLabel(place)}, local time). ` +
-  `Tithi ${w.panchang.paksha} ${w.panchang.tithi}, Nakshatra ${w.panchang.nakshatra}. Traditional Jyotish guidance, not a guarantee. Found with Muhurat Finder on MyBhagya.`;
+  i18n.t("muhurat.share.text", {
+    event: eventLabel, date: longDate(w.date), range: range12(w.startLocal, w.endLocal), place: placeLabel(place),
+    paksha: glossName("paksha", w.panchang.paksha), tithi: glossName("tithi", w.panchang.tithi), nakshatra: glossName("nakshatra", w.panchang.nakshatra),
+  });

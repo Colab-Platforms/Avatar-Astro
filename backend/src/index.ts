@@ -12,6 +12,7 @@ import tarotRoutes from "./routes/tarotRoutes.js";
 import inquiryRoutes from "./routes/inquiryRoutes.js";
 import { auth, optionalAuth } from "./middleware/authMiddleware.js";
 import { captureReadings } from "./modules/library/readingCapture.js";
+import { ttsLanguageCode } from "./utils/responseLanguage.js";
 import { createRateLimiter } from "./utils/rateLimit.js";
 import { feature } from "./utils/usage.js";
 import { installAiUsageCapture } from "./utils/aiUsageCapture.js";
@@ -344,7 +345,11 @@ app.post("/api/tts", ...feature("tts"), auth("USER"), async (req: Request, res: 
   if (!apiKey) {
     return res.status(500).json({ error: "SARVAM_API_KEY not configured" });
   }
-  const langCode = String(language ?? "").startsWith("en") ? "en-IN" : "hi-IN";
+  // Each of the ten languages has its own verified voice language; anything else is refused rather than read in a Hindi voice.
+  const langCode = ttsLanguageCode(language);
+  if (!langCode) {
+    return res.status(422).json({ error: "Voice is not available for this language", code: "tts_language_unsupported" });
+  }
   try {
     const sarvamRes = await fetch("https://api.sarvam.ai/text-to-speech", {
       method: "POST",

@@ -1,4 +1,5 @@
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
+import Tx from "@/i18n/Tx";
 import { Minus, Plus } from "lucide-react";
 import { usePublicContent } from "@/lib/publicContent";
 import { homeFaqs } from "@/data/homeFaqs";
@@ -12,12 +13,12 @@ const FaqSection = () => {
     <div className="container relative mx-auto px-4 md:px-6">
       <div className="grid gap-6 lg:grid-cols-[0.8fr_1.3fr] lg:gap-12">
         <div className="text-center lg:text-left">
-          <p className="hl-eyebrow mb-3">Questions, Answered</p>
+          <p className="hl-eyebrow mb-3"><Tx k="home.faq.eyebrow" /></p>
           <h2 id="home-faq-h" className="hl-serif text-3xl font-bold leading-tight text-home-ink sm:text-4xl md:text-[2.5rem]">
-            Curious About Your <span className="text-home-gerua">Bhagya?</span>
+            <Tx k="home.faq.lead" /> <span className="text-home-gerua"><Tx k="home.faq.accent" /></span>
           </h2>
           <p className="mx-auto mt-4 max-w-sm font-home-sans text-base italic leading-relaxed text-home-muted lg:mx-0">
-            From ancient wisdom to everyday questions, find your answers here.
+            <Tx k="home.faq.body" />
           </p>
         </div>
 

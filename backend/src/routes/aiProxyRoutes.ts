@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import express from "express";
 import { createRateLimiter } from "../utils/rateLimit.js";
 import { auth } from "../middleware/authMiddleware.js";
+import { languageDirective, parseResponseLanguage, tokenBudget } from "../utils/responseLanguage.js";
 
 /**
  * Server-side proxy for the Groq chat-completions API so the key never ships
@@ -16,6 +17,7 @@ const TIMEOUT_MS = 45_000;
 const MAX_MESSAGES = 60;
 const MAX_TOTAL_CHARS = 60_000;
 const MAX_TOKENS_CAP = 4000;
+const MAX_TOKENS_CAP_INDIC = 8000; // Indic scripts take several times more tokens than English for the same reply
 const ROLES = new Set(["system", "user", "assistant"]);
 
 const router = Router();
@@ -53,9 +55,19 @@ router.post("/chat", async (req: Request, res: Response) => {
     return res.status(503).json({ error: { message: "AI service is not configured" } });
   }
 
+  // A caller that wants the reply in the visitor's chosen language sends `language`. It is checked against the ten supported
+  // languages and turned into a fixed instruction, so the value itself never reaches the prompt. Callers that manage their own
+  // language (Know Your Karma, AI Guru) simply do not send it and are unchanged.
+  const lang = parseResponseLanguage(req.body?.language);
+  if (lang) {
+    const at = clean.length - 1; // placed before the final message so a user message stays last
+    clean.splice(at, 0, { role: "system", content: `${languageDirective(lang)} This overrides any earlier language instruction.` });
+  }
+
   const temp = typeof temperature === "number" && isFinite(temperature) ? Math.min(Math.max(temperature, 0), 1.5) : 0.7;
-  const maxTokens =
+  const requested =
     typeof max_tokens === "number" && isFinite(max_tokens) ? Math.min(Math.max(Math.floor(max_tokens), 1), MAX_TOKENS_CAP) : 1000;
+  const maxTokens = tokenBudget(requested, lang, MAX_TOKENS_CAP_INDIC);
 
   try {
     const upstream = await fetch(GROQ_URL, {

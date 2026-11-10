@@ -1,6 +1,7 @@
 import { OPENROUTER_MODEL } from '../config/aiModels.js';
 import { Request, Response } from 'express';
 import axios from 'axios';
+import { languageRule, requestLanguage, tokenBudget } from '../utils/responseLanguage.js';
 
 const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
 
@@ -23,6 +24,9 @@ export const chartChat = async (req: Request, res: Response) => {
       });
     }
 
+    // The visitor's chosen language, if any; otherwise Hinglish as before.
+    const lang = requestLanguage(req);
+
     // Create context from birth data
     const context = `
 User's Birth Chart Information:
@@ -35,7 +39,7 @@ User's Birth Chart Information:
 
 User's Question: ${question}
 
-Please answer the user's question about their birth chart in a helpful, friendly, and personalized way. Use simple language and relate the answer to their specific astrological placements. Respond in Hinglish (Hindi-English mix) for better relatability.
+Please answer the user's question about their birth chart in a helpful, friendly, and personalized way. Use simple language and relate the answer to their specific astrological placements.${languageRule(lang, " Respond in Hinglish (Hindi-English mix) for better relatability.")}
     `;
 
     const response = await axios.post(
@@ -53,7 +57,7 @@ Please answer the user's question about their birth chart in a helpful, friendly
           }
         ],
         temperature: 0.7,
-        max_tokens: 800
+        max_tokens: tokenBudget(800, lang)
       },
       {
         headers: {
