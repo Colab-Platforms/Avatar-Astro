@@ -1,4 +1,7 @@
 import { useState, useEffect, useRef } from "react";
+import { Trans, useTranslation } from "react-i18next";
+import { useGlossary } from "@/i18n/glossary";
+import { intlTag } from "@/features/muhurat/format";
 import AskDivyaSection from "@/features/guru/AskDivyaSection";
 import FeatureFaq from "@/components/FeatureFaq";
 import { FEATURES } from "@/data/featureCatalog";
@@ -342,10 +345,11 @@ function StarCanvas() {
 }
 
 function ScoreRing({ score }: { score: number }) {
+  const { t } = useTranslation();
   const r=68, circ=2*Math.PI*r;
   const offset=circ-(score/100)*circ;
   return (
-    <div className="ivd-ring-wrap" role="img" aria-label={`Today's score ${score} out of 100`}>
+    <div className="ivd-ring-wrap" role="img" aria-label={t("innerVoice.dashboard.ringAria", { score })}>
       <svg className="ivd-ring-svg" viewBox="0 0 168 168">
         <defs>
           <linearGradient id="ivd-ring-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#F7DC8A"/><stop offset="100%" stopColor="#E58A45"/></linearGradient>
@@ -363,6 +367,21 @@ function ScoreRing({ score }: { score: number }) {
 
 export default function InnerVoiceDashboard() {
   useFeatureTitle(FEATURES.karmaScore);
+  const { t, i18n } = useTranslation();
+  const { g } = useGlossary();
+  const loc = (): string => ((i18n.language || "en") === "en" ? "en-IN" : intlTag());
+  const featName = t("features.karma-score.name", { defaultValue: FEATURES.karmaScore.name });
+  const actName = (a: { id: string; name: string }): string => t(`innerVoice.dashboard.action.${a.id}`, { defaultValue: a.name });
+  const TIER_KEYS: Record<string, string> = { "Getting started": "gettingStarted", "Steady": "steady", "Strong": "strong", "Full practice": "fullPractice" };
+  const tierName = (label: string): string => t(`innerVoice.dashboard.tier.${TIER_KEYS[label] ?? "unknown"}`, { defaultValue: label });
+  const MSG_KEYS: Record<string, string> = {
+    "Nothing logged yet today. Tick the practices you have done to see your score.": "none",
+    "A gentle start. Even one small practice is worth keeping up.": "gentle",
+    "Steady effort today. Consistency matters more than any single day.": "steady",
+    "A strong day of practice. Notice how it feels, and carry that into tomorrow.": "strong",
+    "A full day of mindful practice. Remember that the aim is steadiness, not a perfect score.": "full",
+  };
+  const scoreMsg = (score: number, completed: number): string => { const en = scoreMessage(score, completed); return t(`innerVoice.dashboard.message.${MSG_KEYS[en] ?? "unknown"}`, { defaultValue: en }); };
   const signedIn = useAuthStore((s) => s.isAuthenticated);
   const [profile, setProfile] = useState(()=>{ try{return JSON.parse(localStorage.getItem("iv_profile")||"null")}catch{return null} });
   // `place` is the real place chosen from the searchable list; `pob` keeps its name (and any older typed text).
@@ -400,7 +419,7 @@ export default function InnerVoiceDashboard() {
   const weekSaved=week.filter(d=>d.score!==null).length;
   const tier=tierFor(composite);
   const path=pathToNextLevel(done);
-  const longDate=new Date(today+"T00:00:00").toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long"});
+  const longDate=new Date(today+"T00:00:00").toLocaleDateString(loc(),{weekday:"long",day:"numeric",month:"long"});
   // The practices named in the goal are tagged in the list itself, so there is one place to tick them.
   const suggestedIds=new Set(path?path.steps.map(x=>x.id):[]);
   const extrasDone=EXTRA_ACTIONS.filter(a=>done.includes(a.id)).length;
@@ -412,14 +431,14 @@ export default function InnerVoiceDashboard() {
               <div key={a.id} className={`ivd-action-row${on?" done":""}${sug?" suggested":""}`} onClick={()=>toggleAction(a.id)}>
                 <span className="ivd-action-ico"><Icon size={18} aria-hidden="true" /></span>
                 <div style={{flex:1,minWidth:0}}>
-                  <div className="ivd-action-name">{a.name}</div>
+                  <div className="ivd-action-name">{actName(a)}</div>
                   <div className="ivd-action-meta">
-                    <span className="ivd-chip">+{a.pts} pts</span>
-                    <span className="ivd-chip soft"><Timer size={11} aria-hidden="true" /> {a.minutes===0?"through the day":`~${a.minutes} min`}</span>
-                    {sug&&<span className="ivd-chip suggested"><Sparkles size={11} aria-hidden="true" /> Suggested</span>}
+                    <span className="ivd-chip">{t("innerVoice.dashboard.ptsChip", { pts: a.pts })}</span>
+                    <span className="ivd-chip soft"><Timer size={11} aria-hidden="true" /> {a.minutes===0?t("innerVoice.dashboard.throughDay"):t("innerVoice.dashboard.approxMin", { count: a.minutes })}</span>
+                    {sug&&<span className="ivd-chip suggested"><Sparkles size={11} aria-hidden="true" /> {t("innerVoice.dashboard.suggested")}</span>}
                   </div>
                 </div>
-                <div role="checkbox" aria-checked={on} aria-label={a.name} tabIndex={0} className={`ivd-action-check${on?" done":""}`} onClick={e=>{ e.stopPropagation(); toggleAction(a.id); }} onKeyDown={e=>{ if(e.key===" "||e.key==="Enter"){ e.preventDefault(); toggleAction(a.id); } }}>{on&&<Check size={14} aria-hidden="true" />}</div>
+                <div role="checkbox" aria-checked={on} aria-label={actName(a)} tabIndex={0} className={`ivd-action-check${on?" done":""}`} onClick={e=>{ e.stopPropagation(); toggleAction(a.id); }} onKeyDown={e=>{ if(e.key===" "||e.key==="Enter"){ e.preventDefault(); toggleAction(a.id); } }}>{on&&<Check size={14} aria-hidden="true" />}</div>
               </div>
   ); };
 
@@ -428,11 +447,11 @@ export default function InnerVoiceDashboard() {
   if(!signedIn) return (
     <div className="ivd-app"><style>{CSS}</style><StarCanvas />
       <div className="ivd-wrap">
-        <div className="ivd-hdr"><div className="ivd-eyebrow">Daily Karma Sankhya</div><h1 className="ivd-title">{FEATURES.karmaScore.name}</h1><div className="ivd-orn" aria-hidden="true"><span/><i/><span/></div><p className="ivd-sub">A simple daily score based on the mindful practices you complete. It is symbolic, meant to encourage consistency.</p></div>
+        <div className="ivd-hdr"><div className="ivd-eyebrow">{t("innerVoice.dashboard.eyebrow")}</div><h1 className="ivd-title">{featName}</h1><div className="ivd-orn" aria-hidden="true"><span/><i/><span/></div><p className="ivd-sub">{t("innerVoice.dashboard.intro")}</p></div>
         <div className="ivd-setup">
-          <div className="ivd-setup-title">Sign in to track your score</div>
-          <div className="ivd-setup-sub">Your practices and score history are personal, so they are kept for signed-in members only.</div>
-          <button className="ivd-setup-btn" onClick={()=>requireSignIn()}>Sign in to continue →</button>
+          <div className="ivd-setup-title">{t("innerVoice.dashboard.signIn.title")}</div>
+          <div className="ivd-setup-sub">{t("innerVoice.dashboard.signIn.body")}</div>
+          <button className="ivd-setup-btn" onClick={()=>requireSignIn()}>{t("innerVoice.dashboard.signIn.button")}</button>
         </div>
       </div>
     </div>
@@ -441,23 +460,23 @@ export default function InnerVoiceDashboard() {
   if(!profile||editing) return (
     <div className="ivd-app"><style>{CSS}</style><StarCanvas />
       <div className="ivd-wrap">
-        <div className="ivd-hdr"><div className="ivd-eyebrow">One-time Setup</div><h1 className="ivd-title">{FEATURES.karmaScore.name}</h1><div className="ivd-orn" aria-hidden="true"><span/><i/><span/></div><p className="ivd-sub">A simple daily score based on the mindful practices you complete. It is symbolic, meant to encourage consistency.</p></div>
+        <div className="ivd-hdr"><div className="ivd-eyebrow">{t("innerVoice.dashboard.setup.eyebrow")}</div><h1 className="ivd-title">{featName}</h1><div className="ivd-orn" aria-hidden="true"><span/><i/><span/></div><p className="ivd-sub">{t("innerVoice.dashboard.intro")}</p></div>
         <div className="ivd-setup">
-          <div className="ivd-setup-title">Your Profile</div>
-          <div className="ivd-setup-sub">Only your name is needed. The other details are optional, are kept on this device, and are not used in the score.</div>
+          <div className="ivd-setup-title">{t("innerVoice.dashboard.setup.title")}</div>
+          <div className="ivd-setup-sub">{t("innerVoice.dashboard.setup.body")}</div>
           <div className="ivd-grid2">
-            <div className="ivd-field"><label>Your Name</label><input className="ivd-input" placeholder="Enter your name" maxLength={60} value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))}/></div>
-            <div className="ivd-field"><label>Date of Birth (optional)</label><input className="ivd-input" type="date" value={form.dob} onChange={e=>setForm(f=>({...f,dob:e.target.value}))}/></div>
-            <div className="ivd-field"><label id="ivd-pob-label">Place of Birth (optional)</label>
+            <div className="ivd-field"><label>{t("innerVoice.dashboard.setup.name")}</label><input className="ivd-input" placeholder={t("innerVoice.dashboard.setup.namePlaceholder")} maxLength={60} value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))}/></div>
+            <div className="ivd-field"><label>{t("innerVoice.dashboard.setup.dob")}</label><input className="ivd-input" type="date" value={form.dob} onChange={e=>setForm(f=>({...f,dob:e.target.value}))}/></div>
+            <div className="ivd-field"><label id="ivd-pob-label">{t("innerVoice.dashboard.setup.pob")}</label>
               <LocationPicker value={form.place} onSelect={(place)=>setForm(f=>({...f,place,pob:place?place.label:f.pob}))}/>
-              {!form.place&&form.pob&&<p style={{fontSize:12,color:"#6B4A37",margin:"6px 2px 0"}}>Saved as: {form.pob}. Search and choose your place from the list to update it.</p>}
+              {!form.place&&form.pob&&<p style={{fontSize:12,color:"#6B4A37",margin:"6px 2px 0"}}>{t("innerVoice.dashboard.setup.savedAs", { place: form.pob })}</p>}
             </div>
-            <div className="ivd-field"><label>Chandra Rashi (Moon sign, optional)</label><select className="ivd-select" value={form.sign} onChange={e=>setForm(f=>({...f,sign:e.target.value}))}><option value="">Select...</option>{ZODIAC.map(s=><option key={s} value={s}>{s}</option>)}</select></div>
-            <div className="ivd-field"><label>Nakshatra (optional)</label><select className="ivd-select" value={form.nakshatra} onChange={e=>setForm(f=>({...f,nakshatra:e.target.value}))}><option value="">Select...</option>{NAKSHATRA.map(n=><option key={n} value={n}>{n}</option>)}</select></div>
+            <div className="ivd-field"><label>{t("innerVoice.dashboard.setup.moonSign")}</label><select className="ivd-select" value={form.sign} onChange={e=>setForm(f=>({...f,sign:e.target.value}))}><option value="">{t("innerVoice.dashboard.setup.select")}</option>{ZODIAC.map(s=><option key={s} value={s}>{g("rashi", s)}</option>)}</select></div>
+            <div className="ivd-field"><label>{t("innerVoice.dashboard.setup.nakshatra")}</label><select className="ivd-select" value={form.nakshatra} onChange={e=>setForm(f=>({...f,nakshatra:e.target.value}))}><option value="">{t("innerVoice.dashboard.setup.select")}</option>{NAKSHATRA.map(n=><option key={n} value={n}>{g("nakshatra", n)}</option>)}</select></div>
           </div>
-          <div className="ivd-field" style={{marginBottom:18}}><label>Why are you tracking your karma? (optional)</label><textarea className="ivd-input" rows={3} maxLength={200} placeholder="For example: to stay consistent with my daily prayers" value={form.reason} onChange={e=>setForm(f=>({...f,reason:e.target.value}))} style={{resize:"vertical",fontSize:16}}/></div>
-          <button className="ivd-setup-btn" onClick={saveProfile} disabled={!form.name.trim()}>{profile?"Save Profile →":"Start Tracking →"}</button>
-          {profile&&<button type="button" className="ivd-setup-btn" style={{background:"transparent",color:"#592209",border:"1px solid rgba(89,34,9,.3)",marginTop:10}} onClick={()=>setEditing(false)}>Cancel</button>}
+          <div className="ivd-field" style={{marginBottom:18}}><label>{t("innerVoice.dashboard.setup.reason")}</label><textarea className="ivd-input" rows={3} maxLength={200} placeholder={t("innerVoice.dashboard.setup.reasonPlaceholder")} value={form.reason} onChange={e=>setForm(f=>({...f,reason:e.target.value}))} style={{resize:"vertical",fontSize:16}}/></div>
+          <button className="ivd-setup-btn" onClick={saveProfile} disabled={!form.name.trim()}>{profile?t("innerVoice.dashboard.setup.save"):t("innerVoice.dashboard.setup.start")}</button>
+          {profile&&<button type="button" className="ivd-setup-btn" style={{background:"transparent",color:"#592209",border:"1px solid rgba(89,34,9,.3)",marginTop:10}} onClick={()=>setEditing(false)}>{t("innerVoice.dashboard.setup.cancel")}</button>}
         </div>
       </div>
     </div>
@@ -466,78 +485,78 @@ export default function InnerVoiceDashboard() {
   return (
     <div className="ivd-app"><style>{CSS}</style><StarCanvas />
       <div className="ivd-wrap">
-        <div className="ivd-hdr"><div className="ivd-eyebrow">Daily Karma Sankhya</div><h1 className="ivd-title">{FEATURES.karmaScore.name}</h1><div className="ivd-orn" aria-hidden="true"><span/><i/><span/></div><p className="ivd-sub"><span className="ivd-avatar" aria-hidden="true">{profile.name.trim().charAt(0).toUpperCase()}</span>{profile.name}{profile.sign ? ` · ${profile.sign}`:""}</p>
-          {profile.reason&&<p className="ivd-sub" style={{fontSize:15,marginTop:4}}>Intention: {profile.reason}</p>}
-          <button type="button" className="ivd-chip" style={{marginTop:12,cursor:"pointer"}} onClick={openEditor}>Edit profile</button></div>
+        <div className="ivd-hdr"><div className="ivd-eyebrow">{t("innerVoice.dashboard.eyebrow")}</div><h1 className="ivd-title">{featName}</h1><div className="ivd-orn" aria-hidden="true"><span/><i/><span/></div><p className="ivd-sub"><span className="ivd-avatar" aria-hidden="true">{profile.name.trim().charAt(0).toUpperCase()}</span>{profile.name}{profile.sign ? ` · ${g("rashi", profile.sign)}`:""}</p>
+          {profile.reason&&<p className="ivd-sub" style={{fontSize:15,marginTop:4}}>{t("innerVoice.dashboard.intention", { text: profile.reason })}</p>}
+          <button type="button" className="ivd-chip" style={{marginTop:12,cursor:"pointer"}} onClick={openEditor}>{t("innerVoice.dashboard.editProfile")}</button></div>
 
         <div className="ivd-hero">
           <div className="ivd-score-section">
             <ScoreRing score={composite}/>
             <div className="ivd-score-meta">
               <div className="ivd-hero-date">{longDate}</div>
-              <span className="ivd-tier"><Sparkles size={13} aria-hidden="true" /> {tier.label}</span>
-              <div className="ivd-score-name">Today's Practice Score</div>
-              <div className="ivd-score-msg">{scoreMessage(composite,done.length)}</div>
-              <div className="ivd-score-dasha">{behaviorPts} of {MAX_POINTS} points for a full score · {done.length} {done.length===1?"practice":"practices"} done</div>
+              <span className="ivd-tier"><Sparkles size={13} aria-hidden="true" /> {tierName(tier.label)}</span>
+              <div className="ivd-score-name">{t("innerVoice.dashboard.todayScore")}</div>
+              <div className="ivd-score-msg">{scoreMsg(composite,done.length)}</div>
+              <div className="ivd-score-dasha">{t("innerVoice.dashboard.pointsSummary", { points: behaviorPts, max: MAX_POINTS })} · {t(done.length===1?"innerVoice.dashboard.practiceDone.one":"innerVoice.dashboard.practiceDone.other", { count: done.length })}</div>
               {tier.next ? (
                 <div className="ivd-progress">
-                  <div className="ivd-progress-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={tierProgress} aria-label={`Progress to ${tier.next.label}`}><div className="ivd-progress-fill" style={{width:`${tierProgress}%`}}/></div>
-                  <div className="ivd-progress-lbl">{tier.next.min-composite} more {tier.next.min-composite===1?"point":"points"} of score to reach “{tier.next.label}” ({tier.next.min})</div>
+                  <div className="ivd-progress-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={tierProgress} aria-label={t("innerVoice.dashboard.progressAria", { level: tierName(tier.next.label) })}><div className="ivd-progress-fill" style={{width:`${tierProgress}%`}}/></div>
+                  <div className="ivd-progress-lbl">{t(tier.next.min-composite===1?"innerVoice.dashboard.toNext.one":"innerVoice.dashboard.toNext.other", { count: tier.next.min-composite, level: tierName(tier.next.label), min: tier.next.min })}</div>
                 </div>
               ) : (
-                <div className="ivd-progress"><div className="ivd-progress-lbl">You are at the highest level today. The aim now is to keep it steady.</div></div>
+                <div className="ivd-progress"><div className="ivd-progress-lbl">{t("innerVoice.dashboard.topLevel")}</div></div>
               )}
             </div>
           </div>
         </div>
 
         <div className="ivd-stats">
-          <div className="ivd-stat"><span className="ivd-stat-ico"><Target size={18} aria-hidden="true" /></span><div className="ivd-stat-val">{behaviorPts}</div><div className="ivd-stat-lbl">Points Today</div></div>
-          <div className="ivd-stat"><span className="ivd-stat-ico"><Flame size={18} aria-hidden="true" /></span><div className="ivd-stat-val">{streak}</div><div className="ivd-stat-lbl">Day Streak</div><div className="ivd-stat-note">Best: {best}</div></div>
-          <div className="ivd-stat"><span className="ivd-stat-ico"><CalendarDays size={18} aria-hidden="true" /></span><div className="ivd-stat-val">{weekAvg===null?"–":weekAvg}</div><div className="ivd-stat-lbl">7-Day Average</div><div className="ivd-stat-note">{weekSaved} saved {weekSaved===1?"day":"days"}</div></div>
-          <div className="ivd-stat"><span className="ivd-stat-ico"><Bookmark size={18} aria-hidden="true" /></span><div className="ivd-stat-val">{history.length}</div><div className="ivd-stat-lbl">Days Saved</div></div>
+          <div className="ivd-stat"><span className="ivd-stat-ico"><Target size={18} aria-hidden="true" /></span><div className="ivd-stat-val">{behaviorPts}</div><div className="ivd-stat-lbl">{t("innerVoice.dashboard.stats.pointsToday")}</div></div>
+          <div className="ivd-stat"><span className="ivd-stat-ico"><Flame size={18} aria-hidden="true" /></span><div className="ivd-stat-val">{streak}</div><div className="ivd-stat-lbl">{t("innerVoice.dashboard.stats.streak")}</div><div className="ivd-stat-note">{t("innerVoice.dashboard.stats.best", { best })}</div></div>
+          <div className="ivd-stat"><span className="ivd-stat-ico"><CalendarDays size={18} aria-hidden="true" /></span><div className="ivd-stat-val">{weekAvg===null?"–":weekAvg}</div><div className="ivd-stat-lbl">{t("innerVoice.dashboard.stats.avg")}</div><div className="ivd-stat-note">{t(weekSaved===1?"innerVoice.dashboard.stats.savedDays.one":"innerVoice.dashboard.stats.savedDays.other", { count: weekSaved })}</div></div>
+          <div className="ivd-stat"><span className="ivd-stat-ico"><Bookmark size={18} aria-hidden="true" /></span><div className="ivd-stat-val">{history.length}</div><div className="ivd-stat-lbl">{t("innerVoice.page.daysSaved")}</div></div>
         </div>
 
         <div className="ivd-main">
           <div className="ivd-col">
         <div className="ivd-actions-card">
-          <div className="ivd-sec"><span className="ivd-sec-ico"><Sparkles size={18} aria-hidden="true" /></span><div><div className="ivd-card-title">Today's Practices</div>
-          <div className="ivd-card-sub">Tick what you have done today. Each practice carries the points shown.</div></div></div>
+          <div className="ivd-sec"><span className="ivd-sec-ico"><Sparkles size={18} aria-hidden="true" /></span><div><div className="ivd-card-title">{t("innerVoice.dashboard.practices.title")}</div>
+          <div className="ivd-card-sub">{t("innerVoice.dashboard.practices.sub")}</div></div></div>
           <div className="ivd-actions-list">
             {ACTIONS.map(renderRow)}
           </div>
 
           <button type="button" className="ivd-more-btn" aria-expanded={showMore} aria-controls="ivd-extra" onClick={()=>setShowMore(v=>!v)}>
             <ChevronDown size={16} aria-hidden="true" className={showMore?"open":""} />
-            {showMore?"Show fewer practices":`Show ${EXTRA_ACTIONS.length} more practices`}
-            {!showMore&&extrasDone>0&&<span className="ivd-more-count">{extrasDone} done</span>}
+            {showMore?t("innerVoice.dashboard.practices.fewer"):t("innerVoice.dashboard.practices.more", { count: EXTRA_ACTIONS.length })}
+            {!showMore&&extrasDone>0&&<span className="ivd-more-count">{t("innerVoice.dashboard.practices.extrasDone", { count: extrasDone })}</span>}
           </button>
           {showMore&&(
             <div id="ivd-extra" className="ivd-extra">
-              <div className="ivd-card-sub" style={{margin:"4px 0 10px"}}>More good deeds · optional, they add to the same score</div>
+              <div className="ivd-card-sub" style={{margin:"4px 0 10px"}}>{t("innerVoice.dashboard.practices.extraIntro")}</div>
               <div className="ivd-actions-list">
                 {EXTRA_ACTIONS.map(renderRow)}
               </div>
             </div>
           )}
           <div className="ivd-save-row">
-            <button className="ivd-save-btn" onClick={saveToday}><Bookmark size={15} aria-hidden="true" /> Save Today's Score</button>
+            <button className="ivd-save-btn" onClick={saveToday}><Bookmark size={15} aria-hidden="true" /> {t("innerVoice.dashboard.save.button")}</button>
             {saved||!unsaved
-              ? <span className="ivd-save-state ok" role="status">Saved: {savedToday?.composite ?? composite}/100</span>
-              : <span className="ivd-save-state" role="status">{savedToday?`Changed since you saved (${savedToday.composite}/100). Save to update.`:"Not saved yet. Save to add today to your history and streak."}</span>}
+              ? <span className="ivd-save-state ok" role="status">{t("innerVoice.dashboard.save.saved", { score: savedToday?.composite ?? composite })}</span>
+              : <span className="ivd-save-state" role="status">{savedToday?t("innerVoice.dashboard.save.changed", { score: savedToday.composite }):t("innerVoice.dashboard.save.notSaved")}</span>}
           </div>
         </div>
 
           </div>
           <div className="ivd-col">
-        <div className="ivd-week" aria-label="Your last seven days">
-          <div className="ivd-sec" style={{marginBottom:4}}><span className="ivd-sec-ico"><CalendarDays size={18} aria-hidden="true" /></span><div><div className="ivd-card-title">Your Week</div>
-          <div className="ivd-card-sub">{practiced} of the last 7 days practiced · only saved days are counted</div></div></div>
+        <div className="ivd-week" aria-label={t("innerVoice.dashboard.week.aria")}>
+          <div className="ivd-sec" style={{marginBottom:4}}><span className="ivd-sec-ico"><CalendarDays size={18} aria-hidden="true" /></span><div><div className="ivd-card-title">{t("innerVoice.dashboard.week.title")}</div>
+          <div className="ivd-card-sub">{t("innerVoice.dashboard.week.sub", { count: practiced })}</div></div></div>
           <div className="ivd-week-row">
             {week.map(d=>(
               <div key={d.date} className={`ivd-day${d.isToday?" today":""}`}>
-                <div className={`ivd-day-dot${(d.score??0)>0?" on":""}`} title={d.score===null?"Not saved":`Score ${d.score}`}>{d.score===null?"":d.score}</div>
-                <div className="ivd-day-lbl">{new Date(d.date+"T00:00:00").toLocaleDateString("en-IN",{weekday:"short"})}</div>
+                <div className={`ivd-day-dot${(d.score??0)>0?" on":""}`} title={d.score===null?t("innerVoice.dashboard.week.notSaved"):t("innerVoice.dashboard.week.score", { score: d.score })}>{d.score===null?"":d.score}</div>
+                <div className="ivd-day-lbl">{new Date(d.date+"T00:00:00").toLocaleDateString(loc(),{weekday:"short"})}</div>
               </div>
             ))}
           </div>
@@ -546,22 +565,22 @@ export default function InnerVoiceDashboard() {
         <div className="ivd-advice" data-testid="karma-advice">
           <div className="ivd-advice-head">
             <span className="ivd-stat-ico"><Lightbulb size={18} aria-hidden="true" /></span>
-            <div><div className="ivd-card-title" style={{marginBottom:0}}>How to raise your score</div><div className="ivd-card-sub" style={{marginBottom:0}}>Worked out from what you have ticked today</div></div>
+            <div><div className="ivd-card-title" style={{marginBottom:0}}>{t("innerVoice.dashboard.advice.title")}</div><div className="ivd-card-sub" style={{marginBottom:0}}>{t("innerVoice.dashboard.advice.sub")}</div></div>
           </div>
 
           {path ? (
             <div className="ivd-goal" data-testid="karma-goal">
-              To reach <strong>{path.target.label}</strong> ({path.target.min}+) today, add {path.steps.map((s,i)=>(<span key={s.id}>{i>0?(i===path.steps.length-1?" and ":", "):""}<strong>{s.name}</strong> (+{s.gain})</span>))}. That brings you to <strong>{path.scoreAfter}</strong>. They are tagged <strong>Suggested</strong> in your list.
+              <Trans i18nKey="innerVoice.dashboard.advice.goal" values={{ target: tierName(path.target.label), min: path.target.min, after: path.scoreAfter, suggested: t("innerVoice.dashboard.suggested") }} components={{ b: <strong />, steps: <>{path.steps.map((s,i)=>(<span key={s.id}>{i>0?(i===path.steps.length-1?t("innerVoice.dashboard.advice.and"):t("innerVoice.dashboard.advice.comma")):""}<strong>{actName(s)}</strong> (+{s.gain})</span>))}</> }} />
             </div>
           ) : composite>=85 ? (
-            <div className="ivd-goal">You have done almost everything today. Keep the same routine tomorrow: steadiness counts for more than one perfect day.</div>
+            <div className="ivd-goal">{t("innerVoice.dashboard.advice.almost")}</div>
           ) : null}
 
           <ul className="ivd-tips">
-            {done.length===0 && <li><Sparkles size={15} aria-hidden="true" /><span>Start with one small practice. A single tick already moves the score, and the aim is a habit, not a perfect day.</span></li>}
-            {streak===0 && done.length>0 && <li><Flame size={15} aria-hidden="true" /><span>A streak counts every day with at least one saved practice.</span></li>}
-            {streak>0 && <li><Flame size={15} aria-hidden="true" /><span>You are on a {streak}-day streak{streak<best?` (your best is ${best})`:""}.</span></li>}
-            {practiced<7 && weekSaved>0 && <li><CalendarDays size={15} aria-hidden="true" /><span>You practiced on {practiced} of the last 7 days. Even a short mantra on the other days keeps your weekly average up.</span></li>}
+            {done.length===0 && <li><Sparkles size={15} aria-hidden="true" /><span>{t("innerVoice.dashboard.advice.start")}</span></li>}
+            {streak===0 && done.length>0 && <li><Flame size={15} aria-hidden="true" /><span>{t("innerVoice.dashboard.advice.streakInfo")}</span></li>}
+            {streak>0 && <li><Flame size={15} aria-hidden="true" /><span>{t("innerVoice.dashboard.advice.streakNow", { count: streak })}{streak<best?t("innerVoice.dashboard.advice.streakBest", { best }):""}</span></li>}
+            {practiced<7 && weekSaved>0 && <li><CalendarDays size={15} aria-hidden="true" /><span>{t("innerVoice.dashboard.advice.practiced", { count: practiced })}</span></li>}
           </ul>
         </div>
 
@@ -571,8 +590,8 @@ export default function InnerVoiceDashboard() {
         <div className="ivd-lower">
         {lineData.length>1 && (
           <div className="ivd-chart">
-            <div className="ivd-sec"><span className="ivd-sec-ico"><Activity size={18} aria-hidden="true" /></span><div><div className="ivd-card-title">Trend</div>
-            <div className="ivd-card-sub">Your saved scores over the last 14 entries</div></div></div>
+            <div className="ivd-sec"><span className="ivd-sec-ico"><Activity size={18} aria-hidden="true" /></span><div><div className="ivd-card-title">{t("innerVoice.dashboard.trend.title")}</div>
+            <div className="ivd-card-sub">{t("innerVoice.dashboard.trend.sub")}</div></div></div>
             <ResponsiveContainer width="100%" height={230}>
               <LineChart data={lineData}>
                 <XAxis dataKey="date" tick={{fill:"#6B4A37",fontSize:11,fontFamily:"'DM Sans', system-ui, sans-serif"}} axisLine={false} tickLine={false}/>
@@ -585,14 +604,14 @@ export default function InnerVoiceDashboard() {
         )}
 
         <div className="ivd-history">
-          <div className="ivd-sec"><span className="ivd-sec-ico"><Bookmark size={18} aria-hidden="true" /></span><div><div className="ivd-card-title">Score History</div>
-          <div className="ivd-card-sub">Your most recent saved days</div></div></div>
-          {history.length===0 ? <div className="ivd-empty">No history yet. Tick today's practices and save your first score above.</div> :
+          <div className="ivd-sec"><span className="ivd-sec-ico"><Bookmark size={18} aria-hidden="true" /></span><div><div className="ivd-card-title">{t("innerVoice.dashboard.history.title")}</div>
+          <div className="ivd-card-sub">{t("innerVoice.dashboard.history.sub")}</div></div></div>
+          {history.length===0 ? <div className="ivd-empty">{t("innerVoice.dashboard.history.empty")}</div> :
             history.slice(0,15).map(e=>(
               <div key={e.date} className="ivd-h-row">
-                <div className="ivd-h-date">{new Date(e.date+"T00:00:00").toLocaleDateString("en-IN",{day:"numeric",month:"short"})}</div>
+                <div className="ivd-h-date">{new Date(e.date+"T00:00:00").toLocaleDateString(loc(),{day:"numeric",month:"short"})}</div>
                 <div className="ivd-h-bar"><div className="ivd-h-fill" style={{width:`${e.composite}%`}}/></div>
-                <div><div className="ivd-h-score">{e.composite}</div><div className="ivd-h-acts">{e.actionsCompleted ?? 0} practices</div></div>
+                <div><div className="ivd-h-score">{e.composite}</div><div className="ivd-h-acts">{t("innerVoice.dashboard.history.practices", { count: e.actionsCompleted ?? 0 })}</div></div>
               </div>
             ))}
         </div>

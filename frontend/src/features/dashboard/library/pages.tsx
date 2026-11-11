@@ -324,7 +324,7 @@ export function MyActivity() {
         <label className={labelCls}>To<input type="date" className={`${field} mt-1 w-auto`} value={params.get("to") ?? ""} onChange={(e) => set({ to: e.target.value || null })} /></label>
       </form>
       {q.isLoading ? <Loading /> : q.error ? <ErrorBox error={q.error} onRetry={() => q.refetch()} /> : items.length === 0 ? (
-        <Empty icon={CalendarHeart} title="No activity to show" body={Object.values(f).some(Boolean) ? "Nothing matches these filters." : "Your readings, saves and conversations will appear here as you use MyBhagya."} />
+        <Empty icon={CalendarHeart} title="No activity to show" body={Object.values(f).some(Boolean) ? "Nothing matches these filters." : "Your readings, saves and conversations will appear here as you use Bhagya."} />
       ) : (
         <>
           <ol className={`${card} divide-y divide-[#EFE4D0]`}>

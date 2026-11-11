@@ -3,7 +3,8 @@ import Tx from "@/i18n/Tx";
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
-import { zodiacSigns, ZodiacSign } from '@/data/zodiacData';
+import { useTranslation } from 'react-i18next';
+import { zodiacSigns, ZodiacSign, useZodiacText } from '@/data/zodiacData';
 
 import ariesImg from '@/assets/zodiac/aries.png';
 import taurusImg from '@/assets/zodiac/taurus.png';
@@ -43,6 +44,8 @@ const arrowCls =
   'flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-home-gerua bg-home-gerua text-home-ivory transition-all duration-300 hover:scale-110 hover:border-home-gold hover:bg-home-gold motion-reduce:transition-none motion-reduce:hover:scale-100';
 
 export const ZodiacWheelSection = () => {
+  const { t } = useTranslation();
+  const z = useZodiacText();
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -106,7 +109,7 @@ export const ZodiacWheelSection = () => {
 
         {/* ── Carousel: arrows beside the track on md+, below it on phones ── */}
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 md:flex-nowrap md:gap-x-6">
-          <button onClick={() => paginate(-1)} aria-label="Previous sign" className={`${arrowCls} order-2 md:order-none`}>
+          <button onClick={() => paginate(-1)} aria-label={t("zodiac.wheel.previous")} className={`${arrowCls} order-2 md:order-none`}>
             <ChevronLeft className="h-5 w-5" />
           </button>
 
@@ -149,7 +152,7 @@ export const ZodiacWheelSection = () => {
                   >
                     <img
                       src={zodiacImages[sign.name]}
-                      alt={sign.name}
+                      alt={z.sign(sign.name)}
                       draggable={false}
                       style={{
                         width: '92%',
@@ -166,7 +169,7 @@ export const ZodiacWheelSection = () => {
             </AnimatePresence>
           </div>
 
-          <button onClick={() => paginate(1)} aria-label="Next sign" className={`${arrowCls} order-3 md:order-none`}>
+          <button onClick={() => paginate(1)} aria-label={t("zodiac.wheel.next")} className={`${arrowCls} order-3 md:order-none`}>
             <ChevronRight className="h-5 w-5" />
           </button>
         </div>
@@ -186,11 +189,11 @@ export const ZodiacWheelSection = () => {
                 className="hl-serif mb-1 font-semibold uppercase leading-tight tracking-[0.12em] text-home-ink"
                 style={{ fontSize: 'clamp(28px, 3.2vw, 38px)' }}
               >
-                {current.name}
+                {z.sign(current.name)}
               </h3>
 
               <p className="mb-3 font-home-sans text-base uppercase tracking-widest text-home-muted md:text-[16.5px]">
-                {current.dates}
+                {z.dates(current)}
               </p>
 
               <div className="flex flex-wrap items-center justify-center gap-2">
@@ -200,7 +203,7 @@ export const ZodiacWheelSection = () => {
                     className="inline-flex h-11 items-center rounded-full border border-home-gerua/25 bg-home-parchment px-4 font-home-sans text-sm text-home-ink"
                     style={{ letterSpacing: '0.08em' }}
                   >
-                    {trait}
+                    {z.trait(current, i)}
                   </span>
                 ))}
                 <button
@@ -217,12 +220,12 @@ export const ZodiacWheelSection = () => {
         </div>
 
         {/* ── Dot indicators ── */}
-        <div className="mt-3 flex justify-center gap-1" role="group" aria-label="Choose a zodiac sign">
+        <div className="mt-3 flex justify-center gap-1" role="group" aria-label={t("zodiac.wheel.choose")}>
           {zodiacSigns.map((_, i) => (
             <button
               key={i}
               onClick={() => goToIndex(i, currentIndex)}
-              aria-label={zodiacSigns[i].name}
+              aria-label={z.sign(zodiacSigns[i].name)}
               aria-current={i === currentIndex ? 'true' : undefined}
               className="flex h-6 items-center px-[3px]"
             >

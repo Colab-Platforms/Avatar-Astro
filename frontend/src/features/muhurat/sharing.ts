@@ -38,7 +38,7 @@ export async function renderMuhuratCard(eventLabel: string, place: MuhuratPlace,
   line(i18n.t("muhurat.share.yogaKarana", { yoga: glossName("yoga", w.panchang.yoga), karana: glossName("karana", w.panchang.karana) }), 890, "36px Georgia, serif", "#4A2E1F");
   line(i18n.t("muhurat.share.note1"), 1150, "italic 28px Georgia, serif", "#6B4A37");
   line(i18n.t("muhurat.share.note2"), 1192, "italic 28px Georgia, serif", "#6B4A37");
-  line("MyBhagya", 1280, "600 34px Georgia, serif", "#592209");
+  line("Bhagya", 1280, "600 34px Georgia, serif", "#592209");
   return new Promise((resolve) => c.toBlob((b) => resolve(b), "image/png"));
 }
 
@@ -74,7 +74,7 @@ export const buildIcs = (eventLabel: string, place: MuhuratPlace, w: MuhuratWind
   [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//MyBhagya//Muhurat Finder//EN",
+    "PRODID:-//Bhagya//Muhurat Finder//EN",
     "CALSCALE:GREGORIAN",
     "BEGIN:VEVENT",
     `UID:${icsStamp(w.startUtc)}-${eventLabel.replace(/\W+/g, "-").toLowerCase()}@mybhagya`,

@@ -1,5 +1,5 @@
 /**
- * Divya Margdarshak follows the ONE MyBhagya language selector.
+ * Divya Margdarshak follows the ONE Bhagya language selector.
  *
  * MOCKED vs REAL: everything here is mocked at the network edge (aiChat, screening and the daily-session gate), so these tests prove
  * the wiring: what the page shows in each language and what it sends. They cannot prove how well a real model writes Tamil. That is
@@ -386,5 +386,139 @@ describe("no hard-coded English in the chat, and the old language system is gone
     for (const i of [1, 2, 3]) used.add(`guru.search.status${i}`);
     expect([...used].filter((k) => !keys.has(k))).toEqual([]);
     expect(used.size).toBeGreaterThan(40);
+  });
+});
+
+// ── the in-chat language selector, language requests typed in the chat, and what each Guru can really speak ──────────────────────
+import LanguageSelector from "@/components/LanguageSelector";
+import { detectLanguageRequest } from "@/i18n/languageRequest";
+import { guruLanguages, VERIFIED_GURU_LANGUAGES } from "@/lib/guruLanguages";
+
+const shownLanguages = () => screen.getAllByTestId("language-current").map((e) => e.textContent);
+const nativeOf = (code: string) => LOCALES.find((l) => l.code === code)!.native;
+
+describe("the visible language selector in the chat header", () => {
+  it("is in the header (no scrolling), shows the current language, lists all ten in their own script, and is the only language control", async () => {
+    signIn();
+    await mountReady();
+    const slot = screen.getByTestId("guru-language");
+    expect(slot.closest("header")).not.toBeNull();
+    expect(slot).toHaveTextContent("English");
+    fireEvent.click(slot.querySelector("button")!);
+    for (const l of LOCALES) expect(screen.getByTestId(`language-option-${l.code}`)).toHaveTextContent(l.native);
+    expect(document.querySelectorAll("select").length).toBe(0);
+  });
+
+  it.each(["hi", "ta", "gu"] as const)("choosing %s here changes the one central language, is saved under the one storage key, and the site selector follows", async (code) => {
+    signIn();
+    render(<LanguageSelector variant="desktop" />); // stands in for the selector in the main navbar
+    await mountReady();
+    expect(shownLanguages()).toEqual(["English", "English"]);
+    const chatSlot = screen.getByTestId("guru-language");
+    fireEvent.click(chatSlot.querySelector("button")!);
+    await act(async () => { fireEvent.click(chatSlot.querySelector(`[data-testid="language-option-${code}"]`)!); });
+    await waitFor(() => expect(i18n.language).toBe(code));
+    expect(localStorage.getItem(STORAGE_KEY)).toBe(code);
+    expect(shownLanguages()).toEqual([nativeOf(code), nativeOf(code)]);
+    const keys = Object.keys(localStorage).filter((k) => /lang/i.test(k));
+    expect(keys).toEqual([STORAGE_KEY]); // no separate chat-language storage
+  });
+
+  it("and the other way round: changing the language elsewhere updates the chat's selector", async () => {
+    signIn();
+    await mountReady();
+    await act(async () => { await setLanguage("te"); });
+    expect(screen.getByTestId("guru-language")).toHaveTextContent(nativeOf("te"));
+  });
+});
+
+describe("a language request typed in the chat is a preference change, not a topic", () => {
+  const REQUESTS: [string, LocaleCode][] = [
+    ["Talk in Hindi.", "hi"],
+    ["Please reply in Marathi.", "mr"],
+    ["Can you speak in Tamil?", "ta"],
+    ["Talk in Gujarati.", "gu"],
+    ["Please speak in Telugu.", "te"],
+    ["हिंदी में जवाब दो।", "hi"],
+    ["मराठीत बोला.", "mr"],
+    ["தமிழில் பேசுங்கள்.", "ta"],
+  ];
+
+  it.each(REQUESTS)("%s -> %s (detected)", (text, code) => {
+    expect(detectLanguageRequest(text)).toBe(code);
+  });
+
+  it.each(REQUESTS)("%s: the chat switches the central language and the selector, confirms in that language, and never reaches screening, the timer or the model", async (text, code) => {
+    signIn();
+    await mountReady();
+    await typeAndSend(text);
+    await waitFor(() => expect(i18n.language).toBe(code));
+    const confirmation = i18n.t("voice.languageChanged", { lng: code, language: nativeOf(code) });
+    expect(await screen.findByText(confirmation)).toBeInTheDocument();
+    expect(screen.getByTestId("guru-language")).toHaveTextContent(nativeOf(code));
+    expect(localStorage.getItem(STORAGE_KEY)).toBe(code);
+    expect(screenChatMessage).not.toHaveBeenCalled(); // bypasses topic validation
+    expect(consumeDailyChatSession).not.toHaveBeenCalled(); // does not use up the free session
+    expect(askGuru).not.toHaveBeenCalled();
+    expect(screen.queryByTestId("guru-welcome")).toBeNull(); // the welcome is not shown again
+    expect(screen.queryByText(en.guru.screen.offTopic)).toBeNull();
+  });
+
+  it("a message that only mentions a language or a place is an ordinary message", async () => {
+    for (const m of ["I live in Tamil Nadu and feel stressed.", "My friend speaks Hindi at home.", "What is the Marathi calendar year?", "I can't speak English well.", "Gujarati food is my comfort."]) {
+      expect(detectLanguageRequest(m), m).toBeNull();
+    }
+    signIn();
+    await mountReady();
+    await typeAndSend("My friend speaks Hindi at home and I feel left out.");
+    await waitFor(() => expect(askGuru).toHaveBeenCalledTimes(1));
+    expect(i18n.language).toBe("en");
+  });
+
+  it.each(["hi", "ta", "gu"] as const)("the exact sequence: 'ok', then a request for %s, then a career question is answered in that language, not with the welcome", async (code) => {
+    signIn();
+    vi.mocked(askGuru).mockResolvedValueOnce({ type: "gathering", message: "An English answer to ok." });
+    await mountReady();
+    await typeAndSend("ok");
+    expect(await screen.findByText("An English answer to ok.")).toBeInTheDocument();
+    expect(vi.mocked(askGuru).mock.calls[0][6]).toBe("en");
+
+    await typeAndSend(code === "hi" ? "talk in hindi" : code === "ta" ? "talk in tamil" : "talk in gujarati");
+    await waitFor(() => expect(i18n.language).toBe(code));
+    expect(await screen.findByText(i18n.t("voice.languageChanged", { lng: code, language: nativeOf(code) }))).toBeInTheDocument();
+    expect(askGuru).toHaveBeenCalledTimes(1); // the request itself was not sent to the model
+    expect(screen.getByTestId("guru-language")).toHaveTextContent(nativeOf(code));
+
+    vi.mocked(askGuru).mockResolvedValueOnce({ type: "gathering", message: sample(code) });
+    await typeAndSend("What is my career outlook?");
+    expect(await screen.findByText(sample(code))).toBeInTheDocument();
+    const call = vi.mocked(askGuru).mock.calls[1];
+    expect(call[1]).toBe("What is my career outlook?");
+    expect(call[6]).toBe(code); // the language reaches the model request
+    expect(call[2]).toContain(LOCALES.find((l) => l.code === code)!.english);
+    expect(screen.getByText("An English answer to ok.")).toBeInTheDocument(); // earlier messages are not rewritten
+    expect(screen.queryByTestId("guru-welcome")).toBeNull();
+    expect(screenChatMessage).toHaveBeenCalledTimes(2); // 'ok' and the career question were screened; the language request was not
+  });
+});
+
+describe("what each Guru can really speak", () => {
+  it("no profile advertises a language the Guru cannot reply in (Sanskrit is not offered), and every profile still lists at least two", () => {
+    for (const a of ASTROLOGERS) {
+      const shown = guruLanguages(a);
+      expect(shown.length, a.name).toBeGreaterThanOrEqual(2);
+      for (const l of shown) expect(VERIFIED_GURU_LANGUAGES, `${a.name}: ${l}`).toContain(l);
+      expect(shown).not.toContain("Sanskrit");
+    }
+    expect(VERIFIED_GURU_LANGUAGES).toEqual(LOCALES.map((l) => l.english));
+  });
+
+  it("the Guru card in the chat shows only the verified languages", async () => {
+    signIn();
+    await mountReady();
+    const card = screen.getByTestId("persona-card");
+    expect(card.textContent).not.toContain("Sanskrit");
+    const persona = ASTROLOGERS.find((a) => card.textContent?.includes(a.name))!;
+    expect(card.textContent).toContain(guruLanguages(persona).join(" · "));
   });
 });

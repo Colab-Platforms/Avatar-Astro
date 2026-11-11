@@ -3,6 +3,7 @@
 // via Laplacian variance, crop + rotation alignment driven by real detected
 // landmarks, auto contrast/brightness, and an unsharp-mask sharpen pass.
 
+import i18n from "@/i18n";
 import type { HandLandmarks, Point, PreprocessedImage } from "./types";
 
 const MAX_WORKING_DIM = 960; // keeps convolution passes fast and the UI responsive
@@ -13,7 +14,7 @@ export function loadImageFromDataUrl(dataUrl: string): Promise<HTMLImageElement>
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error("Could not load image"));
+    img.onerror = () => reject(new Error(i18n.t("palm.errors.imageLoad")));
     img.src = dataUrl;
   });
 }

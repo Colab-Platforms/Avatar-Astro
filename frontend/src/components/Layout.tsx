@@ -17,7 +17,7 @@ const Layout = ({ children }: LayoutProps) => {
   const { pathname } = useLocation();
   const chromeless = CHROMELESS_ROUTES.includes(pathname);
 
-  // The MyBhagya light theme (.home-light, see index.css) applies to every route.
+  // The Bhagya light theme (.home-light, see index.css) applies to every route.
   // Keep overscroll / short pages from flashing a different body colour.
   useEffect(() => {
     document.body.classList.add('home-light-body');

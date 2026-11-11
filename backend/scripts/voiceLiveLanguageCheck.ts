@@ -5,10 +5,11 @@
  *
  * It starts the real /api/ai route in-process and sends what the Voice Consultation sends to the real provider: the real system prompt
  * (read from the component so it cannot drift), the chosen language, and a short conversation. For each of the ten languages it runs
- * a two-turn conversation ("hi", then a real concern, with the first reply in the history), and once the request "talk in tamil".
- * It judges: the reply exists, it is in the chosen script with no English paragraph, a greeting gets a short greeting (not the
+ * a two-turn conversation ("hi", then a real concern, with the first reply in the history).
+ * It judges: the reply exists, it is in the chosen script with no English heading or paragraph, a greeting gets a short greeting (not the
  * welcome text, not a lecture), and the second reply responds to the second message (history was used).
- * About 31 calls: a few cents. It cannot judge meaning or grammar: a native speaker must.
+ * About 30 calls: a few cents. It cannot judge meaning or grammar: a native speaker must.
+ * Language-change requests are handled by the frontend and are covered by Voice Consultation tests; they are not sent to the model.
  */
 import fs from "node:fs";
 import type { AddressInfo } from "node:net";
@@ -30,6 +31,11 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const letters = (s: string) => [...s].filter((c) => /\p{L}/u.test(c));
 const foreignParagraphs = (text: string, lang: ResponseLanguage) =>
   lang === "en" ? 0 : text.split(/\n+/).filter((p) => letters(p).length >= 30 && !matchesResponseLanguage(p, lang)).length;
+const englishHeadings = (text: string, lang: ResponseLanguage) =>
+  lang === "en" ? 0 : text.split(/\n+/).filter((p) => {
+    const line = p.trim();
+    return /^(?:#{1,6}\s+|(?:\*\*|__))[A-Za-z]/.test(line) && !matchesResponseLanguage(line, lang);
+  }).length;
 const CANNED = /kshama karein|technical samasya|please share what troubles your heart/i;
 // Words for "AI / artificial" in the ten languages: a reply to "are you a real person?" must own up to being an AI guide.
 const AI_WORDS = /\bAI\b|artificial|एआई|कृत्रिम|ஏஐ|செயற்கை|ఏఐ|కృత్రిమ|એઆઈ|કૃત્રિમ|এআই|কৃত্রিম|ಎಐ|ಕೃತಕ|എഐ|കൃത്രിമ|ਏਆਈ|ਨਕਲੀ|ਕ੍ਰਿਤਰਿਮ|ਬਣਾਵਟੀ|ਮਸ਼ੀਨੀ/i;
@@ -87,6 +93,8 @@ async function main() {
       if (!matchesResponseLanguage(r.reply, lang)) problems.push("wrong script / language");
       const fp = foreignParagraphs(r.reply, lang);
       if (fp) problems.push(`${fp} paragraph(s) not in the chosen script`);
+      const headings = englishHeadings(r.reply, lang);
+      if (headings) problems.push(`${headings} heading(s) not in the chosen script`);
       if (/^\s*[{\[]/.test(r.reply)) problems.push("raw JSON shown as a reply");
       if (CANNED.test(r.reply)) problems.push("canned welcome/fallback text instead of a reply");
       if (kind === "greeting" && PLANET_ON_GREETING.test(r.reply)) review.push("greeting mentions a planet or kundli (prompt says not to)");
@@ -118,15 +126,9 @@ async function main() {
     console.log(`${lang} are-you-human: ${j.problems.length ? "FAIL  " + j.problems.join("; ") : "pass"}  | ${r.reply.replace(/\n/g, " ").slice(0, 110)}`);
   }
 
-  // "talk in tamil": the page switches the central language to Tamil and then asks for the reply in Tamil.
-  const req = await ask("ta", [{ role: "user", content: "talk in tamil" }]);
-  const jr = judge("ta", req, "greeting");
-  rows.push({ language: "ta", turn: "talk in tamil", ok: jr.problems.length === 0, problems: jr.problems, review: jr.review, reply: req.reply, ms: req.ms });
-  console.log(`ta talk-in-tamil: ${jr.problems.length ? "FAIL  " + jr.problems.join("; ") : "pass"}${jr.review.length ? "  [review: " + jr.review.join("; ") + "]" : ""}`);
-
   server.close();
   const pass = rows.filter((r) => r.ok).length;
-  console.log(`\n${pass}/${rows.length} replies passed the automatic checks (present, chosen script, no English paragraph, not JSON, not canned text).`);
+  console.log(`\n${pass}/${rows.length} replies passed the automatic checks (present, chosen script, no English heading or paragraph, not JSON, not canned text).`);
   console.log(`${rows.filter((r) => r.review.length).length} reply(ies) are flagged for human review.`);
   console.log("These checks cannot judge meaning or grammar; a native speaker must review the replies.");
   if (out) fs.writeFileSync(out, JSON.stringify({ when: new Date().toISOString(), model: process.env.GROQ_MODEL || "(server default)", rows }, null, 2));

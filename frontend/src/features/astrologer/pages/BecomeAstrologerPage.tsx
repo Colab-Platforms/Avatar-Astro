@@ -38,7 +38,7 @@ export default function BecomeAstrologerPage() {
     <section className="mx-auto w-full max-w-5xl px-4 pb-16 pt-10 sm:px-6">
       <header className="rounded-2xl border border-[#592209]/20 bg-[#FBF5EC] p-8 text-center sm:p-12">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-[#592209]/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[#592209]">
-          <Sparkles className="h-3.5 w-3.5" aria-hidden="true" /> Join MyBhagya
+          <Sparkles className="h-3.5 w-3.5" aria-hidden="true" /> Join Bhagya
         </span>
         <h1 className="mt-4 font-home-serif text-4xl font-semibold text-[#592209] sm:text-5xl">Become an Astrologer</h1>
         <p className="mx-auto mt-4 max-w-2xl text-lg text-[#4A2E1F]">
@@ -58,7 +58,7 @@ export default function BecomeAstrologerPage() {
 
       <div className="mt-10 grid gap-5 sm:grid-cols-2">
         {[
-          { icon: UserCheck, title: "Reach real seekers", desc: "Your profile is shown to people actively looking for astrology guidance on MyBhagya." },
+          { icon: UserCheck, title: "Reach real seekers", desc: "Your profile is shown to people actively looking for astrology guidance on Bhagya." },
           { icon: ShieldCheck, title: "Verified, trusted platform", desc: "Every astrologer is manually reviewed, so clients know they're speaking with someone genuine." },
           { icon: FileText, title: "No rigid certificate requirement", desc: "Experienced practitioners without a formal certificate can explain their training and provide alternative evidence." },
           { icon: BadgeCheck, title: "You control your profile", desc: "Your profile stays unpublished until you're ready — availability and pricing are set up after approval." },

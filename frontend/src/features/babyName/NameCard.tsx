@@ -29,7 +29,7 @@ const Row = ({ label, children, wide = false }: { label: string; children: React
 const action = "flex items-center justify-center gap-1.5 rounded-xl border border-[#592209]/25 bg-white/60 px-2 py-2 text-xs font-semibold text-[#592209] transition-colors hover:bg-[#592209] hover:text-[#F5E9D6] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C9873A]";
 
 /** The text copied or shared for a name. */
-export const shareText = (n: BabyName): string => `${n.name} (${n.deva}): ${n.meaning}. Found with Baby Name Jyotish on MyBhagya.`;
+export const shareText = (n: BabyName): string => `${n.name} (${n.deva}): ${n.meaning}. Found with Baby Name Jyotish on Bhagya.`;
 
 async function copyToClipboard(text: string): Promise<boolean> {
   try {

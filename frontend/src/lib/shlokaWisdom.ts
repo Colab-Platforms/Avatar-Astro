@@ -1,6 +1,8 @@
 import { aiChat } from "@/lib/aiClient";
 import { SignInRequiredError } from "@/lib/authedFetch";
-import { chosenLanguage } from "@/i18n/aiLanguage";
+import i18n from "@/i18n";
+import { chosenLanguage, isInLanguage } from "@/i18n/aiLanguage";
+import { localeInfo, type LocaleCode } from "@/i18n/languages";
 import { SHLOKAS, SHLOKA_BY_ID, type Shloka } from "@/data/shlokaCatalog";
 
 export const MAX_SITUATION_CHARS = 600;
@@ -28,7 +30,8 @@ function catalogFor(scripture: string): Shloka[] {
   return filtered.length ? filtered : SHLOKAS;
 }
 
-export function buildPrompt(scripture: string): string {
+/** `language` is the chosen language, when the visitor chose one: the reflection is then written in it (the server adds the exact instruction). */
+export function buildPrompt(scripture: string, language?: LocaleCode): string {
   const list = catalogFor(scripture)
     .map((s) => `- id: ${s.id} | ${s.source} ${s.reference} | themes: ${s.themes.join(", ")} | ${s.meaning}`)
     .join("\n");
@@ -40,7 +43,7 @@ ${list}
 Rules:
 - Pick the verse whose meaning genuinely fits what the person describes. Do not force a fit; choose the closest and be honest about how it applies.
 - Explain how the verse's actual meaning (as given above) relates to their situation. Do not attribute ideas to the verse that it does not contain.
-- Write in the language the person used (English, Hindi in Roman script, or Hinglish). Be specific, warm and concise; no fear, no guaranteed outcomes, no medical, legal or financial advice.
+- ${language ? "Write in the chosen language." : "Write in the language the person used (English, Hindi in Roman script, or Hinglish)."} Be specific, warm and concise; no fear, no guaranteed outcomes, no medical, legal or financial advice.
 
 Return ONLY a JSON object:
 {
@@ -89,6 +92,23 @@ export function shareText(r: { source?: string; chapter?: string; devanagari?: s
 }
 
 export async function fetchWisdom(situation: string, scripture: string): Promise<WisdomResult> {
+  const language = chosenLanguage(); // the reflection is written in the language the visitor chose (nothing is sent if they never chose one)
+  const first = await askOnce(situation, scripture, language, "");
+  if (!language || inChosenLanguage(first, language)) return first;
+  // The model answered in another language: ask once more, firmly; if it still does not comply the reflection is not shown.
+  const name = localeInfo(language).english;
+  const second = await askOnce(situation, scripture, language,
+    `Your previous reply was not written in ${name}. Write the whole reflection again, entirely in ${name} (${localeInfo(language).native}), in its own script.`);
+  if (inChosenLanguage(second, language)) return second;
+  throw new ShlokaError(i18n.t("guru.errors.wrongLanguage", { lng: language }));
+}
+
+/** Only the model's own words are judged (the verse text comes from the catalog). */
+function inChosenLanguage(r: WisdomResult, language: LocaleCode): boolean {
+  return isInLanguage([r.application, r.deeperWisdom, r.action, r.reflectionQuestion].filter(Boolean).join(String.fromCharCode(10)), language);
+}
+
+async function askOnce(situation: string, scripture: string, language: LocaleCode | undefined, retryNote: string): Promise<WisdomResult> {
   let res: Response;
   try {
     res = await aiChat({
@@ -96,20 +116,21 @@ export async function fetchWisdom(situation: string, scripture: string): Promise
       max_tokens: 900,
       json: true,
       library: { feature: "shloka" },
-      language: chosenLanguage(), // the reflection is written in the language the visitor chose (nothing is sent if they never chose one)
+      language,
       messages: [
-        { role: "system", content: buildPrompt(scripture) },
+        { role: "system", content: buildPrompt(scripture, language) },
+        ...(retryNote ? [{ role: "system" as const, content: retryNote }] : []),
         { role: "user", content: `My situation: ${situation.trim().slice(0, MAX_SITUATION_CHARS)}` },
       ],
     });
   } catch (e) {
-    if (e instanceof SignInRequiredError) throw new ShlokaError("Please sign in to continue.");
-    throw new ShlokaError("We couldn't reach the service. Check your connection and try again.");
+    if (e instanceof SignInRequiredError) throw new ShlokaError(i18n.t("karma.shloka.signIn"));
+    throw new ShlokaError(i18n.t("karma.shloka.network"));
   }
-  if (res.status === 429) throw new ShlokaError("Too many requests. Please wait a minute and try again.");
+  if (res.status === 429) throw new ShlokaError(i18n.t("karma.shloka.rate"));
   const data = await res.json().catch(() => null);
-  if (!res.ok || data?.error) throw new ShlokaError("The service is unavailable right now. Please try again in a moment.");
+  if (!res.ok || data?.error) throw new ShlokaError(i18n.t("karma.shloka.unavailable"));
   const result = parseWisdom(data?.choices?.[0]?.message?.content ?? "");
-  if (!result) throw new ShlokaError("We couldn't match a verse this time. Please try again.");
+  if (!result) throw new ShlokaError(i18n.t("karma.shloka.noMatch"));
   return result;
 }

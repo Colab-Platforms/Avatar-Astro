@@ -112,7 +112,7 @@ const NavDropdown = ({ label, menuId, items, currentPath, lightNav, twoColumns =
         ref={triggerRef}
         aria-haspopup="true" aria-expanded={open} aria-controls={menuId}
         onKeyDown={onTriggerKey} onClick={() => setOpen((v) => !v)}
-        className={`relative flex items-center gap-1.5 font-astra text-sm font-semibold tracking-wider transition-colors duration-300
+        className={`relative flex items-center gap-1.5 whitespace-nowrap font-astra text-sm font-semibold tracking-wide transition-colors duration-300
           focus:outline-none focus-visible:ring-2 focus-visible:ring-[#BC6A4D] focus-visible:ring-offset-2
           focus-visible:ring-offset-background rounded-sm
           ${isActive ? "text-[#BC6A4D]" : lightNav ? "text-[#2C1810]/60 hover:text-[#BC6A4D]" : "text-foreground/70 hover:text-[#BC6A4D]"}`}
@@ -190,7 +190,7 @@ const AvatarLiveDropdown = ({ currentPath, lightNav }: AvatarLiveDropdownProps) 
         ref={triggerRef}
         aria-haspopup="true" aria-expanded={open} aria-controls="avatar-live-menu"
         onKeyDown={onTriggerKey} onClick={() => setOpen((v) => !v)}
-        className={`relative flex items-center gap-1.5 font-astra text-sm font-semibold tracking-wider transition-colors duration-300
+        className={`relative flex items-center gap-1.5 whitespace-nowrap font-astra text-sm font-semibold tracking-wide transition-colors duration-300
           focus:outline-none focus-visible:ring-2 focus-visible:ring-[#BC6A4D] focus-visible:ring-offset-2
           focus-visible:ring-offset-background rounded-sm
           ${isActive ? "text-[#BC6A4D]" : lightNav ? "text-[#2C1810]/60 hover:text-[#BC6A4D]" : "text-foreground/70 hover:text-[#BC6A4D]"}`}
@@ -335,7 +335,9 @@ const MobileAccordion = ({ label, items, currentPath, onNavigate }: MobileAccord
 
 // ── Main Navbar ───────────────────────────────────────────────────────────────
 const Navbar = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  // Labels in the Indian languages are much longer than English, so the full bar needs more room before it replaces the menu button.
+  const roomy = i18n.language !== "en";
   const [isOpen, setIsOpen]   = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location              = useLocation();
@@ -384,7 +386,7 @@ const Navbar = () => {
   const lightNav       = isDevotionPage || isHome;
 
   const desktopLinkCls = (active: boolean) =>
-    `relative font-astra text-sm font-semibold tracking-wider transition-colors duration-300 ${
+    `relative whitespace-nowrap font-astra text-sm font-semibold tracking-wide transition-colors duration-300 ${
       active
         ? "text-[#BC6A4D]"
         : lightNav
@@ -404,11 +406,17 @@ const Navbar = () => {
             : 'py-5 bg-transparent'
       }`}
     >
-      <div className="container mx-auto px-4 md:px-6">
+      <div className="mx-auto w-full max-w-[1536px] px-4 md:px-6">
         <div className="flex items-center justify-between">
 
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group select-none">
+          <Link
+            to="/"
+            aria-label={`Bhagya, ${t("nav.home")}`}
+            title={t("nav.home")}
+            onClick={() => { setIsOpen(false); if (location.pathname === "/") window.scrollTo({ top: 0, behavior: "smooth" }); }}
+            className="flex shrink-0 items-center gap-2 group select-none"
+          >
             <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-[#BC6A4D] transition-transform duration-500 group-hover:rotate-90">
               <path d="M12 2L14.8 9.2L22 12L14.8 14.8L12 22L9.2 14.8L2 12L9.2 9.2L12 2Z" />
             </svg>
@@ -416,12 +424,7 @@ const Navbar = () => {
           </Link>
 
           {/* ── Desktop nav ─────────────────────────────────────────────── */}
-          <div className="hidden lg:flex items-center gap-8">
-
-            <Link to="/" className={desktopLinkCls(location.pathname === "/")}>
-              {t("nav.home")}
-              {location.pathname === "/" && <span className="absolute -bottom-1 left-0 right-0 h-[2px] bg-[#BC6A4D] rounded-full" />}
-            </Link>
+          <div className={`hidden ${roomy ? "min-[1760px]:flex" : "xl:flex"} items-center gap-4 min-[1360px]:gap-6 2xl:gap-8 whitespace-nowrap`}>
 
             <NavDropdown label={t("nav.astrologySeva", { defaultValue: ASTROLOGY_SEVA_LABEL })} menuId="astrology-tools-menu" items={visibleAstrologySeva} currentPath={location.pathname} lightNav={lightNav} twoColumns />
             <NavDropdown label={t("nav.innerVoice", { defaultValue: INNER_VOICE_LABEL })}      menuId="inner-voice-menu"     items={visibleInnerVoiceLinks} currentPath={location.pathname} lightNav={lightNav} />
@@ -442,16 +445,17 @@ const Navbar = () => {
             ))}
 
             {isAuthenticated ? (
-              <div className="flex items-center gap-3 pl-2 border-l border-border/30">
-                <Link to="/dashboard" title={t("nav.openDashboard")} className={`flex items-center gap-1.5 font-display text-xs tracking-wider hover:underline ${lightNav ? "text-[#2C1810]/70" : "text-foreground/70"}`}>
+              <div className="flex shrink-0 items-center gap-3 whitespace-nowrap pl-4 2xl:pl-6 border-l border-border/30">
+              <Link to="/dashboard" title={`${t("nav.openDashboard")}: ${displayName}`} className={`flex items-center gap-1.5 whitespace-nowrap font-display text-xs tracking-wider hover:underline ${lightNav ? "text-[#2C1810]/70" : "text-foreground/70"}`}>
                   <User size={14} className="text-[#BC6A4D]" />
-                  {displayName}
+                  <span className="hidden max-w-[9rem] truncate 2xl:inline">{displayName}</span>
+                  <span className="sr-only 2xl:hidden">{displayName}</span>
                 </Link>
                 <button
                   type="button"
                   onClick={() => setShowLogoutConfirm(true)}
                   disabled={logoutMutation.isPending}
-                  className="inline-flex items-center gap-1.5 font-display text-xs font-semibold tracking-wider text-[#BC6A4D] transition-opacity hover:opacity-80 disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 whitespace-nowrap font-display text-xs font-semibold tracking-wider text-[#BC6A4D] transition-opacity hover:opacity-80 disabled:opacity-50"
                 >
                   <LogOut size={14} />
                   {t("nav.signOut")}
@@ -472,7 +476,7 @@ const Navbar = () => {
           {/* Mobile hamburger */}
           <button
             onClick={() => setIsOpen((v) => !v)}
-            className={`lg:hidden p-2 ${lightNav ? "text-[#2C1810]/70" : "text-foreground/70"} hover:text-primary transition-colors`}
+            className={`${roomy ? "min-[1760px]:hidden" : "xl:hidden"} p-2 ${lightNav ? "text-[#2C1810]/70" : "text-foreground/70"} hover:text-primary transition-colors`}
             aria-label={isOpen ? t("nav.closeMenu") : t("nav.openMenu")}
             aria-expanded={isOpen}
             aria-controls="mobile-menu"
@@ -483,18 +487,9 @@ const Navbar = () => {
 
         {/* ── Mobile menu ─────────────────────────────────────────────────── */}
         {isOpen && (
-          <div id="mobile-menu" className="lg:hidden mt-4 pb-4 border-t border-border/30">
+          <div id="mobile-menu" className={`${roomy ? "min-[1760px]:hidden" : "xl:hidden"} mt-4 pb-4 border-t border-border/30`}>
             <div className="flex flex-col gap-1 mt-4">
 
-              <Link
-                to="/"
-                onClick={() => setIsOpen(false)}
-                className={`mobile-nav-link font-display text-base font-medium px-2 py-2 rounded-lg transition-colors duration-300 ${
-                  location.pathname === "/" ? "text-[#BC6A4D]" : "text-foreground/70 hover:text-[#BC6A4D]"
-                }`}
-              >
-                {t("nav.home")}
-              </Link>
 
               <MobileAccordion label={t("nav.astrologySeva", { defaultValue: ASTROLOGY_SEVA_LABEL })} items={visibleAstrologySeva}  currentPath={location.pathname} onNavigate={() => setIsOpen(false)} />
               <MobileAccordion label={t("nav.innerVoice", { defaultValue: INNER_VOICE_LABEL })}     items={visibleInnerVoiceLinks} currentPath={location.pathname} onNavigate={() => setIsOpen(false)} />

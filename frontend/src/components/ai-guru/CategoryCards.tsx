@@ -1,4 +1,5 @@
 import { motion, useIsPresent } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { Briefcase, Heart, Leaf, Flower2, ArrowRight } from "lucide-react";
 
 export interface CategorySuggestion {
@@ -16,25 +17,25 @@ const STYLES = [
     icon: Briefcase,
     gradient: "from-[#592209]/25 via-[#F5E9D6] to-transparent",
     ring: "group-hover:ring-[#E0C8B0]/40",
-    ctaLabel: "Ask about your career growth",
+    ctaLabel: "career",
   },
   {
     icon: Heart,
     gradient: "from-[#EC4899]/25 via-[#F5E9D6] to-transparent",
     ring: "group-hover:ring-[#EC4899]/40",
-    ctaLabel: "Ask about your relationship",
+    ctaLabel: "relationship",
   },
   {
     icon: Leaf,
     gradient: "from-[#592209]/25 via-[#F5E9D6] to-transparent",
     ring: "group-hover:ring-[#E0C8B0]/40",
-    ctaLabel: "Ask about your health",
+    ctaLabel: "health",
   },
   {
     icon: Flower2,
     gradient: "from-[#592209]/25 via-[#F5E9D6] to-transparent",
     ring: "group-hover:ring-[#592209]/40",
-    ctaLabel: "Ask about your health path",
+    ctaLabel: "healthPath",
   },
 ];
 
@@ -42,6 +43,7 @@ const CategoryCards = ({ suggestions, onSelect }: CategoryCardsProps) => {
   // While this component is exiting (AnimatePresence removing the welcome
   // screen after the first message), suppress hover/tap so the outgoing
   // cards don't visually "react" mid-transition.
+  const { t } = useTranslation();
   const isPresent = useIsPresent();
 
   return (
@@ -68,7 +70,7 @@ const CategoryCards = ({ suggestions, onSelect }: CategoryCardsProps) => {
             </h3>
             <p className="mb-5 text-sm leading-relaxed text-muted-foreground">{s.sub}</p>
             <div className="flex items-center gap-2 text-xs font-medium text-foreground/85">
-              {style.ctaLabel}
+              {t(`innerVoice.categories.${style.ctaLabel}`)}
               <span className="flex h-7 w-7 items-center justify-center rounded-full border border-primary/35 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:border-[#592209]">
                 <ArrowRight className="h-3.5 w-3.5" />
               </span>

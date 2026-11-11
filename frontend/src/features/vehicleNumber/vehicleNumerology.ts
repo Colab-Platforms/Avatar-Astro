@@ -5,7 +5,7 @@
  *
  *  1. Take the evaluated digits of the registration (by default the four-digit number, leading zeros kept: 0007).
  *  2. Add them: the digit sum. 0007 -> 7, 1234 -> 10.
- *  3. Reduce with the same routine as the rest of MyBhagya numerology (reductionChain in lib/numerology.ts): keep adding digits until
+ *  3. Reduce with the same routine as the rest of Bhagya numerology (reductionChain in lib/numerology.ts): keep adding digits until
  *     one remains, stopping at the master numbers 11, 22 and 33. 2900 -> 11 (a master number, read like 2); 1234 -> 10 -> 1.
  *  4. Planet: the single-digit root maps to its planet with the existing PLANET_BY_DIGIT table (1 Sun, 2 Moon, 3 Jupiter, 4 Rahu,
  *     5 Mercury, 6 Venus, 7 Ketu, 8 Saturn, 9 Mars).

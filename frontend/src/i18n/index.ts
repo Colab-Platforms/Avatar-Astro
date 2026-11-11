@@ -1,5 +1,5 @@
 /**
- * MyBhagya's translation system: i18next + react-i18next.
+ * Bhagya's translation system: i18next + react-i18next.
  *
  *  - English is bundled and is the source of truth and the fallback. Every other language is a separate chunk, loaded on demand.
  *  - A key missing or empty in the chosen language falls back to English (an empty string counts as missing). A key missing in

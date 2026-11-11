@@ -1,8 +1,10 @@
+import { useTranslation } from "react-i18next";
 import EducationSection, { EducationBlock } from "@/components/EducationSection";
 import { FEATURES } from "@/data/featureCatalog";
 import { FEATURE_FAQS } from "@/data/featureFaqs";
 import { SQUARE_PALM_MIN, LONG_FINGERS_MIN } from "@/lib/palmAnalysis/lineEstimator";
 
+// English source text. Each piece is looked up by key (palm.education.b<block>.<part>) with this English as the default.
 const blocks: EducationBlock[] = [
   {
     heading: "What Is Palm Reading?",
@@ -12,7 +14,7 @@ const blocks: EducationBlock[] = [
     ],
   },
   {
-    heading: "How Does Palm Reading Work on MyBhagya Astro?",
+    heading: "How Does Palm Reading Work on Bhagya Astro?",
     list: [
       "Upload a photo of your palm or use your camera for a live scan.",
       "Your device detects your hand and finds 21 landmark points, such as your knuckles and fingertips.",
@@ -74,5 +76,20 @@ const DISCLAIMER =
   "Palm reading is offered for personal interest, cultural exploration and reflection. It is a traditional practice that is not scientifically proven, and the result is not a prediction, a medical assessment or professional advice.";
 
 export default function PalmEducation() {
-  return <EducationSection audioToolSlug={FEATURES.palm.id} idPrefix="palm" title="About Hasta Rekha (Palmistry)" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
+  const { t } = useTranslation();
+  const text = (b: number, part: string, def: string) =>
+    t(`palm.education.b${b}.${part}`, { defaultValue: def, squareMin: SQUARE_PALM_MIN, longMin: LONG_FINGERS_MIN });
+  const localized: EducationBlock[] = blocks.map((block, b) => ({
+    ...block,
+    heading: text(b, "heading", block.heading),
+    paragraphs: block.paragraphs?.map((p, i) => text(b, `p.${i}`, p)),
+    list: block.list?.map((item, i) => text(b, `list.${i}`, item as string)),
+    after: block.after?.map((p, i) => text(b, `after.${i}`, p)),
+    table: block.table && {
+      caption: block.table.caption && text(b, "table.caption", block.table.caption),
+      head: block.table.head.map((h, i) => text(b, `table.head.${i}`, h)),
+      rows: block.table.rows.map((r, ri) => r.map((c, ci) => text(b, `table.rows.${ri}.${ci}`, c))),
+    },
+  }));
+  return <EducationSection audioToolSlug={FEATURES.palm.id} idPrefix="palm" title={t("palm.education.title", { defaultValue: "About Hasta Rekha (Palmistry)" })} blocks={localized} faqs={faqs} disclaimer={t("palm.education.disclaimer", { defaultValue: DISCLAIMER })} />;
 }

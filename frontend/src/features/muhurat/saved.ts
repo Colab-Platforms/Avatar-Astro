@@ -32,7 +32,7 @@ const read = (): SavedMuhurat[] => {
 };
 
 /**
- * Saved Muhurats live only in this browser: MyBhagya has no table for them, and adding one is a database change. Nothing is
+ * Saved Muhurats live only in this browser: Bhagya has no table for them, and adding one is a database change. Nothing is
  * sent to the server or attached to the account, and the page says so.
  */
 export function useSavedMuhurats() {

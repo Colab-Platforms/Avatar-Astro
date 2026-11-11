@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { APP_LANGUAGE_HEADER, chosenLanguage } from "@/i18n/aiLanguage";
+import { APP_LANGUAGE_HEADER, chosenLanguage, isInLanguage } from "@/i18n/aiLanguage";
 import { STORAGE_KEY } from "@/i18n/languages";
 import { useAuthStore } from "@/store/authStore";
 
@@ -25,6 +25,17 @@ describe("the chosen language reaches the server", () => {
     expect(chosenLanguage()).toBeUndefined();
     window.localStorage.setItem(STORAGE_KEY, "klingon");
     expect(chosenLanguage()).toBeUndefined();
+  });
+
+  describe("selected-language response validation", () => {
+    it("rejects an English heading even when the reply is otherwise in the selected script", () => {
+      expect(isInLanguage("**What you can do**\nஉங்கள் மனதை அமைதிப்படுத்துங்கள்.", "ta")).toBe(false);
+      expect(isInLanguage("**What you can do**\nતમારા મનને શાંત કરો.", "gu")).toBe(false);
+    });
+
+    it("rejects a long English paragraph in a non-English reply", () => {
+      expect(isInLanguage("உங்கள் மனதை அமைதிப்படுத்துங்கள்.\nThis is a long English paragraph that should never be part of a Tamil response.", "ta")).toBe(false);
+    });
   });
 
   it("is sent as X-App-Language on account requests, alongside the caller's own headers", async () => {

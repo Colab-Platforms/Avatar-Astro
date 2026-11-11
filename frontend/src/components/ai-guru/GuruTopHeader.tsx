@@ -2,6 +2,7 @@ import { ArrowLeft, Menu } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { PersonaHeader } from "./PersonaCard";
+import LanguageSelector from "@/components/LanguageSelector";
 import { getFallback, hasPreviousAppEntry } from "@/components/BackButton";
 import type { Astrologer } from "@/data/astrologers";
 
@@ -22,10 +23,10 @@ const GuruTopHeader = ({ onOpenSidebar, persona }: GuruTopHeaderProps) => {
     else navigate(getFallback(location.pathname), { replace: true });
   };
   return (
-    <header className="flex min-h-[56px] items-center gap-3 border-b border-primary/15 bg-[#FBF5EC]/80 px-4 py-2 backdrop-blur-xl md:px-6">
+    <header className="flex min-h-[56px] items-center gap-2 border-b border-primary/15 bg-[#FBF5EC]/80 px-3 py-2 backdrop-blur-xl sm:gap-3 sm:px-4 md:px-6">
       <button
         onClick={onOpenSidebar}
-        className="rounded-lg border border-primary/15 p-2 text-muted-foreground hover:bg-primary/10 lg:hidden"
+        className="shrink-0 rounded-lg border border-primary/15 p-2 text-muted-foreground hover:bg-primary/10 lg:hidden"
         aria-label={t("guru.header.openMenu")}
       >
         <Menu className="h-4 w-4" />
@@ -34,12 +35,16 @@ const GuruTopHeader = ({ onOpenSidebar, persona }: GuruTopHeaderProps) => {
         type="button"
         onClick={goBack}
         aria-label={t("guru.header.goBack")}
-        className="flex items-center gap-1.5 rounded-lg border border-[#592209]/25 px-3 py-2 text-sm text-[#592209] transition-colors hover:border-[#E58A45] hover:bg-[#592209]/5"
+        className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#592209]/25 px-2.5 py-2 text-sm sm:px-3 text-[#592209] transition-colors hover:border-[#E58A45] hover:bg-[#592209]/5"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        {t("common.back")}
+        <span className="hidden sm:inline">{t("common.back")}</span>
       </button>
       {persona && <PersonaHeader persona={persona} />}
+      {/* The one site-wide language choice (no separate chat language): the next reply is written in it. */}
+      <div className="ml-auto shrink-0" data-testid="guru-language">
+        <LanguageSelector variant="desktop" />
+      </div>
     </header>
   );
 };

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("@/lib/aiClient", () => ({ aiChat: vi.fn() }));
 import { aiChat } from "@/lib/aiClient";
+import i18n from "@/i18n";
 import { askKarma, buildKarmaPrompt, parseKarmaAnswer } from "./karmaReading";
 import { calendarFacts, namesOtherCalendarFacts, parseCalendar, type TodayCalendar } from "./karmaCalendar";
 
@@ -12,6 +13,7 @@ const calendar: TodayCalendar = {
   tithi: { name: "Navami", numberInPaksha: 9, endsAtLocal: "Tue, 3 Nov 2026, 11:55" },
   nakshatra: { name: "Ashlesha", pada: 3 }, yoga: "Shukla", karana: "Taitila", sunrise: "06:33", sunset: "17:35", festivals: null, notes: [],
 };
+const hiReply = { thought: "छोटी आदतें हमारे मन को शांत करती हैं।", action: "आज किसी एक व्यक्ति को धन्यवाद कहें।", remember: "आप फिर से शुरू कर सकते हैं।" };
 const good = { thought: "Small habits shape how we feel.", action: "Say thank you to one person today.", remember: "You can begin again any time." };
 
 describe("calendar facts", () => {
@@ -81,14 +83,14 @@ describe("parseKarmaAnswer", () => {
       expect(parseKarmaAnswer(JSON.stringify({ ...good, thought }), calendar), thought).toBeNull();
     }
   });
-  it("accepts only the chosen language's script", () => {
-    const hi = { thought: "छोटी आदतें हमारे मन को शांत करती हैं।", action: "आज किसी एक व्यक्ति को धन्यवाद कहें।", remember: "आप फिर से शुरू कर सकते हैं।" };
-    expect(parseKarmaAnswer(JSON.stringify(hi), calendar, "hi")).toEqual(hi);
-    expect(parseKarmaAnswer(JSON.stringify(hi), calendar, "en")).toBeNull(); // Devanagari when English was asked
-    expect(parseKarmaAnswer(JSON.stringify(hi), calendar, "hinglish")).toBeNull(); // Devanagari when Hinglish was asked
-    expect(parseKarmaAnswer(JSON.stringify(good), calendar, "hi")).toBeNull(); // Roman when Hindi was asked
-    const hing = { thought: "Chhoti aadatein mann ko shaant karti hain.", action: "Aaj kisi ek vyakti ko dhanyavaad kahein.", remember: "Aap phir se shuru kar sakte hain." };
-    expect(parseKarmaAnswer(JSON.stringify(hing), calendar, "hinglish")).toEqual(hing);
+  it("accepts only the chosen language (any of the ten), judged by isInLanguage", () => {
+    const ta = { thought: "சிறிய பழக்கங்கள் மனதை அமைதிப்படுத்துகின்றன.", action: "இன்று ஒருவருக்கு நன்றி சொல்லுங்கள்.", remember: "நீங்கள் மீண்டும் தொடங்கலாம்." };
+    expect(parseKarmaAnswer(JSON.stringify(hiReply), calendar, "hi")).toEqual(hiReply);
+    expect(parseKarmaAnswer(JSON.stringify(ta), calendar, "ta")).toEqual(ta);
+    expect(parseKarmaAnswer(JSON.stringify(hiReply), calendar, "en")).toBeNull(); // Devanagari when English was asked
+    expect(parseKarmaAnswer(JSON.stringify(hiReply), calendar, "ta")).toBeNull(); // Hindi when Tamil was asked
+    expect(parseKarmaAnswer(JSON.stringify(good), calendar, "hi")).toBeNull(); // English when Hindi was asked
+    expect(parseKarmaAnswer(JSON.stringify(good), calendar, "ta")).toBeNull();
   });
   it("does not carry unknown fields through", () => {
     expect(parseKarmaAnswer(JSON.stringify({ ...good, score: 99, prediction: "wealth" }), calendar)).not.toHaveProperty("prediction");
@@ -125,13 +127,35 @@ describe("askKarma", () => {
     expect(aiChat).toHaveBeenCalledTimes(2); // one retry, no more
   });
 
-  it("tells the model the reply language and answers errors in that language", async () => {
+  it("the request carries the chosen language and the prompt asks for it", async () => {
+    vi.mocked(aiChat).mockImplementation(() => ok(JSON.stringify(hiReply)));
+    await askKarma("hello there", calendar, [], "hi");
+    const body = vi.mocked(aiChat).mock.calls[0][0];
+    expect(body.language).toBe("hi");
+    expect(body.messages[0].content).toContain("chosen language");
+    vi.mocked(aiChat).mockClear();
     vi.mocked(aiChat).mockImplementation(() => ok(JSON.stringify(good)));
-    await askKarma("hello there", calendar, [], "hi").catch(() => {});
-    expect(vi.mocked(aiChat).mock.calls[0][0].messages[0].content).toContain("Devanagari script");
+    await askKarma("hello there", calendar, [], "en");
+    expect(vi.mocked(aiChat).mock.calls[0][0].language).toBe("en");
+  });
+
+  it("a wrong-language reply is retried once with a firm note, then refused with a translated message (never English)", async () => {
+    vi.mocked(aiChat).mockImplementation(() => ok(JSON.stringify(good))); // English for a Hindi request
+    await expect(askKarma("hello there", calendar, [], "hi")).rejects.toThrow(i18n.t("karma.errors.wrongLanguage", { lng: "hi" }));
+    expect(aiChat).toHaveBeenCalledTimes(2);
+    const retry = vi.mocked(aiChat).mock.calls[1][0];
+    expect(JSON.stringify(retry.messages)).toContain("not written in Hindi");
+    expect(retry.language).toBe("hi");
+    // the second attempt can still rescue it
+    vi.mocked(aiChat).mockClear();
+    let n = 0;
+    vi.mocked(aiChat).mockImplementation(() => ok(JSON.stringify(++n === 1 ? good : hiReply)));
+    expect(await askKarma("hello there", calendar, [], "hi")).toEqual(hiReply);
+  });
+
+  it("errors are shown in the reply language", async () => {
     vi.mocked(aiChat).mockImplementation(() => Promise.resolve(new Response("{}", { status: 429 })));
-    await expect(askKarma("hello there", calendar, [], "hi")).rejects.toThrow(/बहुत सारे सवाल/);
-    await expect(askKarma("hello there", calendar, [], "hinglish")).rejects.toThrow(/bahut saare sawaal/);
+    await expect(askKarma("hello there", calendar, [], "hi")).rejects.toThrow(i18n.t("karma.errors.rate", { lng: "hi" }));
   });
 
   it("maps provider failure, rate limit and bad output to safe messages", async () => {

@@ -5,6 +5,7 @@ import LotusOm from "@/components/ai-guru/LotusOm";
 import { guruTiming, statusIndexAt } from "@/lib/guruTiming";
 import { AstrologerAvatar } from "@/components/astrologers/AstrologerCard";
 import type { Astrologer } from "@/data/astrologers";
+import { guruLanguages } from "@/lib/guruLanguages";
 
 export const AI_GUIDED_LABEL = "Guided response based on this astrologer's area of expertise";
 
@@ -27,7 +28,7 @@ export const PersonaCard = ({ persona }: { persona: Astrologer | null }) => {
             <span className="truncate">{persona.name}</span>
             {persona.verified && !persona.demo && <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-[#592209]" aria-label={t("guru.persona.verified")} />}
           </div>
-          <div className="text-[11px] text-muted-foreground">{persona.languages.join(" · ")}</div>
+          <div className="text-[11px] text-muted-foreground">{guruLanguages(persona).join(" · ")}</div>
         </div>
       </div>
       <ul className="mt-2.5 flex flex-wrap gap-1" aria-label={t("guru.persona.expertise")}>
@@ -55,10 +56,10 @@ export const PersonaHeader = ({ persona }: { persona: Astrologer }) => {
     <AstrologerAvatar a={persona} size={44} />
     <div className="min-w-0">
       <div className="flex items-center gap-1.5">
-        <span className="truncate font-home-serif text-lg font-semibold text-foreground">{persona.name}</span>
+        <span className="line-clamp-2 break-words font-home-serif text-base font-semibold leading-tight text-foreground sm:line-clamp-1 sm:text-lg">{persona.name}</span>
         {persona.verified && !persona.demo && <BadgeCheck className="h-4 w-4 shrink-0 text-[#592209]" aria-label={t("guru.persona.verified")} />}
       </div>
-      <div className="text-xs text-muted-foreground">{persona.expertise.slice(0, 3).join(" · ")} · {t("guru.persona.guided")}</div>
+      <div className="hidden text-xs text-muted-foreground sm:block">{persona.expertise.slice(0, 3).join(" · ")} · {t("guru.persona.guided")}</div>
     </div>
   </div>
   );

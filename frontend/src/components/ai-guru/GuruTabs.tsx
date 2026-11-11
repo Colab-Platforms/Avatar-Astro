@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { MessageCircle, Mic, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { GuruTab } from "./GuruSidebar";
@@ -11,12 +12,14 @@ interface GuruTabsProps {
 }
 
 const TABS: { key: GuruTab; label: string; icon: typeof MessageCircle }[] = [
-  { key: "consultation", label: "Consultation Mode", icon: MessageCircle },
-  { key: "voice", label: "Voice Consultation", icon: Mic },
-  { key: "report", label: "Diagnosis & Remedy Report", icon: FileText },
+  { key: "consultation", label: "consultation", icon: MessageCircle },
+  { key: "voice", label: "voice", icon: Mic },
+  { key: "report", label: "report", icon: FileText },
 ];
 
-const GuruTabs = ({ activeTab, onChange, reportReady, reportGenerating }: GuruTabsProps) => (
+const GuruTabs = ({ activeTab, onChange, reportReady, reportGenerating }: GuruTabsProps) => {
+  const { t } = useTranslation();
+  return (
   <div className="flex gap-1 overflow-x-auto border-b border-primary/15 bg-[#FBF5EC]/60 px-4 md:px-6" role="tablist">
     {TABS.map(({ key, label, icon: Icon }) => (
       <button
@@ -30,15 +33,15 @@ const GuruTabs = ({ activeTab, onChange, reportReady, reportGenerating }: GuruTa
         )}
       >
         <Icon className="h-4 w-4" />
-        {label}
+        {t(`innerVoice.tabs.${label}`)}
         {key === "report" && reportReady && (
           <span className="rounded-full border border-[#592209]/35 bg-[#592209]/15 px-2 py-0.5 text-[10px] text-[#FF9D4D]">
-            Ready
+            {t("innerVoice.tabs.ready")}
           </span>
         )}
         {key === "report" && reportGenerating && (
           <span className="rounded-full border border-[#592209]/35 bg-[#592209]/15 px-2 py-0.5 text-[10px] text-[#FF9D4D]">
-            Generating…
+            {t("innerVoice.tabs.generating")}
           </span>
         )}
         {activeTab === key && (
@@ -51,6 +54,7 @@ const GuruTabs = ({ activeTab, onChange, reportReady, reportGenerating }: GuruTa
       </button>
     ))}
   </div>
-);
+  );
+};
 
 export default GuruTabs;

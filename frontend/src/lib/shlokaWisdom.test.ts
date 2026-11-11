@@ -1,7 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 vi.mock("@/lib/aiClient", () => ({ aiChat: vi.fn() }));
 import { aiChat } from "@/lib/aiClient";
+import i18n from "@/i18n";
 import { SHLOKAS } from "@/data/shlokaCatalog";
 import { parseWisdom, fetchWisdom, buildPrompt, shareText } from "./shlokaWisdom";
 
@@ -55,5 +56,33 @@ describe("fetchWisdom", () => {
     await expect(fetchWisdom("x", "")).rejects.toThrow(/unavailable/);
     vi.mocked(aiChat).mockResolvedValue(reply(429, {}));
     await expect(fetchWisdom("x", "")).rejects.toThrow(/Too many/);
+  });
+
+  describe("chosen language", () => {
+    const ok = (obj: object) => reply(200, { choices: [{ message: { content: JSON.stringify(obj) } }] });
+    const en = { id: "up-satyam", application: "Be honest with the people around you in small things." };
+    const hi = { id: "up-satyam", application: "छोटी-छोटी बातों में अपने आसपास के लोगों से सच बोलिए।" };
+    afterEach(() => localStorage.clear());
+    it("with no language chosen it behaves as before: nothing is sent, no retry", async () => {
+      vi.mocked(aiChat).mockResolvedValue(ok(en));
+      await fetchWisdom("x", "");
+      expect(vi.mocked(aiChat).mock.calls[0][0].language).toBeUndefined();
+      expect(vi.mocked(aiChat).mock.calls[0][0].messages[0].content).toContain("Hindi in Roman script");
+      expect(aiChat).toHaveBeenCalledTimes(1);
+    });
+    it("sends the chosen language, asks for it in the prompt, retries once, then refuses with a translated error", async () => {
+      localStorage.setItem("mybhagya_lang", "hi");
+      vi.mocked(aiChat).mockResolvedValue(ok(en));
+      await expect(fetchWisdom("x", "")).rejects.toThrow(i18n.t("guru.errors.wrongLanguage", { lng: "hi" }));
+      expect(aiChat).toHaveBeenCalledTimes(2);
+      const first = vi.mocked(aiChat).mock.calls[0][0];
+      expect(first.language).toBe("hi");
+      expect(first.messages[0].content).toContain("Write in the chosen language.");
+      expect(first.messages[0].content).not.toContain("Hindi in Roman script");
+      expect(JSON.stringify(vi.mocked(aiChat).mock.calls[1][0].messages)).toContain("not written in Hindi");
+      vi.mocked(aiChat).mockReset();
+      vi.mocked(aiChat).mockResolvedValueOnce(ok(en)).mockResolvedValueOnce(ok(hi));
+      expect((await fetchWisdom("x", "")).application).toBe(hi.application);
+    });
   });
 });

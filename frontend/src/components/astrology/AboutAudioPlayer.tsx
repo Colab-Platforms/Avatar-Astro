@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, Pause, Play, Volume2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { AUDIO_LANGUAGES, useAstrologyAudio, type AudioLanguage } from "@/lib/astrologyAudio";
 
 const SPEEDS = [0.75, 1, 1.25, 1.5, 2] as const;
@@ -20,6 +21,7 @@ interface Props {
  * the MP3 (hosted on Cloudinary) is not downloaded until Play is pressed, and ElevenLabs is never involved.
  */
 export default function AboutAudioPlayer({ toolSlug }: Props) {
+  const { t } = useTranslation();
   const [language, setLanguage] = useState<AudioLanguage>("en");
   const [playing, setPlaying] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -103,14 +105,14 @@ export default function AboutAudioPlayer({ toolSlug }: Props) {
     <div
       data-testid="about-audio-player"
       role="group"
-      aria-label="Listen to this section"
+      aria-label={t("gunaText.audio.listen")}
       className="mx-auto mb-6 w-full max-w-xl rounded-2xl border border-[#592209]/15 bg-white/[0.06] p-3 sm:p-4"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="flex items-center gap-1.5 text-sm font-semibold text-[#592209]">
-          <Volume2 className="h-4 w-4" aria-hidden="true" /> Listen to this section
+          <Volume2 className="h-4 w-4" aria-hidden="true" /> {t("gunaText.audio.listen")}
         </p>
-        <div role="radiogroup" aria-label="Audio language" className="flex gap-1">
+        <div role="radiogroup" aria-label={t("gunaText.audio.language")} className="flex gap-1">
           {AUDIO_LANGUAGES.map((l) => (
             <button
               key={l.code}
@@ -130,23 +132,23 @@ export default function AboutAudioPlayer({ toolSlug }: Props) {
 
       {q.isLoading ? (
         <p className="mt-3 flex items-center gap-2 text-sm text-[#6B4A37]" role="status">
-          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> Checking for audio…
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> {t("gunaText.audio.checking")}
         </p>
       ) : q.isError ? (
         <p className="mt-3 text-sm text-[#6B4A37]" role="status">
-          Audio could not be checked right now.{" "}
-          <button type="button" onClick={() => q.refetch()} className="font-medium text-[#592209] underline">Try again</button>
+          {t("gunaText.audio.checkFailed")}{" "}
+          <button type="button" onClick={() => q.refetch()} className="font-medium text-[#592209] underline">{t("gunaText.audio.tryAgain")}</button>
         </p>
       ) : !url ? (
         <p className="mt-3 text-sm text-[#6B4A37]" role="status" data-testid="audio-unavailable">
-          Audio for this section is not available in {langLabel} yet.
+          {t("gunaText.audio.unavailable", { language: langLabel })}
         </p>
       ) : (
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <button
             type="button"
             onClick={toggle}
-            aria-label={playing ? "Pause audio" : "Play audio"}
+            aria-label={playing ? t("gunaText.audio.pause") : t("gunaText.audio.play")}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#592209] text-white transition hover:bg-[#6f2b0d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#592209]"
           >
             {loading ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" /> : playing ? <Pause className="h-5 w-5" aria-hidden="true" /> : <Play className="h-5 w-5 translate-x-px" aria-hidden="true" />}
@@ -154,7 +156,7 @@ export default function AboutAudioPlayer({ toolSlug }: Props) {
           <div className="min-w-[8rem] flex-1">
             <input
               type="range"
-              aria-label="Audio progress"
+              aria-label={t("gunaText.audio.progress")}
               min={0}
               max={duration > 0 ? duration : 1}
               step={0.1}
@@ -169,17 +171,17 @@ export default function AboutAudioPlayer({ toolSlug }: Props) {
             </div>
           </div>
           <label className="flex items-center gap-1 text-xs text-[#6B4A37]">
-            <span className="sr-only">Playback speed</span>
+            <span className="sr-only">{t("gunaText.audio.speed")}</span>
             <select
               value={rate}
               onChange={(e) => changeRate(Number(e.target.value))}
-              aria-label="Playback speed"
+              aria-label={t("gunaText.audio.speed")}
               className="rounded-md border border-[#592209]/25 bg-transparent px-1.5 py-1 text-xs text-[#592209]"
             >
               {SPEEDS.map((s) => <option key={s} value={s}>{s}×</option>)}
             </select>
           </label>
-          {failed && <p className="basis-full text-sm text-red-800" role="alert">The audio could not be played. Please try again.</p>}
+          {failed && <p className="basis-full text-sm text-red-800" role="alert">{t("gunaText.audio.playFailed")}</p>}
         </div>
       )}
     </div>

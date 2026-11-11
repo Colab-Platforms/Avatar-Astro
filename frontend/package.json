@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "i18n:report": "node scripts/i18n-report.mjs"
+    "i18n:report": "node scripts/i18n-report.mjs",
+    "i18n:audit": "node scripts/i18n-audit.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

@@ -1,23 +1,26 @@
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { ScrollText, Orbit, Hourglass, BookOpen, Sparkles } from "lucide-react";
 
 const STEPS = [
-  { icon: ScrollText, label: "Reading Birth Chart" },
-  { icon: Orbit, label: "Checking Planetary\nPositions" },
-  { icon: Hourglass, label: "Calculating Dasha\n& Transits" },
-  { icon: BookOpen, label: "Consulting Ancient\nScriptures" },
-  { icon: Sparkles, label: "Generating Guidance\n& Remedies" },
+  { icon: ScrollText, label: "Reading Birth Chart", key: "read" },
+  { icon: Orbit, label: "Checking Planetary\nPositions", key: "check" },
+  { icon: Hourglass, label: "Calculating Dasha\n& Transits", key: "dasha" },
+  { icon: BookOpen, label: "Consulting Ancient\nScriptures", key: "scriptures" },
+  { icon: Sparkles, label: "Generating Guidance\n& Remedies", key: "guidance" },
 ];
 
-const AnalysisTimeline = () => (
+const AnalysisTimeline = () => {
+  const { t } = useTranslation();
+  return (
   <div className="rounded-[20px] border border-primary/15 bg-[#FBF5EC]/70 px-6 py-8">
     <h3 className="mb-8 text-center font-home-serif text-xl font-semibold text-foreground">
-      How Divya Margdarshak Analyses Your Question
+      {t("innerVoice.timeline.title")}
     </h3>
     <div className="flex flex-col items-center gap-8 md:flex-row md:items-start md:justify-between md:gap-2">
-      {STEPS.map(({ icon: Icon, label }, i) => (
+      {STEPS.map(({ icon: Icon, label, key }, i) => (
         <motion.div
-          key={label}
+          key={key}
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.5 }}
@@ -34,12 +37,13 @@ const AnalysisTimeline = () => (
             <Icon className="h-5 w-5" />
           </div>
           <span className="max-w-[120px] whitespace-pre-line text-xs leading-snug text-muted-foreground">
-            {label}
+            {t(`innerVoice.timeline.${key}`, { defaultValue: label })}
           </span>
         </motion.div>
       ))}
     </div>
   </div>
-);
+  );
+};
 
 export default AnalysisTimeline;

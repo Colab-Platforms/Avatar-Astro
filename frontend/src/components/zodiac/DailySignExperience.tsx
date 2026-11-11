@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { Trans, useTranslation } from "react-i18next";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { AlertTriangle, Briefcase, Clover, HeartHandshake, Leaf, RotateCw, Shuffle, Smile, Sparkles, Sun, Target } from "lucide-react";
-import type { ZodiacSign } from "@/data/zodiacData";
+import i18n from "@/i18n";
+import { intlTag } from "@/features/muhurat/format";
+import { useZodiacText, type ZodiacSign } from "@/data/zodiacData";
 import { MAJOR_ARCANA, shuffleDeck, type TarotCard } from "@/data/tarotData";
 import TarotArt from "@/components/tarot/TarotArt";
 import { fetchDailyHoroscope, formatDateLabel, HoroscopeError, msUntilNextDay, todayKey, type DailyHoroscope } from "@/lib/dailyHoroscope";
@@ -17,6 +20,12 @@ type Load =
   | { state: "ready"; data: DailyHoroscope }
   | { state: "unavailable" }
   | { state: "error"; message: string };
+
+/** The date line: English keeps its fixed layout; other languages use Intl (Latin digits) for the same calendar date. */
+const dateLabel = (dateKey: string): string =>
+  !i18n.language || i18n.language === "en"
+    ? formatDateLabel(dateKey)
+    : new Intl.DateTimeFormat(intlTag(), { timeZone: "UTC", weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date(`${dateKey}T00:00:00Z`));
 
 /** One reading per sign per day. The key includes the date, so yesterday's text is never shown for today. */
 const memory = new Map<string, DailyHoroscope>();
@@ -51,7 +60,7 @@ export function useDailyReading(signName: string, today: string): { load: Load; 
       })
       .catch((e) => {
         if (controller.signal.aborted || e?.name === "AbortError") return;
-        setLoad(e instanceof HoroscopeError && e.kind === "unavailable" ? { state: "unavailable" } : { state: "error", message: e?.message || "Something went wrong." });
+        setLoad(e instanceof HoroscopeError && e.kind === "unavailable" ? { state: "unavailable" } : { state: "error", message: e?.message || i18n.t("horoscope.daily.errorFallback") });
       });
     return () => controller.abort();
   }, [signName, today, attempt]);
@@ -74,6 +83,7 @@ const CardBack = () => {
 const DeckCard = ({ card, slot, flipped, phase, disabled, onFlip }: {
   card: TarotCard; slot: number; flipped: boolean; phase: "idle" | "gather" | "spread"; disabled: boolean; onFlip: () => void;
 }) => {
+  const { t } = useTranslation();
   const reduce = useReducedMotion();
   const centre = (DECK_SIZE - 1) / 2;
   return (
@@ -90,7 +100,7 @@ const DeckCard = ({ card, slot, flipped, phase, disabled, onFlip }: {
           data-testid={`daily-card-${slot}`}
           data-card={card.name}
           aria-pressed={flipped}
-          aria-label={flipped ? `${card.name}, selected` : `Face-down card ${slot + 1}. Tap to reveal`}
+          aria-label={flipped ? t("horoscope.daily.cardSelected", { name: card.name }) : t("horoscope.daily.cardFaceDown", { number: slot + 1 })}
           whileHover={disabled || flipped ? {} : { y: -8, scale: 1.04 }}
           whileTap={disabled ? {} : { scale: 0.97 }}
           animate={{ rotateY: flipped ? 180 : 0 }}
@@ -111,7 +121,10 @@ const DeckCard = ({ card, slot, flipped, phase, disabled, onFlip }: {
 };
 
 /** The picked card: large artwork, name, and the deck's own meaning. */
-const SelectedCard = ({ card, sign }: { card: TarotCard; sign: ZodiacSign }) => (
+const SelectedCard = ({ card, sign }: { card: TarotCard; sign: ZodiacSign }) => {
+  const { t } = useTranslation();
+  const z = useZodiacText();
+  return (
   <motion.div data-testid="card-reveal" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }} transition={{ duration: 0.3 }}
     className="mx-auto mt-8 grid max-w-2xl gap-5 rounded-2xl border-2 border-[#592209]/35 bg-[#FBF5EC] p-5 shadow-lg sm:grid-cols-[150px_1fr] md:p-6">
     <div className="relative mx-auto aspect-[2/3] w-[130px] overflow-hidden rounded-xl border-2 border-[#C9873A] bg-[#2A0F04] shadow-md sm:w-full">
@@ -119,16 +132,17 @@ const SelectedCard = ({ card, sign }: { card: TarotCard; sign: ZodiacSign }) => 
       <span className="absolute left-0 right-0 top-0 bg-gradient-to-b from-[rgba(18,6,2,.88)] to-transparent px-1 pb-3 pt-1.5 text-center text-xs font-bold tracking-[0.14em] text-[#F5E9D6]">{card.number}</span>
     </div>
     <div>
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6B4A37]">Your card for {sign.name}</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6B4A37]">{t("horoscope.daily.yourCard", { sign: z.sign(sign.name) })}</p>
       <h3 className="mt-1 text-2xl font-bold text-[#592209]" data-testid="selected-card-name">{card.name}</h3>
       <ul className="mt-2 flex flex-wrap gap-2">
         {card.keywords.map((k) => <li key={k} className="rounded-full border border-[#592209]/25 bg-[#592209]/[0.06] px-3 py-0.5 text-sm text-[#592209]">{k}</li>)}
       </ul>
       <p className="mt-3 text-[17px] leading-relaxed text-[#301607]" data-testid="card-text">{card.meaning}</p>
-      <p className="mt-2 text-sm italic text-[#6B4A37]">A card is a prompt to reflect on. The horoscope for today follows below.</p>
+      <p className="mt-2 text-sm italic text-[#6B4A37]">{t("horoscope.daily.cardNote")}</p>
     </div>
   </motion.div>
-);
+  );
+};
 
 // ─── Reading (shown once, in this order) ──────────────────────────────────────
 
@@ -142,12 +156,14 @@ const SECTIONS = [
 ] as const;
 
 const Reading = ({ data, sign }: { data: DailyHoroscope; sign: ZodiacSign }) => {
+  const { t } = useTranslation();
+  const z = useZodiacText();
   const s = data.sections;
   const hasLucky = !!(s.lucky && (s.lucky.color || s.lucky.number));
   return (
-    <section aria-label={`Today's horoscope for ${sign.name}`} className="mt-10" data-testid="daily-reading">
+    <section aria-label={t("horoscope.daily.readingFor", { sign: z.sign(sign.name) })} className="mt-10" data-testid="daily-reading">
       <div className="mb-5 rounded-2xl bg-gradient-to-br from-[#592209] to-[#3b1706] p-6 text-[#F5E9D6] shadow-lg md:p-8" data-testid="section-overview">
-        <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#E9B872]"><Sun className="h-4 w-4" aria-hidden /> Today&apos;s Overview</p>
+        <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#E9B872]"><Sun className="h-4 w-4" aria-hidden /> {t("horoscope.daily.overview")}</p>
         <p className="mt-2 text-xl leading-relaxed md:text-2xl">{s.overview}</p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -156,7 +172,7 @@ const Reading = ({ data, sign }: { data: DailyHoroscope; sign: ZodiacSign }) => 
             className="rounded-2xl border border-[#592209]/25 bg-[#FBF5EC] p-5 shadow-sm">
             <header className="mb-3 flex items-start gap-3">
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#592209]/10 text-[#592209]"><Icon className="h-5 w-5" aria-hidden /></span>
-              <div><h3 className="text-lg font-bold leading-tight text-[#592209]">{title}</h3><p className="text-[13px] italic text-[#6B4A37]">{q}</p></div>
+              <div><h3 className="text-lg font-bold leading-tight text-[#592209]">{t(`horoscope.daily.sections.${key}.title`, { defaultValue: title })}</h3><p className="text-[13px] italic text-[#6B4A37]">{t(`horoscope.daily.sections.${key}.hint`, { defaultValue: q })}</p></div>
             </header>
             <p className="text-[16.5px] leading-relaxed text-[#301607]">{s[key]}</p>
           </motion.article>
@@ -164,15 +180,15 @@ const Reading = ({ data, sign }: { data: DailyHoroscope; sign: ZodiacSign }) => 
       </div>
       <div className="mt-5 grid gap-4 md:grid-cols-2">
         <article data-testid="section-guidance" className={`rounded-2xl border border-[#C9873A] bg-[#FFF7E6] p-5 shadow-[inset_4px_0_0_#C9873A] ${hasLucky ? "" : "md:col-span-2"}`}>
-          <header className="mb-2 flex items-center gap-2 text-[#592209]"><Target className="h-5 w-5" aria-hidden /><h3 className="text-lg font-bold">Today&apos;s Guidance</h3></header>
+          <header className="mb-2 flex items-center gap-2 text-[#592209]"><Target className="h-5 w-5" aria-hidden /><h3 className="text-lg font-bold">{t("horoscope.daily.guidance")}</h3></header>
           <p className="text-[17px] font-medium leading-relaxed text-[#301607]">{s.guidance}</p>
         </article>
         {hasLucky && (
           <article className="rounded-2xl border border-[#592209]/25 bg-[#F5E9D6] p-5" data-testid="lucky-details">
-            <header className="mb-2 flex items-center gap-2 text-[#592209]"><Clover className="h-5 w-5" aria-hidden /><h3 className="text-lg font-bold">Lucky Details</h3></header>
+            <header className="mb-2 flex items-center gap-2 text-[#592209]"><Clover className="h-5 w-5" aria-hidden /><h3 className="text-lg font-bold">{t("horoscope.daily.luckyDetails")}</h3></header>
             <ul className="flex flex-wrap gap-2">
-              {s.lucky?.color && <li className="rounded-full border border-[#592209]/30 bg-[#FBF5EC] px-4 py-1.5 text-[15px] text-[#301607]">Colour: <strong>{s.lucky.color}</strong></li>}
-              {s.lucky?.number && <li className="rounded-full border border-[#592209]/30 bg-[#FBF5EC] px-4 py-1.5 text-[15px] text-[#301607]">Number: <strong>{s.lucky.number}</strong></li>}
+              {s.lucky?.color && <li className="rounded-full border border-[#592209]/30 bg-[#FBF5EC] px-4 py-1.5 text-[15px] text-[#301607]">{t("horoscope.daily.luckyColour")} <strong>{s.lucky.color}</strong></li>}
+              {s.lucky?.number && <li className="rounded-full border border-[#592209]/30 bg-[#FBF5EC] px-4 py-1.5 text-[15px] text-[#301607]">{t("horoscope.daily.luckyNumber")} <strong>{s.lucky.number}</strong></li>}
             </ul>
           </article>
         )}
@@ -184,6 +200,8 @@ const Reading = ({ data, sign }: { data: DailyHoroscope; sign: ZodiacSign }) => 
 // ─── Experience ──────────────────────────────────────────────────────────────
 
 const DailySignExperience = ({ sign }: { sign: ZodiacSign }) => {
+  const { t } = useTranslation();
+  const z = useZodiacText();
   const today = useToday();
   const { load, retry } = useDailyReading(sign.name, today);
   const [deck, setDeck] = useState<TarotCard[]>(drawDeck);
@@ -217,33 +235,33 @@ const DailySignExperience = ({ sign }: { sign: ZodiacSign }) => {
 
       {/* 1. header */}
       <div className="mb-6 text-center">
-        <h1 id="daily-h" className="text-3xl font-bold text-foreground md:text-5xl">Daily Horoscope – {sign.name}</h1>
-        <p className="mt-2 text-lg text-muted-foreground" data-testid="reading-date">{formatDateLabel(date)}</p>
+        <h1 id="daily-h" className="text-3xl font-bold text-foreground md:text-5xl">{t("horoscope.daily.heading", { sign: z.sign(sign.name) })}</h1>
+        <p className="mt-2 text-lg text-muted-foreground" data-testid="reading-date">{dateLabel(date)}</p>
       </div>
 
       {blocked && (
         <div role="alert" className="mx-auto mb-6 max-w-xl rounded-2xl border border-[#592209]/30 bg-[#FBF5EC] p-5 text-center" data-testid={load.state === "unavailable" ? "reading-unavailable" : "reading-error"}>
-          <p className="font-semibold text-[#592209]">{load.state === "unavailable" ? `${sign.name}'s horoscope for today isn't available right now.` : "We couldn't load the horoscope."}</p>
-          <p className="mt-1 text-sm text-[#4A3022]">{load.state === "unavailable" ? "We only show a reading when we have a real one for today. Please try again in a little while." : load.message}</p>
+          <p className="font-semibold text-[#592209]">{load.state === "unavailable" ? t("horoscope.daily.unavailableTitle", { sign: z.sign(sign.name) }) : t("horoscope.daily.errorTitle")}</p>
+          <p className="mt-1 text-sm text-[#4A3022]">{load.state === "unavailable" ? t("horoscope.daily.unavailableBody") : load.message}</p>
           <button type="button" onClick={retry} className="mt-3 inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-[#592209] px-4 py-2 text-sm font-semibold text-[#F5E9D6] hover:bg-[#461B07]">
-            <RotateCw className="h-4 w-4" aria-hidden /> Try again
+            <RotateCw className="h-4 w-4" aria-hidden /> {t("horoscope.daily.tryAgain")}
           </button>
         </div>
       )}
 
       {/* 2. shuffle + deck + instruction */}
       <div className="flex flex-col items-center gap-2">
-        <button type="button" onClick={shuffle} disabled={shuffling} data-testid="shuffle-cards" aria-label="Shuffle the cards"
+        <button type="button" onClick={shuffle} disabled={shuffling} data-testid="shuffle-cards" aria-label={t("horoscope.daily.shuffleAria")}
           className="inline-flex min-h-[50px] items-center justify-center gap-2 rounded-full border-[1.5px] border-[#592209] bg-[#592209] px-8 py-3 text-[15px] font-bold uppercase tracking-[0.14em] text-[#F5E9D6] shadow-lg transition hover:bg-[#461B07] disabled:cursor-wait disabled:opacity-70">
           <Shuffle className={`h-5 w-5 ${shuffling ? "animate-spin" : ""}`} aria-hidden />
-          <span aria-live="polite">{shuffling ? "Shuffling…" : "Shuffle Cards"}</span>
+          <span aria-live="polite">{shuffling ? t("horoscope.daily.shuffling") : t("horoscope.daily.shuffle")}</span>
         </button>
         <p className="text-center text-[#4A3022]" data-testid="deck-instruction">
-          {picked === null ? `Shuffle the cards, then tap one to see your card for ${sign.name}.` : "Tap the card again to close it, or shuffle for a new draw."}
+          {picked === null ? t("horoscope.daily.instructionPick", { sign: z.sign(sign.name) }) : t("horoscope.daily.instructionClose")}
         </p>
       </div>
 
-      <div className="trr-daily mt-5 flex items-start justify-center gap-[clamp(8px,2vw,22px)] px-2 pt-2" role="group" aria-label="Face-down cards" data-testid="daily-cards">
+      <div className="trr-daily mt-5 flex items-start justify-center gap-[clamp(8px,2vw,22px)] px-2 pt-2" role="group" aria-label={t("horoscope.daily.faceDownCards")} data-testid="daily-cards">
         {deck.map((card, slot) => (
           <DeckCard key={card.id} card={card} slot={slot} flipped={picked === slot} phase={phase} disabled={shuffling || blocked} onFlip={() => pick(slot)} />
         ))}
@@ -254,7 +272,7 @@ const DailySignExperience = ({ sign }: { sign: ZodiacSign }) => {
 
       {/* 4–12. the reading, once */}
       {picked !== null && load.state === "loading" && (
-        <div className="mt-10 space-y-3" role="status" aria-label="Loading today's horoscope" data-testid="reading-loading">
+        <div className="mt-10 space-y-3" role="status" aria-label={t("horoscope.daily.loading")} data-testid="reading-loading">
           <div className="h-24 animate-pulse rounded-2xl bg-[#592209]/15" /><div className="h-4 w-2/3 animate-pulse rounded bg-[#592209]/10" /><div className="h-4 w-1/2 animate-pulse rounded bg-[#592209]/10" />
         </div>
       )}
@@ -263,8 +281,7 @@ const DailySignExperience = ({ sign }: { sign: ZodiacSign }) => {
       {/* 13. disclaimer */}
       {picked !== null && load.state === "ready" && (
         <p className="mx-auto mt-8 max-w-2xl rounded-xl border border-[#C9873A]/50 bg-[#FFF7E6] p-4 text-center text-sm leading-relaxed text-[#301607]" data-testid="system-note">
-          <strong>About this horoscope:</strong> this is general guidance for everyone born under the Western (tropical) Sun sign {sign.name}, written for reflection. It is not a prediction, and it is not your Vedic <em>Janma Rashi</em> (Moon sign), which depends on your exact birth details. Find yours in{" "}
-          <Link to="/birth-chart" className="font-semibold text-[#592209] underline">Janma Kundali</Link>.
+          <Trans i18nKey="horoscope.daily.systemNote" values={{ sign: z.sign(sign.name) }} components={{ b: <strong />, i: <em />, l: <Link to="/birth-chart" className="font-semibold text-[#592209] underline" /> }} />
         </p>
       )}
     </section>

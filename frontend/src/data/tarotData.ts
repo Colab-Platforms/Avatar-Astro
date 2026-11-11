@@ -1,3 +1,5 @@
+import type { TFunction } from "i18next";
+
 export interface TarotCard {
   id: number;
   name: string;
@@ -178,4 +180,20 @@ export const getCategoryCardImage = (category: string | undefined, card: TarotCa
   if (!key) return null;
   const num = String(card.id + 1).padStart(2, '0');
   return `/images/tarot/cards/${key}/${num}.png`;
+};
+
+// Display text: the English data above stays the source of truth (and ids/names are what the server receives);
+// each card's words are looked up by its stable id so every language can show its own.
+export const tarotCardName = (t: TFunction, card: TarotCard): string => t(`tarot.card.${card.id}.name`, { defaultValue: card.name });
+export const tarotCardKeywords = (t: TFunction, card: TarotCard): string[] =>
+  card.keywords.map((k, i) => t(`tarot.card.${card.id}.keywords.${i}`, { defaultValue: k }));
+export const tarotCardMeaning = (t: TFunction, card: TarotCard): string => t(`tarot.card.${card.id}.meaning`, { defaultValue: card.meaning });
+export const tarotCardShadow = (t: TFunction, card: TarotCard): string => t(`tarot.card.${card.id}.shadow`, { defaultValue: card.shadow });
+/** The small label above a card: the numeral for a Major Arcana card, the suit name for a Minor one. */
+export const tarotCardTopLabel = (t: TFunction, card: TarotCard): string =>
+  card.arcana === 'major' ? card.number : t(`tarot.suit.${card.suit ?? ''}`, { defaultValue: card.suit ?? '' });
+/** Display name of a life area chosen on the question screen ("Career", "Life Purpose", ...). */
+export const tarotCategoryLabel = (t: TFunction, category: string): string => {
+  const key = CATEGORY_IMAGE_KEYS[category];
+  return key ? t(`tarot.category.${key}`, { defaultValue: category }) : category;
 };

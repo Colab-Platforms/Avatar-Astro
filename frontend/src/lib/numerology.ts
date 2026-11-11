@@ -8,6 +8,8 @@
 //   • Chaldean (1–8, no 9 on letters) — used for the Chaldean name number.
 // Life Path and Birth Number come from the date of birth.
 
+import i18n from "@/i18n";
+
 export const CHALDEAN_MAP: Record<string, number> = {
   A: 1, I: 1, J: 1, Q: 1, Y: 1,
   B: 2, K: 2, R: 2,
@@ -46,14 +48,14 @@ export interface NameCheck { ok: boolean; display: string; letters: string; erro
  */
 export function checkName(raw: string): NameCheck {
   const display = (raw || "").trim().replace(/\s+/g, " ");
-  if (!display) return { ok: false, display: "", letters: "", error: "Please enter a name." };
-  if (display.length > 60) return { ok: false, display: "", letters: "", error: "Please keep the name to 60 characters or fewer." };
+  if (!display) return { ok: false, display: "", letters: "", error: i18n.t("namank.err.nameEmpty") };
+  if (display.length > 60) return { ok: false, display: "", letters: "", error: i18n.t("namank.err.nameLong") };
   const ascii = display.normalize("NFD").replace(/[̀-ͯ]/g, "");
   if (!/^[A-Za-z][A-Za-z .'’-]*$/.test(ascii)) {
-    return { ok: false, display: "", letters: "", error: "Please use English letters (A–Z), spaces, hyphens or apostrophes. The numerology tables here only cover A–Z." };
+    return { ok: false, display: "", letters: "", error: i18n.t("namank.err.nameChars") };
   }
   const letters = ascii.toUpperCase().replace(/[^A-Z]/g, "");
-  if (letters.length < 2) return { ok: false, display: "", letters: "", error: "Please enter at least two letters." };
+  if (letters.length < 2) return { ok: false, display: "", letters: "", error: i18n.t("namank.err.nameShort") };
   return { ok: true, display, letters, error: "" };
 }
 
@@ -232,7 +234,7 @@ export function buildProfile(name: string, dob: string): NameProfile | { error: 
 
 // ── Plain-language breakdown of a number's traditional theme ─────────────────
 
-export interface NumberInsight { meaning: string; strengths: string[]; challenge: string; tip: string }
+export interface NumberInsight { meaning: string; strengths: string[]; challenge: string; tip: string; /** The shadow side on its own (no lead-in), when the theme has one. */ shadow?: string }
 
 /** General guidance for each single digit: a gentle, practical suggestion (not a prediction). */
 const NUMBER_TIPS: Record<number, string> = {
@@ -252,10 +254,14 @@ export function numberInsight(n: number): NumberInsight {
   const theme = themeFor(n);
   const m = theme.text.match(/^(.*?)\s*The shadow side is\s+(.*?)\.?\s*$/s);
   const root = reduceNumber(n, false);
+  // The dictionary key of the theme that themeFor() resolved to; the English text above is the fallback.
+  const tk = NUMBER_THEMES[n] ? n : NUMBER_THEMES[root] ? root : 9;
+  const shadow = m ? i18n.t(`namank.theme.${tk}.shadow`, { defaultValue: m[2].replace(/\.$/, "") }) : undefined;
   return {
-    meaning: (m ? m[1] : theme.text).trim(),
-    strengths: theme.keywords.split("·").map((x) => x.trim()).filter(Boolean),
-    challenge: m ? `The shadow side is ${m[2].replace(/\.$/, "")}.` : "Tradition also warns of the shadow side of this number; some systems do not use it.",
-    tip: NUMBER_TIPS[root] ?? NUMBER_TIPS[9],
+    meaning: i18n.t(`namank.theme.${tk}.meaning`, { defaultValue: (m ? m[1] : theme.text).trim() }).trim(),
+    strengths: i18n.t(`namank.theme.${tk}.keywords`, { defaultValue: theme.keywords }).split("·").map((x) => x.trim()).filter(Boolean),
+    challenge: shadow !== undefined ? i18n.t("namank.insight.shadowSentence", { shadow }) : i18n.t("namank.insight.noShadow"),
+    tip: i18n.t(`namank.tip.${NUMBER_TIPS[root] ? root : 9}`, { defaultValue: NUMBER_TIPS[root] ?? NUMBER_TIPS[9] }),
+    shadow,
   };
 }

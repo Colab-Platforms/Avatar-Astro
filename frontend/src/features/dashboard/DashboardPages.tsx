@@ -220,7 +220,7 @@ export function ProfileSettings() {
                 </Section>
 
                 <Section id="pref-h" icon={Settings2} tone="plum" title="Preferences">
-                  <p className="text-sm leading-relaxed text-[#4A3A2C]">MyBhagya does not send marketing messages or notifications, so there are no notification settings to change. Your privacy controls are above.</p>
+                  <p className="text-sm leading-relaxed text-[#4A3A2C]">Bhagya does not send marketing messages or notifications, so there are no notification settings to change. Your privacy controls are above.</p>
                 </Section>
 
                 <section className="rounded-2xl border border-[#E8CFC4] bg-[#FBF1EC] p-5 sm:p-6" aria-labelledby="del-h">

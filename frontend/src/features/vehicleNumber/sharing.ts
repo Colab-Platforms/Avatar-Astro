@@ -12,7 +12,7 @@ export interface ShareInput {
 }
 
 export const shareText = (i: ShareInput): string =>
-  `${i.number}: digit total ${i.total}, numerology number ${i.reduced} (${i.planet}). ${i.label}. Traditional numerology, not a guarantee. Found with Lucky Vehicle Number on MyBhagya.`;
+  `${i.number}: digit total ${i.total}, numerology number ${i.reduced} (${i.planet}). ${i.label}. Traditional numerology, not a guarantee. Found with Lucky Vehicle Number on Bhagya.`;
 
 export async function copyText(text: string): Promise<boolean> {
   try {
@@ -84,7 +84,7 @@ export async function renderShareCard(i: ShareInput): Promise<Blob | null> {
   ctx.fillText("Availability depends on your RTO.", c.width / 2, 1224);
   ctx.fillStyle = "#592209";
   ctx.font = "600 34px Georgia, serif";
-  ctx.fillText("MyBhagya", c.width / 2, 1290);
+  ctx.fillText("Bhagya", c.width / 2, 1290);
   return new Promise((resolve) => c.toBlob((b) => resolve(b), "image/png"));
 }
 

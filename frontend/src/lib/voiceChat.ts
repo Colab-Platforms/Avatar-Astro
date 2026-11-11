@@ -10,7 +10,7 @@ export interface VoiceTurn { role: "user" | "assistant"; content: string }
 /**
  * One reply from Pandit Ji in the Voice Consultation.
  *
- * `language` is the language chosen in the MyBhagya selector. It is sent to the server (which turns it into the instruction to write
+ * `language` is the language chosen in the Bhagya selector. It is sent to the server (which turns it into the instruction to write
  * directly in that language) and the reply is checked to really be in it. A reply in another language is not shown: the model is
  * asked once more, and if it still does not comply the caller gets a VoiceChatError. A failure is never turned into a made-up reply.
  *

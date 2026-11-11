@@ -7,7 +7,7 @@ import { getDailyChatStatus, consumeDailyChatSession } from "../utils/dailyChatS
 import { screenMessage, ESCALATION_REPLY, OFF_TOPIC_REPLY } from "../utils/chatScreening.js";
 import prisma from "@root/prisma.js";
 import { OPENROUTER_MODEL } from "../config/aiModels.js";
-import { languageRule, matchesResponseLanguage, namesCalendarTermIn, requestLanguage, tokenBudget } from "../utils/responseLanguage.js";
+import { WrongLanguageError, generateInLanguage, languageRule, matchesResponseLanguage, namesCalendarTermIn, requestLanguage, tokenBudget, type ResponseLanguage } from "../utils/responseLanguage.js";
 
 const router = Router();
 // Life path readings and TTS are generated per user and spend provider credits.
@@ -121,6 +121,19 @@ async function callAI(apiKey: string, prompt: string, maxTokens = 1000, model: s
   return data?.choices?.[0]?.message?.content ?? "";
 }
 
+/** callAI plus the language check: a reply in the wrong language is asked for once more, then refused (WrongLanguageError). */
+async function callAIInLanguage(apiKey: string, prompt: string, baseTokens: number, lang: ResponseLanguage | undefined): Promise<string> {
+  return generateInLanguage(lang, (retryNote) =>
+    callAI(apiKey, prompt, tokenBudget(baseTokens, lang), currentModel(), languageRule(lang, HINGLISH_RULE) + retryNote),
+  );
+}
+
+/** The error answer for a failed AI route: a wrong-language reply is a 502 with a code the page can translate. */
+function aiFailure(res: Response, err: unknown, fallback: string) {
+  if (err instanceof WrongLanguageError) return res.status(502).json({ error: err.message, code: err.code, language: err.language });
+  return res.status(500).json({ error: fallback });
+}
+
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 /** The free model is shared and is often rate limited for a moment: retry once before giving up. */
 export const LIFE_PATH_RETRY_DELAY_MS = Number(process.env.LIFE_PATH_RETRY_DELAY_MS ?? 1500);
@@ -174,12 +187,12 @@ Analyze this through the lens of karma and dharma. Respond ONLY with valid JSON 
 }`;
 
     const lang = requestLanguage(req);
-    const raw = await callAI(apiKey, prompt, tokenBudget(900, lang), currentModel(), languageRule(lang, HINGLISH_RULE));
+    const raw = await callAIInLanguage(apiKey, prompt, 900, lang);
     const result = parseJSON(raw);
     return res.json(result);
   } catch (err: any) {
     console.error("Karma diagnosis error:", err.message);
-    return res.status(500).json({ error: "Failed to generate karma diagnosis" });
+    return aiFailure(res, err, "Failed to generate karma diagnosis");
   }
 });
 
@@ -228,12 +241,12 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
 }`;
 
     const lang = requestLanguage(req);
-    const raw = await callAI(apiKey, prompt, tokenBudget(800, lang), currentModel(), languageRule(lang, HINGLISH_RULE));
+    const raw = await callAIInLanguage(apiKey, prompt, 800, lang);
     const result = parseJSON(raw);
     return res.json(result);
   } catch (err: any) {
     console.error("Guru chat error:", err.message);
-    return res.status(500).json({ error: "Failed to get guru response" });
+    return aiFailure(res, err, "Failed to get guru response");
   }
 });
 
@@ -262,12 +275,12 @@ Analyze this journal entry for karmic patterns, emotional states, and spiritual 
 }`;
 
     const lang = requestLanguage(req);
-    const raw = await callAI(apiKey, prompt, tokenBudget(700, lang), currentModel(), languageRule(lang, HINGLISH_RULE));
+    const raw = await callAIInLanguage(apiKey, prompt, 700, lang);
     const result = parseJSON(raw);
     return res.json(result);
   } catch (err: any) {
     console.error("Journal analysis error:", err.message);
-    return res.status(500).json({ error: "Failed to analyze journal entry" });
+    return aiFailure(res, err, "Failed to analyze journal entry");
   }
 });
 
@@ -301,12 +314,12 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
 }`;
 
     const lang = requestLanguage(req);
-    const raw = await callAI(apiKey, prompt, tokenBudget(900, lang), currentModel(), languageRule(lang, HINGLISH_RULE));
+    const raw = await callAIInLanguage(apiKey, prompt, 900, lang);
     const result = parseJSON(raw);
     return res.json(result);
   } catch (err: any) {
     console.error("Wisdom/shloka error:", err.message);
-    return res.status(500).json({ error: "Failed to fetch shloka wisdom" });
+    return aiFailure(res, err, "Failed to fetch shloka wisdom");
   }
 });
 

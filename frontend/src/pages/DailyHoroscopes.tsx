@@ -2,12 +2,16 @@ import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ChevronDown, Heart, Briefcase, Activity, Sparkles, Loader } from 'lucide-react';
-import { zodiacSigns } from '@/data/zodiacData';
+import { useTranslation } from 'react-i18next';
+import { zodiacSigns, useZodiacText } from '@/data/zodiacData';
+import { intlTag } from '@/features/muhurat/format';
 import { useAIDailyHoroscope } from '@/hooks/useInterpretation';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const DailyHoroscopes = () => {
+  const { t, i18n } = useTranslation();
+  const z = useZodiacText();
   const [selectedSign, setSelectedSign] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const pageRef = useRef<HTMLDivElement>(null);
@@ -57,10 +61,10 @@ const DailyHoroscopes = () => {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="page-title font-display text-4xl md:text-5xl lg:text-6xl text-glow text-primary mb-4">
-            Daily Horoscopes
+            {t('horoscope.page.title')}
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Select your zodiac sign to receive your personalized celestial guidance for today
+            {t('horoscope.page.subtitle')}
           </p>
         </div>
 
@@ -77,12 +81,12 @@ const DailyHoroscopes = () => {
                     {selectedZodiac.symbol}
                   </span>
                   <div>
-                    <div className="font-display text-foreground">{selectedZodiac.name}</div>
-                    <div className="text-sm text-muted-foreground">{selectedZodiac.dates}</div>
+                    <div className="font-display text-foreground">{z.sign(selectedZodiac.name)}</div>
+                    <div className="text-sm text-muted-foreground">{z.dates(selectedZodiac)}</div>
                   </div>
                 </div>
               ) : (
-                <span className="text-muted-foreground">Choose your zodiac sign...</span>
+                <span className="text-muted-foreground">{t('horoscope.page.choose')}</span>
               )}
               <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -102,8 +106,8 @@ const DailyHoroscopes = () => {
                   >
                     <span className="text-2xl">{sign.symbol}</span>
                     <div className="text-left">
-                      <div className="font-display text-sm text-foreground">{sign.name}</div>
-                      <div className="text-xs text-muted-foreground">{sign.dates}</div>
+                      <div className="font-display text-sm text-foreground">{z.sign(sign.name)}</div>
+                      <div className="text-xs text-muted-foreground">{z.dates(sign)}</div>
                     </div>
                   </button>
                 ))}
@@ -123,15 +127,15 @@ const DailyHoroscopes = () => {
               >
                 {selectedZodiac.symbol}
               </div>
-              <h2 className="font-display text-3xl text-foreground mb-2">{selectedZodiac.name}</h2>
-              <p className="text-muted-foreground">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+              <h2 className="font-display text-3xl text-foreground mb-2">{z.sign(selectedZodiac.name)}</h2>
+              <p className="text-muted-foreground">{new Date().toLocaleDateString(!i18n.language || i18n.language === 'en' ? 'en-US' : intlTag(), { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
             </div>
 
             {/* Loading State */}
             {loading && (
               <div className="text-center py-12">
                 <Loader className="w-8 h-8 text-primary animate-spin mx-auto mb-4" />
-                <p className="text-muted-foreground">Generating your personalized horoscope from the cosmos...</p>
+                <p className="text-muted-foreground">{t('horoscope.page.loading')}</p>
               </div>
             )}
 
@@ -149,7 +153,7 @@ const DailyHoroscopes = () => {
             {/* Error State */}
             {!loading && !horoscopeData && (
               <div className="text-center py-12">
-                <p className="text-red-800">Failed to generate horoscope. Please try again.</p>
+                <p className="text-red-800">{t('horoscope.page.error')}</p>
               </div>
             )}
           </div>
@@ -159,7 +163,7 @@ const DailyHoroscopes = () => {
         {!selectedSign && (
           <div className="text-center py-20">
             <div className="text-6xl mb-6 opacity-30">✨</div>
-            <p className="text-muted-foreground">Select your zodiac sign above to reveal today's cosmic guidance</p>
+            <p className="text-muted-foreground">{t('horoscope.page.prompt')}</p>
           </div>
         )}
       </div>

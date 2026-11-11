@@ -37,12 +37,12 @@ const entries: GlossaryEntry[] = [
   {
     term: "Shadbala",
     short: "A traditional method of measuring planetary strength.",
-    meaning: "'Six-fold strength': a detailed traditional scoring of how strong each graha is. MyBhagya does not calculate it.",
+    meaning: "'Six-fold strength': a detailed traditional scoring of how strong each graha is. Bhagya does not calculate it.",
   },
   {
     term: "Ashtakavarga",
     short: "A traditional point system for transits.",
-    meaning: "A scoring method that gives each sign points from each graha, used to judge transits. MyBhagya does not calculate it.",
+    meaning: "A scoring method that gives each sign points from each graha, used to judge transits. Bhagya does not calculate it.",
   },
   {
     term: "Parashari",
@@ -295,7 +295,7 @@ const entries: GlossaryEntry[] = [
   {
     term: "Ayanamsa",
     short: "The offset between the Western and Vedic zodiacs.",
-    meaning: "The angle (about 24° today) by which the Vedic sidereal zodiac lags the Western tropical one. MyBhagya uses the Lahiri ayanamsa.",
+    meaning: "The angle (about 24° today) by which the Vedic sidereal zodiac lags the Western tropical one. Bhagya uses the Lahiri ayanamsa.",
   },
   {
     term: "Guna Milan",

@@ -15,7 +15,7 @@ import "@/features/ratna/ratna.css";
 export const RATNA_TITLE = FEATURES.ratna.name;
 export const RATNA_SUBTITLE = FEATURES.ratna.subtitle;
 export const RATNA_DESCRIPTION =
-  "Explore personalized Vedic astrology interpretations, traditional Ratna significance, customary wearing guidance, and related products from the My Bhagya Shop.";
+  "Explore personalized Vedic astrology interpretations, traditional Ratna significance, customary wearing guidance, and related products from the Bhagya Shop.";
 
 const GENDERS: Gender[] = ["Male", "Female", "Other", "Prefer not to say"];
 const NAME_RE = /^[\p{L}\p{M}][\p{L}\p{M} .'’-]*$/u;
@@ -64,7 +64,7 @@ const RatnaJyotish = () => {
   }, []);
 
   useEffect(() => {
-    document.title = `${RATNA_TITLE} | My Bhagya`;
+    document.title = `${RATNA_TITLE} | Bhagya`;
     const meta = document.querySelector('meta[name="description"]');
     const prev = meta?.getAttribute("content");
     meta?.setAttribute("content", RATNA_DESCRIPTION);

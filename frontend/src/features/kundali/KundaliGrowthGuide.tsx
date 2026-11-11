@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { LucideIcon } from "lucide-react";
 import { Activity, Briefcase, CalendarCheck, CheckCircle2, Compass, Flower2, Heart, Sparkles, TrendingUp, Wallet } from "lucide-react";
 import type { KundaliResult } from "./types";
@@ -24,6 +25,7 @@ const Label = ({ icon: Icon, children }: { icon: LucideIcon; children: string })
  * reading, so nothing is invented and the same page never shows the same advice twice.
  */
 export const KundaliGrowthGuide = ({ k, sunSign, lifePath, name }: { k: KundaliResult; sunSign: string; lifePath: number; name?: string }) => {
+  const { t } = useTranslation(); // re-renders on a language change, so the guide built below follows it
   const g = buildGrowthGuide({ kundali: k, sunSign, lifePath, name });
   return (
     <section
@@ -35,9 +37,9 @@ export const KundaliGrowthGuide = ({ k, sunSign, lifePath, name }: { k: KundaliR
         <span className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-[#592209] text-[#F5E9D6]">
           <Sparkles className="h-5 w-5" aria-hidden="true" />
         </span>
-        <h2 id="growth-guide-h" className="text-2xl font-bold text-[#301607] sm:text-3xl">Your Personal Growth Guide</h2>
+        <h2 id="growth-guide-h" className="text-2xl font-bold text-[#301607] sm:text-3xl">{t("kundali.growth.ui.title")}</h2>
         <p className="mx-auto mt-1 max-w-xl text-base italic text-[#6B4A37]">
-          Understand your strengths, work on your challenges and take small steps towards a better life.
+          {t("kundali.growth.ui.subtitle")}
         </p>
       </div>
 
@@ -63,7 +65,7 @@ export const KundaliGrowthGuide = ({ k, sunSign, lifePath, name }: { k: KundaliR
 
               {a.chart.length > 0 && (
                 <div className="mb-3 rounded-lg border border-[#592209]/15 bg-[#F5E9D6]/60 p-2.5" data-testid={`growth-${a.key}-chart`}>
-                  <p className="mb-1 text-[11px] font-bold uppercase tracking-wide text-[#592209]">From your chart</p>
+                  <p className="mb-1 text-[11px] font-bold uppercase tracking-wide text-[#592209]">{t("kundali.growth.ui.fromChart")}</p>
                   <ul className="space-y-1 text-sm leading-snug text-[#301607]">
                     {a.chart.map((c) => (
                       <li key={c}>{c}</li>
@@ -73,7 +75,7 @@ export const KundaliGrowthGuide = ({ k, sunSign, lifePath, name }: { k: KundaliR
               )}
 
               <div className="mb-3">
-                <Label icon={TrendingUp}>Your Strengths</Label>
+                <Label icon={TrendingUp}>{t("kundali.growth.ui.strengths")}</Label>
                 <ul className="list-disc space-y-1 pl-5 text-[15px] leading-snug text-[#301607]">
                   {a.strengths.map((s) => (
                     <li key={s}>{s}</li>
@@ -82,7 +84,7 @@ export const KundaliGrowthGuide = ({ k, sunSign, lifePath, name }: { k: KundaliR
               </div>
 
               <div className="mb-3">
-                <Label icon={Compass}>Areas to Improve</Label>
+                <Label icon={Compass}>{t("kundali.growth.ui.improve")}</Label>
                 <ul className="list-disc space-y-1 pl-5 text-[15px] leading-snug text-[#301607]">
                   {a.improve.map((s) => (
                     <li key={s}>{s}</li>
@@ -91,7 +93,7 @@ export const KundaliGrowthGuide = ({ k, sunSign, lifePath, name }: { k: KundaliR
               </div>
 
               <div className="rounded-xl bg-[#FFF1CC]/70 p-3">
-                <Label icon={CheckCircle2}>What You Can Do</Label>
+                <Label icon={CheckCircle2}>{t("kundali.growth.ui.whatToDo")}</Label>
                 <ol className="space-y-1.5 text-[15px] leading-snug text-[#301607]">
                   {a.actions.map((s, i) => (
                     <li key={s} className="flex gap-2">
@@ -111,7 +113,7 @@ export const KundaliGrowthGuide = ({ k, sunSign, lifePath, name }: { k: KundaliR
       <div data-testid="growth-plan" className="mt-5 rounded-2xl border border-[#592209]/25 bg-white/70 p-4 sm:p-5">
         <h3 className="mb-3 flex items-center gap-2 text-xl font-semibold text-[#592209]">
           <CalendarCheck className="h-5 w-5" aria-hidden="true" />
-          Your Next 30 Days
+          {t("kundali.growth.ui.next30")}
         </h3>
         <ol className="grid gap-2.5 sm:grid-cols-2">
           {g.plan.map((p, i) => (
@@ -127,12 +129,12 @@ export const KundaliGrowthGuide = ({ k, sunSign, lifePath, name }: { k: KundaliR
       </div>
 
       <div data-testid="growth-message" className="mt-5 rounded-2xl bg-[#592209] p-5 text-center text-[#F5E9D6] sm:p-7">
-        <h3 className="mb-2 text-xl font-semibold text-[#F7DC8A] sm:text-2xl">A Message for Your Journey</h3>
+        <h3 className="mb-2 text-xl font-semibold text-[#F7DC8A] sm:text-2xl">{t("kundali.growth.ui.messageTitle")}</h3>
         <p className="mx-auto max-w-2xl text-[17px] italic leading-relaxed">{g.message}</p>
       </div>
 
       <p className="mt-4 text-center text-xs leading-relaxed text-[#6B4A37]">
-        Astrology is a traditional way of reflecting and is not scientifically proven. This guide offers ideas to think about, not predictions or medical, financial or relationship advice.
+        {t("kundali.growth.ui.disclaimer")}
       </p>
     </section>
   );

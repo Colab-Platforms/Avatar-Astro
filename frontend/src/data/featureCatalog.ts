@@ -4,6 +4,11 @@
  * language lives here. Use this everywhere a feature name or subtitle is shown.
  */
 
+import i18n from "@/i18n";
+
+/** Subtitle in the chosen language (features.<id>.subtitle); the English below is the fallback. Read at render time, so it follows the language. */
+const localizedSubtitle = (id: string, english: string): string => i18n.t(`features.${id}.subtitle`, { defaultValue: english });
+
 export type FeatureCategory = "astrology" | "inner-voice";
 
 export interface FeatureMeta {
@@ -29,21 +34,27 @@ export const FEATURES = {
   zodiac: {
     id: "zodiac",
     name: "Daily Horoscope",
-    subtitle: "Explore your zodiac sign, planetary influences and the qualities that shape your personality.",
+    get subtitle() {
+      return localizedSubtitle("zodiac", "Explore your zodiac sign, planetary influences and the qualities that shape your personality.");
+    },
     path: "/zodiac",
     category: "astrology",
   },
   birthChart: {
     id: "birth-chart",
     name: "Janma Kundali",
-    subtitle: "Understand your life's cosmic blueprint through the positions of planets at your birth.",
+    get subtitle() {
+      return localizedSubtitle("birth-chart", "Understand your life's cosmic blueprint through the positions of planets at your birth.");
+    },
     path: "/birth-chart",
     category: "astrology",
   },
   compatibility: {
     id: "compatibility",
     name: "Love Compatibility",
-    subtitle: "Explore your connection, compatibility and relationship harmony through Vedic astrology.",
+    get subtitle() {
+      return localizedSubtitle("compatibility", "Explore your connection, compatibility and relationship harmony through Vedic astrology.");
+    },
     path: "/compatibility",
     category: "astrology",
   },

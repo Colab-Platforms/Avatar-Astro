@@ -1,5 +1,5 @@
 /**
- * The languages MyBhagya is offered in. One list drives the selector, the fonts, the page's lang attribute, the AI reply language
+ * The languages Bhagya is offered in. One list drives the selector, the fonts, the page's lang attribute, the AI reply language
  * sent to the server, and the review status of each translation.
  */
 export type LocaleCode = "en" | "hi" | "mr" | "ta" | "te" | "gu" | "bn" | "kn" | "ml" | "pa";

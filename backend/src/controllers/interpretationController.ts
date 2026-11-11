@@ -3,7 +3,7 @@ import {
   generateHumanReadableInterpretation,
   generateCompatibilityAnalysis
 } from '../services/chatgptService.js';
-import { requestLanguage } from '../utils/responseLanguage.js';
+import { WrongLanguageError, requestLanguage } from '../utils/responseLanguage.js';
 import { getDailyHoroscope, parseSign, toPlainText, HoroscopeUnavailableError } from '../services/dailyHoroscopeService.js';
 
 // Generate human-readable birth chart interpretation
@@ -25,6 +25,7 @@ export const interpretBirthChart = async (req: Request, res: Response) => {
       data: interpretation
     });
   } catch (error: any) {
+    if (error instanceof WrongLanguageError) return res.status(502).json({ success: false, error: error.message, code: error.code, language: error.language });
     console.error('Interpretation Error:', error);
     res.status(500).json({
       success: false,
@@ -80,6 +81,7 @@ export const generateAICompatibility = async (req: Request, res: Response) => {
       }
     });
   } catch (error: any) {
+    if (error instanceof WrongLanguageError) return res.status(502).json({ success: false, error: error.message, code: error.code, language: error.language });
     console.error('Compatibility Analysis Error:', error);
     res.status(500).json({
       success: false,

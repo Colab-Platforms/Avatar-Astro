@@ -307,7 +307,7 @@ export const evaluate = (rule: EventRule, ctx: DayCtx, t: Date, tz: string, time
 /* ---------------- ranking ---------------- */
 
 /**
- * Score out of 100 (MyBhagya's ordering of windows that ALREADY qualify; not a classical grade):
+ * Score out of 100 (Bhagya's ordering of windows that ALREADY qualify; not a classical grade):
  *   nakshatra: 30 if in the event's first-choice list, 15 if only accepted
  *   weekday:   20 if first-choice, 8 if only accepted
  *   paksha:    8 for Shukla where the event prefers it

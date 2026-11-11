@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import i18n from "@/i18n";
 import AskDivyaSection from "@/features/guru/AskDivyaSection";
 import { FEATURES } from "@/data/featureCatalog";
 import { useFeatureTitle } from "@/hooks/useFeatureTitle";
@@ -31,6 +33,7 @@ const inputStyle: React.CSSProperties = {
 };
 
 export default function NameDestinyReportPage() {
+  const { t } = useTranslation();
   useFeatureTitle(FEATURES.numerology);
   const [form, setForm] = useState<FormState>(emptyForm());
   const [profile, setProfile] = useState<NameProfile | null>(null);
@@ -46,22 +49,22 @@ export default function NameDestinyReportPage() {
     e.preventDefault();
     if (!requireSignIn(() => handleSubmit({ preventDefault() {} } as React.FormEvent))) return; // signed out: ask, keep the form, then run this once
     if (!form.firstName.trim() || !form.dob) {
-      setError("Please enter your first name and date of birth.");
+      setError(i18n.t("namank.page.errRequired"));
       return;
     }
     if (form.dob > today || form.dob < "1900-01-01") {
-      setError("Please enter a valid date of birth (between 1900 and today).");
+      setError(i18n.t("namank.page.errDob"));
       return;
     }
     const first = checkName(form.firstName);
     if (!first.ok) {
-      setError(`First name: ${first.error}`);
+      setError(i18n.t("namank.page.errFirst", { error: first.error }));
       return;
     }
     if (form.lastName.trim()) {
       const last = checkName(form.lastName);
       if (!last.ok) {
-        setError(`Last name: ${last.error}`);
+        setError(i18n.t("namank.page.errLast", { error: last.error }));
         return;
       }
     }
@@ -74,11 +77,11 @@ export default function NameDestinyReportPage() {
       const checkRes = await authedFetch(`${AUTH_API_BASE_URL}/name-analysis/check`, { method: "POST" });
       if (!checkRes.ok) {
         const body = await checkRes.json().catch(() => null);
-        setError(body?.message || "This feature is temporarily unavailable. Please try again later.");
+        setError(body?.message || i18n.t("namank.page.errUnavailable"));
         return;
       }
     } catch (err) {
-      if (!(err instanceof SignInRequiredError)) setError("Couldn't verify usage limit. Please check your connection and try again.");
+      if (!(err instanceof SignInRequiredError)) setError(i18n.t("namank.page.errUsage"));
       return;
     }
     setError("");
@@ -91,7 +94,7 @@ export default function NameDestinyReportPage() {
       {!profile && (
         <>
           <header className="mx-auto mb-8 max-w-3xl px-4 pt-10 text-center">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#592209]">Name Numerology</p>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#592209]">{t("namank.page.eyebrow")}</p>
             <h1 className="mb-4 text-4xl text-[#301607] sm:text-6xl" style={{ fontFamily: "'Astra','Cinzel',serif" }}>
               {FEATURES.numerology.name}
             </h1>
@@ -99,7 +102,7 @@ export default function NameDestinyReportPage() {
           </header>
 
           <p className="mx-auto mb-4 max-w-2xl px-4 text-center text-base leading-relaxed text-foreground/75 sm:text-lg">
-            Explore what the letters of your name and the digits of your birth date add up to in numerology. Namank Jyotish calculates your Destiny, Soul Urge, Personality, Chaldean, Life Path and Birth numbers, shows every step of the working, and gives the traditional meaning of each.
+            {t("namank.page.intro")}
           </p>
 
           <div id="celebrity-name-changes" style={{ scrollMarginTop: 90 }}>
@@ -109,9 +112,9 @@ export default function NameDestinyReportPage() {
           <form id="destiny-form" onSubmit={handleSubmit} noValidate style={{ maxWidth: 600, margin: "0 auto", padding: "32px 0 20px", scrollMarginTop: 100 }}>
             <div style={{ textAlign: "center", marginBottom: 36 }}>
               <h2 style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: "clamp(24px,3.5vw,34px)", fontWeight: 700, color: "#301607", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>
-                Your Details
+                {t("namank.page.detailsTitle")}
               </h2>
-              <p style={{ color: "#6B4A37", fontStyle: "italic", fontSize: 16 }}>Free with an account. Your details stay in your browser.</p>
+              <p style={{ color: "#6B4A37", fontStyle: "italic", fontSize: 16 }}>{t("namank.page.freeNote")}</p>
             </div>
 
             {error && (
@@ -123,17 +126,17 @@ export default function NameDestinyReportPage() {
             <div style={{ background: "rgba(89,34,9,0.2)", border: "1px solid rgba(89,34,9,0.2)", borderRadius: 20, padding: "32px 28px", backdropFilter: "blur(16px)" }}>
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2" style={{ marginBottom: 20 }}>
                 <div>
-                  <label htmlFor="nd-first" style={{ display: "block", color: "#592209", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>First Name *</label>
-                  <input id="nd-first" style={inputStyle} maxLength={60} autoComplete="given-name" value={form.firstName} onChange={(e) => up("firstName", e.target.value)} placeholder="e.g. Rohan" />
+                  <label htmlFor="nd-first" style={{ display: "block", color: "#592209", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>{t("namank.page.firstName")}</label>
+                  <input id="nd-first" style={inputStyle} maxLength={60} autoComplete="given-name" value={form.firstName} onChange={(e) => up("firstName", e.target.value)} placeholder={t("namank.page.firstPlaceholder")} />
                 </div>
                 <div>
-                  <label htmlFor="nd-last" style={{ display: "block", color: "#592209", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>Last Name <span style={{ opacity: 0.6, fontWeight: 400 }}>(Optional)</span></label>
-                  <input id="nd-last" style={inputStyle} maxLength={60} autoComplete="family-name" value={form.lastName} onChange={(e) => up("lastName", e.target.value)} placeholder="e.g. Mehta" />
+                  <label htmlFor="nd-last" style={{ display: "block", color: "#592209", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>{t("namank.page.lastName")} <span style={{ opacity: 0.6, fontWeight: 400 }}>{t("namank.page.optional")}</span></label>
+                  <input id="nd-last" style={inputStyle} maxLength={60} autoComplete="family-name" value={form.lastName} onChange={(e) => up("lastName", e.target.value)} placeholder={t("namank.page.lastPlaceholder")} />
                 </div>
               </div>
 
               <div style={{ marginBottom: 28 }}>
-                <label htmlFor="nd-dob" style={{ display: "block", color: "#592209", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>Date of Birth *</label>
+                <label htmlFor="nd-dob" style={{ display: "block", color: "#592209", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>{t("namank.page.dob")}</label>
                 <input id="nd-dob" type="date" min="1900-01-01" max={today} style={inputStyle} value={form.dob} onChange={(e) => up("dob", e.target.value)} />
               </div>
 
@@ -145,7 +148,7 @@ export default function NameDestinyReportPage() {
                   cursor: "pointer", boxShadow: "0 0 30px rgba(89,34,9,0.35)",
                 }}
               >
-                ✦ Show My Namank Jyotish ✦
+                {t("namank.page.submit")}
               </button>
             </div>
           </form>

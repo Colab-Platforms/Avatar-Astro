@@ -230,7 +230,7 @@ describe("homepage content and structure", () => {
     expect(homeFaqs).toHaveLength(5);
     expect(new Set(homeFaqs.map((f) => f.question)).size).toBe(5);
     for (const f of homeFaqs) expect(within(section).getByRole("button", { name: f.question })).toBeInTheDocument();
-    for (const old of ["How does Janma Kundali work on MyBhagya?", "Can I get a daily horoscope on MyBhagya?", "What other spiritual experiences are available?"]) {
+    for (const old of ["How does Janma Kundali work on Bhagya?", "Can I get a daily horoscope on Bhagya?", "What other spiritual experiences are available?"]) {
       expect(screen.queryByText(old)).toBeNull();
     }
     expect(section.textContent).not.toMatch(/Jodi Jyotish|Rashi Chakra|Tarot Drishti|Naamank/);
@@ -335,9 +335,15 @@ describe("site-wide light theme scoping", () => {
     expect(nav.queryByText(/Devotion/)).toBeNull();
     expect(nav.queryByRole("link", { name: /Puja/ })).toBeNull();
     expect(nav.queryByRole("link", { name: /Chadhawa/ })).toBeNull();
-    // order: Home, Astrology Seva, Inner Voice, Shop, Live, Blog, About, Contact, Sign in
-    const text = document.querySelector("nav [class~=\"lg:flex\"]")!.textContent!;
-    const order = ["Home", "Astrology Seva", "Inner Voice", "Shop", "Live", "Blog", "About", "Contact", "Sign in"].map((l) => text.indexOf(l));
+    // There is no separate Home item any more: the "Bhagya" brand is the way home.
+    const brand = nav.getByRole("link", { name: /^Bhagya, Home$/ });
+    expect(brand).toHaveAttribute("href", "/");
+    expect(brand).toHaveTextContent("Bhagya");
+    expect(document.querySelector("nav [class~=\"xl:flex\"]")!.textContent).not.toMatch(/\bHome\b/);
+    expect(nav.queryByRole("link", { name: "Home" })).toBeNull();
+    // order: Astrology Seva, Inner Voice, Shop, Live, Blog, About, Contact, Sign in
+    const text = document.querySelector("nav [class~=\"xl:flex\"]")!.textContent!;
+    const order = ["Astrology Seva", "Inner Voice", "Shop", "Live", "Blog", "About", "Contact", "Sign in"].map((l) => text.indexOf(l));
     expect(order.every((i) => i >= 0)).toBe(true);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
   });

@@ -80,7 +80,7 @@ describe("dictionaries", () => {
       const all = leaves(load(l.code));
       const native = all.filter(([, v]) => /[०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯]/.test(v));
       expect(native.map(([k]) => `${l.code}:${k}`)).toEqual([]);
-      const brand = all.filter(([, v]) => /MyBhagya/i.test(v)).length;
+      const brand = all.filter(([, v]) => /Bhagya/i.test(v)).length;
       expect(brand).toBeGreaterThan(0);
     }
   });
