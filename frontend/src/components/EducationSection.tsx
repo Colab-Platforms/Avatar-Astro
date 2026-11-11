@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import AboutAudioPlayer from "@/components/astrology/AboutAudioPlayer";
 
 export interface EducationBlock {
@@ -15,6 +16,8 @@ export interface EducationBlock {
 }
 
 export interface EducationFaq {
+  /** Optional dictionary key prefix (e.g. "gunaText.faq.zodiac.0"); the text is looked up as <id>.question / <id>.answer. */
+  id?: string;
   question: string;
   answer: string;
 }
@@ -38,6 +41,7 @@ interface EducationSectionProps {
  * real method.
  */
 export default function EducationSection({ title, blocks, faqs, disclaimer, idPrefix, audioToolSlug }: EducationSectionProps) {
+  const { t } = useTranslation();
   return (
     <section
       aria-labelledby={`${idPrefix}-edu-title`}
@@ -130,18 +134,18 @@ export default function EducationSection({ title, blocks, faqs, disclaimer, idPr
               <span aria-hidden="true" className="mr-2 text-[#592209]/70">
                 {blocks.length + 1}.
               </span>
-              Frequently Asked Questions
+              {t("gunaText.faq.heading")}
             </h2>
             <div className="divide-y divide-[#592209]/15">
               {faqs.map((f) => (
                 <details key={f.question} className="group py-2.5">
                   <summary className="flex cursor-pointer list-none items-start justify-between gap-4 text-base font-semibold text-[#301607] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#592209] [&::-webkit-details-marker]:hidden">
-                    <span>{f.question}</span>
+                    <span>{f.id ? t(`${f.id}.question`, { defaultValue: f.question }) : f.question}</span>
                     <span aria-hidden="true" className="mt-0.5 text-[#592209] transition group-open:rotate-45">
                       +
                     </span>
                   </summary>
-                  <p className="mt-1.5 text-base leading-[1.6] text-[#4A2E1F]">{f.answer}</p>
+                  <p className="mt-1.5 text-base leading-[1.6] text-[#4A2E1F]">{f.id ? t(`${f.id}.answer`, { defaultValue: f.answer }) : f.answer}</p>
                 </details>
               ))}
             </div>

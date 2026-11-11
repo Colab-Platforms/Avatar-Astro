@@ -161,7 +161,7 @@ export default function DashboardLayout() {
           )}
         >
           {collapsed ? (
-            <Link to="/" className="flex items-center justify-center" title="MyBhagya - Go to website homepage">
+            <Link to="/" className="flex items-center justify-center" title="Bhagya - Go to website homepage">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#3A1C0C] text-xs font-semibold text-[#F3E8D4]">
                 MB
               </span>
@@ -172,7 +172,7 @@ export default function DashboardLayout() {
                 MB
               </span>
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold tracking-tight text-[#2A1A10]">MyBhagya</p>
+                <p className="truncate text-sm font-semibold tracking-tight text-[#2A1A10]">Bhagya</p>
                 <p className="truncate text-[0.68rem] text-[#8C7A6B]">Customer dashboard</p>
               </div>
             </Link>
@@ -331,7 +331,7 @@ export default function DashboardLayout() {
                 MB
               </span>
               <div>
-                <p className="text-sm font-semibold tracking-tight text-[#2A1A10]">MyBhagya</p>
+                <p className="text-sm font-semibold tracking-tight text-[#2A1A10]">Bhagya</p>
                 <p className="text-[0.68rem] text-[#8C7A6B]">Customer dashboard</p>
               </div>
             </Link>

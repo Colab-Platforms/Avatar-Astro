@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import type { TarotCard } from "@/data/tarotData";
+import { useTranslation } from "react-i18next";
+import { tarotCardName, type TarotCard } from "@/data/tarotData";
 
 /**
  * Local, resolution-independent tarot illustrations (no external images).
@@ -367,6 +368,7 @@ export interface TarotArtProps {
 
 /** Full-bleed card artwork. Scales to its parent via `preserveAspectRatio="xMidYMid slice"`. */
 const TarotArt = ({ card, className }: TarotArtProps) => {
+  const { t } = useTranslation();
   const isMajor = card.arcana === "major";
   const motif = isMajor ? MOTIFS[card.id] : SUIT_MOTIFS[card.suit || ""];
   const uid = `ta-${card.id}`;
@@ -376,7 +378,7 @@ const TarotArt = ({ card, className }: TarotArtProps) => {
       viewBox="0 0 100 150"
       preserveAspectRatio="xMidYMid slice"
       role="img"
-      aria-label={`${card.name} tarot card illustration`}
+      aria-label={t("tarot.art.cardAria", { name: tarotCardName(t, card) })}
       style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }}
     >
       <defs>

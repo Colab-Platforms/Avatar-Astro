@@ -1,8 +1,9 @@
 import { FEATURES } from "@/data/featureCatalog";
 import AskDivyaSection from "@/features/guru/AskDivyaSection";
 import { Link, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { zodiacSigns } from "@/data/zodiacData";
+import { zodiacSigns, useZodiacText } from "@/data/zodiacData";
 import { zodiacImages } from "@/data/zodiacImages";
 import DailySignExperience from "@/components/zodiac/DailySignExperience";
 
@@ -19,6 +20,8 @@ const card = "glass-card rounded-2xl p-6 md:p-8";
 const h2 = "mb-4 font-display text-lg uppercase tracking-[0.18em] text-primary";
 
 const ZodiacDetail = () => {
+  const { t } = useTranslation();
+  const z = useZodiacText();
   const { sign = "" } = useParams<{ sign: string }>();
   const index = zodiacSigns.findIndex((z) => z.name.toLowerCase() === sign.toLowerCase());
   const zodiac = index >= 0 ? zodiacSigns[index] : undefined;
@@ -26,10 +29,10 @@ const ZodiacDetail = () => {
   if (!zodiac) {
     return (
       <main className="mx-auto flex min-h-[60vh] max-w-xl flex-col items-center justify-center px-4 pt-24 text-center">
-        <h1 className="mb-3 font-display text-3xl text-primary">Sign not found</h1>
-        <p className="mb-6 text-muted-foreground">We couldn&apos;t find a zodiac sign called &ldquo;{sign}&rdquo;.</p>
+        <h1 className="mb-3 font-display text-3xl text-primary">{t("zodiac.detail.notFoundTitle")}</h1>
+        <p className="mb-6 text-muted-foreground">{t("zodiac.detail.notFoundBody", { sign })}</p>
         <Link to="/zodiac" className="btn-outline-cosmic rounded-lg px-6 py-3">
-          View all twelve signs
+          {t("zodiac.detail.viewAll")}
         </Link>
       </main>
     );
@@ -38,103 +41,106 @@ const ZodiacDetail = () => {
   const prev = zodiacSigns[(index + 11) % 12];
   const next = zodiacSigns[(index + 1) % 12];
   const ruler = zodiac.traditionalRuling ? `${zodiac.ruling} (modern) · ${zodiac.traditionalRuling} (traditional)` : zodiac.ruling;
+  const rulerLabel = zodiac.traditionalRuling
+    ? t("zodiac.detail.rulerBoth", { modern: z.planet(zodiac.ruling), traditional: z.planet(zodiac.traditionalRuling) })
+    : z.planet(zodiac.ruling);
 
   return (
     <main className="relative z-10 mx-auto max-w-5xl overflow-x-clip px-4 pb-20 pt-40 md:pt-24">
       <DailySignExperience sign={zodiac} />
 
-      <h2 className="mb-6 border-t border-primary/20 pt-10 text-center font-display text-2xl uppercase tracking-[0.2em] text-primary">About This Zodiac Sign</h2>
+      <h2 className="mb-6 border-t border-primary/20 pt-10 text-center font-display text-2xl uppercase tracking-[0.2em] text-primary">{t("zodiac.detail.about")}</h2>
       <header className="mb-10 grid items-center gap-8 md:grid-cols-[minmax(0,260px)_1fr]">
         <div className="mx-auto w-48 md:w-full">
-          <img src={zodiacImages[zodiac.name]} alt={`${zodiac.name} constellation illustration`} className="w-full object-contain drop-shadow-[0_0_24px_rgba(245,195,106,0.35)]" />
+          <img src={zodiacImages[zodiac.name]} alt={t("zodiac.detail.imageAlt", { sign: z.sign(zodiac.name) })} className="w-full object-contain drop-shadow-[0_0_24px_rgba(245,195,106,0.35)]" />
         </div>
         <div className="text-center md:text-left">
-          <p className="mb-2 text-sm uppercase tracking-[0.25em] text-primary/80">Western (tropical) Sun sign profile</p>
+          <p className="mb-2 text-sm uppercase tracking-[0.25em] text-primary/80">{t("zodiac.detail.profileEyebrow")}</p>
           <h2 className="mb-2 font-display text-4xl tracking-wider text-foreground md:text-6xl">
-            {zodiac.name} <span aria-hidden="true">{zodiac.symbol}</span>
+            {z.sign(zodiac.name)} <span aria-hidden="true">{zodiac.symbol}</span>
           </h2>
           <p className="mb-5 text-lg text-muted-foreground">
-            {zodiac.dates} <span className="text-sm">(Western tropical dates; the Vedic Rashi starts about 24 days later)</span>
+            {z.dates(zodiac)} <span className="text-sm">({t("zodiac.detail.datesNote")})</span>
           </p>
           <div className="mb-5 flex flex-wrap justify-center gap-2 md:justify-start">
-            <span className={chip}>Element: {zodiac.element}</span>
-            <span className={chip}>Ruler: {ruler}</span>
+            <span className={chip}>{t("zodiac.detail.elementLabel", { element: z.element(zodiac.element) })}</span>
+            <span className={chip}>{t("zodiac.detail.rulerLabel", { ruler: rulerLabel })}</span>
           </div>
-          <p className="text-lg leading-relaxed text-foreground/90">{zodiac.description}</p>
+          <p className="text-lg leading-relaxed text-foreground/90">{z.description(zodiac)}</p>
         </div>
       </header>
 
       <div className="grid gap-6 md:grid-cols-2">
         <section className={card} aria-labelledby="traits-h">
-          <h2 id="traits-h" className={h2}>Core Traits</h2>
+          <h2 id="traits-h" className={h2}>{t("zodiac.detail.coreTraits")}</h2>
           <ul className="flex flex-wrap gap-2">
-            {zodiac.traits.map((t) => (
-              <li key={t} className={chip}>{t}</li>
+            {zodiac.traits.map((trait, i) => (
+              <li key={trait} className={chip}>{z.trait(zodiac, i)}</li>
             ))}
           </ul>
-          <p className="mt-5 text-sm leading-relaxed text-muted-foreground">{ELEMENT_NOTES[zodiac.element]}</p>
+          <p className="mt-5 text-sm leading-relaxed text-muted-foreground">{t(`zodiac.detail.elementNotes.${zodiac.element}`, { defaultValue: ELEMENT_NOTES[zodiac.element] })}</p>
         </section>
 
         <section className={card} aria-labelledby="strengths-h">
-          <h2 id="strengths-h" className={h2}>Strengths</h2>
+          <h2 id="strengths-h" className={h2}>{t("zodiac.detail.strengths")}</h2>
           <ul className="list-disc space-y-2 pl-5 text-foreground/90 marker:text-primary">
-            {zodiac.strengths.map((s) => (
-              <li key={s}>{s}</li>
+            {zodiac.strengths.map((s, i) => (
+              <li key={s}>{z.strength(zodiac, i)}</li>
             ))}
           </ul>
         </section>
 
         <section className={card} aria-labelledby="challenges-h">
-          <h2 id="challenges-h" className={h2}>Areas to Watch</h2>
+          <h2 id="challenges-h" className={h2}>{t("zodiac.detail.areasToWatch")}</h2>
           <ul className="list-disc space-y-2 pl-5 text-foreground/90 marker:text-primary">
-            {zodiac.weaknesses.map((w) => (
-              <li key={w}>{w}</li>
+            {zodiac.weaknesses.map((w, i) => (
+              <li key={w}>{z.weakness(zodiac, i)}</li>
             ))}
           </ul>
         </section>
 
         <section className={card} aria-labelledby="compat-h">
-          <h2 id="compat-h" className={h2}>Traditionally Compatible Signs</h2>
+          <h2 id="compat-h" className={h2}>{t("zodiac.detail.compatibleSigns")}</h2>
           <ul className="flex flex-wrap gap-2">
             {zodiac.compatibility.map((c) => (
               <li key={c}>
                 <Link to={`/zodiac/${c.toLowerCase()}`} className={`${chip} inline-block hover:border-primary hover:text-primary`}>
-                  {c}
+                  {z.sign(c)}
                 </Link>
               </li>
             ))}
           </ul>
           <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
-            These pairings come from the traditional idea that signs of a harmonious element tend to understand each other. They are a general guide, not a verdict on any relationship.
+            {t("zodiac.detail.compatNote")}
           </p>
         </section>
       </div>
 
       <section className="mt-8 rounded-2xl border border-primary/20 bg-primary/5 p-6 text-center md:p-8" aria-labelledby="next-h">
-        <h2 id="next-h" className={h2}>Explore More</h2>
+        <h2 id="next-h" className={h2}>{t("zodiac.detail.exploreMore")}</h2>
         <p className="mx-auto mb-5 max-w-2xl text-muted-foreground">
-          Your Sun sign is only one part of your story. Your Janma Kundali shows your Vedic Janma Rashi and full birth chart, and Love Compatibility shows how you match with someone else.
+          {t("zodiac.detail.exploreBody")}
         </p>
         <div className="flex flex-col justify-center gap-3 sm:flex-row">
-          <Link to="/birth-chart" className="btn-outline-cosmic rounded-lg px-6 py-3">Janma Kundali</Link>
-          <Link to="/horoscopes" className="btn-outline-cosmic rounded-lg px-6 py-3">Daily Horoscope</Link>
-          <Link to="/compatibility" className="btn-outline-cosmic rounded-lg px-6 py-3">Explore Love Compatibility</Link>
+          <Link to="/birth-chart" className="btn-outline-cosmic rounded-lg px-6 py-3">{t("zodiac.detail.linkKundali")}</Link>
+          <Link to="/horoscopes" className="btn-outline-cosmic rounded-lg px-6 py-3">{t("zodiac.detail.linkHoroscope")}</Link>
+          <Link to="/compatibility" className="btn-outline-cosmic rounded-lg px-6 py-3">{t("zodiac.detail.linkCompatibility")}</Link>
         </div>
       </section>
 
-      <nav aria-label="Other signs" className="mt-10 flex items-center justify-between gap-4">
+      <nav aria-label={t("zodiac.detail.otherSigns")} className="mt-10 flex items-center justify-between gap-4">
         <Link to={`/zodiac/${prev.name.toLowerCase()}`} className="inline-flex items-center gap-2 text-primary/90 hover:text-primary">
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" /> {prev.name}
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" /> {z.sign(prev.name)}
         </Link>
         <Link to={`/zodiac/${next.name.toLowerCase()}`} className="inline-flex items-center gap-2 text-primary/90 hover:text-primary">
-          {next.name} <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          {z.sign(next.name)} <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </Link>
       </nav>
 
       <AskDivyaSection feature="zodiac" context={`Viewing the ${zodiac.name} sign profile: element ${zodiac.element}, ruler ${ruler}. These are general traditional themes for the sign, not a personal chart.`} />
 
       <p className="mt-10 text-center text-sm italic leading-relaxed text-muted-foreground">
-        Sun sign profiles describe general traditional themes for personal interest and reflection. They are not predictions, and one sign cannot describe a whole person.
+        {t("zodiac.detail.disclaimer")}
       </p>
     </main>
   );

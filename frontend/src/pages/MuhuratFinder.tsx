@@ -79,7 +79,7 @@ export default function MuhuratFinder() {
         </div>
         <img
           src="/images/muhurat-logo.png"
-          alt="MyBhagya"
+          alt="Bhagya"
           data-testid="muhurat-logo"
           className="mx-auto mb-3 h-20 w-auto max-w-[60%] object-contain sm:h-24"
           onError={(e) => { e.currentTarget.style.display = "none"; }}

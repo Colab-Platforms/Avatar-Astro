@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import FeatureFaq from "@/components/FeatureFaq";
 import FullScreenLoader from "@/components/Loader/FullScreenLoader";
 import { FEATURES } from "@/data/featureCatalog";
@@ -147,7 +148,9 @@ const CSS = `
 .ivw-saved-prev{font-size:15px;color:#301607;font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 `;
 
+// The English text is the value the app already used; the shown text comes from the dictionary (keys in the second column).
 const SCRIPTURES = ["Bhagavad Gita","Upanishads"];
+const SCRIPTURE_KEYS: Record<string, string> = { "Bhagavad Gita": "gita", "Upanishads": "upanishads" };
 const QUICK_PROMPTS = [
   "I keep failing despite working hard",
   "My relationship is breaking apart",
@@ -204,6 +207,10 @@ function Field({ icon: Icon, label, text, textClass }: FieldProps) {
 
 export default function InnerVoiceWisdom() {
   useFeatureTitle(FEATURES.shloka);
+  const { t } = useTranslation();
+  const featName = t("features.sacred-shloka.name", { defaultValue: FEATURES.shloka.name });
+  const scriptureName = (s: string): string => t(`innerVoice.wisdom.scripture.${SCRIPTURE_KEYS[s] ?? "unknown"}`, { defaultValue: s });
+  const quickPrompt = (i: number): string => t(`innerVoice.wisdom.quick.${i}`, { defaultValue: QUICK_PROMPTS[i] });
   const [situation, setSituation] = useState("");
   const [scripture, setScripture] = useState("");
   const [loading, setLoading] = useState(false);
@@ -231,7 +238,7 @@ export default function InnerVoiceWisdom() {
       setResult(await requestWisdom(q, scripture));
     } catch(e) {
       console.error("[Sacred Shloka] request failed:", e);
-      setError(e instanceof ShlokaError ? e.message : "Could not retrieve wisdom right now. Please try again in a moment.");
+      setError(e instanceof ShlokaError ? e.message : t("innerVoice.wisdom.errors.failed"));
     } finally {
       setLoading(false);
     }
@@ -252,7 +259,7 @@ export default function InnerVoiceWisdom() {
   const copyShloka = async () => {
     if (!display) return;
     try { await navigator.clipboard.writeText(shareText(display)); setCopied(true); setTimeout(() => setCopied(false), 2000); }
-    catch { setError("Copying isn't available in this browser."); }
+    catch { setError(t("innerVoice.wisdom.errors.copy")); }
   };
 
   return (
@@ -282,18 +289,18 @@ export default function InnerVoiceWisdom() {
             style={{ WebkitMaskImage: "radial-gradient(ellipse 62% 60% at 50% 52%, #000 62%, transparent 100%)", maskImage: "radial-gradient(ellipse 62% 60% at 50% 52%, #000 62%, transparent 100%)" }}
             draggable={false}
           />
-          <div className="ivw-eyebrow">Ancient Vedic Scripture</div>
-          <h1 className="ivw-h1">{FEATURES.shloka.name}</h1>
+          <div className="ivw-eyebrow">{t("innerVoice.wisdom.eyebrow")}</div>
+          <h1 className="ivw-h1">{featName}</h1>
           {/* A quote in place of the plain subtitle. The catalog subtitle itself (used elsewhere) is not changed. */}
           <blockquote data-testid="ivw-quote" className="relative mx-auto mt-5 max-w-xl px-6 sm:px-10">
             <span aria-hidden="true" className="absolute -top-3 left-0 select-none font-serif text-6xl leading-none text-[#B8892B]/45">“</span>
             <p className="font-serif text-xl italic leading-relaxed text-[#592209] sm:text-2xl">
-              A single verse, read with a calm mind, can light the next step of your day.
+              {t("innerVoice.wisdom.quote")}
             </p>
             <span aria-hidden="true" className="absolute -bottom-7 right-0 select-none font-serif text-6xl leading-none text-[#B8892B]/45">”</span>
             <footer className="mt-4 flex items-center justify-center gap-3 text-xs uppercase tracking-[0.2em] text-[#8A6414]">
               <span aria-hidden="true" className="h-px w-8 bg-[#B8892B]/50" />
-              Sacred wisdom
+              {t("innerVoice.wisdom.quoteFooter")}
               <span aria-hidden="true" className="h-px w-8 bg-[#B8892B]/50" />
             </footer>
           </blockquote>
@@ -303,34 +310,34 @@ export default function InnerVoiceWisdom() {
           <div className="ivw-formwrap">
             {/* Scripture filter */}
             <div className="ivw-pills">
-              <div className={`ivw-pill${scripture===""?" on":""}`} onClick={()=>setScripture("")}>Any Scripture</div>
+              <div className={`ivw-pill${scripture===""?" on":""}`} onClick={()=>setScripture("")}>{t("innerVoice.wisdom.anyScripture")}</div>
               {SCRIPTURES.map(s=>(
-                <div key={s} className={`ivw-pill${scripture===s?" on":""}`} onClick={()=>setScripture(s)}>{s}</div>
+                <div key={s} className={`ivw-pill${scripture===s?" on":""}`} onClick={()=>setScripture(s)}>{scriptureName(s)}</div>
               ))}
             </div>
 
             <div className="ivw-form">
-              <label className="ivw-flabel">What are you going through?</label>
+              <label className="ivw-flabel">{t("innerVoice.wisdom.question")}</label>
               <textarea
                 className="ivw-ta"
-                placeholder={`Describe your situation honestly and specifically...\n\nExample: "I worked hard for 2 years on my startup. It failed. I feel God doesn't reward honest effort."`}
+                placeholder={t("innerVoice.wisdom.placeholder")}
                 value={situation}
                 maxLength={MAX_SITUATION_CHARS}
                 onChange={e=>setSituation(e.target.value.slice(0, MAX_SITUATION_CHARS))}
               />
 
-              <label className="ivw-flabel">Or pick a quick situation</label>
+              <label className="ivw-flabel">{t("innerVoice.wisdom.quickLabel")}</label>
               <div className="ivw-qps">
-                {QUICK_PROMPTS.map(p=>(
-                  <button key={p} className="ivw-qp" onClick={()=>fetchWisdom(p)}>{p}</button>
+                {QUICK_PROMPTS.map((p,i)=>(
+                  <button key={p} className="ivw-qp" onClick={()=>fetchWisdom(quickPrompt(i))}>{quickPrompt(i)}</button>
                 ))}
               </div>
 
               {loading ? (
-                <FullScreenLoader title="Searching the Scriptures" description="Finding a verse for your situation…" steps={["Understanding your situation", "Searching the scriptures", "Preparing the verse and its meaning"]} testId="shloka-loader" />
+                <FullScreenLoader title={t("innerVoice.wisdom.loader.title")} description={t("innerVoice.wisdom.loader.description")} steps={[t("innerVoice.wisdom.loader.step1"), t("innerVoice.wisdom.loader.step2"), t("innerVoice.wisdom.loader.step3")]} testId="shloka-loader" />
               ) : (
                 <button className="ivw-btn" onClick={()=>fetchWisdom()} disabled={situation.trim().length < 8}>
-                  🕉 &nbsp; Receive the Verse
+                  🕉 &nbsp; {t("innerVoice.wisdom.receive")}
                 </button>
               )}
               {error && <div className="ivw-err">⚠ {error}</div>}
@@ -339,7 +346,7 @@ export default function InnerVoiceWisdom() {
             {/* Saved shlokas */}
             {signedIn && savedShlokas.length > 0 && (
               <>
-                <div className="ivw-saved-hdr">📿 Your Saved Shlokas ({savedShlokas.length})</div>
+                <div className="ivw-saved-hdr">📿 {t("innerVoice.wisdom.savedTitle", { count: savedShlokas.length })}</div>
                 {savedShlokas.map(s=>(
                   <div key={s.id} className="ivw-saved-card" onClick={()=>setViewingSaved(s)}>
                     <div className="ivw-saved-src">{s.source} · {s.chapter}</div>
@@ -354,7 +361,7 @@ export default function InnerVoiceWisdom() {
 
             {/* Source header */}
             <div className="ivw-src-row">
-              <span className="ivw-src-badge">{display.source || "Vedic Scripture"}</span>
+              <span className="ivw-src-badge">{display.source || t("innerVoice.wisdom.defaultSource")}</span>
               {display.chapter && <span className="ivw-src-chapter">{display.chapter}</span>}
             </div>
 
@@ -370,7 +377,7 @@ export default function InnerVoiceWisdom() {
               {display.wordByWord && (
                 <>
                   <div className="ivw-wbw-divider"><Sparkles size={14} aria-hidden="true" /></div>
-                  <div className="ivw-wbw-lbl">Word by word</div>
+                  <div className="ivw-wbw-lbl">{t("innerVoice.wisdom.wordByWord")}</div>
                   <div className="ivw-wbw">{display.wordByWord}</div>
                 </>
               )}
@@ -378,18 +385,18 @@ export default function InnerVoiceWisdom() {
 
             {/* Content sections: small boxes side by side */}
             <div className="ivw-sections">
-              {display.meaning && <div className="ivw-sec meaning"><Field icon={BookOpen} label="English Meaning" text={display.meaning} textClass="gold" /></div>}
-              {display.application && <div className="ivw-sec application"><Field icon={Compass} label="How This Speaks to Your Situation" text={display.application} /></div>}
-              {display.deeperWisdom && <div className="ivw-sec wisdom"><Field icon={Sparkles} label="Deeper Wisdom" text={display.deeperWisdom} textClass="italic" /></div>}
-              {display.action && <div className="ivw-sec action"><Field icon={Leaf} label="Practical Lesson for Today" text={display.action} /></div>}
-              {display.reflectionQuestion && <div className="ivw-sec reflect"><Field icon={Lightbulb} label="Question to Reflect On" text={display.reflectionQuestion} textClass="italic" /></div>}
-              {display.relatedVerse && <div className="ivw-sec related"><Field icon={Link2} label="Also See" text={display.relatedVerse} textClass="small" /></div>}
+              {display.meaning && <div className="ivw-sec meaning"><Field icon={BookOpen} label={t("innerVoice.wisdom.sections.meaning")} text={display.meaning} textClass="gold" /></div>}
+              {display.application && <div className="ivw-sec application"><Field icon={Compass} label={t("innerVoice.wisdom.sections.application")} text={display.application} /></div>}
+              {display.deeperWisdom && <div className="ivw-sec wisdom"><Field icon={Sparkles} label={t("innerVoice.wisdom.sections.deeper")} text={display.deeperWisdom} textClass="italic" /></div>}
+              {display.action && <div className="ivw-sec action"><Field icon={Leaf} label={t("innerVoice.wisdom.sections.action")} text={display.action} /></div>}
+              {display.reflectionQuestion && <div className="ivw-sec reflect"><Field icon={Lightbulb} label={t("innerVoice.wisdom.sections.reflect")} text={display.reflectionQuestion} textClass="italic" /></div>}
+              {display.relatedVerse && <div className="ivw-sec related"><Field icon={Link2} label={t("innerVoice.wisdom.sections.related")} text={display.relatedVerse} textClass="small" /></div>}
             </div>
 
             {/* Mantra */}
             {display.mantra && (
               <div className="ivw-mantra">
-                <span className="ivw-mantra-lbl"><LotusOm size={20} /> Daily Contemplation Mantra</span>
+                <span className="ivw-mantra-lbl"><LotusOm size={20} /> {t("innerVoice.wisdom.mantra")}</span>
                 <div className="ivw-mantra-txt">"{display.mantra}"</div>
                 {display.mantraCount && <div className="ivw-mantra-count">{display.mantraCount}</div>}
               </div>
@@ -397,15 +404,15 @@ export default function InnerVoiceWisdom() {
 
             <p style={{textAlign:"center",fontSize:13,fontStyle:"italic",color:"#6B4A37",margin:"4px 0 16px"}}>
               {display.verified
-                ? "The verse comes from a curated list; the personal reflection is generated. For study or formal use, please check the verse against an authentic edition."
-                : "This saved verse was suggested automatically and may contain errors. Please verify the text and reference in an authentic edition before quoting."}
+                ? t("innerVoice.wisdom.verified")
+                : t("innerVoice.wisdom.unverified")}
             </p>
 
             <div className="ivw-btns">
-              <button className="ivw-save" onClick={saveShloka}><Bookmark size={15} aria-hidden="true" /> Save Shloka</button>
-              <button className="ivw-again" onClick={copyShloka}>{copied ? <><Check size={15} aria-hidden="true" /> Copied</> : <><Copy size={15} aria-hidden="true" /> Copy Verse</>}</button>
+              <button className="ivw-save" onClick={saveShloka}><Bookmark size={15} aria-hidden="true" /> {t("innerVoice.wisdom.save")}</button>
+              <button className="ivw-again" onClick={copyShloka}>{copied ? <><Check size={15} aria-hidden="true" /> {t("innerVoice.wisdom.copied")}</> : <><Copy size={15} aria-hidden="true" /> {t("innerVoice.wisdom.copy")}</>}</button>
               <button className="ivw-again" onClick={()=>{ setResult(null); setViewingSaved(null); setSituation(""); }}>
-                <RotateCcw size={15} aria-hidden="true" /> Seek Another
+                <RotateCcw size={15} aria-hidden="true" /> {t("innerVoice.wisdom.again")}
               </button>
             </div>
 

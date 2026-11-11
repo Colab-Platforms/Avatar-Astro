@@ -13,7 +13,7 @@ const read = (): string[] => {
 };
 
 /**
- * Saved numbers live only in this browser. MyBhagya has no table for saved vehicle numbers, and adding one would be a database
+ * Saved numbers live only in this browser. Bhagya has no table for saved vehicle numbers, and adding one would be a database
  * change, so nothing is sent to the server and nothing is attached to the account. The page says so.
  */
 export function useVehicleFavourites() {

@@ -490,7 +490,8 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Flame, Mountain, Wind, Droplets } from 'lucide-react';
-import { zodiacSigns, ZodiacSign } from '@/data/zodiacData';
+import { useTranslation } from 'react-i18next';
+import { zodiacSigns, ZodiacSign, useZodiacText } from '@/data/zodiacData';
 import ZodiacCard from '@/components/ZodiacCard';
 import ElementSelector from '@/components/astrology/ElementSelector';
 import ZodiacEducation from '@/components/ZodiacEducation';
@@ -548,6 +549,8 @@ const INACTIVITY_TIMEOUT = 10000; // resume auto after 10s of no interaction
 
 const ZodiacSigns = () => {
   useFeatureTitle(FEATURES.zodiac);
+  const { t } = useTranslation();
+  const z = useZodiacText();
   const navigate = useNavigate();
   const pageRef = useRef<HTMLDivElement>(null);
   const wheelRef = useRef<HTMLDivElement>(null);
@@ -723,10 +726,10 @@ const ZodiacSigns = () => {
               {FEATURES.zodiac.name}
             </h1>
             <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto">
-              {FEATURES.zodiac.subtitle} Tap a sign on the wheel to read about it.
+              {FEATURES.zodiac.subtitle} {t('zodiac.page.tapHint')}
             </p>
             <p className="text-muted-foreground/80 text-sm max-w-2xl mx-auto mt-3">
-              Dates shown are the Western (tropical) Sun-sign ranges, which run about 24 days later than Vedic (sidereal) Rashi dates. Your own Vedic Rashi is calculated from your birth details in Janma Kundali.
+              {t('zodiac.page.datesNote')}
             </p>
           </div>
 
@@ -745,7 +748,7 @@ const ZodiacSigns = () => {
                 <div className="absolute top-4 left-1/2 -translate-x-1/2">
                   <div className={`flex items-center gap-2 text-xs uppercase tracking-widest transition-opacity duration-300 ${isAutoMode ? 'opacity-90' : 'opacity-0'}`}>
                     <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                    <span className="text-muted-foreground">Auto-exploring</span>
+                    <span className="text-muted-foreground">{t('zodiac.page.autoExploring')}</span>
                   </div>
                 </div>
 
@@ -762,7 +765,7 @@ const ZodiacSigns = () => {
                     <div className="flex items-center gap-2 mb-4">
                       <ElementIcon className={`w-4 h-4 ${elementColors[selectedSign.element]}`} />
                       <span className={`text-sm uppercase tracking-[0.2em] ${elementColors[selectedSign.element]}`}>
-                        {selectedSign.element} Element
+                        {t('zodiac.page.elementBadge', { element: z.element(selectedSign.element) })}
                       </span>
                     </div>
 
@@ -771,28 +774,28 @@ const ZodiacSigns = () => {
                       <div className="w-20 h-20 relative flex-shrink-0">
                         <img 
                           src={zodiacImages[selectedSign.name]} 
-                          alt={selectedSign.name}
+                          alt={z.sign(selectedSign.name)}
                           className="w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(245,195,106,0.4)]"
                         />
                       </div>
                       <div>
                         <h3 className="font-display text-3xl md:text-4xl tracking-wider text-foreground">
-                          {selectedSign.name}
+                          {z.sign(selectedSign.name)}
                         </h3>
                         <p className="text-muted-foreground text-lg tracking-wide">
-                          {selectedSign.dates}
+                          {z.dates(selectedSign)}
                         </p>
                       </div>
                     </div>
 
                     {/* Ruling planet */}
                     <div className="text-base text-muted-foreground mb-4">
-                      Ruled by <span className="text-primary">{selectedSign.ruling}</span>
+                      {t('zodiac.page.ruledBy')} <span className="text-primary">{z.planet(selectedSign.ruling)}</span>
                     </div>
 
                     {/* Description */}
                     <p className="text-foreground/90 text-base md:text-lg leading-relaxed mb-6">
-                      {selectedSign.description}
+                      {z.description(selectedSign)}
                     </p>
 
                     {/* Traits preview */}
@@ -802,7 +805,7 @@ const ZodiacSigns = () => {
                           key={index}
                           className="px-3 py-1 text-sm rounded-full border border-primary/30 text-primary/80 bg-primary/5"
                         >
-                          {trait}
+                          {z.trait(selectedSign, index)}
                         </span>
                       ))}
                     </div>
@@ -814,7 +817,7 @@ const ZodiacSigns = () => {
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <span>Read Full Profile</span>
+                      <span>{t('zodiac.page.readFullProfile')}</span>
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </motion.button>
                   </motion.div>
@@ -877,7 +880,7 @@ const ZodiacSigns = () => {
                       <button
                         key={sign.name}
                         onClick={() => handleSignClick(sign)}
-                        aria-label={`Show ${sign.name}, ${sign.dates}`}
+                        aria-label={t('zodiac.page.showSign', { sign: z.sign(sign.name), dates: z.dates(sign) })}
                         aria-pressed={isSelected}
                         className="zodiac-wheel-btn absolute -translate-x-1/2 -translate-y-1/2 focus:outline-none"
                         style={{ left: `${x}%`, top: `${y}%` }}
@@ -887,7 +890,7 @@ const ZodiacSigns = () => {
                           <span className={`zodiac-wheel-glow${isSelected ? ' zodiac-wheel-glow--active' : ''}`} />
                           <img
                             src={zodiacImages[sign.name]}
-                            alt={sign.name}
+                            alt={z.sign(sign.name)}
                             className={`w-12 h-12 md:w-14 md:h-14 object-contain zodiac-wheel-icon${isSelected ? ' zodiac-wheel-icon--selected' : ''}`}
                           />
                         </span>
@@ -932,7 +935,7 @@ const ZodiacSigns = () => {
                     willChange: 'opacity, left, top',
                   }}
                 >
-                  {selectedSign.name}
+                  {z.sign(selectedSign.name)}
                 </span>
 
                 {/* Decorative corner stars */}

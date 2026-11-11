@@ -8,11 +8,15 @@ import type { Server } from "node:http";
 import express from "express";
 import jwt from "jsonwebtoken";
 import aiProxyRoutes from "../../routes/aiProxyRoutes.js";
+import tarotRoutes from "../../routes/tarotRoutes.js";
+import compatibilityRoutes from "../../routes/compatibilityRoutes.js";
+import nameAnalysisRoutes from "../../routes/nameAnalysisRoutes.js";
+import birthChartRoutes from "../../routes/birthChartRoutes.js";
 import innerVoiceRoutes, { shortText } from "../../routes/innerVoiceRoutes.js";
 import { setAccountStatusChecker } from "../../middleware/authMiddleware.js";
 import {
   RESPONSE_LANGUAGES, languageDirective, languageInfo, languageRule, matchesResponseLanguage, namesCalendarTermIn,
-  parseResponseLanguage, requestLanguage, tokenBudget, ttsLanguageCode, type ResponseLanguage,
+  parseResponseLanguage, requestLanguage, tokenBudget, ttsLanguageCode, generateInLanguage, replyIsInLanguage, replyTextOf, WrongLanguageError, type ResponseLanguage,
 } from "../../utils/responseLanguage.js";
 import { CALENDAR_WORDS } from "../../utils/responseLanguage.terms.js";
 
@@ -138,6 +142,10 @@ before(async () => {
   app.use("/api/ai", aiProxyRoutes);
   app.use(express.json());
   app.use("/api/inner-voice", innerVoiceRoutes);
+  app.use("/api/tarot", tarotRoutes);
+  app.use("/api/compatibility", compatibilityRoutes);
+  app.use("/api/name-analysis", nameAnalysisRoutes);
+  app.use("/api/birthchart", birthChartRoutes);
   server = app.listen(0);
   base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
   globalThis.fetch = (async (input: any, init: any) => {
@@ -195,7 +203,13 @@ test("proxy: no language, or an invalid one, leaves the request exactly as it wa
 });
 
 test("inner voice: the chosen language replaces the Hinglish default; without one the Hinglish default is kept", async () => {
-  upstream = async () => completion(JSON.stringify({ shloka: "x", transliteration: "x", source: "x", wordByWord: "x", meaning: "x", application: "x", action: "x", mantra: "x" }));
+  const GU_TEXT = "તમારા મનને શાંત રાખવા માટે દરરોજ થોડો સમય ઊંડો શ્વાસ લો.";
+  // The reply must really be Gujarati now: a placeholder such as "x" is (correctly) refused by the language guard.
+  upstream = async (_url, init) => {
+    const wantsGujarati = JSON.parse(init.body).messages[0].content.includes("Gujarati");
+    const t = wantsGujarati ? GU_TEXT : "Take a slow breath each day and let your mind settle.";
+    return completion(JSON.stringify({ shloka: "x", transliteration: "x", source: "x", wordByWord: "x", meaning: t, application: t, action: t, mantra: "x" }));
+  };
   const a = await post("/api/inner-voice/wisdom", { situation: "I feel lost" }, { "X-App-Language": "gu" });
   assert.equal(a.status, 200);
   const withLang = sent().messages[0].content as string;
@@ -256,4 +270,177 @@ test("voice output: each of the ten languages maps to its own verified voice lan
   assert.equal(ttsLanguageCode(undefined), "hi-IN", "callers that never sent a language keep the old behaviour");
   assert.equal(ttsLanguageCode(""), "hi-IN");
   for (const bad of ["fr-FR", "or-IN", "hinglish", "ta; DROP", 5, {}]) assert.equal(ttsLanguageCode(bad as unknown), null, "must refuse " + JSON.stringify(bad));
+});
+
+// ── the language guard: verify the reply, ask once more, then refuse ──────────────────────────────────────────────────
+const TA_TEXT = "உங்கள் மனதை அமைதிப்படுத்த தினமும் சிறிது நேரம் ஆழ்ந்து மூச்சு விடுங்கள்.";
+const EN_TEXT = "Take a slow breath every day and give your mind a little time to settle down.";
+
+test("replyTextOf reads the VALUES of a JSON reply, never its English keys", () => {
+  assert.equal(replyTextOf('{"guidance":"' + TA_TEXT + '","step":"x"}'), TA_TEXT + "\nx");
+  assert.equal(replyTextOf("plain text"), "plain text");
+  assert.equal(replyTextOf('```json\n{"a":["one","two"],"b":{"c":"three"}}\n```'), "one\ntwo\nthree");
+  assert.equal(replyIsInLanguage(replyTextOf('{"guidance":"' + TA_TEXT + '"}'), "ta"), true, "keys are Latin by design and must not count against a Tamil reply");
+});
+
+test("replyIsInLanguage refuses wrong script, an English paragraph, and an English heading", () => {
+  assert.equal(replyIsInLanguage(TA_TEXT, "ta"), true);
+  assert.equal(replyIsInLanguage(EN_TEXT, "ta"), false);
+  assert.equal(replyIsInLanguage(TA_TEXT + "\n" + EN_TEXT, "ta"), false, "an English paragraph inside a Tamil reply");
+  assert.equal(replyIsInLanguage("**What you can do**\n" + TA_TEXT, "ta"), false, "an English heading");
+  assert.equal(replyIsInLanguage(TA_TEXT + " (Rohini, 108)", "ta"), true, "names and numbers are allowed");
+  assert.equal(replyIsInLanguage(EN_TEXT, "en"), true);
+  assert.equal(replyIsInLanguage(TA_TEXT, "en"), false);
+});
+
+test("generateInLanguage: right first time = one call; wrong then right = two calls; wrong twice = WrongLanguageError; no language = untouched", async () => {
+  let calls: string[] = [];
+  const answers = (...a: string[]) => async (note: string) => { calls.push(note); return a[Math.min(calls.length - 1, a.length - 1)]; };
+
+  assert.equal(await generateInLanguage("ta", answers(TA_TEXT)), TA_TEXT);
+  assert.equal(calls.length, 1);
+
+  calls = [];
+  assert.equal(await generateInLanguage("ta", answers(EN_TEXT, TA_TEXT)), TA_TEXT);
+  assert.equal(calls.length, 2);
+  assert.match(calls[1], /not written in Tamil/);
+  assert.equal(calls[0], "", "the first request carries no retry note");
+
+  calls = [];
+  await assert.rejects(generateInLanguage("ta", answers(EN_TEXT, EN_TEXT)), (e: any) => e instanceof WrongLanguageError && e.code === "wrong_language" && e.language === "ta");
+  assert.equal(calls.length, 2, "exactly one retry");
+
+  calls = [];
+  assert.equal(await generateInLanguage(undefined, answers(EN_TEXT)), EN_TEXT, "a visitor who never chose a language sees exactly what they saw before");
+  assert.equal(calls.length, 1);
+});
+
+test("inner voice: an English answer to a Tamil request is retried; a correct second answer is returned", async () => {
+  const ok = (t: string) => completion(JSON.stringify({ shloka: "x", transliteration: "x", source: "x", wordByWord: "x", meaning: t, application: t, action: t, mantra: "x" }));
+  let n = 0;
+  upstream = async () => ok(++n === 1 ? EN_TEXT : TA_TEXT);
+  const r = await post("/api/inner-voice/wisdom", { situation: "I feel lost" }, { "X-App-Language": "ta" });
+  assert.equal(r.status, 200);
+  assert.equal(upstreamCalls.length, 2);
+  assert.match(JSON.parse(upstreamCalls[1].init.body).messages[0].content, /not written in Tamil/);
+  assert.equal(r.data.meaning, TA_TEXT);
+});
+
+test("inner voice: still English after the retry -> 502 with code wrong_language, never the English text", async () => {
+  upstream = async () => completion(JSON.stringify({ shloka: "x", transliteration: "x", source: "x", wordByWord: "x", meaning: EN_TEXT, application: EN_TEXT, action: EN_TEXT, mantra: "x" }));
+  const r = await post("/api/inner-voice/wisdom", { situation: "I feel lost" }, { "X-App-Language": "ta" });
+  assert.equal(r.status, 502);
+  assert.equal(r.data.code, "wrong_language");
+  assert.equal(r.data.language, "ta");
+  assert.equal(upstreamCalls.length, 2);
+  assert.ok(!JSON.stringify(r.data).includes(EN_TEXT));
+});
+
+test("inner voice: with no language chosen an English reply is accepted in one call, exactly as before", async () => {
+  upstream = async () => completion(JSON.stringify({ shloka: "x", transliteration: "x", source: "x", wordByWord: "x", meaning: EN_TEXT, application: EN_TEXT, action: EN_TEXT, mantra: "x" }));
+  const r = await post("/api/inner-voice/wisdom", { situation: "I feel lost" });
+  assert.equal(r.status, 200);
+  assert.equal(upstreamCalls.length, 1);
+});
+
+const TAROT_CARDS = ["Death", "The Moon", "The Sun"];
+const tarotJson = (t: string) => JSON.stringify({ currentKarmaTheme: t, rootCause: t, lifeAreasAffected: [t], dailyAction: t, weeklyAction: t, spiritualPractice: t, recommendedHabit: t, reflectionQuestion: t, positiveAffirmation: t, cardInsights: [{ insight: t }, { insight: t }, { insight: t }] });
+
+test("tarot: a Tamil request gets a Tamil reading; an English first answer is retried once", async () => {
+  let n = 0;
+  upstream = async () => completion(tarotJson(++n === 1 ? EN_TEXT : TA_TEXT));
+  const r = await post("/api/tarot/reading", { mode: "karma", cards: TAROT_CARDS }, { "X-App-Language": "ta" });
+  assert.equal(r.status, 200, JSON.stringify(r.data));
+  assert.equal(upstreamCalls.length, 2);
+  assert.equal(r.data.data.currentKarmaTheme, TA_TEXT);
+});
+
+test("tarot: English twice -> 502 wrong_language and no English reading is returned", async () => {
+  upstream = async () => completion(tarotJson(EN_TEXT));
+  const r = await post("/api/tarot/reading", { mode: "karma", cards: TAROT_CARDS }, { "X-App-Language": "ta" });
+  assert.equal(r.status, 502);
+  assert.equal(r.data.code, "wrong_language");
+  assert.ok(!JSON.stringify(r.data).includes(EN_TEXT));
+});
+
+test("tarot: no language chosen -> the Hinglish default is untouched and there is no retry", async () => {
+  upstream = async () => completion(tarotJson(EN_TEXT));
+  const r = await post("/api/tarot/reading", { mode: "karma", cards: TAROT_CARDS });
+  assert.equal(r.status, 200);
+  assert.equal(upstreamCalls.length, 1);
+  assert.match(JSON.parse(upstreamCalls[0].init.body).messages[0].content, /natural Hinglish/);
+});
+
+// ── compatibility and birth chart routes ─────────────────────────────────────────────────────────────────────────────
+const compatBody = { p1: { name: "Asha", dob: "1990-05-17", zodiac: "Taurus", lifePath: 5 }, p2: { name: "Ravi", dob: "1988-02-11", zodiac: "Virgo", lifePath: 3 }, scores: { overall: 80, love: 82, marriage: 78 } };
+const compatJson = (t: string) => JSON.stringify({ loveInsight: t, marriageWindow: "2027-2029", greenFlags: [t], redFlags: [t], timeline: { attraction: t, connection: t, growth: t, commitment: t, marriage: t, stability: t }, aiInsights: [{ title: t, text: t }] });
+const birthBody = { name: "Asha", zodiac: "Taurus", lifePath: 5, dob: "1990-05-17", place: "Pune" };
+const birthJson = (t: string) => JSON.stringify({ purpose: t, archetypes: [{ icon: "x", name: t, desc: t }], powers: [{ icon: "x", name: t, desc: t }], shadows: [{ icon: "x", name: t, tip: t }], loveLanguage: t, relStyle: t, attachment: t, idealPartner: t, emotionalNeed: t, spiritMeaning: [t], mustDo: [t], mustAvoid: [t] });
+
+test("compatibility: English first answer to a Tamil request is retried and the Tamil one is returned", async () => {
+  let n = 0;
+  upstream = async () => completion(compatJson(++n === 1 ? EN_TEXT : TA_TEXT));
+  const r = await post("/api/compatibility/analyze", compatBody, { "X-App-Language": "ta" });
+  assert.equal(r.status, 200, JSON.stringify(r.data));
+  assert.equal(upstreamCalls.length, 2);
+  assert.equal(r.data.loveInsight, TA_TEXT);
+});
+
+test("compatibility: English twice -> 502 wrong_language, no English text returned; no language -> one call as before", async () => {
+  upstream = async () => completion(compatJson(EN_TEXT));
+  const bad = await post("/api/compatibility/analyze", compatBody, { "X-App-Language": "ta" });
+  assert.equal(bad.status, 502);
+  assert.equal(bad.data.code, "wrong_language");
+  assert.ok(!JSON.stringify(bad.data).includes(EN_TEXT));
+  upstreamCalls = [];
+  const plain = await post("/api/compatibility/analyze", compatBody);
+  assert.equal(plain.status, 200);
+  assert.equal(upstreamCalls.length, 1);
+});
+
+const nameBody = { name: "Asha", dob: "1990-05-17", lifePath: 5, destiny: 3, soulUrge: 1, personality: 2, chaldean: 4, lifePathPlanet: "Mercury", destinyPlanet: "Jupiter", overallScore: 80 };
+const nameJson = (t: string) => JSON.stringify({ frictionExplanation: t, wealthPotential: t, relationshipEnergy: t, careerAlignment: t, remedies: [t], signatureAnalysisNote: t, topVariantExplanation: t });
+
+test("name analysis narrative: English first answer to a Tamil request is retried and the Tamil one is returned", async () => {
+  let n = 0;
+  upstream = async () => completion(nameJson(++n === 1 ? EN_TEXT : TA_TEXT));
+  const r = await post("/api/name-analysis/narrative", nameBody, { "X-App-Language": "ta" });
+  assert.equal(r.status, 200, JSON.stringify(r.data));
+  assert.equal(upstreamCalls.length, 2);
+  assert.equal(r.data.frictionExplanation, TA_TEXT);
+});
+
+test("name analysis narrative: English twice -> 502 wrong_language, no English text; no language -> one call", async () => {
+  upstream = async () => completion(nameJson(EN_TEXT));
+  const bad = await post("/api/name-analysis/narrative", nameBody, { "X-App-Language": "ta" });
+  assert.equal(bad.status, 502);
+  assert.equal(bad.data.code, "wrong_language");
+  assert.ok(!JSON.stringify(bad.data).includes(EN_TEXT));
+  upstreamCalls = [];
+  const plain = await post("/api/name-analysis/narrative", nameBody);
+  assert.equal(plain.status, 200);
+  assert.equal(upstreamCalls.length, 1);
+});
+
+test("birth chart analyze and chat: same guard (retry once, then refuse)", async () => {
+  let n = 0;
+  upstream = async () => completion(birthJson(++n === 1 ? EN_TEXT : TA_TEXT));
+  const a = await post("/api/birthchart/analyze", birthBody, { "X-App-Language": "ta" });
+  assert.equal(a.status, 200, JSON.stringify(a.data));
+  assert.equal(upstreamCalls.length, 2);
+  assert.equal(a.data.purpose, TA_TEXT);
+
+  upstreamCalls = [];
+  upstream = async () => completion(EN_TEXT);
+  const c = await post("/api/birthchart/chat", { question: "Will I be happy?", chartData: birthBody }, { "X-App-Language": "ta" });
+  assert.equal(c.status, 502);
+  assert.equal(c.data.code, "wrong_language");
+  assert.equal(upstreamCalls.length, 2);
+  assert.ok(!JSON.stringify(c.data).includes(EN_TEXT));
+
+  upstreamCalls = [];
+  const plain = await post("/api/birthchart/chat", { question: "Will I be happy?", chartData: birthBody });
+  assert.equal(plain.status, 200);
+  assert.equal(plain.data.answer, EN_TEXT);
+  assert.equal(upstreamCalls.length, 1);
 });

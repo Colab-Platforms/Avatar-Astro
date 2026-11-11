@@ -1,4 +1,4 @@
-/** Original lotus illustration with a subtle Om, drawn in the MyBhagya palette. */
+/** Original lotus illustration with a subtle Om, drawn in the Bhagya palette. */
 /** `animated` adds a gentle floating, breathing and soft glow (`.lotus-live` in index.css); it stops for visitors who prefer reduced motion. */
 export const LotusOm = ({ size = 96, className = "", animated = false }: { size?: number; className?: string; animated?: boolean }) => (
   <svg viewBox="0 0 120 100" width={size} height={size * (100 / 120)} role="img" aria-label="Lotus with Om" className={`${className}${animated ? " lotus-live" : ""}`}>

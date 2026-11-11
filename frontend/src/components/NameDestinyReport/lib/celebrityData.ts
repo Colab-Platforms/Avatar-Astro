@@ -74,3 +74,7 @@ export const CELEBRITY_NAME_CHANGES: CelebrityChange[] = [
     photo: "/images/celebrities/riteish-deshmukh.png",
   },
 ];
+
+/** Dictionary key of a celebrity card, e.g. "Ajay Devgn" -> "ajayDevgn" (namank.celeb.items.<key>.profession / .description). */
+export const celebKey = (currentName: string): string =>
+  currentName.replace(/[^A-Za-z]+(.)/g, (_, c: string) => c.toUpperCase()).replace(/^./, (c) => c.toLowerCase());

@@ -13,7 +13,7 @@ export default function PublishedArticles() {
 
   return (
     <section className="mb-12" aria-labelledby="published-articles-h">
-      <h2 id="published-articles-h" className="mb-4 text-center font-display text-2xl text-primary">Latest from MyBhagya</h2>
+      <h2 id="published-articles-h" className="mb-4 text-center font-display text-2xl text-primary">Latest from Bhagya</h2>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {articles.map((a) => {
           const img = safeHref(a.imageUrl);

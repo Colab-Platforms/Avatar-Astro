@@ -1,4 +1,8 @@
 import { Download } from "lucide-react";
+import { Trans, useTranslation } from "react-i18next";
+import i18n from "@/i18n";
+import { useGlossary } from "@/i18n/glossary";
+import { intlTag } from "@/features/muhurat/format";
 import { CHALDEAN_MAP, datesForNumber, numberInsight, planetForNumber, reduceNumber, type NameProfile } from "@/lib/numerology";
 import { downloadBlueprintPDF } from "./lib/pdfExport";
 
@@ -6,27 +10,29 @@ const heading = { fontFamily: "'Astra','Cinzel',serif" } as const;
 
 function formatDob(dob: string) {
   const [y, m, d] = dob.split("-");
+  if (i18n.language && i18n.language !== "en") return new Intl.DateTimeFormat(intlTag(), { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(Date.UTC(Number(y), Number(m) - 1, Number(d))));
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   return `${Number(d)} ${months[Number(m) - 1]} ${y}`;
 }
 
 /** Collapsible, plain-language walk-through of how the name becomes the Naamank (Chaldean). Uses the real name and values. */
 function NaamankExplainer({ profile }: { profile: NameProfile }) {
+  const { t } = useTranslation();
   const w = profile.chaldean;
   const groups = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => ({ n, letters: Object.entries(CHALDEAN_MAP).filter(([, v]) => v === n).map(([l]) => l) }));
   const used = new Set(w.letters.map((l) => l.ch));
   const chainSteps = w.chain.slice(0, -1).map((c, i) => `${String(c).split("").join(" + ")} = ${w.chain[i + 1]}`);
   return (
     <details className="glass-card mx-auto w-full max-w-3xl rounded-2xl p-5 sm:p-6" data-testid="nd-explainer">
-      <summary className="cursor-pointer text-lg font-bold text-[#592209]" style={heading}>How is this calculated?</summary>
+      <summary className="cursor-pointer text-lg font-bold text-[#592209]" style={heading}>{t("namank.report.explainer.title")}</summary>
       <div className="mt-4 space-y-6 text-[15.5px] leading-relaxed text-[#301607]">
         <section>
-          <h3 className="text-lg font-bold text-[#592209]">How Is Your Naamank Calculated?</h3>
-          <p className="mt-1"><strong>What is Chaldean numerology?</strong> It is an old system in which every letter is given a traditional number from 1 to 8 (there is no 9 on letters). Your name is turned into one number by adding the values of its letters. These are traditional Chaldean assignments, <em>not</em> the ordinary position of a letter in the English alphabet (for example, S is 3 here, not 19, and H is 5, not 8).</p>
+          <h3 className="text-lg font-bold text-[#592209]">{t("namank.report.explainer.heading")}</h3>
+          <p className="mt-1"><Trans i18nKey="namank.report.explainer.what" components={{ b: <strong />, i: <em /> }} /></p>
         </section>
 
-        <section aria-label="Chaldean letter guide" data-testid="nd-letter-guide">
-          <h3 className="font-bold text-[#592209]">Chaldean Letter Guide</h3>
+        <section aria-label={t("namank.report.explainer.guideLabel")} data-testid="nd-letter-guide">
+          <h3 className="font-bold text-[#592209]">{t("namank.report.explainer.guideHeading")}</h3>
           <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
             {groups.map((g) => (
               <div key={g.n} className="rounded-xl border border-[#592209]/20 bg-[#FBF5EC] p-3 text-center">
@@ -37,12 +43,12 @@ function NaamankExplainer({ profile }: { profile: NameProfile }) {
               </div>
             ))}
           </div>
-          <p className="mt-1 text-xs text-[#6B4A37]">Letters that appear in your name are highlighted.</p>
+          <p className="mt-1 text-xs text-[#6B4A37]">{t("namank.report.explainer.highlighted")}</p>
         </section>
 
-        <section aria-label="Your name breakdown" data-testid="nd-breakdown">
-          <h3 className="font-bold text-[#592209]">Your Name Breakdown</h3>
-          <p className="text-sm text-[#4A2E1F]">Name used: <strong>{profile.letters}</strong></p>
+        <section aria-label={t("namank.report.explainer.breakdownLabel")} data-testid="nd-breakdown">
+          <h3 className="font-bold text-[#592209]">{t("namank.report.explainer.breakdownHeading")}</h3>
+          <p className="text-sm text-[#4A2E1F]"><Trans i18nKey="namank.report.explainer.nameUsed" values={{ letters: profile.letters }} components={{ b: <strong /> }} /></p>
           <ul className="mt-2 flex flex-wrap gap-2">
             {w.letters.map((l, i) => (
               <li key={i} className="flex w-12 flex-col items-center rounded-lg border border-[#592209]/30 bg-[#FBF5EC] py-1.5">
@@ -54,15 +60,15 @@ function NaamankExplainer({ profile }: { profile: NameProfile }) {
         </section>
 
         <section data-testid="nd-addition">
-          <h3 className="font-bold text-[#592209]">Step-by-Step Addition</h3>
+          <h3 className="font-bold text-[#592209]">{t("namank.report.explainer.additionHeading")}</h3>
           <p className="mt-1 break-words rounded-lg border border-[#592209]/15 bg-[#592209]/5 p-3 font-mono text-sm">{w.letters.map((l) => l.value).join(" + ")} = <strong>{w.total}</strong></p>
         </section>
 
         <section data-testid="nd-reduction">
-          <h3 className="font-bold text-[#592209]">Final Reduction</h3>
-          <p className="mt-1">{w.chain.length === 1 ? `${w.total} is already a single digit, so no reduction is needed.` : "A Naamank is a single digit, so the digits of the total are added again until one digit is left:"}</p>
+          <h3 className="font-bold text-[#592209]">{t("namank.report.explainer.reductionHeading")}</h3>
+          <p className="mt-1">{w.chain.length === 1 ? t("namank.report.explainer.alreadySingle", { total: w.total }) : t("namank.report.explainer.reduceAgain")}</p>
           {chainSteps.length > 0 && <ul className="mt-1 list-disc pl-5 font-mono text-sm">{chainSteps.map((c) => <li key={c}>{c}</li>)}</ul>}
-          <p className="mt-2 rounded-xl border border-[#C9873A]/50 bg-[#FFF7E6] p-3">Your Naamank is <strong className="text-xl text-[#592209]">{w.result}</strong>.</p>
+          <p className="mt-2 rounded-xl border border-[#C9873A]/50 bg-[#FFF7E6] p-3"><Trans i18nKey="namank.report.explainer.yourNaamank" values={{ result: w.result }} components={{ b: <strong className="text-xl text-[#592209]" /> }} /></p>
         </section>
       </div>
     </details>
@@ -70,102 +76,105 @@ function NaamankExplainer({ profile }: { profile: NameProfile }) {
 }
 
 
-const PLANET_NOTE = "In Indian numerology each number from 1 to 9 is linked with one of the nine grahas (1 Sun, 2 Moon, 3 Jupiter, 4 Rahu, 5 Mercury, 6 Venus, 7 Ketu, 8 Saturn, 9 Mars). This is a traditional association, not a calculation.";
-
 type Core = { key: string; hindi: string; title: string; what: string; number: number };
 type W = { letters: { ch: string; value: number }[]; total: number; chain: number[]; result: number };
 
 const steps = (chain: number[]) => {
   const out: string[] = [];
   for (let i = 0; i < chain.length - 1; i++) out.push(`${String(chain[i]).split("").join(" + ")} = ${chain[i + 1]}`);
-  return out.length ? out.join(" → ") : "Already a single digit";
+  return out.length ? out.join(" → ") : i18n.t("namank.report.singleDigit");
 };
 const workingText = (w: W) => ({ values: w.letters.map((l) => `${l.ch}=${l.value}`).join("  "), sum: `${w.letters.map((l) => l.value).join(" + ")} = ${w.total}`, reduce: steps(w.chain) });
 
 function Calc({ title, method, input, children }: { title: string; method: string; input: string; children: React.ReactNode }) {
+  const { t } = useTranslation();
   return (
     <div className="rounded-xl border border-[#592209]/15 bg-[#592209]/5 p-4">
       <h4 className="font-semibold text-[#592209]">{title}</h4>
-      <p className="text-xs text-[#6B4A37]">Method: {method}</p>
-      <p className="mt-1 text-sm text-[#301607]"><strong>Input used:</strong> {input}</p>
+      <p className="text-xs text-[#6B4A37]">{t("namank.report.calc.method", { method })}</p>
+      <p className="mt-1 text-sm text-[#301607]"><strong>{t("namank.report.calc.inputUsed")}</strong> {input}</p>
       <div className="mt-2 space-y-1 break-words font-mono text-xs leading-relaxed text-[#4A2E1F]" data-testid="nd-working">{children}</div>
     </div>
   );
 }
 
 export default function NameDestinyReport({ profile }: { profile: NameProfile }) {
+  const { t } = useTranslation();
+  const { g } = useGlossary();
+  const planetName = (n: number) => g("planet", planetForNumber(n).planet);
+  const planetNote = t("namank.report.calc.planetNote", { sun: g("planet", "Sun"), moon: g("planet", "Moon"), jupiter: g("planet", "Jupiter"), rahu: g("planet", "Rahu"), mercury: g("planet", "Mercury"), venus: g("planet", "Venus"), ketu: g("planet", "Ketu"), saturn: g("planet", "Saturn"), mars: g("planet", "Mars") });
   const dates = datesForNumber(profile.lifePath.result);
   const root = reduceNumber(profile.lifePath.result, false);
   const lp = profile.lifePath;
 
   const core: Core[] = [
-    { key: "naamank", hindi: "नामांक", title: "Naamank", what: "From the letters of your name (Chaldean method).", number: profile.chaldean.result },
-    { key: "mulank", hindi: "मूलांक", title: "Mulank", what: `From your birth day (${profile.birth.day}).`, number: profile.birth.result },
-    { key: "bhagyank", hindi: "भाग्यांक", title: "Bhagyank", what: "From your full date of birth.", number: lp.result },
+    { key: "naamank", hindi: t("namank.report.core.naamank.native"), title: t("namank.report.core.naamank.title"), what: t("namank.report.core.naamank.what"), number: profile.chaldean.result },
+    { key: "mulank", hindi: t("namank.report.core.mulank.native"), title: t("namank.report.core.mulank.title"), what: t("namank.report.core.mulank.what", { day: profile.birth.day }), number: profile.birth.result },
+    { key: "bhagyank", hindi: t("namank.report.core.bhagyank.native"), title: t("namank.report.core.bhagyank.title"), what: t("namank.report.core.bhagyank.what"), number: lp.result },
   ];
   const more = [
-    { title: "Destiny (Expression)", what: "Your talents and how you express them. From every letter of your name.", n: profile.destiny.result },
-    { title: "Soul Urge", what: "What you want deep inside. From the vowels of your name.", n: profile.soulUrge.result },
-    { title: "Personality", what: "How others tend to see you. From the consonants of your name.", n: profile.personality.result },
+    { title: t("namank.report.more.destiny.title"), what: t("namank.report.more.destiny.what"), n: profile.destiny.result },
+    { title: t("namank.report.more.soulUrge.title"), what: t("namank.report.more.soulUrge.what"), n: profile.soulUrge.result },
+    { title: t("namank.report.more.personality.title"), what: t("namank.report.more.personality.what"), n: profile.personality.result },
   ].filter((m) => m.n);
   const cw = workingText(profile.chaldean);
   const western: [string, W, string][] = [
-    ["Destiny (Expression)", profile.destiny, "every letter"],
-    ["Soul Urge", profile.soulUrge, "the vowels A E I O U"],
-    ["Personality", profile.personality, "the consonants (Y counts as a consonant)"],
+    [t("namank.report.calc.destinyTitle"), profile.destiny, t("namank.report.calc.whatDestiny")],
+    [t("namank.report.calc.soulUrgeTitle"), profile.soulUrge, t("namank.report.calc.whatSoulUrge")],
+    [t("namank.report.calc.personalityTitle"), profile.personality, t("namank.report.calc.whatPersonality")],
   ];
 
   return (
     <div className="my-12 space-y-10" data-testid="nd-results">
       <header className="text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#592209] mb-3">Your Namank Jyotish</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#592209] mb-3">{t("namank.report.eyebrow")}</p>
         <h1 className="mb-1 text-3xl sm:text-5xl font-bold text-[#301607] break-words" style={heading}>{profile.name}</h1>
-        <p className="text-[#4A2E1F]">Born {formatDob(profile.dob)}</p>
+        <p className="text-[#4A2E1F]">{t("namank.report.born", { date: formatDob(profile.dob) })}</p>
       </header>
 
       <section aria-labelledby="nd-main-h" className="mx-auto w-full max-w-xl rounded-3xl bg-gradient-to-br from-[#592209] to-[#3b1706] p-6 text-center text-[#F5E9D6] shadow-lg sm:p-8" data-testid="nd-main">
-        <h2 id="nd-main-h" className="text-xs font-semibold uppercase tracking-[0.25em] text-[#E9B872]">Your Name Number (Naamank)</h2>
+        <h2 id="nd-main-h" className="text-xs font-semibold uppercase tracking-[0.25em] text-[#E9B872]">{t("namank.report.main.heading")}</h2>
         <p className="mt-2 text-7xl font-extrabold leading-none sm:text-8xl" style={heading} data-testid="nd-main-number">{profile.chaldean.result}</p>
         <p className="mt-3 text-[15.5px] leading-relaxed">{numberInsight(profile.chaldean.result).strengths.join(" · ")}</p>
-        <p className="mt-1 text-sm text-[#E9B872]">Linked with {planetForNumber(profile.chaldean.result).planet} {planetForNumber(profile.chaldean.result).symbol} · Chaldean method</p>
+        <p className="mt-1 text-sm text-[#E9B872]">{t("namank.report.main.linked", { planet: planetName(profile.chaldean.result), symbol: planetForNumber(profile.chaldean.result).symbol })}</p>
       </section>
 
       <NaamankExplainer profile={profile} />
 
       <section aria-labelledby="nd-core-h" className="space-y-4" data-testid="nd-core">
-        <h2 id="nd-core-h" className="text-center text-2xl font-bold text-[#301607]" style={heading}>Your Three Core Numbers</h2>
+        <h2 id="nd-core-h" className="text-center text-2xl font-bold text-[#301607]" style={heading}>{t("namank.report.core.heading")}</h2>
         <div className="grid gap-4 md:grid-cols-3">
           {core.map((c) => (
             <article key={c.key} data-testid="nd-number-card" aria-label={c.title} className="glass-card rounded-2xl p-5 text-center">
               <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-[#592209]">{c.title} · {c.hindi}</h3>
               <p data-testid="nd-result" className="my-2 text-5xl font-extrabold leading-none text-[#301607]" style={heading}>{c.number}</p>
               <p className="text-sm text-[#4A2E1F]">{c.what}</p>
-              <p className="mt-1 text-xs text-[#6B4A37]">Planet: {planetForNumber(c.number).planet} {planetForNumber(c.number).symbol}</p>
+              <p className="mt-1 text-xs text-[#6B4A37]">{t("namank.report.core.planet", { planet: planetName(c.number), symbol: planetForNumber(c.number).symbol })}</p>
             </article>
           ))}
         </div>
       </section>
 
       <section aria-labelledby="nd-mean-h" className="space-y-4" data-testid="nd-meanings">
-        <h2 id="nd-mean-h" className="text-center text-2xl font-bold text-[#301607]" style={heading}>What Your Numbers Mean</h2>
+        <h2 id="nd-mean-h" className="text-center text-2xl font-bold text-[#301607]" style={heading}>{t("namank.report.means.heading")}</h2>
         <div className="grid gap-4 md:grid-cols-3">
           {core.map((c) => { const i = numberInsight(c.number); return (
             <article key={c.key} className="glass-card rounded-2xl p-5" data-testid={`nd-meaning-${c.key}`}>
               <h3 className="font-bold text-[#592209]">{c.title} {c.number}</h3>
               <p className="mt-2 text-[15.5px] leading-relaxed text-[#301607]">{i.meaning}</p>
-              <p className="mt-2 text-sm"><strong className="text-[#592209]">Strengths:</strong> {i.strengths.join(", ")}</p>
-              <p className="mt-1 text-sm"><strong className="text-[#592209]">Challenge:</strong> {i.challenge.replace(/^The shadow side is /, "")}</p>
+              <p className="mt-2 text-sm"><strong className="text-[#592209]">{t("namank.report.means.strengths")}</strong> {i.strengths.join(", ")}</p>
+              <p className="mt-1 text-sm"><strong className="text-[#592209]">{t("namank.report.means.challenge")}</strong> {i.shadow !== undefined ? t("namank.insight.shadowShort", { shadow: i.shadow }) : i.challenge}</p>
             </article>
           ); })}
         </div>
       </section>
 
       <section aria-labelledby="nd-tip-h" className="space-y-4" data-testid="nd-guidance">
-        <h2 id="nd-tip-h" className="text-center text-2xl font-bold text-[#301607]" style={heading}>Your Practical Guidance</h2>
+        <h2 id="nd-tip-h" className="text-center text-2xl font-bold text-[#301607]" style={heading}>{t("namank.report.guidance.heading")}</h2>
         <div className="grid gap-4 md:grid-cols-3">
           {core.map((c) => (
             <article key={c.key} className="rounded-2xl border border-[#C9873A]/50 bg-[#FFF7E6] p-5">
-              <h3 className="text-xs font-bold uppercase tracking-[0.16em] text-[#592209]">For your {c.title}</h3>
+              <h3 className="text-xs font-bold uppercase tracking-[0.16em] text-[#592209]">{t("namank.report.guidance.for", { title: c.title })}</h3>
               <p className="mt-1 text-[15.5px] leading-relaxed text-[#301607]">{numberInsight(c.number).tip}</p>
             </article>
           ))}
@@ -173,40 +182,40 @@ export default function NameDestinyReport({ profile }: { profile: NameProfile })
       </section>
 
       <section aria-labelledby="nd-more-h" className="space-y-3" data-testid="nd-western">
-        <div className="text-center"><h2 id="nd-more-h" className="text-xl font-bold text-[#301607]" style={heading}>More Name Insights</h2><p className="text-sm text-[#4A2E1F]">Western (Pythagorean) method, shown separately so the two systems are not mixed.</p></div>
+        <div className="text-center"><h2 id="nd-more-h" className="text-xl font-bold text-[#301607]" style={heading}>{t("namank.report.more.heading")}</h2><p className="text-sm text-[#4A2E1F]">{t("namank.report.more.sub")}</p></div>
         <div className="grid gap-3 md:grid-cols-3">
           {more.map((m) => (
             <article key={m.title} className="flex items-center gap-3 rounded-2xl border border-[#592209]/25 bg-[#FBF5EC] p-4">
               <span className="text-4xl font-extrabold text-[#592209]" style={heading}>{m.n}</span>
-              <div><h3 className="font-semibold text-[#301607]">{m.title}</h3><p className="text-sm text-[#4A2E1F]">{m.what} Often linked with {numberInsight(m.n).strengths[0].toLowerCase()}.</p></div>
+              <div><h3 className="font-semibold text-[#301607]">{m.title}</h3><p className="text-sm text-[#4A2E1F]">{t("namank.report.more.line", { what: m.what, strength: numberInsight(m.n).strengths[0].toLowerCase() })}</p></div>
             </article>
           ))}
         </div>
       </section>
 
       <details className="glass-card rounded-2xl p-5 sm:p-6" data-testid="nd-calculations">
-        <summary className="cursor-pointer text-xl font-bold text-[#592209]" style={heading}>Show Calculations</summary>
+        <summary className="cursor-pointer text-xl font-bold text-[#592209]" style={heading}>{t("namank.report.calc.heading")}</summary>
         <div className="mt-4 space-y-4">
-          <p className="text-sm leading-relaxed text-[#4A2E1F]">{PLANET_NOTE} Each number is plain arithmetic: take each letter's value, add them, then add the digits of the total until one digit is left. Nothing here is generated text.</p>
-          <Calc title="Naamank (Name Number)" method="Chaldean (letters A to Z valued 1 to 8)" input={profile.letters}>
-            <p>Letter values: {cw.values}</p><p>Addition: {cw.sum}</p><p>Reduction: {cw.reduce}</p><p>Result: {profile.chaldean.result}</p>
+          <p className="text-sm leading-relaxed text-[#4A2E1F]">{t("namank.report.calc.intro", { note: planetNote })}</p>
+          <Calc title={t("namank.report.calc.naamankTitle")} method={t("namank.report.calc.naamankMethod")} input={profile.letters}>
+            <p>{t("namank.report.calc.letterValues", { value: cw.values })}</p><p>{t("namank.report.calc.addition", { value: cw.sum })}</p><p>{t("namank.report.calc.reduction", { value: cw.reduce })}</p><p>{t("namank.report.calc.result", { value: profile.chaldean.result })}</p>
           </Calc>
-          <Calc title="Mulank (Birth Number)" method="Day of the month" input={`Birth day ${profile.birth.day}`}>
-            <p>Reduction: {steps(profile.birth.chain)}</p><p>Result: {profile.birth.result}</p>
+          <Calc title={t("namank.report.calc.mulankTitle")} method={t("namank.report.calc.mulankMethod")} input={t("namank.report.calc.birthDay", { day: profile.birth.day })}>
+            <p>{t("namank.report.calc.reduction", { value: steps(profile.birth.chain) })}</p><p>{t("namank.report.calc.result", { value: profile.birth.result })}</p>
           </Calc>
-          <Calc title="Bhagyank (Life Path)" method="All digits of the date of birth" input={profile.dob}>
-            <p>Digits: {lp.digits.join(" + ")} = {lp.total}</p><p>Reduction: {steps(lp.chain)}{lp.result > 9 ? " (11, 22 and 33 are kept as master numbers)" : ""}</p><p>Result: {lp.result}</p>
+          <Calc title={t("namank.report.calc.bhagyankTitle")} method={t("namank.report.calc.bhagyankMethod")} input={profile.dob}>
+            <p>{t("namank.report.calc.digits", { digits: lp.digits.join(" + "), total: lp.total })}</p><p>{t("namank.report.calc.reduction", { value: steps(lp.chain) + (lp.result > 9 ? ` ${t("namank.report.calc.masterNote")}` : "") })}</p><p>{t("namank.report.calc.result", { value: lp.result })}</p>
           </Calc>
-          {western.map(([t, w, what]) => {
+          {western.map(([title, w, what]) => {
             const wk = workingText(w);
             return (
-              <Calc key={t} title={`${t} Number`} method={`Pythagorean (A=1 to I=9, then repeating), ${what}`} input={w.letters.map((l) => l.ch).join("") || "none"}>
-                {w.letters.length ? <><p>Letter values: {wk.values}</p><p>Addition: {wk.sum}</p><p>Reduction: {wk.reduce}</p><p>Result: {w.result}</p></> : <p>This name has no such letters.</p>}
+              <Calc key={title} title={title} method={t("namank.report.calc.pythagorean", { what })} input={w.letters.map((l) => l.ch).join("") || t("namank.report.calc.none")}>
+                {w.letters.length ? <><p>{t("namank.report.calc.letterValues", { value: wk.values })}</p><p>{t("namank.report.calc.addition", { value: wk.sum })}</p><p>{t("namank.report.calc.reduction", { value: wk.reduce })}</p><p>{t("namank.report.calc.result", { value: w.result })}</p></> : <p>{t("namank.report.calc.noLetters")}</p>}
               </Calc>
             );
           })}
           <p data-testid="nd-dates" className="text-sm text-[#4A2E1F]">
-            Dates whose digits reduce to {root}{lp.result > 9 ? ` (the root of master Bhagyank ${lp.result})` : ""}: <strong className="text-[#301607]">{dates.join(", ")}</strong>. A traditional association, not a forecast of lucky days.
+            <Trans i18nKey="namank.report.calc.dates" values={{ root, master: lp.result > 9 ? ` ${t("namank.report.calc.masterRoot", { n: lp.result })}` : "", dates: dates.join(", ") }} components={{ b: <strong className="text-[#301607]" /> }} />
           </p>
         </div>
       </details>
@@ -214,12 +223,12 @@ export default function NameDestinyReport({ profile }: { profile: NameProfile })
       <div className="flex justify-center">
         <button onClick={() => downloadBlueprintPDF(profile)}
           className="inline-flex items-center gap-2 rounded-full border-2 border-[#592209]/50 px-6 py-3 text-sm font-semibold uppercase tracking-wide text-[#592209] transition-colors hover:bg-[#592209]/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#592209]">
-          <Download size={16} aria-hidden="true" /> Download as PDF
+          <Download size={16} aria-hidden="true" /> {t("namank.report.download")}
         </button>
       </div>
 
       <p className="mx-auto max-w-2xl text-center text-xs leading-relaxed text-[#6B4A37]/80">
-        This reading is for personal interest and reflection. Numerology is a traditional belief system that is not scientifically proven, and the result is not a prediction or professional advice.
+        {t("namank.report.disclaimer")}
       </p>
     </div>
   );

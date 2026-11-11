@@ -128,7 +128,7 @@ describe("results: birth profile and method", () => {
     expect(m).toHaveTextContent("Brihat Parashara Hora Shastra");
     expect(m).toHaveTextContent("Numerology method, not a Panchang calculation");
     expect(m).toHaveTextContent(/common Indian numerology table/);
-    expect(m).toHaveTextContent(/MyBhagya's own way of summarising/);
+    expect(m).toHaveTextContent(/Bhagya's own way of summarising/);
     expect(m).toHaveTextContent("+2");
     expect(m).toHaveTextContent("No percentages are used");
     expect(m).toHaveTextContent(/Rahu \(4\) and Ketu \(7\)/); // Life Path 4 involves Rahu, so the convention is disclosed
@@ -328,7 +328,7 @@ describe("saving, copying and sharing", () => {
     const saved = screen.getByTestId("saved-numbers");
     expect(saved).toHaveTextContent(n);
     expect(saved).toHaveTextContent(/browser only/);
-    expect(saved).toHaveTextContent(/not attached to your MyBhagya account/);
+    expect(saved).toHaveTextContent(/not attached to your Bhagya account/);
     expect(JSON.parse(localStorage.getItem("lucky-vehicle-favourites-v1")!)).toEqual([n]);
     unmount();
     render(<VehicleResults profile={profile} query={query()} />);

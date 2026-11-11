@@ -69,8 +69,14 @@ export function scriptShare(text: string, lang: LocaleCode): number {
 export function isInLanguage(text: string, lang: LocaleCode): boolean {
   if (scriptShare(text, lang) < (lang === "en" ? 0.85 : 0.6)) return false;
   if (lang === "en") return true;
-  return text
-    .split(/\n+/)
-    .filter((p) => [...p].filter((c) => /\p{L}/u.test(c)).length >= 30)
-    .every((p) => scriptShare(p, lang) >= 0.35);
+  const paragraphs = text.split(/\n+/);
+  const hasEnglishHeading = paragraphs.some((paragraph) => {
+    const line = paragraph.trim();
+    const isHeading = /^(?:#{1,6}\s+|(?:\*\*|__))[A-Za-z][\p{L}\p{M}\s:!?.,'’()-]{0,80}(?:\*\*|__)?\s*:?\s*$/u.test(line)
+      || /^[A-Za-z][A-Za-z\s]{1,50}:\s*$/.test(line);
+    return isHeading && scriptShare(line, lang) < 0.6;
+  });
+  return !hasEnglishHeading && paragraphs
+    .filter((paragraph) => [...paragraph].filter((c) => /\p{L}/u.test(c)).length >= 30)
+    .every((paragraph) => scriptShare(paragraph, lang) >= 0.35);
 }

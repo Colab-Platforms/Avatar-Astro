@@ -1,7 +1,9 @@
 import { Router, Request, Response } from "express";
 import { createRateLimiter } from "../utils/rateLimit.js";
 import { auth } from "../middleware/authMiddleware.js";
-import { languageRule, requestLanguage, tokenBudget } from "../utils/responseLanguage.js";
+import { WrongLanguageError, generateInLanguage, languageRule, requestLanguage, tokenBudget } from "../utils/responseLanguage.js";
+
+class ProviderDown extends Error {}
 
 const router = Router();
 router.use(auth("USER"));
@@ -80,25 +82,33 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
 }`;
 
     const lang = requestLanguage(req); // the visitor's chosen language, if any; otherwise English as before
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
-        "HTTP-Referer": "https://spiritual-ai.app",
-        "X-Title": "Spiritual AI Birth Chart",
-      },
-      body: JSON.stringify({
-        model: "google/gemma-4-31b-it:free",
-        max_tokens: tokenBudget(1800, lang),
-        messages: [{ role: "user", content: prompt + languageRule(lang, "") }],
-      }),
-    });
+    let raw: string;
+    try {
+      raw = await generateInLanguage(lang, async (retryNote) => {
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`,
+          "HTTP-Referer": "https://spiritual-ai.app",
+          "X-Title": "Spiritual AI Birth Chart",
+        },
+        body: JSON.stringify({
+          model: "google/gemma-4-31b-it:free",
+          max_tokens: tokenBudget(1800, lang),
+          messages: [{ role: "user", content: prompt + languageRule(lang, "") + retryNote }],
+        }),
+      });
 
-    const data = await response.json() as any;
-    if (data.error) { console.error("Birth chart provider error"); return res.status(502).json({ error: "The reading service is unavailable right now" }); }
-
-    const raw = data.choices?.[0]?.message?.content || "";
+      const data = await response.json() as any;
+      if (data.error) { console.error("AI provider error"); throw new ProviderDown(); }
+        return data.choices?.[0]?.message?.content || "";
+      });
+    } catch (e) {
+      if (e instanceof WrongLanguageError) return res.status(502).json({ error: e.message, code: e.code, language: e.language });
+      if (e instanceof ProviderDown) return res.status(502).json({ error: "The reading service is unavailable right now" });
+      throw e;
+    }
     const clean = raw.replace(/```json|```/g, "").trim();
     const parsed = JSON.parse(clean);
 
@@ -137,25 +147,33 @@ Answer the following question with COMPLETE SPECIFICITY to this person's zodiac,
 Question: "${question}"`;
 
     const lang = requestLanguage(req);
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
-        "HTTP-Referer": "https://spiritual-ai.app",
-        "X-Title": "Spiritual AI Chart Chat",
-      },
-      body: JSON.stringify({
-        model: "google/gemma-4-31b-it:free",
-        max_tokens: tokenBudget(400, lang),
-        messages: [{ role: "user", content: prompt + languageRule(lang, "") }],
-      }),
-    });
+    let answer: string;
+    try {
+      answer = await generateInLanguage(lang, async (retryNote) => {
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`,
+          "HTTP-Referer": "https://spiritual-ai.app",
+          "X-Title": "Spiritual AI Chart Chat",
+        },
+        body: JSON.stringify({
+          model: "google/gemma-4-31b-it:free",
+          max_tokens: tokenBudget(400, lang),
+          messages: [{ role: "user", content: prompt + languageRule(lang, "") + retryNote }],
+        }),
+      });
 
-    const data = await response.json() as any;
-    if (data.error) { console.error("Birth chart provider error"); return res.status(502).json({ error: "The reading service is unavailable right now" }); }
-
-    const answer = data.choices?.[0]?.message?.content || "";
+      const data = await response.json() as any;
+      if (data.error) { console.error("AI provider error"); throw new ProviderDown(); }
+        return data.choices?.[0]?.message?.content || "";
+      });
+    } catch (e) {
+      if (e instanceof WrongLanguageError) return res.status(502).json({ error: e.message, code: e.code, language: e.language });
+      if (e instanceof ProviderDown) return res.status(502).json({ error: "The reading service is unavailable right now" });
+      throw e;
+    }
     return res.json({ answer });
   } catch (err: any) {
     console.error("Chart chat error:", err);

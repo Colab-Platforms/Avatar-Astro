@@ -3,8 +3,11 @@ import { detectLanguageRequest } from "@/i18n/languageRequest";
 
 describe("explicit language requests", () => {
   it.each([
+    ["Can you speak in Tamil?", "ta"],
     ["Talk in Tamil.", "ta"],
     ["talk in tamil", "ta"],
+    ["Talk in Gujarati.", "gu"],
+    ["Please reply in Telugu.", "te"],
     ["Please reply in Marathi", "mr"],
     ["please speak in the Hindi language", "hi"],
     ["Can you answer in Telugu?", "te"],
@@ -17,6 +20,7 @@ describe("explicit language requests", () => {
     ["tamil mein bolo", "ta"],
     ["marathi me jawab do", "mr"],
     ["हिंदी में जवाब दो।", "hi"],
+    ["मराठीत बोला.", "mr"],
     ["मराठीत उत्तर द्या", "mr"],
     ["தமிழில் பேசுங்கள்.", "ta"],
     ["తెలుగులో మాట్లాడండి", "te"],
@@ -33,6 +37,8 @@ describe("explicit language requests", () => {
     "hi",
     "I feel worried about my career.",
     "I can't speak English well",
+    "I cannot speak English",
+    "I cannot speak in English",
     "I cannot talk in Hindi",
     "My friend is from Tamil Nadu and I miss her",
     "I want to learn Marathi cooking",

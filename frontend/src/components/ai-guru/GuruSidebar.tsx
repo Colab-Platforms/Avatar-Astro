@@ -85,7 +85,7 @@ const GuruSidebar = ({
             <div className="font-home-serif text-lg font-semibold leading-tight text-foreground">
               {t("features.ai-guru.name")}
             </div>
-            <div className="text-[11px] leading-tight text-muted-foreground">Guidance with MyBhagya</div>
+            <div className="text-[11px] leading-tight text-muted-foreground">Guidance with Bhagya</div>
           </div>
         </div>
         <button

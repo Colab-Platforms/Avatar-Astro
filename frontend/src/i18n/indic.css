@@ -75,6 +75,10 @@ html[data-indic] .lg\:whitespace-nowrap {
 html[data-indic] button,
 html[data-indic] a { overflow-wrap: anywhere; }
 
+/* The desktop navbar keeps every label on one line (it switches to the menu button before it runs out of room), and never breaks a word. */
+html[data-indic] nav .hidden.whitespace-nowrap,
+html[data-indic] nav .hidden.whitespace-nowrap :is(a, button, span) { white-space: nowrap !important; overflow-wrap: normal; word-break: keep-all; }
+
 /* Devanagari names (the baby-name spellings) inside a page in another script: a Devanagari-capable font, not whatever the page's script font lacks. */
 html[data-indic] [lang="hi"]:not(html),
 html[data-indic] [lang="mr"]:not(html) {

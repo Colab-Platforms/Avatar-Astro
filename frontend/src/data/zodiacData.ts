@@ -1,3 +1,6 @@
+import { useTranslation } from 'react-i18next';
+import { useGlossary } from '@/i18n/glossary';
+
 export interface ZodiacSign {
   name: string;
   symbol: string;
@@ -177,3 +180,24 @@ export const zodiacSigns: ZodiacSign[] = [
 ];
 
 export const horoscopeCategories = ['Love', 'Career', 'Health', 'Lucky Numbers'];
+
+/**
+ * Translated look-ups for the static sign data above. The data keeps its English values and ids; the English text is the
+ * `defaultValue`, and each item has a stable key (`zodiac.sign.<Name>.<field>`). Sign and planet names go through the glossary.
+ */
+export function useZodiacText() {
+  const { t } = useTranslation();
+  const { g } = useGlossary();
+  return {
+    /** Sign name (Aries ... Pisces) in the chosen language. */
+    sign: (name: string) => g('rashi', name),
+    /** Planet name (Mars, Pluto ...) in the chosen language. */
+    planet: (name: string) => g('planet', name),
+    element: (element: string) => t(`zodiac.element.${element}`, { defaultValue: element }),
+    dates: (z: ZodiacSign) => t(`zodiac.sign.${z.name}.dates`, { defaultValue: z.dates }),
+    description: (z: ZodiacSign) => t(`zodiac.sign.${z.name}.description`, { defaultValue: z.description }),
+    trait: (z: ZodiacSign, i: number) => t(`zodiac.sign.${z.name}.traits.${i}`, { defaultValue: z.traits[i] }),
+    strength: (z: ZodiacSign, i: number) => t(`zodiac.sign.${z.name}.strengths.${i}`, { defaultValue: z.strengths[i] }),
+    weakness: (z: ZodiacSign, i: number) => t(`zodiac.sign.${z.name}.weaknesses.${i}`, { defaultValue: z.weaknesses[i] }),
+  };
+}

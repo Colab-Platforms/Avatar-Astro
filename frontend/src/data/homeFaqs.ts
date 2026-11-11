@@ -8,8 +8,8 @@ export interface HomeFaq {
 /** The home page FAQ (five questions). Feature names come from the feature catalog so they stay in step with the approved names. */
 export const homeFaqs: HomeFaq[] = [
   {
-    question: "What can I explore on MyBhagya?",
-    answer: `MyBhagya brings together Vedic astrology, spiritual wisdom and self-reflection. Explore your ${FEATURES.birthChart.name}, ${FEATURES.zodiac.name}, ${FEATURES.tarot.name}, ${FEATURES.palm.name}, ${FEATURES.numerology.name}, ${FEATURES.compatibility.name}, ${FEATURES.ratna.name}, ${FEATURES.futurePath.name}, ${FEATURES.shloka.name} and more.`,
+    question: "What can I explore on Bhagya?",
+    answer: `Bhagya brings together Vedic astrology, spiritual wisdom and self-reflection. Explore your ${FEATURES.birthChart.name}, ${FEATURES.zodiac.name}, ${FEATURES.tarot.name}, ${FEATURES.palm.name}, ${FEATURES.numerology.name}, ${FEATURES.compatibility.name}, ${FEATURES.ratna.name}, ${FEATURES.futurePath.name}, ${FEATURES.shloka.name} and more.`,
   },
   {
     question: "Why should I trust astrology? Is it really accurate?",
@@ -17,9 +17,9 @@ export const homeFaqs: HomeFaq[] = [
       "Vedic astrology is an ancient traditional system that reads planetary positions and links them to different parts of life. We try to explain these traditional ideas clearly. Astrology is not scientifically proven to predict the future, so treat a reading as food for reflection, not as a guaranteed fact.",
   },
   {
-    question: "I am an atheist. Is MyBhagya still for me?",
+    question: "I am an atheist. Is Bhagya still for me?",
     answer:
-      "Absolutely. You don't need a religion or a belief in astrology to explore MyBhagya. You can enjoy the cultural knowledge, stories, life reflections, traditional calendar details and practical thoughts. Explore only what feels meaningful to you.",
+      "Absolutely. You don't need a religion or a belief in astrology to explore Bhagya. You can enjoy the cultural knowledge, stories, life reflections, traditional calendar details and practical thoughts. Explore only what feels meaningful to you.",
   },
   {
     question: "Are my partner and I astrologically compatible?",

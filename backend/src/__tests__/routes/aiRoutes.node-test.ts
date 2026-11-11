@@ -101,6 +101,26 @@ test("chat: honours GROQ_MODEL env", async () => {
   assert.equal(JSON.parse(upstreamCalls[0].init.body).model, "some/other-model");
 });
 
+test("chat: validates the selected language and puts its native-script instruction before the final user turn", async () => {
+  await post("/api/ai/chat", {
+    language: "ta",
+    max_tokens: 380,
+    messages: [
+      { role: "system", content: "Voice Consultation system prompt" },
+      { role: "user", content: "hello" },
+      { role: "assistant", content: "வணக்கம்" },
+      { role: "user", content: "I feel worried about my career." },
+    ],
+  });
+  const sent = JSON.parse(upstreamCalls[0].init.body);
+  assert.equal(sent.messages[0].content, "Voice Consultation system prompt");
+  assert.match(sent.messages.at(-2).content, /natural, simple Tamil/);
+  assert.match(sent.messages.at(-2).content, /Tamil script/);
+  assert.equal(sent.messages.at(-1).content, "I feel worried about my career.");
+  assert.equal(sent.messages.at(-1).role, "user");
+  assert.equal(sent.max_tokens, 950); // the selected Indic-language token budget is applied
+});
+
 const badChatBodies: [string, unknown][] = [
   ["no body", {}],
   ["empty messages", { messages: [] }],

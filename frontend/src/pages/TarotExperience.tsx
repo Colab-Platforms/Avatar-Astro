@@ -5,9 +5,11 @@ import { useFeatureTitle } from "@/hooks/useFeatureTitle";
 import { motion, AnimatePresence } from 'framer-motion';
 import { authedFetch, requireSignIn, SignInRequiredError } from '@/lib/authedFetch';
 import gsap from 'gsap';
+import { useTranslation } from 'react-i18next';
+import i18n from '@/i18n';
 import { RotateCcw, Shuffle } from 'lucide-react';
 import TarotArt from '../components/tarot/TarotArt';
-import { TarotCard, ALL_CARDS, MAJOR_ARCANA, shuffleDeck, getCategoryCardImage } from '../data/tarotData';
+import { TarotCard, ALL_CARDS, MAJOR_ARCANA, shuffleDeck, getCategoryCardImage, tarotCardName, tarotCardKeywords, tarotCardTopLabel, tarotCategoryLabel } from '../data/tarotData';
 import { TarotLandingScene } from '../components/tarot/TarotLandingScene';
 import { useBackOverride } from '../context/NavigationContext';
 import { API_BASE_URL } from '@/lib/api';
@@ -94,6 +96,8 @@ const CardBackImage: React.FC = () => {
 
 // ─── Card Face component ──────────────────────────────────────────────────────
 const CardFace = ({ card, size = 'md', category }: { card: TarotCard; size?: 'sm' | 'md' | 'lg'; category?: string }) => {
+  const { t } = useTranslation();
+  const cardName = tarotCardName(t, card);
   const theme = getCardTheme(card);
   const isMajor = card.arcana === 'major';
   const [imgFailed, setImgFailed] = useState(false);
@@ -105,14 +109,14 @@ const CardFace = ({ card, size = 'md', category }: { card: TarotCard; size?: 'sm
     lg: { symbol: 52, name: 16, sub: 11, kw: 10,  pad: '10px 8px', numSize: 14 },
   }[size];
 
-  const topLabel = isMajor ? card.number : (card.suit || '');
+  const topLabel = tarotCardTopLabel(t, card);
 
   if (imgSrc) {
     return (
       <div style={{ position: 'relative', width: '100%', height: '100%', borderRadius: '7px', overflow: 'hidden', border: `1.5px solid ${theme.border}`, background: theme.bg }}>
         <img
           src={imgSrc}
-          alt={card.name}
+          alt={cardName}
           onError={() => setImgFailed(true)}
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }}
         />
@@ -120,7 +124,7 @@ const CardFace = ({ card, size = 'md', category }: { card: TarotCard; size?: 'sm
           <span style={{ fontSize: `${cfg.numSize}px`, color: '#301607', letterSpacing: '2px', fontFamily: "'DM Sans', system-ui, sans-serif", textTransform: 'uppercase', fontWeight: 600 }}>{topLabel}</span>
         </div>
         <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: size === 'sm' ? '4px 3px 5px' : '8px 6px 10px', textAlign: 'center', background: 'linear-gradient(to top, #FBF5EC 0%, transparent 100%)' }}>
-          <span style={{ fontSize: `${cfg.name}px`, color: '#301607', fontFamily: "'DM Sans', system-ui, sans-serif", textTransform: 'uppercase', letterSpacing: '1px', lineHeight: 1.2 }}>{card.name}</span>
+          <span style={{ fontSize: `${cfg.name}px`, color: '#301607', fontFamily: "'DM Sans', system-ui, sans-serif", textTransform: 'uppercase', letterSpacing: '1px', lineHeight: 1.2 }}>{cardName}</span>
         </div>
       </div>
     );
@@ -137,10 +141,10 @@ const CardFace = ({ card, size = 'md', category }: { card: TarotCard; size?: 'sm
         <span style={{ fontSize: `${cfg.numSize}px`, color: '#F5E9D6', letterSpacing: '2px', fontFamily: "'DM Sans', system-ui, sans-serif", textTransform: 'uppercase', fontWeight: 600 }}>{topLabel}</span>
       </div>
       <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: cfg.pad, paddingTop: size === 'sm' ? 12 : 22, textAlign: 'center', background: 'linear-gradient(to top, rgba(18,6,2,0.94) 40%, transparent)', zIndex: 1 }}>
-        <div style={{ fontSize: `${cfg.name}px`, color: '#F5E9D6', fontFamily: "'DM Sans', system-ui, sans-serif", textTransform: 'uppercase', letterSpacing: '1px', lineHeight: 1.2, fontWeight: 600 }}>{card.name}</div>
+        <div style={{ fontSize: `${cfg.name}px`, color: '#F5E9D6', fontFamily: "'DM Sans', system-ui, sans-serif", textTransform: 'uppercase', letterSpacing: '1px', lineHeight: 1.2, fontWeight: 600 }}>{cardName}</div>
         {size !== 'sm' && (
           <div style={{ fontSize: `${cfg.kw}px`, color: '#E9B872', marginTop: 3, lineHeight: 1.3 }}>
-            {card.keywords.slice(0, 2).join(' · ')}
+            {tarotCardKeywords(t, card).slice(0, 2).join(' · ')}
           </div>
         )}
       </div>
@@ -173,26 +177,30 @@ const Particles = ({ count = 40 }: { count?: number }) => {
 };
 
 // ─── Opening Scene (legacy, kept) ────────────────────────────────────────────
-const OpeningScene = ({ onBegin }: { onBegin: () => void }) => (
+const OpeningScene = ({ onBegin }: { onBegin: () => void }) => {
+  const { t } = useTranslation();
+  return (
   <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
     <Particles count={50} />
     <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.4 }}
       style={{ textAlign: 'center', zIndex: 10, padding: '0 24px', maxWidth: '700px' }}>
       <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8, duration: 1 }}
         style={{ fontSize: 'clamp(42px, 8vw, 80px)', fontFamily: "'DM Sans', system-ui, sans-serif", textTransform: 'uppercase', letterSpacing: '8px', lineHeight: 1.1, marginBottom: '16px', background: 'linear-gradient(135deg, #592209 0%, #FBF5EC 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-        Welcome<br />Seeker
+        {t('tarot.page.opening.welcome')}<br />{t('tarot.page.opening.seeker')}
       </motion.h1>
       <motion.button initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 2.4, type: 'spring' }}
         onClick={onBegin}
         style={{ padding: '18px 52px', fontSize: '16px', fontFamily: "'DM Sans', system-ui, sans-serif", letterSpacing: '4px', textTransform: 'uppercase', color: '#F5E9D6', cursor: 'pointer', border: 'none', background: 'linear-gradient(135deg, #592209 0%, #B5561A 50%, #592209 100%)', borderRadius: '4px', boxShadow: '0 0 30px rgba(89,34,9,0.5)' }}>
-        Begin Journey
+        {t('tarot.page.opening.begin')}
       </motion.button>
     </motion.div>
   </div>
-);
+  );
+};
 
 // ─── Shuffle Scene (legacy, kept) ────────────────────────────────────────────
 const ShuffleScene = ({ onComplete }: { onComplete: () => void }) => {
+  const { t } = useTranslation();
   const [step, setStep] = useState(0);
   const cardData = useMemo(() => Array.from({ length: 20 }, (_, i) => {
     const angle = (i / 20) * Math.PI * 2;
@@ -220,13 +228,14 @@ const ShuffleScene = ({ onComplete }: { onComplete: () => void }) => {
           </motion.div>
         ))}
       </div>
-      <button onClick={onComplete} style={{ position: 'absolute', bottom: '30px', background: 'transparent', border: '1px solid rgba(89,34,9,0.3)', color: '#592209', fontFamily: "'DM Sans', system-ui, sans-serif", letterSpacing: '3px', fontSize: '11px', padding: '8px 20px', cursor: 'pointer', textTransform: 'uppercase', borderRadius: '2px' }}>Skip</button>
+      <button onClick={onComplete} style={{ position: 'absolute', bottom: '30px', background: 'transparent', border: '1px solid rgba(89,34,9,0.3)', color: '#592209', fontFamily: "'DM Sans', system-ui, sans-serif", letterSpacing: '3px', fontSize: '11px', padding: '8px 20px', cursor: 'pointer', textTransform: 'uppercase', borderRadius: '2px' }}>{t('tarot.page.opening.skip')}</button>
     </div>
   );
 };
 
 // ─── Question Select Scene ────────────────────────────────────────────────────
 const QuestionSelectScene = ({ onSelect }: { onSelect: (q: string) => void }) => {
+  const { t } = useTranslation();
   const [hov, setHov] = useState<string|null>(null);
   const canRef = useRef<HTMLCanvasElement>(null);
 
@@ -480,14 +489,14 @@ const QuestionSelectScene = ({ onSelect }: { onSelect: (q: string) => void }) =>
           </div>
 
           <h1 style={{fontFamily:"'DM Sans', system-ui, sans-serif",fontWeight:700,margin:'0 auto',lineHeight:1.3,textAlign:'center',maxWidth:840}}>
-            <span style={{display:'block',fontSize:36,color:'#301607',letterSpacing:0}}>What Calls To</span>
-            <span style={{display:'block',fontSize:36,color:'#592209',letterSpacing:0}}>Your Soul</span>
+            <span style={{display:'block',fontSize:36,color:'#301607',letterSpacing:0}}>{t('tarot.page.question.line1')}</span>
+            <span style={{display:'block',fontSize:36,color:'#592209',letterSpacing:0}}>{t('tarot.page.question.line2')}</span>
           </h1>
           <p style={{fontFamily:"'DM Sans', system-ui, sans-serif",fontSize:17,color:'rgba(48,22,7,0.78)',margin:'16px auto 0',maxWidth:640,lineHeight:1.6}}>{FEATURES.tarot.subtitle}</p>
 
           <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:14,marginTop:25}}>
             <div style={{width:48,height:1,background:'linear-gradient(to right,transparent,rgba(89,34,9,0.5))'}}/>
-            <p style={{fontFamily:"'DM Sans', system-ui, sans-serif",fontSize:19,color:'rgba(48,22,7,0.72)',letterSpacing:'0.04em',margin:0}}>Choose the area of life you wish to illuminate</p>
+            <p style={{fontFamily:"'DM Sans', system-ui, sans-serif",fontSize:19,color:'rgba(48,22,7,0.72)',letterSpacing:'0.04em',margin:0}}>{t('tarot.page.question.choose')}</p>
             <div style={{width:48,height:1,background:'linear-gradient(to left,transparent,rgba(89,34,9,0.5))'}}/>
           </div>
         </div>
@@ -532,7 +541,7 @@ const QuestionSelectScene = ({ onSelect }: { onSelect: (q: string) => void }) =>
                 }}>
                   <div style={{height:200,overflow:'hidden',position:'relative'}}>
                     {cardArt[id]
-                      ? <img src={cardArt[id]} alt={id} style={{width:'100%',height:'100%',objectFit:'cover',objectPosition:'center',display:'block'}}/>
+                      ? <img src={cardArt[id]} alt={tarotCategoryLabel(t, id)} style={{width:'100%',height:'100%',objectFit:'cover',objectPosition:'center',display:'block'}}/>
                       : scenes[id]}
                     <div style={{position:'absolute',left:0,right:0,bottom:0,height:40,
                       background:'linear-gradient(to bottom, transparent, #FBF5EC)',pointerEvents:'none'}}/>
@@ -542,7 +551,7 @@ const QuestionSelectScene = ({ onSelect }: { onSelect: (q: string) => void }) =>
                       fontFamily:"'Cinzel',serif",fontSize:24,fontWeight:700,letterSpacing:'0.02em',
                       textTransform:'uppercase',transition:'color 0.3s',lineHeight:1.15,
                       color: isHov ? m.color : '#301607',
-                    }}>{id}</span>
+                    }}>{tarotCategoryLabel(t, id)}</span>
                   </div>
                 </div>
               </motion.div>
@@ -580,7 +589,7 @@ const QuestionSelectScene = ({ onSelect }: { onSelect: (q: string) => void }) =>
         <div style={{textAlign:'center',marginTop:50}}>
           <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:14,opacity:0.62}}>
             <div style={{width:55,height:1,background:'linear-gradient(to right,transparent,rgba(89,34,9,0.55))'}}/>
-            <span style={{fontFamily:"'DM Sans', system-ui, sans-serif",fontSize:14,color:'rgba(89,34,9,0.78)',letterSpacing:'0.2em',whiteSpace:'nowrap'}}>Your answers are within...</span>
+            <span style={{fontFamily:"'DM Sans', system-ui, sans-serif",fontSize:14,color:'rgba(89,34,9,0.78)',letterSpacing:'0.2em',whiteSpace:'nowrap'}}>{t('tarot.page.question.within')}</span>
             <div style={{width:55,height:1,background:'linear-gradient(to left,transparent,rgba(89,34,9,0.55))'}}/>
           </div>
         </div>
@@ -592,6 +601,11 @@ const QuestionSelectScene = ({ onSelect }: { onSelect: (q: string) => void }) =>
 // ─── Card Spread Scene ────────────────────────────────────────────────────────
 type UIPhase = 'animating' | 'idle';
 type ButtonLabel = 'Shuffle Cards' | 'Shuffling…' | 'The Cards Are Ready';
+const BUTTON_LABEL_KEYS: Record<ButtonLabel, string> = {
+  'Shuffle Cards': 'tarot.page.spread.shuffle',
+  'Shuffling…': 'tarot.page.spread.shuffling',
+  'The Cards Are Ready': 'tarot.page.spread.ready',
+};
 type ShuffleStyle =
   | 'Casino Riffle Shuffle' | 'Hindu Shuffle' | 'Overhand Shuffle' | 'Bridge Shuffle'
   | 'Waterfall Shuffle' | 'Spiral Shuffle' | 'Arc Toss' | 'Circular Orbit'
@@ -694,6 +708,8 @@ const buildShuffleSteps = (style: ShuffleStyle, rotMult: number): ShuffleStep[] 
 };
 
 const CardSpreadScene = ({ numCards, positions, question, onComplete }: { numCards: number; positions: string[]; question?: string; onComplete: (cards: TarotCard[]) => void }) => {
+  const { t } = useTranslation();
+  const positionKind = numCards === 5 ? 'timeline' : 'karma';
   const [fanCards, setFanCards] = useState(() => shuffleDeck(MAJOR_ARCANA).slice(0, FAN_COUNT));
   const [selected, setSelected] = useState<{ card: TarotCard; fanIdx: number }[]>([]);
   const [hovered, setHovered] = useState<number | null>(null);
@@ -870,7 +886,7 @@ const CardSpreadScene = ({ numCards, positions, question, onComplete }: { numCar
     };
   };
 
-  const guidanceLabel = question || (numCards === 5 ? 'Tarot Bhagya' : 'Karma Mirror');
+  const guidanceLabel = question ? tarotCategoryLabel(t, question) : t(`tarot.modes.${positionKind}.name`);
 
   return (
     <div style={{
@@ -884,20 +900,20 @@ const CardSpreadScene = ({ numCards, positions, question, onComplete }: { numCar
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginBottom: 16 }}>
           <div style={{ width: 44, height: 1, background: 'linear-gradient(to right,transparent,#FBF5EC)' }} />
           <p style={{ letterSpacing: '0.4em', fontSize: '12px', color: '#592209', textTransform: 'uppercase', fontFamily: "'DM Sans', system-ui, sans-serif", margin: 0, whiteSpace: 'nowrap' }}>
-            ✦&nbsp; {selected.length} / {numCards} Cards Selected &nbsp;✦
+            ✦&nbsp; {t('tarot.page.spread.cardsSelected', { selected: selected.length, total: numCards })} &nbsp;✦
           </p>
           <div style={{ width: 44, height: 1, background: 'linear-gradient(to left,transparent,#FBF5EC)' }} />
         </div>
         <h2 style={{ margin: 0, fontFamily: "'DM Sans', system-ui, sans-serif", fontWeight: 700, lineHeight: 1.3 }}>
           <span style={{ display: 'block', fontSize: 'clamp(22px, 3.6vw, 34px)', textTransform: 'uppercase', color: '#301607' }}>
-            Select {numCards} Cards For
+            {t('tarot.page.spread.selectFor', { number: numCards })}
           </span>
           <span style={{ display: 'block', fontSize: 'clamp(22px, 3.6vw, 34px)', textTransform: 'uppercase', color: '#592209' }}>
-            Your {guidanceLabel} Guidance
+            {t('tarot.page.spread.guidance', { label: guidanceLabel })}
           </span>
         </h2>
         <p style={{ color: 'rgba(48,22,7,0.72)', fontSize: '14px', marginTop: '14px', fontFamily: "'DM Sans', system-ui, sans-serif", letterSpacing: '0.02em', fontStyle: 'italic' }}>
-          Tap each card for its meaning · Take what resonates · Leave the rest
+          {t('tarot.page.spread.tapHint')}
         </p>
       </motion.div>
 
@@ -912,7 +928,7 @@ const CardSpreadScene = ({ numCards, positions, question, onComplete }: { numCar
               <div style={{ width: `${slotW}px`, height: `${slotH}px`, borderRadius: '14px', border: s ? `1.5px solid ${theme!.border}` : '1.5px dashed rgba(89,34,9,0.4)', background: s ? 'transparent' : 'rgba(89,34,9,0.05)', position: 'relative', overflow: 'hidden', boxShadow: s ? `0 0 22px ${theme!.glow}` : 'none', transition: 'all 0.4s' }}>
                 {s && <CardFace card={s.card} size="lg" category={question} />}
               </div>
-              <span style={{ fontSize: '13px', letterSpacing: '1.5px', color: s ? '#592209' : 'rgba(89,34,9,0.55)', fontFamily: "'DM Sans', system-ui, sans-serif", textTransform: 'uppercase', textAlign: 'center', maxWidth: `${slotW}px` }}>{pos}</span>
+              <span style={{ fontSize: '13px', letterSpacing: '1.5px', color: s ? '#592209' : 'rgba(89,34,9,0.55)', fontFamily: "'DM Sans', system-ui, sans-serif", textTransform: 'uppercase', textAlign: 'center', maxWidth: `${slotW}px` }}>{t(`tarot.positions.${positionKind}.${i}`, { defaultValue: pos })}</span>
             </motion.div>
           );
         })}
@@ -944,7 +960,7 @@ const CardSpreadScene = ({ numCards, positions, question, onComplete }: { numCar
                 onClick={() => handleSelect(card, i)}
                 role="button"
                 tabIndex={0}
-                aria-label={s ? `Selected card ${i + 1}` : `Choose card ${i + 1}`}
+                aria-label={s ? t('tarot.page.spread.selectedCard', { number: i + 1 }) : t('tarot.page.spread.chooseCard', { number: i + 1 })}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelect(card, i); } }}
                 onMouseEnter={() => handleCardEnter(i)}
                 onMouseLeave={() => handleCardLeave(i)}
@@ -975,7 +991,7 @@ const CardSpreadScene = ({ numCards, positions, question, onComplete }: { numCar
       <motion.button
         type="button"
         data-testid="shuffle-cards"
-        aria-label="Shuffle the cards"
+        aria-label={t('tarot.page.spread.shuffleAria')}
         onClick={handleShuffle}
         disabled={uiPhase !== 'idle'}
         whileHover={uiPhase === 'idle' ? { scale: 1.04 } : {}}
@@ -1000,7 +1016,7 @@ const CardSpreadScene = ({ numCards, positions, question, onComplete }: { numCar
         <motion.span aria-hidden style={{ display: 'inline-flex' }} animate={uiPhase === 'idle' ? { rotate: 0 } : { rotate: 360 }} transition={uiPhase === 'idle' ? { duration: 0 } : { duration: 1.2, repeat: Infinity, ease: 'linear' }}>
           <Shuffle size={18} />
         </motion.span>
-        <span aria-live="polite">{buttonLabel}</span>
+        <span aria-live="polite">{t(BUTTON_LABEL_KEYS[buttonLabel])}</span>
       </motion.button>
 
       <style>{`
@@ -1052,6 +1068,8 @@ const ShuffleSparkles: React.FC<{ runKey: number; cosmic: boolean }> = ({ runKey
 
 // ─── Card Reveal Scene ────────────────────────────────────────────────────────
 const CardRevealScene = ({ cards, positions, question, onComplete }: { cards: TarotCard[]; positions: string[]; question?: string; onComplete: () => void }) => {
+  const { t } = useTranslation();
+  const positionKind = cards.length === 5 ? 'timeline' : 'karma';
   const [revealed, setRevealed] = useState<boolean[]>(new Array(cards.length).fill(false));
   const [current, setCurrent] = useState(0);
   const [autoReveal] = useState(true);
@@ -1077,10 +1095,10 @@ const CardRevealScene = ({ cards, positions, question, onComplete }: { cards: Ta
 
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ textAlign: 'center', marginBottom: '48px', zIndex: 10 }}>
         <p style={{ letterSpacing: '6px', fontSize: '14px', color: 'rgba(48,22,7,1)', textTransform: 'uppercase', fontFamily: "'DM Sans', system-ui, sans-serif", marginBottom: '12px' }}>
-          The Cards Reveal Themselves
+          {t('tarot.page.reveal.kicker')}
         </p>
         <h2 style={{ fontSize: 'clamp(26px, 4vw, 44px)', fontFamily: "'DM Sans', system-ui, sans-serif", letterSpacing: '5px', textTransform: 'uppercase', color: '#592209', textShadow: '0 0 30px rgba(89,34,9,0.4)' }}>
-          Your Sacred Reading
+          {t('tarot.page.reveal.title')}
         </h2>
         <div style={{ width: '80px', height: '1px', background: '#F5E9D6', margin: '16px auto 0' }} />
       </motion.div>
@@ -1116,15 +1134,15 @@ const CardRevealScene = ({ cards, positions, question, onComplete }: { cards: Ta
 
               {/* Position label */}
               <span style={{ fontSize: '13px', fontWeight: 600, letterSpacing: '2.5px', color: revealed[i] ? 'rgba(48,22,7,1)' : 'rgba(89,34,9,0.45)', fontFamily: "'DM Sans', system-ui, sans-serif", textTransform: 'uppercase', textAlign: 'center', maxWidth: '150px', transition: 'color 0.6s' }}>
-                {positions[i]}
+                {t(`tarot.positions.${positionKind}.${i}`, { defaultValue: positions[i] })}
               </span>
 
               <AnimatePresence>
                 {revealed[i] && (
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
                     style={{ textAlign: 'center' }}>
-                    <p style={{ fontSize: '18px', color: '#592209', fontFamily: "'DM Sans', system-ui, sans-serif", letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '4px' }}>{card.name}</p>
-                    <p style={{ fontSize: '14px', color: 'rgba(48,22,7,0.85)', fontFamily: "'DM Sans', system-ui, sans-serif" }}>{card.keywords[0]}</p>
+                    <p style={{ fontSize: '18px', color: '#592209', fontFamily: "'DM Sans', system-ui, sans-serif", letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '4px' }}>{tarotCardName(t, card)}</p>
+                    <p style={{ fontSize: '14px', color: 'rgba(48,22,7,0.85)', fontFamily: "'DM Sans', system-ui, sans-serif" }}>{tarotCardKeywords(t, card)[0]}</p>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -1138,7 +1156,7 @@ const CardRevealScene = ({ cards, positions, question, onComplete }: { cards: Ta
           <motion.button initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
             onClick={onComplete}
             style={{ marginTop: '56px', padding: '18px 52px', fontFamily: "'DM Sans', system-ui, sans-serif", letterSpacing: '5px', fontSize: '15px', textTransform: 'uppercase', color: '#F5E9D6', background: 'linear-gradient(135deg, #592209, #B5561A)', border: 'none', borderRadius: '4px', cursor: 'pointer', boxShadow: '0 0 35px rgba(89,34,9,0.55)', zIndex: 10 }}>
-            Reveal My Reading
+            {t('tarot.page.reveal.button')}
           </motion.button>
         )}
       </AnimatePresence>
@@ -1217,36 +1235,37 @@ const KarmaMirrorDisplay = ({
   </KarmaResult>
 );
 
-const ReadingNote = () => (
+const ReadingNote = () => {
+  const { t } = useTranslation();
+  return (
   <p style={{ position: 'relative', zIndex: 10, maxWidth: 560, margin: '0 auto 32px', padding: '0 20px', textAlign: 'center', fontSize: 15, lineHeight: 1.7, fontStyle: 'italic', color: '#6B4A37', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-    This reading is a generated reflection based on the cards you drew. It is not a prediction or professional advice.
+    {t('tarot.page.note')}
   </p>
-);
+  );
+};
 
 // ─── Reset button ─────────────────────────────────────────────────────────────
-const ResetButton = ({ onReset }: { onReset: () => void }) => (
+const ResetButton = ({ onReset }: { onReset: () => void }) => {
+  const { t } = useTranslation();
+  return (
   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}
     style={{ textAlign: 'center', paddingBottom: '48px', position: 'relative', zIndex: 10 }}>
     <button onClick={onReset}
       style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', padding: '16px 36px', background: 'transparent', border: '1px solid #592209', color: '#592209', fontFamily: "'DM Sans', system-ui, sans-serif", letterSpacing: '4px', fontSize: '15px', textTransform: 'uppercase', borderRadius: '4px', cursor: 'pointer', transition: 'all 0.3s' }}
       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#592209'; (e.currentTarget as HTMLElement).style.color = '#F5E9D6'; (e.currentTarget as HTMLElement).style.boxShadow = '0 6px 18px rgba(89,34,9,0.25)'; }}
       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#592209'; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; }}>
-      <RotateCcw size={15} /> Begin New Reading
+      <RotateCcw size={15} /> {t('tarot.page.reset')}
     </button>
   </motion.div>
-);
+  );
+};
 
 // ─── Loading Overlay ──────────────────────────────────────────────────────────
-const LOADING_STEPS = [
-  "Laying out your cards",
-  "Reading each position",
-  "Interpreting the cards together",
-  "Preparing your reading",
-];
-
-const LoadingOverlay = () => (
-  <FullScreenLoader title="Reading Your Cards" description="Interpreting your spread…" steps={LOADING_STEPS} testId="tarot-loader" />
-);
+const LoadingOverlay = () => {
+  const { t } = useTranslation();
+  const steps = [0, 1, 2, 3].map((i) => t(`tarot.page.loading.steps.${i}`));
+  return <FullScreenLoader title={t('tarot.page.loading.title')} description={t('tarot.page.loading.description')} steps={steps} testId="tarot-loader" />;
+};
 
 // ─── Main Experience ──────────────────────────────────────────────────────────
 const TarotExperience = () => {
@@ -1293,7 +1312,7 @@ const TarotExperience = () => {
     if (isLoadingRef.current) return; // ignore duplicate submissions
     if (!requireSignIn(() => { void fetchReading(cards, modeArg, q); })) {
       // Signed out: the sign-in dialog is open over the page. If it is closed without signing in, the chosen cards stay and this message offers a retry.
-      setReadingError('Please sign in to get your reading. Your cards are still here.');
+      setReadingError(i18n.t('tarot.page.errors.signIn'));
       return;
     }
     const controller = new AbortController();
@@ -1313,12 +1332,12 @@ const TarotExperience = () => {
       const data = await res.json().catch(() => null);
       if (controller.signal.aborted) return;
       if (res.ok && data?.success && data.data) setReading(data.data);
-      else setReadingError(res.status === 429 ? 'Too many readings requested. Please wait a minute and try again.' : "We couldn't create your reading just now. Your cards are still here — please try again.");
+      else setReadingError(data?.code === 'wrong_language' ? i18n.t('guru.errors.wrongLanguage') : res.status === 429 ? i18n.t('tarot.page.errors.tooMany') : i18n.t('tarot.page.errors.generic'));
     } catch (e) {
       if (controller.signal.aborted) return;
-      if (e instanceof SignInRequiredError) { setReadingError('Please sign in to get your reading. Your cards are still here.'); return; }
+      if (e instanceof SignInRequiredError) { setReadingError(i18n.t('tarot.page.errors.signIn')); return; }
       console.error('[Tarot] reading request failed:', e);
-      setReadingError("We couldn't reach the reading service. Check your connection and try again.");
+      setReadingError(i18n.t('tarot.page.errors.network'));
     } finally {
       if (abortRef.current === controller) {
         isLoadingRef.current = false;
@@ -1432,20 +1451,23 @@ const TarotExperience = () => {
 };
 
 // ─── Error state (no made-up reading is ever shown when the service fails) ──────
-const ReadingError = ({ message, cards, onRetry, onReset }: { message: string; cards: TarotCard[]; onRetry: () => void; onReset: () => void }) => (
+const ReadingError = ({ message, cards, onRetry, onReset }: { message: string; cards: TarotCard[]; onRetry: () => void; onReset: () => void }) => {
+  const { t } = useTranslation();
+  return (
   <div role="alert" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', background: 'transparent', textAlign: 'center' }}>
     <div style={{ display: 'flex', gap: 10, marginBottom: 28, flexWrap: 'wrap', justifyContent: 'center' }}>
       {cards.map(c => (
-        <span key={c.id} style={{ padding: '6px 14px', border: '1px solid rgba(89,34,9,0.4)', borderRadius: 20, color: '#592209', fontFamily: "'Cinzel', Georgia, serif", fontSize: 15 }}>{c.name}</span>
+        <span key={c.id} style={{ padding: '6px 14px', border: '1px solid rgba(89,34,9,0.4)', borderRadius: 20, color: '#592209', fontFamily: "'Cinzel', Georgia, serif", fontSize: 15 }}>{tarotCardName(t, c)}</span>
       ))}
     </div>
-    <h2 style={{ margin: '0 0 12px', color: '#301607', fontFamily: "'Cinzel', Georgia, serif", fontSize: 'clamp(24px,4vw,34px)', letterSpacing: 2 }}>Your reading couldn&apos;t be created</h2>
+    <h2 style={{ margin: '0 0 12px', color: '#301607', fontFamily: "'Cinzel', Georgia, serif", fontSize: 'clamp(24px,4vw,34px)', letterSpacing: 2 }}>{t('tarot.page.errors.title')}</h2>
     <p style={{ margin: '0 0 32px', maxWidth: 460, color: '#4A2E1F', fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 17, lineHeight: 1.7 }}>{message}</p>
     <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
-      <button onClick={onRetry} style={{ padding: '14px 32px', background: '#592209', border: 'none', borderRadius: 4, color: '#F5E9D6', fontFamily: "'Cinzel', Georgia, serif", letterSpacing: 3, fontSize: 15, textTransform: 'uppercase', cursor: 'pointer', fontWeight: 700 }}>Try Again</button>
-      <button onClick={onReset} style={{ padding: '14px 32px', background: 'transparent', border: '1px solid rgba(89,34,9,0.5)', borderRadius: 4, color: '#592209', fontFamily: "'Cinzel', Georgia, serif", letterSpacing: 3, fontSize: 15, textTransform: 'uppercase', cursor: 'pointer' }}>Start Over</button>
+      <button onClick={onRetry} style={{ padding: '14px 32px', background: '#592209', border: 'none', borderRadius: 4, color: '#F5E9D6', fontFamily: "'Cinzel', Georgia, serif", letterSpacing: 3, fontSize: 15, textTransform: 'uppercase', cursor: 'pointer', fontWeight: 700 }}>{t('tarot.page.errors.tryAgain')}</button>
+      <button onClick={onReset} style={{ padding: '14px 32px', background: 'transparent', border: '1px solid rgba(89,34,9,0.5)', borderRadius: 4, color: '#592209', fontFamily: "'Cinzel', Georgia, serif", letterSpacing: 3, fontSize: 15, textTransform: 'uppercase', cursor: 'pointer' }}>{t('tarot.page.errors.startOver')}</button>
     </div>
   </div>
-);
+  );
+};
 
 export default TarotExperience;

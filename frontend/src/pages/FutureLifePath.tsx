@@ -1,4 +1,8 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import i18n from "@/i18n";
+import { chosenLanguage } from "@/i18n/aiLanguage";
+import { glossName } from "@/i18n/glossary";
 import { motion, useReducedMotion } from "framer-motion";
 import AskDivyaSection from "@/features/guru/AskDivyaSection";
 import FeatureFaq from "@/components/FeatureFaq";
@@ -50,6 +54,61 @@ function cleanBlock(b: unknown): CalendarBlock | null {
   return { title: String(x.title ?? ""), reckoned: String(x.reckoned ?? ""), facts, notes: Array.isArray(x.notes) ? x.notes.filter((n) => typeof n === "string") : [] };
 }
 
+/**
+ * The Panchang blocks are written by the server in fixed English. Their labels, titles and calculated names are shown in the
+ * chosen language by looking up the exact English text; anything not known stays in English.
+ */
+const tx = (key: string, english: string, values?: Record<string, string | number>): string => i18n.t(key, { defaultValue: english, ...(values ?? {}) });
+const FACT_LABELS: Record<string, string> = { "Day": "day", "Hindu month": "month", "Vedic weekday": "vedicWeekday" };
+const TERM_LABELS = new Set(["Tithi", "Paksha", "Nakshatra", "Yoga", "Karana"]);
+const tithiShown = (value: string): string => { const m = /^(Shukla|Krishna)\s+(.+)$/.exec(value); return m ? `${glossName("paksha", m[1])} ${glossName("tithi", m[2])}` : glossName("tithi", value); };
+const factLabel = (label: string): string => {
+  const m = /^(.+) \(at sunrise\)$/.exec(label);
+  if (m) return tx(`innerVoice.life.fact.atSunrise`, label, { label: factLabel(m[1]) });
+  if (TERM_LABELS.has(label)) return glossName("term", label);
+  return FACT_LABELS[label] ? tx(`innerVoice.life.fact.${FACT_LABELS[label]}`, label) : label;
+};
+const factValue = (label: string, value: string): string => {
+  const base = label.replace(/ \(at sunrise\)$/, "");
+  if (base === "Day" || base === "Vedic weekday") return glossName("weekday", value);
+  if (base === "Tithi") return tithiShown(value);
+  if (base === "Paksha") return value === "Shukla (bright half)" ? tx("innerVoice.life.paksha.shukla", value) : value === "Krishna (dark half)" ? tx("innerVoice.life.paksha.krishna", value) : value;
+  if (base === "Nakshatra") { const m = /^(.+), pada (\d+)$/.exec(value); return m ? tx("innerVoice.life.nakshatraPada", value, { name: glossName("nakshatra", m[1]), pada: m[2] }) : glossName("nakshatra", value); }
+  if (base === "Yoga") return glossName("yoga", value);
+  if (base === "Karana") return glossName("karana", value);
+  if (base === "Hindu month") { const m = /^Adhika (.+)$/.exec(value); return m ? tx("innerVoice.life.adhika", value, { name: glossName("masa", m[1]) }) : glossName("masa", value); }
+  return value;
+};
+const blockTitle = (title: string): string =>
+  title === "Your birth Panchang" ? tx("innerVoice.life.title.birth", title) : title === "Today's Panchang" ? tx("innerVoice.life.title.today", title) : title;
+const blockReckoned = (s: string): string => {
+  let m = /^Sunrise on (\d{4}-\d{2}-\d{2}), (.*)$/.exec(s);
+  if (m) return tx("innerVoice.life.reckoned.sunrise", s, { date: m[1], place: m[2] });
+  m = /^(\d{4}-\d{2}-\d{2}) at (\d{2}:\d{2}), (.*)$/.exec(s);
+  if (m) return tx("innerVoice.life.reckoned.at", s, { date: m[1], time: m[2], place: m[3] });
+  return s;
+};
+const NOTE_KEYS: Record<string, string> = {
+  "No birth time was given, so the values are for local sunrise on your birth date.": "noTime",
+  "No birth time was given, so values are for local sunrise. Those marked \"at sunrise\" change during your birth date, so add your birth time for exact ones.": "noTimeChanging",
+};
+const blockNote = (s: string): string => {
+  if (NOTE_KEYS[s]) return tx(`innerVoice.life.note.${NOTE_KEYS[s]}`, s);
+  const m = /^Born before sunrise \((.+)\), so the Vedic weekday is (.+)\.$/.exec(s);
+  return m ? tx("innerVoice.life.note.beforeSunrise", s, { time: m[1], day: glossName("weekday", m[2]) }) : s;
+};
+
+/** "What it means" is built on the server from fixed English sentences; each known sentence is shown in the chosen language. */
+const meaningText = (s: string): string => {
+  const ord = (n: string, orig: string): string => ((i18n.language || "en") === "en" ? orig : n);
+  const half = (h: string): string => tx("innerVoice.life.meaning.half." + h, h === "bright" ? "bright half (Shukla Paksha), when the Moon grows bigger each night" : "dark half (Krishna Paksha), when the Moon grows smaller each night");
+  return s
+    .replace(/(You were born in|At sunrise on your birth date it was) the (bright|dark) half \((?:Shukla|Krishna) Paksha\), when the Moon grows (?:bigger|smaller) each night\. (.+?) is the ((\d+)(?:st|nd|rd|th)) day of that half\./, (full, lead: string, h: string, tithi: string, o: string, n: string) =>
+      tx("innerVoice.life.meaning.birth", full, { lead: tx("innerVoice.life.meaning.lead." + (lead.startsWith("You") ? "born" : "sunrise"), lead), half: half(h), tithi: tithiShown(tithi), ord: ord(n, o), n }))
+    .replace(/Today is (\w+): (.+?), the ((\d+)(?:st|nd|rd|th)) day of the (bright|dark) half\./, (full, day: string, tithi: string, o: string, n: string, h: string) =>
+      tx("innerVoice.life.meaning.today", full, { day: glossName("weekday", day), tithi: tithiShown(tithi), ord: ord(n, o), n, half: tx("innerVoice.life.meaning.short." + h, h) }));
+};
+
 const inputCls =
   "w-full rounded-xl border border-[#592209]/20 bg-white/80 px-4 py-3 text-base text-[#3B1E10] placeholder:text-[#3B1E10]/55 shadow-sm transition focus:border-[#B8892B] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B8892B]/50";
 const labelCls = "mb-2 block text-sm font-semibold text-[#592209]";
@@ -58,6 +117,9 @@ const kicker = "mb-2 flex items-center gap-2 text-xs font-semibold uppercase tra
 
 export default function FutureLifePath() {
   useFeatureTitle(FEATURES.futurePath);
+  const { t } = useTranslation();
+  const featName = t("features.future-life-path.name", { defaultValue: FEATURES.futurePath.name });
+  const focusLabel = (v: string, english: string): string => t(`innerVoice.life.focus.${v}`, { defaultValue: english });
   const reduce = useReducedMotion();
   const [dob, setDob] = useState("");
   const [tob, setTob] = useState("");
@@ -83,11 +145,11 @@ export default function FutureLifePath() {
     if (loading) return; // one request at a time
     setRetryable(false);
     if (!dob) {
-      setError("Please enter your date of birth.");
+      setError(t("innerVoice.life.errors.dobRequired"));
       return;
     }
     if (dob > today || dob < "1900-01-01") {
-      setError("Please enter a valid date of birth.");
+      setError(t("innerVoice.life.errors.dobInvalid"));
       return;
     }
     if (!requireSignIn(() => { void generate(); })) return; // signed out: ask first, keep the form
@@ -104,16 +166,23 @@ export default function FutureLifePath() {
           // The coordinates and time zone of the chosen place decide the birth Panchang.
           place: place ? { latitude: place.latitude, longitude: place.longitude, timezone: place.timezone } : undefined,
           focus,
+          language: chosenLanguage(),
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.status === 429) {
-        setError("Too many readings requested. Please wait a minute and try again.");
+        setError(t("innerVoice.life.errors.tooMany"));
         return;
       }
       if (res.status === 503 && data?.code === "provider_busy") {
         // The service answered, but it is busy. Nothing was generated; the form keeps your details.
-        setError("The reading service is busy right now. Your details are still here, so please try again in a minute.");
+        setError(t("innerVoice.life.errors.busy"));
+        setRetryable(true);
+        return;
+      }
+      if (res.status === 502 && data?.code === "wrong_language") {
+        // The server could not get the reading in the chosen language, twice. Nothing is shown; the form keeps your details.
+        setError(t("guru.errors.wrongLanguage"));
         setRetryable(true);
         return;
       }
@@ -128,11 +197,11 @@ export default function FutureLifePath() {
       setResult(data);
     } catch (e) {
       if (e instanceof SignInRequiredError) {
-        setError("Please sign in to generate your reading.");
+        setError(t("innerVoice.life.errors.signIn"));
         return;
       }
       console.error("[Future Life Path Prediction] request failed:", e);
-      setError("We couldn't generate your reading right now. Please try again in a moment.");
+      setError(t("innerVoice.life.errors.failed"));
       setRetryable(true);
     } finally {
       setLoading(false);
@@ -171,18 +240,18 @@ export default function FutureLifePath() {
             draggable={false}
           />
           <h1 className="mb-3 text-3xl leading-tight text-[#592209] sm:text-5xl" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-            {FEATURES.futurePath.name}
+            {featName}
           </h1>
           {/* A quote in place of the two plain intro lines. The catalog subtitle itself (used elsewhere) is not changed. */}
           <blockquote data-testid="flp-quote" className="relative mx-auto mt-5 max-w-xl px-6 sm:px-10">
             <span aria-hidden="true" className="absolute -top-3 left-0 select-none font-serif text-6xl leading-none text-[#B8892B]/45">“</span>
             <p className="font-serif text-xl italic leading-relaxed text-[#592209] sm:text-2xl">
-              Your path is never fixed in stone. Let the Panchang show you the moment, and let one calm step lead you forward.
+              {t("innerVoice.life.quote")}
             </p>
             <span aria-hidden="true" className="absolute -bottom-7 right-0 select-none font-serif text-6xl leading-none text-[#B8892B]/45">”</span>
             <footer className="mt-4 flex items-center justify-center gap-3 text-xs uppercase tracking-[0.2em] text-[#8A6414]">
               <span aria-hidden="true" className="h-px w-8 bg-[#B8892B]/50" />
-              Panchang guidance
+              {t("innerVoice.life.quoteFooter")}
               <span aria-hidden="true" className="h-px w-8 bg-[#B8892B]/50" />
             </footer>
           </blockquote>
@@ -192,7 +261,7 @@ export default function FutureLifePath() {
 
         {!result ? (
           <motion.div key="form" className="mx-auto max-w-4xl" {...enter(0.05)}>
-            {loading && <FullScreenLoader title="Reading Your Path" description="Preparing your reading…" steps={["Calculating your Panchang", "Reading your path", "Writing your guidance"]} testId="futurepath-loader" />}
+            {loading && <FullScreenLoader title={t("innerVoice.life.loader.title")} description={t("innerVoice.life.loader.description")} steps={[t("innerVoice.life.loader.step1"), t("innerVoice.life.loader.step2"), t("innerVoice.life.loader.step3")]} testId="futurepath-loader" />}
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -205,7 +274,7 @@ export default function FutureLifePath() {
               <div className="grid gap-5 md:grid-cols-3">
                 <div>
                   <label htmlFor="flp-dob" className={labelCls}>
-                    Date of birth <span className="font-bold text-[#8A6414]">(required)</span>
+                    {t("innerVoice.life.form.dob")} <span className="font-bold text-[#8A6414]">{t("innerVoice.life.form.required")}</span>
                   </label>
                   <input
                     id="flp-dob"
@@ -221,19 +290,19 @@ export default function FutureLifePath() {
                 </div>
                 <div>
                   <label htmlFor="flp-tob" className={labelCls}>
-                    Time of birth <span className="font-normal text-[#3B1E10]/65">(optional)</span>
+                    {t("innerVoice.life.form.tob")} <span className="font-normal text-[#3B1E10]/65">{t("innerVoice.life.form.optional")}</span>
                   </label>
                   <input id="flp-tob" type="time" value={tob} onChange={(e) => setTob(e.target.value)} className={inputCls} />
                 </div>
                 <div>
                   <span id="flp-pob-label" className={labelCls}>
-                    Place of birth <span className="font-normal text-[#3B1E10]/65">(optional)</span>
+                    {t("innerVoice.life.form.pob")} <span className="font-normal text-[#3B1E10]/65">{t("innerVoice.life.form.optional")}</span>
                   </span>
                   <LocationPicker value={place} onSelect={setPlace} disabled={loading} />
                 </div>
                 <div className="md:col-span-3">
                   <span id="flp-focus-label" className={labelCls}>
-                    Area of interest <span className="font-normal text-[#3B1E10]/65">(optional)</span>
+                    {t("innerVoice.life.form.focus")} <span className="font-normal text-[#3B1E10]/65">{t("innerVoice.life.form.optional")}</span>
                   </span>
                   <div role="radiogroup" aria-labelledby="flp-focus-label" className="flex flex-wrap gap-2">
                     {FOCUS_OPTIONS.map((o) => {
@@ -251,7 +320,7 @@ export default function FutureLifePath() {
                               : "border-[#592209]/25 bg-white/70 text-[#592209] hover:border-[#B8892B] hover:bg-[#FFF3D6]"
                           }`}
                         >
-                          {o.label}
+                          {focusLabel(o.value, o.label)}
                         </button>
                       );
                     })}
@@ -264,7 +333,7 @@ export default function FutureLifePath() {
                   ⚠ {error}
                   {!loading && dob && retryable && (
                     <button type="button" onClick={generate} className="ml-3 underline underline-offset-2 hover:text-foreground">
-                      Retry
+                      {t("innerVoice.life.form.retry")}
                     </button>
                   )}
                 </div>
@@ -277,21 +346,21 @@ export default function FutureLifePath() {
               >
                 {loading ? (
                   <>
-                    <Loader2 className="animate-spin" size={18} aria-hidden="true" /> Reading your path…
+                    <Loader2 className="animate-spin" size={18} aria-hidden="true" /> {t("innerVoice.life.form.reading")}
                   </>
                 ) : (
                   <>
-                    <Sparkles size={16} aria-hidden="true" /> Generate My Life Path Reading
+                    <Sparkles size={16} aria-hidden="true" /> {t("innerVoice.life.form.generate")}
                   </>
                 )}
               </button>
-              <p className="mt-3 text-center text-xs text-[#3B1E10]/65">Your details are sent only to generate this reading and are not saved.</p>
+              <p className="mt-3 text-center text-xs text-[#3B1E10]/65">{t("innerVoice.life.form.privacy")}</p>
             </form>
           </motion.div>
         ) : (
           <div aria-live="polite">
             <motion.p className="mb-5 text-center text-sm font-semibold uppercase tracking-[0.25em] text-[#8A6414]" {...enter()}>
-              {FEATURES.futurePath.name}
+              {featName}
             </motion.p>
 
             <div className="grid gap-5 lg:grid-cols-12">
@@ -299,15 +368,15 @@ export default function FutureLifePath() {
               <div className="space-y-5 lg:col-span-7">
                 <motion.section data-testid="flp-panchang" aria-labelledby="flp-panchang-h" className={cardCls} {...enter(0.05)}>
                   <h2 id="flp-panchang-h" className={kicker}>
-                    <Moon size={14} aria-hidden="true" /> Your Panchang
+                    <Moon size={14} aria-hidden="true" /> {t("innerVoice.life.result.panchang")}
                   </h2>
                   {birth ? (
                     <CalendarCard block={birth} icon="moon" hover={hover} />
                   ) : (
                     <p className="rounded-xl border border-dashed border-[#B8892B]/50 bg-[#FFF8E6] px-4 py-3 text-sm text-[#4A2E1F]" data-testid="flp-no-birth-panchang">
                       {result.panchang?.birthNeedsPlace
-                        ? "Your birth Panchang needs your place of birth, so it was not calculated. Choose a place from the list to see it. This reading is not based on your birth Panchang."
-                        : "Your birth Panchang could not be calculated, so this reading is not Panchang-based."}
+                        ? t("innerVoice.life.result.needsPlace")
+                        : t("innerVoice.life.result.noBirth")}
                     </p>
                   )}
                   {todayBlock && (
@@ -315,7 +384,7 @@ export default function FutureLifePath() {
                       <CalendarCard block={todayBlock} icon="sun" hover={hover} />
                     </div>
                   )}
-                  <p className="mt-3 text-xs text-[#3B1E10]/65">Calculated from the real positions of the Sun and Moon. Festivals are not included.</p>
+                  <p className="mt-3 text-xs text-[#3B1E10]/65">{t("innerVoice.life.result.calculated")}</p>
                 </motion.section>
               </div>
 
@@ -324,15 +393,15 @@ export default function FutureLifePath() {
                 {result.meaning && (
                   <motion.section className={cardCls} {...enter(0.1)}>
                     <h2 className={kicker}>
-                      <Info size={14} aria-hidden="true" /> What it means
+                      <Info size={14} aria-hidden="true" /> {t("innerVoice.life.result.meaning")}
                     </h2>
-                    <p className="text-base leading-relaxed text-[#3B1E10]/90">{result.meaning}</p>
+                    <p className="text-base leading-relaxed text-[#3B1E10]/90">{meaningText(result.meaning)}</p>
                   </motion.section>
                 )}
 
                 <motion.section className={cardCls} {...enter(0.15)}>
                   <h2 className={kicker}>
-                    <Compass size={14} aria-hidden="true" /> Your Life Guidance <span className="font-normal normal-case tracking-normal text-[#3B1E10]/60">· {FOCUS_OPTIONS.find((o) => o.value === focus)?.label}</span>
+                    <Compass size={14} aria-hidden="true" /> {t("innerVoice.life.result.guidance")} <span className="font-normal normal-case tracking-normal text-[#3B1E10]/60">· {focusLabel(focus, FOCUS_OPTIONS.find((o) => o.value === focus)?.label ?? "")}</span>
                   </h2>
                   <p className="text-base leading-relaxed text-[#3B1E10]/90">{result.lifePathOverview}</p>
                 </motion.section>
@@ -342,14 +411,14 @@ export default function FutureLifePath() {
                   {...enter(0.2)}
                 >
                   <h2 className={kicker}>
-                    <Lightbulb size={14} aria-hidden="true" /> One Good Step
+                    <Lightbulb size={14} aria-hidden="true" /> {t("innerVoice.life.result.step")}
                   </h2>
                   <p className="text-lg font-medium leading-relaxed text-[#592209]">{result.oneGoodStep}</p>
                 </motion.section>
 
                 {result.thought && (
                   <motion.section className="rounded-2xl border border-[#592209]/10 bg-white/60 px-5 py-4 text-center" {...enter(0.25)}>
-                    <h2 className="mb-1 text-xs font-semibold uppercase tracking-[0.22em] text-[#8A6414]">A Thought to Remember</h2>
+                    <h2 className="mb-1 text-xs font-semibold uppercase tracking-[0.22em] text-[#8A6414]">{t("innerVoice.life.result.thought")}</h2>
                     <p className="font-serif text-lg italic leading-relaxed text-[#592209]">“{result.thought}”</p>
                   </motion.section>
                 )}
@@ -358,11 +427,11 @@ export default function FutureLifePath() {
           {verse && (
             <motion.section data-testid="flp-scripture" className={`${cardCls} lg:col-span-12`} {...enter(0.3)}>
               <h2 className={kicker}>
-                <BookOpen size={14} aria-hidden="true" /> From the Bhagavad Gita
+                <BookOpen size={14} aria-hidden="true" /> {t("innerVoice.life.result.gita")}
               </h2>
               <p className="text-base leading-relaxed text-[#3B1E10]/90">{verse.meaning}</p>
-              <p className="mt-2 text-sm font-semibold text-[#592209]">Bhagavad Gita, {verse.reference}</p>
-              <p className="mt-1 text-xs text-[#3B1E10]/60">A teaching for reflection. It is not part of the calculation.</p>
+              <p className="mt-2 text-sm font-semibold text-[#592209]">{t("innerVoice.life.result.gitaRef", { ref: verse.reference })}</p>
+              <p className="mt-1 text-xs text-[#3B1E10]/60">{t("innerVoice.life.result.gitaNote")}</p>
             </motion.section>
           )}
             </div>
@@ -388,23 +457,24 @@ export default function FutureLifePath() {
 
 /** One calendar (birth or today): a title, where it was reckoned, and small cards for each calculated fact. */
 function CalendarCard({ block, icon, hover }: { block: CalendarBlock; icon: "moon" | "sun"; hover: object }) {
+  useTranslation(); // re-render when the language changes
   const Icon = icon === "sun" ? Sun : Moon;
   return (
     <div>
       <p className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#592209]">
-        <Icon size={15} aria-hidden="true" className="text-[#B8892B]" /> {block.title}
-        <span className="text-xs font-normal text-[#3B1E10]/60">· {block.reckoned}</span>
+        <Icon size={15} aria-hidden="true" className="text-[#B8892B]" /> {blockTitle(block.title)}
+        <span className="text-xs font-normal text-[#3B1E10]/60">· {blockReckoned(block.reckoned)}</span>
       </p>
       <dl className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
         {block.facts.map((f) => (
           <motion.div key={f.label} {...hover} className="rounded-xl border border-[#B8892B]/25 bg-gradient-to-br from-[#FFFBF0] to-[#FBEFD0] px-3 py-2.5 transition-shadow hover:shadow-md">
-            <dt className="text-[11px] uppercase tracking-wider text-[#8A6414]">{f.label}</dt>
-            <dd className="text-sm font-semibold text-[#592209]">{f.value}</dd>
+            <dt className="text-[11px] uppercase tracking-wider text-[#8A6414]">{factLabel(f.label)}</dt>
+            <dd className="text-sm font-semibold text-[#592209]">{factValue(f.label, f.value)}</dd>
           </motion.div>
         ))}
       </dl>
       {block.notes.map((n) => (
-        <p key={n} className="mt-2 text-xs text-[#3B1E10]/65">{n}</p>
+        <p key={n} className="mt-2 text-xs text-[#3B1E10]/65">{blockNote(n)}</p>
       ))}
     </div>
   );

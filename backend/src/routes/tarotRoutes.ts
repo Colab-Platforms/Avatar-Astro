@@ -2,7 +2,7 @@ import { Router, Request, Response } from "express";
 import express from "express";
 import { createRateLimiter } from "../utils/rateLimit.js";
 import { auth } from "../middleware/authMiddleware.js";
-import { languageRule, requestLanguage, tokenBudget } from "../utils/responseLanguage.js";
+import { WrongLanguageError, generateInLanguage, languageRule, requestLanguage, tokenBudget } from "../utils/responseLanguage.js";
 
 const HINGLISH_DEFAULT_RULE =
   "\n\nLanguage: write every human-readable text value in natural Hinglish (Roman-script Hindi mixed with English, the way people actually speak). Keep JSON keys, fixed values and any Sanskrit verses or mantras exactly as specified. Only if the person wrote in Devanagari Hindi, answer in Hindi instead.";
@@ -186,26 +186,39 @@ router.post("/reading", async (req: Request, res: Response) => {
   const lang = requestLanguage(req);
 
   try {
-    const upstream = await fetch(OPENROUTER_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "X-Title": "MyBhagya Astro Tarot",
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: tokenBudget(2000, lang),
-        messages: [{ role: "user", content: buildPrompt(mode, names, category) + languageRule(lang, HINGLISH_DEFAULT_RULE) }],
-      }),
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
-    if (!upstream.ok) {
-      console.error("Tarot provider error status:", upstream.status);
-      return fail(res, 502, "The reading service is unavailable right now");
+    class TarotProviderDown extends Error {}
+    // One model call. A reply in the wrong language is asked for once more (see generateInLanguage), then refused.
+    const askTarot = async (retryNote: string): Promise<string> => {
+      const upstream = await fetch(OPENROUTER_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+          "X-Title": "Bhagya Astro Tarot",
+        },
+        body: JSON.stringify({
+          model: MODEL,
+          max_tokens: tokenBudget(2000, lang),
+          messages: [{ role: "user", content: buildPrompt(mode, names, category) + languageRule(lang, HINGLISH_DEFAULT_RULE) + retryNote }],
+        }),
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      });
+      if (!upstream.ok) {
+        console.error("Tarot provider error status:", upstream.status);
+        throw new TarotProviderDown();
+      }
+      const body = (await upstream.json().catch(() => null)) as any;
+      const content: string = body?.choices?.[0]?.message?.content ?? "";
+      return content;
+    };
+    let content: string;
+    try {
+      content = await generateInLanguage(lang, askTarot);
+    } catch (e) {
+      if (e instanceof WrongLanguageError) return res.status(502).json({ success: false, error: e.message, code: e.code, language: e.language });
+      if (e instanceof TarotProviderDown) return fail(res, 502, "The reading service is unavailable right now");
+      throw e;
     }
-    const body = (await upstream.json().catch(() => null)) as any;
-    const content: string = body?.choices?.[0]?.message?.content ?? "";
     const match = content.match(/\{[\s\S]*\}/);
     let parsed: unknown = null;
     if (match) {

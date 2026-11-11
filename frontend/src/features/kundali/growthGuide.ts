@@ -1,5 +1,7 @@
 import type { KundaliResult } from "./types";
-import { buildKundaliGuide, DASHA_THEME } from "./kundaliInsights";
+import { buildKundaliGuide, dashaTheme, rashiName, signName, planetName } from "./kundaliInsights";
+import i18n from "@/i18n";
+import { glossName } from "@/i18n/glossary";
 
 // "Your Personal Growth Guide": practical advice built ONLY from what the reading already calculated (confirmed Rashis, Life Path,
 // Panchang, and, when a birth time was given, the houses, dignity and Dasha). Nothing here recalculates the chart, adds a placement
@@ -247,6 +249,19 @@ const TITLE: Record<AreaKey, string> = {
 const asSign = (s: string | undefined | null): Sign | null => ((SIGNS as readonly string[]).includes(s ?? "") ? (s as Sign) : null);
 const lc = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
 
+// The static tables above keep the English text and ids; the text shown is looked up by a stable key (English is the fallback).
+const T = (key: string, values?: Record<string, string | number>): string => i18n.t(key, values) as string;
+const D = (key: string, english: string): string => i18n.t(key, { defaultValue: english }) as string;
+const signText = (s: Sign, f: "strength" | "watch" | "need" | "work") => D(`kundali.growth.sign.${s}.${f}`, SIGN[s][f]);
+const lpText = (n: number, f: "strength" | "watch" | "work" | "short") => D(`kundali.growth.lifePath.${n}.${f}`, LP[n][f]);
+const elText = (a: AreaKey, e: Element, f: "s" | "w") => D(`kundali.growth.element.${a}.${e}.${f === "s" ? "strength" : "watch"}`, EL[a][e][f]);
+const actEl = (a: AreaKey, e: Element) => D(`kundali.growth.action.element.${a}.${e}`, ACT_EL[a][e]);
+const actQ = (a: AreaKey, q: Quality) => D(`kundali.growth.action.quality.${a}.${q}`, ACT_Q[a][q]);
+const actG = (a: AreaKey, g: Group) => D(`kundali.growth.action.group.${a}.${g}`, ACT_G[a][g]);
+const qImprove = (a: AreaKey, q: Quality) => D(`kundali.growth.qualityImprove.${a}.${q}`, Q_IMPROVE[a]![q]);
+const qSpirit = (q: Quality) => D(`kundali.growth.qualitySpirit.${q}`, Q_SPIRIT[q]);
+const elName = (e: Element) => T(`kundali.growth.elementName.${e}`);
+
 export function buildGrowthGuide({ kundali: k, sunSign, lifePath, name }: GrowthInput): GrowthGuide {
   const sun = asSign(sunSign) ?? asSign(k.sun.rashi?.sign) ?? "Aries";
   const moon = asSign(k.moon.rashi?.sign); // null when the Moon changes sign on the birth date and no birth time was given
@@ -254,75 +269,92 @@ export function buildGrowthGuide({ kundali: k, sunSign, lifePath, name }: Growth
   const el = ELEMENT[primary];
   const ql = QUALITY[primary];
   const lp = LP[lifePath] ? lifePath : 9;
-  const lpi = LP[lp];
   const g = lpGroup(lp);
-  const sunName = k.sun.rashi?.name ?? k.sun.candidates[0]?.name ?? sun;
-  const primaryName = moon ? `${k.moon.rashi!.name} Moon (Chandra Rashi)` : `${sunName} Sun (Surya Rashi)`;
+  const sunName = k.sun.rashi ? rashiName(k.sun.rashi) : k.sun.candidates[0] ? rashiName(k.sun.candidates[0]) : signName(sun);
+  const primaryName = moon ? T("kundali.growth.primaryMoon", { name: rashiName(k.moon.rashi!) }) : T("kundali.growth.primarySun", { name: sunName });
   const guide = buildKundaliGuide(k); // calculated facts only; houses and dignity exist only when the birth time was given
 
-  const fact = (it: { title: string; fact: string }) => `${it.title}: ${it.fact}`;
+  const fact = (it: { title: string; fact: string }) => T("kundali.growth.factJoin", { title: it.title, fact: it.fact });
   const dashaLord = k.dasha?.mahadasha.lord;
-  const dashaTheme = dashaLord ? DASHA_THEME[dashaLord] : undefined;
+  const dashaThemeText = dashaLord ? dashaTheme(dashaLord) : undefined;
+  const dashaLordName = dashaLord ? planetName(dashaLord) : "";
   const panchangKnown = k.timeKnown && !k.panchang?.uncertain;
 
-  const act = (a: AreaKey): string[] => [ACT_EL[a][el], ACT_Q[a][ql], ACT_G[a][g]];
-  const lpLine = `Life Path ${lp}`;
+  const act = (a: AreaKey): string[] => [actEl(a, el), actQ(a, ql), actG(a, g)];
+  const lpLine = T("kundali.growth.lifePathLabel", { n: lp });
+  const elN = elName(el);
 
   const built: Record<AreaKey, GrowthArea> = {
     personality: {
-      key: "personality", title: TITLE.personality,
+      key: "personality", title: D("kundali.growth.area.personality", TITLE.personality),
       chart: [...guide.strengths.slice(0, 2), ...guide.challenges.slice(0, 1)].map(fact),
-      strengths: [`Your ${primaryName} points to ${SIGN[primary].strength}, along with ${EL.personality[el].s}.`, `${lpLine} adds ${lpi.strength}.`],
-      improve: [`Be mindful of ${SIGN[primary].watch}, and of ${EL.personality[el].w}.`, `${lpLine} can lean towards ${lpi.watch}.`],
+      strengths: [
+        T("kundali.growth.personality.strength1", { primary: primaryName, strength: signText(primary, "strength"), element: elText("personality", el, "s") }),
+        T("kundali.growth.personality.strength2", { lp: lpLine, strength: lpText(lp, "strength") }),
+      ],
+      improve: [
+        T("kundali.growth.personality.improve1", { watch: signText(primary, "watch"), elementWatch: elText("personality", el, "w") }),
+        T("kundali.growth.personality.improve2", { lp: lpLine, watch: lpText(lp, "watch") }),
+      ],
       actions: act("personality"),
-      basis: `Built from your ${primaryName} and ${lpLine}.`,
+      basis: T("kundali.growth.personality.basis", { primary: primaryName, lp: lpLine }),
     },
     career: {
-      key: "career", title: TITLE.career,
-      chart: [...guide.career.slice(0, 2).map(fact), ...(k.dasha ? [`Running period: ${k.dasha.mahadasha.lord} Mahadasha with ${k.dasha.antardasha.lord} Antardasha.`] : [])],
+      key: "career", title: D("kundali.growth.area.career", TITLE.career),
+      chart: [...guide.career.slice(0, 2).map(fact), ...(k.dasha ? [T("kundali.growth.career.runningPeriod", { mahadasha: planetName(k.dasha.mahadasha.lord), antardasha: planetName(k.dasha.antardasha.lord) })] : [])],
       strengths: [
-        `Your ${sunName} Sun is traditionally linked with ${SIGN[sun].work}.`,
-        `${lpLine} suits ${lpi.work}, and your ${el} element brings ${EL.career[el].s}.`,
-        ...(dashaTheme ? [`A ${dashaLord} period is traditionally read as a time that emphasises ${dashaTheme}. It is a good theme to build on.`] : []),
+        T("kundali.growth.career.strength1", { sun: sunName, work: signText(sun, "work") }),
+        T("kundali.growth.career.strength2", { lp: lpLine, work: lpText(lp, "work"), element: elN, elementStrength: elText("career", el, "s") }),
+        ...(dashaThemeText ? [T("kundali.growth.career.strengthDasha", { lord: dashaLordName, theme: dashaThemeText })] : []),
       ],
-      improve: [`Watch for ${EL.career[el].w}.`, Q_IMPROVE.career![ql]],
+      improve: [T("kundali.growth.watchFor", { watch: elText("career", el, "w") }), qImprove("career", ql)],
       actions: act("career"),
-      basis: `Built from your ${sunName} Sun, ${lpLine}${guide.houses ? ", your 10th house" : ""}${k.dasha ? " and running Dasha" : ""}. A chart does not decide your profession.`,
+      basis: T("kundali.growth.career.basis", {
+        sun: sunName, lp: lpLine,
+        houses: guide.houses ? T("kundali.growth.career.basisHouses") : "",
+        dasha: k.dasha ? T("kundali.growth.career.basisDasha") : "",
+      }),
     },
     love: {
-      key: "love", title: TITLE.love,
+      key: "love", title: D("kundali.growth.area.love", TITLE.love),
       chart: [...guide.relationships.slice(0, 3).map(fact)],
-      strengths: [`Your ${primaryName} traditionally looks for ${SIGN[primary].need}.`, `Your ${el} element brings ${EL.love[el].s}.`],
-      improve: [`Watch for ${EL.love[el].w}.`, Q_IMPROVE.love![ql]],
+      strengths: [
+        T("kundali.growth.love.strength1", { primary: primaryName, need: signText(primary, "need") }),
+        T("kundali.growth.elementBrings", { element: elN, text: elText("love", el, "s") }),
+      ],
+      improve: [T("kundali.growth.watchFor", { watch: elText("love", el, "w") }), qImprove("love", ql)],
       actions: act("love"),
-      basis: `Built from your ${primaryName}${guide.houses ? " and your 7th house" : ""}. It does not predict a partner or a marriage date.`,
+      basis: T("kundali.growth.love.basis", { primary: primaryName, houses: guide.houses ? T("kundali.growth.love.basisHouses") : "" }),
     },
     money: {
-      key: "money", title: TITLE.money,
+      key: "money", title: D("kundali.growth.area.money", TITLE.money),
       chart: guide.houses ? guide.career.slice(2, 3).map(fact) : [],
-      strengths: [`Your ${el} element brings ${EL.money[el].s}.`, `Your ${sunName} Sun's ${SIGN[sun].strength} can help you stick to a plan.`],
-      improve: [`Watch for ${EL.money[el].w}.`, Q_IMPROVE.money![ql]],
+      strengths: [
+        T("kundali.growth.elementBrings", { element: elN, text: elText("money", el, "s") }),
+        T("kundali.growth.money.strength2", { sun: sunName, strength: signText(sun, "strength") }),
+      ],
+      improve: [T("kundali.growth.watchFor", { watch: elText("money", el, "w") }), qImprove("money", ql)],
       actions: act("money"),
-      basis: `Built from your ${primaryName} element and ${lpLine}${guide.houses ? ", with your 2nd and 11th houses shown above" : ""}. It does not promise wealth.`,
+      basis: T("kundali.growth.money.basis", { primary: primaryName, lp: lpLine, houses: guide.houses ? T("kundali.growth.money.basisHouses") : "" }),
     },
     health: {
-      key: "health", title: TITLE.health,
+      key: "health", title: D("kundali.growth.area.health", TITLE.health),
       chart: [],
-      strengths: [`Your ${el} element brings ${EL.health[el].s}.`, "Small, regular habits tend to work better for you than sudden, big changes."],
-      improve: [`Watch for ${EL.health[el].w}.`],
+      strengths: [T("kundali.growth.elementBrings", { element: elN, text: elText("health", el, "s") }), T("kundali.growth.health.strength2")],
+      improve: [T("kundali.growth.watchFor", { watch: elText("health", el, "w") })],
       actions: act("health"),
-      basis: "General lifestyle advice shaped by your Rashi's element. It is not a medical or chart-based assessment, and it does not predict illness.",
+      basis: T("kundali.growth.health.basis"),
     },
     spirit: {
-      key: "spirit", title: TITLE.spirit,
+      key: "spirit", title: D("kundali.growth.area.spirit", TITLE.spirit),
       chart: [
-        ...guide.important.filter((i) => i.title === "Your Janma Nakshatra").map(fact),
-        ...(panchangKnown ? [`Panchang at birth: ${k.panchang.paksha === "shukla" ? "Shukla" : "Krishna"} paksha, ${k.panchang.tithi.name} tithi.`] : []),
+        ...guide.important.filter((i) => i.title === T("kundali.insight.nakshatra.title")).map(fact),
+        ...(panchangKnown ? [T("kundali.growth.spirit.panchang", { paksha: glossName("paksha", k.panchang.paksha === "shukla" ? "Shukla" : "Krishna"), tithi: glossName("tithi", k.panchang.tithi.name) })] : []),
       ],
-      strengths: [`Your ${el} element brings ${EL.spirit[el].s}.`, Q_SPIRIT[ql]],
-      improve: [`Watch for ${EL.spirit[el].w}.`],
+      strengths: [T("kundali.growth.elementBrings", { element: elN, text: elText("spirit", el, "s") }), qSpirit(ql)],
+      improve: [T("kundali.growth.watchFor", { watch: elText("spirit", el, "w") })],
       actions: act("spirit"),
-      basis: `Built from your ${primaryName} element and ${lpLine}${k.moon.nakshatra ? " and Janma Nakshatra" : ""}. Choose only what suits you: a quiet walk or journal works as well as a prayer or Shloka.`,
+      basis: T("kundali.growth.spirit.basis", { primary: primaryName, lp: lpLine, nakshatra: k.moon.nakshatra ? T("kundali.growth.spirit.basisNakshatra") : "" }),
     },
   };
   const areas = AREAS.map((a) => built[a]);
@@ -330,26 +362,25 @@ export function buildGrowthGuide({ kundali: k, sunSign, lifePath, name }: Growth
   // The 30-day plan reuses the actions generated above, so it always matches this person's guide.
   const A = (key: AreaKey, i: number) => built[key].actions[i];
   const plan: GrowthPlanItem[] = [
-    { label: "One daily habit", text: A("personality", 0) },
-    { label: "One weekly goal", text: A("career", 1) },
-    { label: "One relationship improvement", text: A("love", 1) },
-    { label: "One career or learning goal", text: A("career", 0) },
-    { label: "One health habit", text: A("health", 0) },
-    { label: "One reflection practice", text: A("spirit", 1) },
+    { label: T("kundali.growth.plan.dailyHabit"), text: A("personality", 0) },
+    { label: T("kundali.growth.plan.weeklyGoal"), text: A("career", 1) },
+    { label: T("kundali.growth.plan.relationship"), text: A("love", 1) },
+    { label: T("kundali.growth.plan.careerLearning"), text: A("career", 0) },
+    { label: T("kundali.growth.plan.healthHabit"), text: A("health", 0) },
+    { label: T("kundali.growth.plan.reflection"), text: A("spirit", 1) },
   ];
 
-  const who = name?.trim() ? `${name.trim().split(/\s+/)[0]}, your` : "Your";
-  const growth = `Watch for ${SIGN[primary].watch}, and be patient with yourself as you work on it`;
+  const first = name?.trim() ? name.trim().split(/\s+/)[0] : "";
   const message = [
-    `${who} ${primaryName} and ${lpLine} bring ${SIGN[primary].strength} and ${lpi.short}, and these are strengths you can build on.`,
-    `${growth}. Care for the people around you as you grow.`,
-    dashaTheme ? `Your current ${dashaLord} period is a good time to focus on ${dashaTheme}.` : "",
-    `You do not need to change everything at once. Start with one good step today: ${lc(A("personality", 0))}`,
+    T(first ? "kundali.growth.message.openingNamed" : "kundali.growth.message.opening", { name: first, primary: primaryName, lp: lpLine, strength: signText(primary, "strength"), short: lpText(lp, "short") }),
+    T("kundali.growth.message.growth", { watch: signText(primary, "watch") }),
+    dashaThemeText ? T("kundali.growth.message.dasha", { lord: dashaLordName, theme: dashaThemeText }) : "",
+    T("kundali.growth.message.closing", { step: lc(A("personality", 0)) }),
   ].filter(Boolean).join(" ");
 
   const notices: string[] = [];
-  if (!k.timeKnown) notices.push("You did not enter a birth time, so this guide uses only your confirmed Rashi, Panchang and Life Path number. Add your birth time for guidance based on houses and your running Dasha.");
-  else if (!moon) notices.push("Your Chandra Rashi depends on your birth time, so this guide leans on your Surya Rashi.");
+  if (!k.timeKnown) notices.push(T("kundali.growth.notice.noTime"));
+  else if (!moon) notices.push(T("kundali.growth.notice.noMoon"));
 
   return { areas, plan, message, notices };
 }

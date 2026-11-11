@@ -157,10 +157,10 @@ const Footer = () => {
               color: '#F5E9D6',
             }}
           >
-            MYBHAGYA
+            BHAGYA
           </p>
           <p className="text-sm" style={{ color: dim }}>
-            2024 MyBhagya. All rights reserved.
+            2024 Bhagya. All rights reserved.
           </p>
         </div>
       </div>

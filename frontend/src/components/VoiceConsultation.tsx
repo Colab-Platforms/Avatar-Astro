@@ -6,7 +6,6 @@ import { useConsultationGuard } from "../hooks/useConsultationGuard";
 import { API_BASE_URL } from "@/lib/api";
 import { authedFetch } from '@/lib/authedFetch';
 import { askPandit, VoiceChatError } from "@/lib/voiceChat";
-import { replyLanguage } from "@/i18n/aiLanguage";
 import { detectLanguageRequest } from "@/i18n/languageRequest";
 import { LOCALES, isLocale, localeInfo, type LocaleCode } from "@/i18n/languages";
 import { setLanguage } from "@/i18n";
@@ -70,7 +69,7 @@ const VOICE_SYSTEM_PROMPT = `You are Pandit Rameshwar Ji, a warm, compassionate 
 
 You ONLY discuss: career, job, business, relationships, marriage, family, health, finances, stress, anxiety, spirituality, karma, life purpose, emotional struggles, inner peace, future guidance. Politely refuse every other topic.
 
-LANGUAGE RULE — write ONLY in the language given in the language instruction that follows, in that language's own script, whatever language the seeker speaks or types in. Earlier turns may be in another language: still answer in the instructed language. If the seeker asks you to change language, just answer in the instructed language.
+LANGUAGE RULE — write ONLY in the language given in the language instruction that follows, in that language's own script, whatever language the seeker speaks or types in. Earlier turns may be in another language: still answer in the instructed language. Do not use English headings or long English paragraphs in a non-English reply. A request to change languages is handled by the interface and is never an off-topic request.
 
 YOUR IDENTITY:
 You speak with the calm authority, deep warmth and spiritual wisdom of a Jyotish Acharya, temple priest or Vedic guru, like a caring elder of the family. You sound like a kind Pandit Ji on a phone consultation, never like a chatbot or a life coach.
@@ -203,7 +202,10 @@ const VC_CSS = `
 /** Additions for the language selector row, the typed-message box, the typing indicator and the error state. */
 const VC_CSS_EXTRA = `
 .vc-topbar{flex-wrap:wrap;}
-.vc-lang-full{width:100%;order:9;}
+.vc-language-control{flex-shrink:0;}
+.vc-lang-full{width:100%;order:1;}
+.vc-topbar-title{order:0;}
+.vc-topbar .vc-ctrl-btn{order:2;}
 .vc-form{display:flex;gap:8px;width:100%;max-width:460px;}
 .vc-input{flex:1;min-width:0;padding:10px 14px;border-radius:10px;border:1px solid rgba(89,34,9,0.3);background:#fff;color:#301607;font-size:15px;outline:none;}
 .vc-input:focus{border-color:#592209;box-shadow:0 0 0 3px rgba(229,138,69,0.2);}
@@ -229,7 +231,7 @@ html[data-indic] .vc-root,html[data-indic] .vc-root *{font-family:var(--indic-sa
 .vc-mic-area{padding:12px 20px 14px;gap:8px;}
 .vc-mic-ring{width:72px;height:72px;}
 .vc-mic-icon{font-size:28px;}
-@media (max-width:640px){.vc-mic-area{padding:14px 14px 20px;}.vc-msg-body{max-width:90%;}}
+@media (max-width:640px){.vc-topbar-title{margin-right:0;}.vc-mic-area{padding:14px 14px 20px;}.vc-msg-body{max-width:90%;}}
 `;
 
 const WAVE_HEIGHTS = [
@@ -318,7 +320,12 @@ export default function VoiceConsultation() {
     fit();
     window.addEventListener("resize", fit);
     window.addEventListener("orientationchange", fit);
-    return () => { window.removeEventListener("resize", fit); window.removeEventListener("orientationchange", fit); };
+    // The page header above this screen changes height after load (for example when a Guru profile is assigned), which moves this
+    // screen down. Its container shrinks when that happens, so watching the container keeps the fit correct.
+    const parent = rootRef.current?.parentElement;
+    const watcher = typeof ResizeObserver !== "undefined" && parent ? new ResizeObserver(fit) : null;
+    if (watcher && parent) watcher.observe(parent);
+    return () => { window.removeEventListener("resize", fit); window.removeEventListener("orientationchange", fit); watcher?.disconnect(); };
   }, []);
 
   // CSS injection
@@ -458,11 +465,26 @@ export default function VoiceConsultation() {
       setFailure(null);
       setNotice("");
 
-      // An explicit request ("talk in Tamil") changes the ONE site-wide language. An ordinary message never does.
-      let chosen: LocaleCode = replyLanguage();
-      if (!retry) {
-        const asked = detectLanguageRequest(text);
-        if (asked && asked !== chosen && (await setLanguage(asked))) chosen = asked;
+      // Read the shared i18next state; an explicit language request is a preference change, not a chat topic.
+      let chosen: LocaleCode = isLocale(i18n.language) ? i18n.language : "en";
+      const asked = retry ? null : detectLanguageRequest(text);
+      if (asked) {
+        if (asked !== chosen && !(await setLanguage(asked))) {
+          pushEntry({ role: "user", text, ttsLang: ttsTag(chosen), lang: chosen });
+          setNotice(i18n.t("language.loadFailed", { lng: chosen }));
+          setMicState("idle");
+          return;
+        }
+        chosen = asked;
+        pushEntry({ role: "user", text, ttsLang: ttsTag(chosen), lang: chosen });
+        const confirmation = i18n.t("voice.languageChanged", {
+          lng: chosen,
+          language: localeInfo(chosen).native,
+        });
+        const idx = pushEntry({ role: "pandit", text: confirmation, ttsLang: ttsTag(chosen), lang: chosen });
+        setMicState("speaking");
+        speakWithControls(idx, confirmation, ttsTag(chosen), () => { if (!abortRef.current) setMicState("idle"); });
+        return;
       }
 
       if (!retry) pushEntry({ role: "user", text, ttsLang: ttsTag(chosen), lang: chosen });
@@ -560,7 +582,9 @@ export default function VoiceConsultation() {
     <div className="vc-root" ref={rootRef}>
       <div className="vc-topbar">
         <span className="vc-topbar-title">{t("voice.title")}</span>
-        {!narrow && <LanguageSelector />}
+        <div className={narrow ? "vc-lang-full" : "vc-language-control"}>
+          <LanguageSelector variant={narrow ? "mobile" : "desktop"} />
+        </div>
         <button className={`vc-ctrl-btn${tts.muted ? " vc-muted" : ""}`} onClick={tts.toggleMute}>
           {tts.muted ? `🔇 ${t("voice.unmute")}` : `🔊 ${t("voice.voiceOn")}`}
         </button>
@@ -573,7 +597,6 @@ export default function VoiceConsultation() {
         {conversation.length > 0 && (
           <button className="vc-ctrl-btn" onClick={newSession}>🔄 {t("voice.newSession")}</button>
         )}
-        {narrow && <div className="vc-lang-full"><LanguageSelector variant="mobile" /></div>}
       </div>
 
       <div className="vc-history" ref={historyRef} role="log" aria-live="polite">

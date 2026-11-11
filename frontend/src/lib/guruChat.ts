@@ -81,7 +81,7 @@ export async function askGuru(
   extraSystem = "",
   /** "chapter.verse" references the reply may cite: only the verified verses handed to the model. */
   allowedRefs: string[] = [],
-  /** The language the reply must be written in: the language chosen in the MyBhagya selector (English if none was chosen). */
+  /** The language the reply must be written in: the language chosen in the Bhagya selector (English if none was chosen). */
   language: LocaleCode = replyLanguage(),
 ): Promise<GuruTurn> {
   const first = await askOnce(history, userMessage, languageDirective, conversationId, extraSystem, allowedRefs, language, "");

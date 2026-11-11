@@ -13,7 +13,7 @@
  *   - "consensus": the core lists (tithi, nakshatra, weekday) appear alike across the references consulted.
  *   - "general": the event follows the general auspicious-time conventions; the references give no event-specific list,
  *     so no extra event-specific restriction has been invented.
- * The ORDER in which suitable windows are ranked (tiers below) is MyBhagya's own documented ordering, not a classical grade.
+ * The ORDER in which suitable windows are ranked (tiers below) is Bhagya's own documented ordering, not a classical grade.
  */
 
 export type EventId =

@@ -102,7 +102,7 @@ export function AdminSidebar({ mobileOpen = false, onMobileClose }: AdminSidebar
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between border-b border-[#E8E3DC] px-5 py-4">
         <div>
-          <p className="text-base font-semibold tracking-tight text-[#1F1B16]">MyBhagya</p>
+          <p className="text-base font-semibold tracking-tight text-[#1F1B16]">Bhagya</p>
           <p className="text-xs text-[#6B6259]">Admin panel</p>
         </div>
         {showClose && (

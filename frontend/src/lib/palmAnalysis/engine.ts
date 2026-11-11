@@ -5,6 +5,7 @@
 // implementation (e.g. one backed by a real trained line-segmentation model)
 // without touching any component.
 
+import i18n from "@/i18n";
 import type {
   HandLandmarks, ImageQualityCheck, PalmAnalysisEngine, PalmAnalysisResult, PreprocessedImage,
 } from "./types";
@@ -24,19 +25,19 @@ class DefaultPalmAnalysisEngine implements PalmAnalysisEngine {
     const landmarks = await detectHandLandmarks(source);
 
     if (!landmarks) {
-      return { ok: false, issue: "no_hand_detected", message: "We couldn't clearly detect a palm in this photo.", blurScore, landmarks: null };
+      return { ok: false, issue: "no_hand_detected", message: i18n.t("palm.quality.noHand"), blurScore, landmarks: null };
     }
     if (landmarks.confidence < 0.55) {
-      return { ok: false, issue: "low_confidence", message: "Palm detection confidence is low — try better lighting.", blurScore, landmarks };
+      return { ok: false, issue: "low_confidence", message: i18n.t("palm.quality.lowConfidence"), blurScore, landmarks };
     }
     if (landmarks.handednessCertain === false) {
-      return { ok: false, issue: "low_confidence", message: "We can't tell which hand this is from the photo. Please upload a clear photo with your palm facing the camera and fingers slightly apart.", blurScore, landmarks };
+      return { ok: false, issue: "low_confidence", message: i18n.t("palm.quality.handednessUnsure"), blurScore, landmarks };
     }
     if (isTooBlurry(blurScore)) {
-      return { ok: false, issue: "too_blurry", message: "This image looks a little blurry for a precise reading.", blurScore, landmarks };
+      return { ok: false, issue: "too_blurry", message: i18n.t("palm.quality.blurry"), blurScore, landmarks };
     }
     if (isHandTooSmall(landmarks)) {
-      return { ok: false, issue: "hand_too_small", message: "Move your hand closer — it's too small in the frame.", blurScore, landmarks };
+      return { ok: false, issue: "hand_too_small", message: i18n.t("palm.quality.tooSmall"), blurScore, landmarks };
     }
     return { ok: true, blurScore, landmarks };
   }
@@ -48,7 +49,7 @@ class DefaultPalmAnalysisEngine implements PalmAnalysisEngine {
       const img = new Image();
       await new Promise<void>((resolve, reject) => {
         img.onload = () => resolve();
-        img.onerror = () => reject(new Error("Could not load captured frame"));
+        img.onerror = () => reject(new Error(i18n.t("palm.errors.frameLoad")));
         img.src = dataUrl;
       });
       return preprocessPalmImage(img, landmarks);

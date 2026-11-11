@@ -30,6 +30,8 @@ const EN_REPLY = "Namaste, I am glad you reached out. Tell me what is on your mi
 /** A real sentence in each language (from its own dictionary), long enough to be judged by script. */
 const reply = (code: string) => (code === "en" ? EN_REPLY : (dict(code).guru.errors.network as string));
 const english = (code: string) => LOCALES.find((l) => l.code === code)!.english;
+const confirmation = (code: string) =>
+  dict(code).voice.languageChanged.replace("{{language}}", LOCALES.find((l) => l.code === code)!.native);
 
 const ok = (content: string) => ({ ok: true, status: 200, json: async () => ({ choices: [{ message: { content } }] }) }) as Response;
 const mockAi = vi.mocked(aiChat);
@@ -131,6 +133,28 @@ describe("chat behaviour", () => {
     send("hi");
     expect(await screen.findByTestId("vc-failure")).toBeInTheDocument();
     expect(bubbles("pandit")).toEqual([]);
+  });
+
+  it("retries a reply in the selected language when the first model response is in English", async () => {
+    await mount("ta");
+    mockAi.mockResolvedValueOnce(ok(EN_REPLY)).mockResolvedValueOnce(ok(reply("ta")));
+    send("I feel worried about my career.");
+    await screen.findByText(reply("ta"));
+    expect(mockAi).toHaveBeenCalledTimes(2);
+    expect(mockAi.mock.calls.every(([body]) => body.language === "ta")).toBe(true);
+    expect(lastCall().messages[1].content).toContain("Your previous reply was not written in Tamil");
+    expect(screen.queryByText(EN_REPLY)).toBeNull();
+  });
+
+  it("does not show an English fallback when both language attempts are wrong", async () => {
+    await mount("gu");
+    mockAi.mockResolvedValueOnce(ok(EN_REPLY)).mockResolvedValueOnce(ok(EN_REPLY));
+    send("I feel worried about my career.");
+    const failure = await screen.findByTestId("vc-failure");
+    expect(failure).toHaveTextContent(dict("gu").guru.errors.wrongLanguage);
+    expect(screen.getByRole("button", { name: dict("gu").common.retry })).toBeInTheDocument();
+    expect(bubbles("pandit")).toEqual([]);
+    expect(mockAi.mock.calls.every(([body]) => body.language === "gu")).toBe(true);
   });
 
   it("Retry asks again with the same history, does not duplicate the user's message, and clears the error", async () => {
@@ -260,6 +284,19 @@ describe("central language integration", () => {
     expect(bubbles("pandit")).toEqual([EN_REPLY, reply("ta")]);
   });
 
+  it("keeps the language selector visible in the header after a conversation starts", async () => {
+    await mount();
+    send("hi");
+    await screen.findByText(EN_REPLY);
+    const header = document.querySelector(".vc-topbar")!;
+    expect(header.querySelector("[data-testid=language-selector]")).not.toBeNull();
+    fireEvent.click(header.querySelector("[data-testid=language-selector] button")!);
+    fireEvent.click(header.querySelector("[data-testid=language-option-gu]")!);
+    await waitFor(() => expect(i18n.language).toBe("gu"));
+    expect(header.querySelector("[data-testid=language-current]")).toHaveTextContent("ગુજરાતી");
+    expect(bubbles("pandit")).toEqual([EN_REPLY]);
+  });
+
   it("there is no language state or storage key of its own", async () => {
     const source = readFileSync(join(SRC, "components", "VoiceConsultation.tsx"), "utf8");
     expect(source).not.toMatch(/localStorage|sessionStorage|createContext|useLanguageDetection|translateText|displayLang|audioLang/);
@@ -270,34 +307,49 @@ describe("central language integration", () => {
     expect(Object.keys(localStorage)).toEqual([STORAGE_KEY]); // the one central key, nothing else
   });
 
-  it("an explicit request changes the central language; an ordinary message in another language does not", async () => {
+  it("an explicit request changes the central language and confirms it without asking the AI", async () => {
     await mount();
-    mockAi.mockResolvedValue(ok(reply("ta")));
     send("talk in tamil");
-    await screen.findByText(reply("ta"));
+    expect(await screen.findByText(confirmation("ta"))).toBeInTheDocument();
     expect(i18n.language).toBe("ta");
     expect(screen.getByTestId("language-current")).toHaveTextContent("தமிழ்"); // the selector shows it at once
-    expect(lastCall().language).toBe("ta");
+    expect(mockAi).not.toHaveBeenCalled(); // language intent bypasses the topic guard and model
 
     await act(async () => { await setLanguage("en"); });
     mockAi.mockResolvedValue(ok(EN_REPLY));
     send("எனக்கு என் வேலை பற்றி கவலை"); // typed in Tamil, but no request to change language
-    await waitFor(() => expect(mockAi).toHaveBeenCalledTimes(2));
+    await screen.findByText(EN_REPLY);
+    expect(mockAi).toHaveBeenCalledTimes(1);
     expect(i18n.language).toBe("en");
     expect(lastCall().language).toBe("en");
   });
 
   it.each([
+    ["Can you speak in Tamil?", "ta"],
+    ["Talk in Gujarati.", "gu"],
+    ["Please reply in Telugu.", "te"],
     ["हिंदी में जवाब दो।", "hi"],
+    ["मराठीत बोला.", "mr"],
     ["தமிழில் பேசுங்கள்.", "ta"],
-    ["Please reply in Marathi", "mr"],
-  ])("'%s' switches the whole site to %s and the reply is requested in it", async (text, code) => {
+  ])("'%s' switches the whole site to %s and confirms in the selected language", async (text, code) => {
     await mount();
-    mockAi.mockResolvedValue(ok(reply(code)));
     send(text);
-    await screen.findByText(reply(code));
+    expect(await screen.findByText(confirmation(code))).toBeInTheDocument();
     expect(i18n.language).toBe(code);
-    expect(lastCall().language).toBe(code);
+    expect(screen.getByTestId("language-current")).toHaveTextContent(LOCALES.find((l) => l.code === code)!.native);
+    expect(mockAi).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    "My friend is from Tamil Nadu and I miss her",
+    "I cannot speak English",
+    "My horoscope says I should focus on my career",
+  ])("does not mistake an ordinary message for a language request: %s", async (text) => {
+    await mount();
+    send(text);
+    await screen.findByText(EN_REPLY);
+    expect(i18n.language).toBe("en");
+    expect(lastCall().language).toBe("en");
   });
 });
 
@@ -494,5 +546,55 @@ describe("the language selector in the header", () => {
     await mount();
     expect(screen.getAllByTestId("language-selector")).toHaveLength(1);
     expect(document.querySelector(".vc-lang-full [data-testid=language-selector]")).not.toBeNull();
+  });
+
+  it("remains accessible on a phone-width screen after chat starts", async () => {
+    window.matchMedia = ((q: string) => ({ matches: true, media: q, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, onchange: null, dispatchEvent: () => false })) as never;
+    await mount();
+    send("hi");
+    await screen.findByText(EN_REPLY);
+    const selector = document.querySelector(".vc-topbar .vc-lang-full [data-testid=language-selector]")!;
+    expect(selector).not.toBeNull();
+    fireEvent.click(selector.querySelector("button")!);
+    fireEvent.click(selector.querySelector("[data-testid=language-option-ta]")!);
+    await waitFor(() => expect(i18n.language).toBe("ta"));
+    expect(selector.querySelector("[data-testid=language-current]")).toHaveTextContent("தமிழ்");
+    expect(bubbles("pandit")).toEqual([EN_REPLY]);
+  });
+});
+
+// ── the guide is honest about what it is ────────────────────────────────────────────────────────────────────────────
+describe("Pandit Ji's system prompt", () => {
+  const source = readFileSync(join(SRC, "components", "VoiceConsultation.tsx"), "utf8");
+  const prompt = /const VOICE_SYSTEM_PROMPT = `([\s\S]*?)`;/.exec(source)![1];
+
+  it("no longer claims to be a human, or to have years of experience, or forbids saying it is an AI", () => {
+    expect(prompt).not.toMatch(/real, wise, compassionate human|40 years|real Pandit Ji|Never say you are artificial|Never mention AI/i);
+  });
+
+  it("says it is an AI guide, answers honestly when asked, and cannot see a birth chart", () => {
+    expect(prompt).toMatch(/AI guide, not a human pandit/);
+    expect(prompt).toMatch(/if the seeker asks whether you are a real person, a human, a bot or an AI, say plainly/);
+    expect(prompt).toMatch(/cannot see the seeker's birth chart/);
+  });
+
+  it("keeps the warm, caring Pandit Ji voice and the existing rules", () => {
+    expect(prompt).toMatch(/warm, compassionate spiritual guide in the Vedic tradition/);
+    expect(prompt).not.toMatch(/I can only reply in English|numerology, face reading, or horoscope analysis/i);
+    expect(prompt).toMatch(/A request to change languages is handled by the interface/);
+    expect(prompt).toMatch(/caring elder of the family/);
+    expect(prompt).toMatch(/GREETING RULE/);
+    expect(prompt).toMatch(/Hanuman Chalisa/);
+    expect(prompt).toMatch(/Bhagavad Gita, Vedas/);
+    expect(prompt).toMatch(/MAXIMUM 5 sentences/);
+  });
+});
+
+describe("navigation and brand", () => {
+  it("the brand name is Bhagya in the dictionaries, with no 'MyBhagya' left in visible text", () => {
+    for (const code of ALL) {
+      const text = JSON.stringify(dict(code));
+      expect(text, code).not.toMatch(/MyBhagya|My Bhagya/);
+    }
   });
 });

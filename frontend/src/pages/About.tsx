@@ -27,7 +27,7 @@ const About = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="page-title font-display text-4xl md:text-5xl lg:text-6xl text-glow text-primary mb-4">
-            About MyBhagya Astro
+            About Bhagya Astro
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
             Your guide to the mysteries of the cosmos
@@ -39,7 +39,7 @@ const About = () => {
           <Sparkles className="w-10 h-10 text-primary mx-auto mb-3" />
           <h2 className="font-display text-2xl md:text-3xl text-foreground mb-3">Our Mission</h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
-            At MyBhagya Astro, we believe that the stars hold profound wisdom for those who seek to understand. 
+            At Bhagya Astro, we believe that the stars hold profound wisdom for those who seek to understand. 
             Our mission is to make astrology accessible, meaningful, and practical for modern life. 
             Whether you're a curious beginner or a seasoned star-gazer, we're here to illuminate your cosmic journey.
           </p>
@@ -64,7 +64,7 @@ const About = () => {
           <h2 className="font-display text-2xl text-primary text-center mb-3">Our Story</h2>
           <div className="max-w-none text-muted-foreground space-y-3 leading-relaxed">
             <p>
-              MyBhagya Astro was born from a fascination with the night sky and a desire to share its wisdom. 
+              Bhagya Astro was born from a fascination with the night sky and a desire to share its wisdom. 
               What started as a personal exploration of astrology grew into a mission to create the most 
               beautiful and insightful astrology platform on the web.
             </p>

@@ -1248,6 +1248,8 @@ nav.navbar-gerua {
 /* Bar: ivory type, gold for active / hover */
 nav.navbar-gerua [class~="text-[#2C1810]/60"],
 nav.navbar-gerua [class~="text-[#2C1810]/70"],
+nav.navbar-gerua [class~="text-[#2C1810]/80"],
+nav.navbar-gerua [class~="text-foreground/80"],
 nav.navbar-gerua [class~="text-foreground/70"],
 nav.navbar-gerua a.group [class~="text-[#BC6A4D]"] { color: var(--nav-fg); }
 nav.navbar-gerua [class~="text-[#BC6A4D]"],

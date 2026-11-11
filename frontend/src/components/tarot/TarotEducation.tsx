@@ -1,39 +1,22 @@
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import EducationSection, { EducationBlock } from "@/components/EducationSection";
 import { FEATURES } from "@/data/featureCatalog";
 import { FEATURE_FAQS } from "@/data/featureFaqs";
 
-const blocks: EducationBlock[] = [
-  {
-    heading: "What Is Tarot Reading?",
-    paragraphs: [
-      "Tarot is a deck of illustrated cards used for reflection and storytelling. Each card carries traditional themes such as new beginnings, choices, endings or support. It is an aid for thinking a question through, not a way of proving what will happen.",
-    ],
-  },
-  {
-    heading: "How Does Tarot Prediction Work?",
-    list: [
-      "Choose a reading: Tarot Bhagya (five cards, with a life area such as Career or Love) or Karma Mirror (three cards).",
-      "Shuffle if you like, then pick the cards that draw you from the fanned deck and watch them turn over.",
-      "Read the interpretation written for exactly those cards in their positions. Tap any card to see its general meaning.",
-    ],
-    ordered: true,
-    after: [
-      "Selection is random: your browser shuffles the 22 Major Arcana cards and cards are always read upright. The card names, positions and life area are sent to a language model, which writes the interpretation, so its wording can differ between readings.",
-    ],
-  },
-  {
-    heading: "How to Understand Your Reading",
-    paragraphs: [
-      "Treat the later positions as themes to prepare for, not events that are certain. In Karma Mirror, “karma” is a lens for recurring patterns, not a claim about past lives. Notice what feels true, and use the suggested steps or ignore them. Your own judgement matters most.",
-    ],
-  },
-];
+// The English text lives in the dictionary under tarot.education.*; the shape (block order, list lengths) is fixed here.
+const blocks = (t: TFunction): EducationBlock[] => {
+  const k = (key: string) => t(`tarot.education.${key}`);
+  return [
+    { heading: k("what.heading"), paragraphs: [k("what.p.0")] },
+    { heading: k("how.heading"), list: [k("how.list.0"), k("how.list.1"), k("how.list.2")], ordered: true, after: [k("how.after.0")] },
+    { heading: k("understand.heading"), paragraphs: [k("understand.p.0")] },
+  ];
+};
 
 const faqs = FEATURE_FAQS.tarot;
 
-const DISCLAIMER =
-  "Tarot Prediction is offered for personal interest and reflection. Readings are generated interpretations, not predictions, and not medical, legal, financial or relationship advice.";
-
 export default function TarotEducation() {
-  return <EducationSection audioToolSlug={FEATURES.tarot.id} idPrefix="tarot" title="About Tarot Prediction" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
+  const { t } = useTranslation();
+  return <EducationSection audioToolSlug={FEATURES.tarot.id} idPrefix="tarot" title={t("tarot.education.title")} blocks={blocks(t)} faqs={faqs} disclaimer={t("tarot.education.disclaimer")} />;
 }

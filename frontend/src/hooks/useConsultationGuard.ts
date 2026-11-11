@@ -32,7 +32,7 @@ export function useConsultationGuard() {
     return !OFF_TOPIC.some((p) => p.test(q));
   };
 
-  /** The refusal, in the language chosen in the MyBhagya selector. */
+  /** The refusal, in the language chosen in the Bhagya selector. */
   const getRejectionMessage = (): string => i18n.t("voice.offTopic");
 
   return { isAllowedTopic, getRejectionMessage };

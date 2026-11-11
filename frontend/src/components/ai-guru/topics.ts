@@ -7,7 +7,7 @@ export interface GuruTopic {
   /** English title: also what the model is told, so the prompt is the same in every language. */
   title: string;
   icon: LucideIcon;
-  /** Soft background tint for the card (MyBhagya palette: cream, blush, sage, lavender, pale gold). */
+  /** Soft background tint for the card (Bhagya palette: cream, blush, sage, lavender, pale gold). */
   tint: string;
   /** Border and icon accent for the card. */
   accent: string;

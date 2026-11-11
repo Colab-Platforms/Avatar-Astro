@@ -103,3 +103,72 @@ export function ttsLanguageCode(language: unknown): string | null {
   const code = parseResponseLanguage(language);
   return code ? `${code}-IN` : null;
 }
+
+// ── Verifying that a reply really is in the chosen language ─────────────────────────────────────────────────────────
+
+/** Thrown when the model answered in the wrong language twice. Routes turn it into a 502 with a translatable code, never a made-up reply. */
+export class WrongLanguageError extends Error {
+  readonly code = "wrong_language";
+  constructor(readonly language: ResponseLanguage) {
+    super(`The reply was not written in ${INFO[language].english}`);
+    this.name = "WrongLanguageError";
+  }
+}
+
+/**
+ * The human-readable text of a model reply. For JSON the VALUES are read (the keys are English by design and must not count);
+ * anything that is not JSON is judged as it is.
+ */
+export function replyTextOf(raw: unknown): string {
+  const text = typeof raw === "string" ? raw : JSON.stringify(raw ?? "");
+  const m = /\{[\s\S]*\}|\[[\s\S]*\]/.exec(text);
+  if (!m) return text;
+  try {
+    const out: string[] = [];
+    const walk = (v: unknown): void => {
+      if (typeof v === "string") out.push(v);
+      else if (Array.isArray(v)) v.forEach(walk);
+      else if (v && typeof v === "object") Object.values(v as Record<string, unknown>).forEach(walk);
+    };
+    walk(JSON.parse(m[0]));
+    return out.join("\n");
+  } catch {
+    return text;
+  }
+}
+
+/**
+ * True when a reply is written in the chosen language: most letters are in its script, no paragraph of real length is in another
+ * script, and no markdown heading was left in English. Names, numbers and short fixed values (for example a category the prompt
+ * required in English) are allowed. English is judged the same way against Latin.
+ */
+export function replyIsInLanguage(text: string, lang: ResponseLanguage): boolean {
+  if (!matchesResponseLanguage(text, lang)) return false;
+  if (lang === "en") return true;
+  if (/\*\*[A-Za-z][A-Za-z ,&'’-]{4,}\*\*/.test(text)) return false; // an English heading such as **What this means**
+  return text
+    .split(/\n+/)
+    .filter((p) => [...p].filter((c) => /\p{L}/u.test(c)).length >= 30)
+    .every((p) => [...p].filter((c) => INFO[lang].letter.test(c)).length / [...p].filter((c) => /\p{L}/u.test(c)).length >= 0.35);
+}
+
+export function retryNoteFor(lang: ResponseLanguage): string {
+  const i = INFO[lang];
+  return `\n\nIMPORTANT: your previous reply was not written in ${i.english}. Write the whole reply again, entirely in ${i.english} (${i.native}), in ${i.script} script, with no English sentences or headings.`;
+}
+
+/**
+ * Runs `ask` (one model call that returns the reply text), checks the language, and on a clearly wrong language asks ONCE more with a
+ * firm note. If that is wrong too it throws WrongLanguageError. With no language chosen (or English requested and found) it returns
+ * the first reply untouched, so a visitor who never chose a language sees exactly what they saw before.
+ */
+export async function generateInLanguage(
+  lang: ResponseLanguage | undefined,
+  ask: (retryNote: string) => Promise<string>,
+): Promise<string> {
+  const first = await ask("");
+  if (!lang || replyIsInLanguage(replyTextOf(first), lang)) return first;
+  const second = await ask(retryNoteFor(lang));
+  if (replyIsInLanguage(replyTextOf(second), lang)) return second;
+  throw new WrongLanguageError(lang);
+}

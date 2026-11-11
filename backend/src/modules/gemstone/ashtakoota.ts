@@ -242,7 +242,7 @@ export const koota = (aMoonLon: number, bMoonLon: number): AshtakootaResult => {
       "Tara gives 1.5 points for each direction whose count (remainder after dividing by 9) is not 3, 5 or 7, the classical Vipat, Pratyak and Vadha taras.",
       "Varna uses the common element rule: water signs Brahmin, fire Kshatriya, earth Vaishya, air Shudra. Some software swaps Vaishya and Shudra.",
       "Vashya and Gana have more than one published table. This calculation uses one widely published Vashya grid and gives Gana 6 when the first person is Deva and the second Manushya (5 the other way round); other sources reverse that pair.",
-      "Because published tables differ, this score can differ from other Guna Milan calculators. It is a MyBhagya calculation and is not claimed to match any particular calculator.",
+      "Because published tables differ, this score can differ from other Guna Milan calculators. It is a Bhagya calculation and is not claimed to match any particular calculator.",
       "Sagittarius and Capricorn Vashya groups are split at 15 degrees of the sign.",
       "Dosha cancellations shown are the commonly cited classical ones; a family astrologer may apply more.",
     ],
