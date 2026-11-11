@@ -37,6 +37,9 @@ import { createAstrologerChatRouter } from "./modules/chat/chat.astrologer.route
 import { resumeAllActiveSessions } from "./modules/chat/billing.js";
 import { initSocketServer } from "./realtime/socketServer.js";
 import { isOriginAllowed } from "./utils/corsOrigins.js";
+import { getExecutionId, reserveToolExecution, settleToolExecution, releaseToolExecution } from "./modules/payment/toolBilling.service.js";
+import { TOOL_KEYS } from "./modules/payment/toolKeys.js";
+import { ApiError } from "./utils/ApiError.js";
 
 dotenv.config();
 
@@ -334,7 +337,13 @@ app.post("/api/tts", ...feature("tts"), auth("USER"), async (req: Request, res: 
     return res.status(500).json({ error: "SARVAM_API_KEY not configured" });
   }
   const langCode = String(language ?? "").startsWith("en") ? "en-IN" : "hi-IN";
+  const userId = req.user!.id;
+  const executionId = getExecutionId(req);
+  let billed: Awaited<ReturnType<typeof reserveToolExecution>> | null = null;
   try {
+    billed = await reserveToolExecution(userId, TOOL_KEYS.TTS_MAIN, executionId);
+    if (billed.alreadySettled) return res.json(billed.execution!.resultPayload);
+
     const sarvamRes = await fetch("https://api.sarvam.ai/text-to-speech", {
       method: "POST",
       headers: {
@@ -354,14 +363,21 @@ app.post("/api/tts", ...feature("tts"), auth("USER"), async (req: Request, res: 
     if (!sarvamRes.ok) {
       const errText = await sarvamRes.text();
       console.error("Sarvam TTS error:", sarvamRes.status, errText);
+      if (billed && !billed.skip) await releaseToolExecution(executionId, "FAILED");
       return res.status(502).json({ error: "Sarvam TTS failed" });
     }
     const data = (await sarvamRes.json()) as any;
     const audio = data.audios?.[0];
-    if (!audio)
+    if (!audio) {
+      if (billed && !billed.skip) await releaseToolExecution(executionId, "FAILED");
       return res.status(502).json({ error: "No audio in Sarvam response" });
-    return res.json({ audio });
+    }
+    const result = { audio };
+    if (billed && !billed.skip) await settleToolExecution(executionId, result);
+    return res.json(result);
   } catch (err: any) {
+    if (billed && !billed.skip) await releaseToolExecution(executionId, "FAILED").catch(() => {});
+    if (err instanceof ApiError) return res.status(err.statusCode).json({ error: err.message });
     console.error("TTS proxy error:", err.message);
     return res.status(500).json({ error: "TTS proxy failed" });
   }

@@ -41,7 +41,15 @@ export default function UserConversationsPage() {
             photoUrl={c.astrologer.profilePhotoUrl}
             lastMessagePreview={c.lastMessage?.content}
             timestamp={c.lastMessage?.createdAt}
-            statusLabel={c.status === "ACTIVE" ? "Active now" : "Chat ended"}
+            statusLabel={
+              c.status === "REQUESTED"
+                ? "Waiting for response…"
+                : c.status === "ACTIVE"
+                  ? "Active now"
+                  : c.status === "PAUSED"
+                    ? "Reconnecting…"
+                    : "Chat ended"
+            }
             onClick={() => navigate(`/chat/${c.sessionId}`)}
           />
         ))}

@@ -24,10 +24,14 @@ export function useAstrologerConversations() {
     socket.on("chat:new-session", invalidate);
     socket.on("chat:message", invalidate);
     socket.on("chat:session-ended", invalidate);
+    socket.on("chat:paused", invalidate);
+    socket.on("chat:resumed", invalidate);
     return () => {
       socket.off("chat:new-session", invalidate);
       socket.off("chat:message", invalidate);
       socket.off("chat:session-ended", invalidate);
+      socket.off("chat:paused", invalidate);
+      socket.off("chat:resumed", invalidate);
     };
   }, [qc]);
 

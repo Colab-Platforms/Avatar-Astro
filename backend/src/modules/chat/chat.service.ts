@@ -252,6 +252,19 @@ export async function endSessionByActor(sessionId: string, userId: string) {
   return billing.endSession(sessionId, reason);
 }
 
+/** Every ChatSession between this pair is one continuous conversation to the two people in it —
+ * a new paid session after a prior one ended is a new billing episode, not a new conversation.
+ * Message history (read and unread-marking) must span all of them, or ending a chat and starting
+ * a new one with the same astrologer would make the earlier messages unreachable. */
+async function peerSessionIds(sessionId: string, userId: string): Promise<{ sessionIds: string[]; role: ChatSenderRole }> {
+  const { session, role } = await resolveActor(sessionId, userId);
+  const sessions = await prisma.chatSession.findMany({
+    where: { userId: session.userId, astrologerProfileId: session.astrologerProfileId },
+    select: { id: true },
+  });
+  return { sessionIds: sessions.map((s) => s.id), role };
+}
+
 export async function postMessage(sessionId: string, userId: string, content: string) {
   const { session, role } = await resolveActor(sessionId, userId);
   if (session.status !== "ACTIVE") throw new ApiError("This chat has ended", STATUS_CODES.CONFLICT);
@@ -266,18 +279,18 @@ export async function postMessage(sessionId: string, userId: string, content: st
 }
 
 export async function markRead(sessionId: string, userId: string) {
-  const { role } = await resolveActor(sessionId, userId);
+  const { sessionIds, role } = await peerSessionIds(sessionId, userId);
   const otherRole: ChatSenderRole = role === "USER" ? "ASTROLOGER" : "USER";
   await prisma.chatMessage.updateMany({
-    where: { sessionId, senderRole: otherRole, readAt: null },
+    where: { sessionId: { in: sessionIds }, senderRole: otherRole, readAt: null },
     data: { readAt: new Date() },
   });
 }
 
 export async function getMessages(sessionId: string, userId: string, cursor?: string, take = 50) {
-  await resolveActor(sessionId, userId);
+  const { sessionIds } = await peerSessionIds(sessionId, userId);
   const messages = await prisma.chatMessage.findMany({
-    where: { sessionId },
+    where: { sessionId: { in: sessionIds } },
     orderBy: { createdAt: "desc" },
     take,
     ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
@@ -299,7 +312,17 @@ export async function listUserConversations(userId: string) {
       messages: { orderBy: { createdAt: "desc" }, take: 1 },
     },
   });
-  return sessions.map((s) => ({
+  // One row per astrologer, not one per ChatSession — a new paid consultation with the same
+  // astrologer after a prior one ended is a new billing event internally, but it must read as
+  // the same conversation thread, not a second entry for the same person. Rows are already
+  // ordered updatedAt desc, so the first one seen per astrologer is the most recent.
+  const seen = new Set<string>();
+  const deduped = sessions.filter((s) => {
+    if (seen.has(s.astrologerProfileId)) return false;
+    seen.add(s.astrologerProfileId);
+    return true;
+  });
+  return deduped.map((s) => ({
     sessionId: s.id,
     status: s.status,
     type: s.type,
@@ -326,13 +349,28 @@ export async function listAstrologerConversations(astrologerProfileId: string) {
   });
   const unreadBySession = new Map(unreadCounts.map((u) => [u.sessionId, u._count._all]));
 
-  return sessions.map((s) => ({
+  // One row per user, not one per ChatSession (same reasoning as listUserConversations) — unread
+  // counts from that user's older sessions with this astrologer are folded into the row that's
+  // actually shown, so a stale unread count from a since-ended session is never silently dropped.
+  const seen = new Map<string, number>();
+  const representative: typeof sessions = [];
+  for (const s of sessions) {
+    const unread = unreadBySession.get(s.id) ?? 0;
+    if (seen.has(s.userId)) {
+      seen.set(s.userId, (seen.get(s.userId) ?? 0) + unread);
+      continue;
+    }
+    seen.set(s.userId, unread);
+    representative.push(s);
+  }
+
+  return representative.map((s) => ({
     sessionId: s.id,
     status: s.status,
     type: s.type,
     user: s.user,
     lastMessage: s.messages[0] ?? null,
-    unreadCount: unreadBySession.get(s.id) ?? 0,
+    unreadCount: seen.get(s.userId) ?? 0,
     startedAt: s.startedAt,
     endedAt: s.endedAt,
   }));

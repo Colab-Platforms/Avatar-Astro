@@ -50,17 +50,12 @@ export default function StartChatButton({ astrologer, compact, className }: Prop
     try {
       const eligibility = await chatApi.getEligibility(astrologer.id);
 
-      // `canStart` already accounts for an existing active session being resumable even
-      // after the free trial or balance would otherwise block a *new* one — check that,
-      // not the raw freeTrialAvailable/balance flags, or a user can never get back into
-      // a chat they already started.
+      // `canStart` already accounts for an existing pending/active session being resumable
+      // even when the balance would otherwise block a *new* one — check that, not the raw
+      // balance flag, or a user can never get back into a chat they already started.
       if (!eligibility.canStart) {
-        if (eligibility.type === "FREE_TRIAL") {
-          toast.error("You've already used your free session with this astrologer.");
-        } else {
-          setMinimumRupees(eligibility.minimumRequiredPaise ? Math.ceil(eligibility.minimumRequiredPaise / 100) : undefined);
-          setRechargeOpen(true);
-        }
+        setMinimumRupees(eligibility.minimumRequiredPaise ? Math.ceil(eligibility.minimumRequiredPaise / 100) : undefined);
+        setRechargeOpen(true);
         return;
       }
 

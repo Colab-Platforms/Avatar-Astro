@@ -1,0 +1,1981 @@
+╭─── Claude Code v2.1.212 ─────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting        │
+│            Welcome back Avatar Learning!           │ started                 │
+│                                                    │ Run /init to create a … │
+│                       ▐▛███▜▌                      │ ─────────────────────── │
+│                      ▝▜█████▛▘                     │ What's new              │
+│                        ▘▘ ▝▝                       │ `/fork` now copies you… │
+│    Sonnet 5 · Claude Pro ·                         │ Added `claude auto-mod… │
+│    avatarlearning@avatarindia.com's Organization   │ Added a session-wide l… │
+│               ~\astro\avatar-astro33               │ /release-notes for more │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+
+● Checkpoint 6 is frontend-heavy. Given scope, I'll focus on what's concretely
+  usable now: the wallet page, chat UI updates for the new REQUESTED/PAUSED
+  states and free-allowance display, and two superadmin pages (wallet
+  lookup/adjustment, tool pricing). I'll skip building out AI-tool
+  price-confirmation UI in depth since no ToolPrice is active yet — there's
+  nothing real to confirm against until you approve pricing. Let me look at
+  existing conventions first.
+
+  Searched for 6 patterns, read 20 files, ran 11 shell commands (ctrl+o to expand)
+  ⎿  Read src\modules\gemstone\gemstone.route.ts (170 lines)
+  ⎿  Read src\routes\aiProxyRoutes.ts (119 lines)
+  ⎿  Referenced file src\routes\innerVoiceRoutes.ts
+  ⎿  Referenced file src\routes\tarotRoutes.ts
+  ⎿  Read prisma\schema\auth.prisma (161 lines)
+  ⎿  Plan file referenced (~\.claude\plans\zesty-knitting-sprout.md)
+
+● No changes needed there. Now implementing the frontend fix set, starting with
+  the API types.
+
+● Update(frontend\src\features\chat\api\chatApi.ts)
+  ⎿  Added 12 lines, removed 3 lines
+       1  import { authRequest } from "@/lib/authClient";
+       2  
+       3 -export type ChatSessionType = "PAID" | "FREE_TRIAL";           
+       4 -export type ChatSessionStatus = "ACTIVE" | "ENDED";            
+       5 -export type ChatEndReason = "USER_ENDED" | "ASTROLOGER_ENDED" |
+         - "BALANCE_EXHAUSTED" | "FREE_LIMIT_REACHED" | "TIMEOUT";       
+       3 +export type ChatSessionType = "PAID" | "FREE_TRIAL" | "COMPLIME
+         +NTARY";                                                        
+       4 +export type ChatSessionStatus = "REQUESTED" | "ACTIVE" | "PAUSE
+         +D" | "ENDED";                                                  
+       5 +export type ChatEndReason =                                    
+       6 +  | "USER_ENDED"                                               
+       7 +  | "ASTROLOGER_ENDED"                                         
+       8 +  | "BALANCE_EXHAUSTED"                                        
+       9 +  | "FREE_LIMIT_REACHED"                                       
+      10 +  | "TIMEOUT"                                                  
+      11 +  | "REJECTED"                                                 
+      12 +  | "DISCONNECTED";                                            
+      13  export type ChatSenderRole = "USER" | "ASTROLOGER";
+      14  
+      15  export interface ChatSession {
+     ...
+      20    status: ChatSessionStatus;
+      21    ratePerMinutePaise: number;
+      22    freeLimitSeconds: number | null;
+      23 +  requestedAt: string;                                         
+      24 +  requestExpiresAt: string | null;                             
+      25    startedAt: string;
+      26    billedSeconds: number;
+      27    amountPaise: number;
+
+● Update(frontend\src\features\chat\api\chatApi.ts)
+  ⎿  Added 2 lines, removed 2 lines
+      43  }
+      44  
+      45  export interface ChatEligibility {
+      46 -  type: ChatSessionType;                                       
+      46 +  type: "PAID" | "COMPLIMENTARY";                              
+      47    canStart: boolean;
+      48 -  freeTrialAvailable: boolean;                                 
+      48    freeLimitSeconds: number | null;
+      49    ratePerMinutePaise: number;
+      50    walletBalancePaise: number | null;
+      51    minimumRequiredPaise?: number;
+      52 +  freeAllowanceRemainingSeconds: number;                       
+      53  }
+      54  
+      55  export interface UserConversationSummary {
+
+● Update(frontend\src\features\chat\api\chatApi.ts)
+  ⎿  Added 6 lines
+      107    endSession(sessionId: string) {
+      108      return authRequest<ChatSession>(`/astrologer/chat/sessions
+           /${sessionId}/end`, { method: "POST" });
+      109    },
+      110 +  acceptSession(sessionId: string) {                          
+      111 +    return authRequest<ChatSession>(`/astrologer/chat/sessions
+          +/${sessionId}/accept`, { method: "POST" });                   
+      112 +  },                                                          
+      113 +  rejectSession(sessionId: string) {                          
+      114 +    return authRequest<ChatSession>(`/astrologer/chat/sessions
+          +/${sessionId}/reject`, { method: "POST" });                   
+      115 +  },                                                          
+      116    setOnline(isOnline: boolean) {
+      117      return authRequest<{ id: string; isOnline: boolean }>("/as
+           trologer/chat/online", { method: "PATCH", body: { isOnline } }
+           );
+      118    },
+
+● Now the conversation summary status types used by the astrologer/user
+  conversation lists:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Good, those already reuse ChatSessionStatus, so they picked up
+  REQUESTED/PAUSED automatically. Now useChatSession.ts:
+
+● Update(frontend\src\features\chat\hooks\useChatSession.ts)
+  ⎿  Added 8 lines, removed 2 lines
+      2  import { useQuery, useQueryClient } from "@tanstack/react-query"
+         ;
+      3  import { toast } from "sonner";
+      4  import { connectSocket } from "../lib/socket";
+      5 -import { chatApi, astrologerChatApi, type ChatMessage, type Chat
+        -SenderRole, type ChatEndReason } from "../api/chatApi";         
+      5 +import { chatApi, astrologerChatApi, type ChatMessage, type Chat
+        +SenderRole, type ChatEndReason, type ChatSessionStatus } from ".
+        +./api/chatApi";                                                 
+      6  
+      7  interface Options {
+      8    sessionId: string;
+     ...
+      10    role: ChatSenderRole;
+      11  }
+      12  
+      13 +/** Matches backend/src/modules/chat/chat.constants.ts's HEARTB
+         +EAT_INTERVAL_MS — kept as a                                    
+      14 + * separate constant here since the frontend has no shared impo
+         +rt path into the backend. */                                   
+      15 +const HEARTBEAT_INTERVAL_MS = 10_000;                          
+      16 +                                                               
+      17  export function useChatSession({ sessionId, role }: Options) {
+      18    const api = role === "USER" ? chatApi : astrologerChatApi;
+      19    const qc = useQueryClient();
+     ...
+      30    });
+      31  
+      32    const [messages, setMessages] = useState<ChatMessage[]>([]);
+      29 -  const [status, setStatus] = useState<"ACTIVE" | "ENDED">("ACT
+         -IVE");                                                         
+      33 +  const [status, setStatus] = useState<ChatSessionStatus>("REQU
+         +ESTED");                                                       
+      34    const [endedReason, setEndedReason] = useState<ChatEndReason 
+          | null>(null);
+      35    const [remainingSeconds, setRemainingSeconds] = useState<numb
+          er | null>(null);
+      36    const [balancePaise, setBalancePaise] = useState<number | nul
+          l>(null);
+      37 +  const [freeSecondsRemaining, setFreeSecondsRemaining] = useSt
+         +ate<number | null>(null);                                      
+      38 +  const [pauseGraceEndsAt, setPauseGraceEndsAt] = useState<stri
+         +ng | null>(null);                                              
+      39    const [peerTyping, setPeerTyping] = useState(false);
+      40  
+      41    useEffect(() => {
+
+● Update(frontend\src\features\chat\hooks\useChatSession.ts)
+  ⎿  Added 28 lines, removed 1 line
+      60        if (message.sessionId !== sessionId) return;
+      61        setMessages((prev) => (prev.some((m) => m.id === message.
+          id) ? prev : [...prev, message]));
+      62      };
+      63 -    const onTimer = (payload: { sessionId: string; remainingSec
+         -onds: number; balancePaise: number | null }) => {              
+      63 +    const onTimer = (payload: { sessionId: string; remainingSec
+         +onds: number | null; balancePaise: number | null; freeSecondsRe
+         +maining?: number }) => {                                       
+      64        if (payload.sessionId !== sessionId) return;
+      65        setRemainingSeconds(payload.remainingSeconds);
+      66        setBalancePaise(payload.balancePaise);
+      67 +      if (payload.freeSecondsRemaining !== undefined) setFreeSe
+         +condsRemaining(payload.freeSecondsRemaining);                  
+      68      };
+      69      const onWarning = (payload: { sessionId: string; remainingS
+          econds: number }) => {
+      70        if (payload.sessionId !== sessionId) return;
+      71        toast.warning(`Less than a minute left — ${payload.remain
+          ingSeconds}s remaining.`);
+      72      };
+      73 +    const onAccepted = (payload: { sessionId: string }) => {   
+      74 +      if (payload.sessionId !== sessionId) return;             
+      75 +      setStatus("ACTIVE");                                     
+      76 +      qc.invalidateQueries({ queryKey: ["chat", "session", sess
+         +ionId] });                                                     
+      77 +    };                                                         
+      78 +    const onPaused = (payload: { sessionId: string; graceEndsAt
+         +: string }) => {                                               
+      79 +      if (payload.sessionId !== sessionId) return;             
+      80 +      setStatus("PAUSED");                                     
+      81 +      setPauseGraceEndsAt(payload.graceEndsAt);                
+      82 +    };                                                         
+      83 +    const onResumed = (payload: { sessionId: string }) => {    
+      84 +      if (payload.sessionId !== sessionId) return;             
+      85 +      setStatus("ACTIVE");                                     
+      86 +      setPauseGraceEndsAt(null);                               
+      87 +    };                                                         
+      88      const onEnded = (payload: { sessionId: string; reason: Chat
+          EndReason }) => {
+      89        if (payload.sessionId !== sessionId) return;
+      90        setStatus("ENDED");
+     ...
+       99      socket.on("chat:message", onMessage);
+      100      socket.on("chat:timer", onTimer);
+      101      socket.on("chat:low-balance-warning", onWarning);
+      102 +    socket.on("chat:accepted", onAccepted);                   
+      103 +    socket.on("chat:paused", onPaused);                       
+      104 +    socket.on("chat:resumed", onResumed);                     
+      105      socket.on("chat:ended", onEnded);
+      106      socket.on("chat:typing", onTyping);
+      107  
+      108 +    // Keeps this participant's presence alive server-side (se
+          +e billing.ts's PRESENCE_TIMEOUT_MS) —                         
+      109 +    // without a recurring heartbeat, a session would be pause
+          +d ~15s after the join-time heartbeat.                         
+      110 +    const heartbeat = setInterval(() => socket.emit("chat:hear
+          +tbeat", { sessionId }), HEARTBEAT_INTERVAL_MS);               
+      111 +                                                              
+      112      return () => {
+      113 +      clearInterval(heartbeat);                               
+      114        socket.emit("chat:leave", { sessionId });
+      115        socket.off("chat:message", onMessage);
+      116        socket.off("chat:timer", onTimer);
+      117        socket.off("chat:low-balance-warning", onWarning);
+      118 +      socket.off("chat:accepted", onAccepted);                
+      119 +      socket.off("chat:paused", onPaused);                    
+      120 +      socket.off("chat:resumed", onResumed);                  
+      121        socket.off("chat:ended", onEnded);
+      122        socket.off("chat:typing", onTyping);
+      123      };
+
+● Now add accept/reject actions and expose the new state in the return value:
+● Update(frontend\src\features\chat\hooks\useChatSession.ts)
+  ⎿  Added 17 lines
+      149      });
+      150    }, [sessionId]);
+      151  
+      152 +  const acceptRequest = useCallback(async () => {             
+      153 +    await astrologerChatApi.acceptSession(sessionId);         
+      154 +    setStatus("ACTIVE");                                      
+      155 +    qc.invalidateQueries({ queryKey: ["chat", "session", sessi
+          +onId] });                                                     
+      156 +  }, [sessionId, qc]);                                        
+      157 +                                                              
+      158 +  const rejectRequest = useCallback(async () => {             
+      159 +    await astrologerChatApi.rejectSession(sessionId);         
+      160 +    setStatus("ENDED");                                       
+      161 +    setEndedReason("REJECTED");                               
+      162 +    qc.invalidateQueries({ queryKey: ["chat", "session", sessi
+          +onId] });                                                     
+      163 +  }, [sessionId, qc]);                                        
+      164 +                                                              
+      165    return {
+      166      session: sessionQuery.data,
+      167      isLoading: sessionQuery.isLoading || messagesQuery.isLoadi
+           ng,
+     ...
+      171      endedReason,
+      172      remainingSeconds,
+      173      balancePaise,
+      174 +    freeSecondsRemaining,                                     
+      175 +    pauseGraceEndsAt,                                         
+      176      peerTyping,
+      177      sendMessage,
+      178      setTyping,
+      179      endChat,
+      180 +    acceptRequest,                                            
+      181 +    rejectRequest,                                            
+      182    };
+      183  }
+
+● Update(frontend\src\features\chat\components\ChatWindow.tsx)
+  ⎿  Added 4 lines, removed 2 lines
+      1  import { useEffect, useRef, useState } from "react";
+      2  import { useNavigate } from "react-router-dom";
+      3 -import { ArrowLeft, Loader2, PhoneOff, Send, Wallet } from "luci
+        -de-react";                                                      
+      3 +import { ArrowLeft, Loader2, PhoneOff, Send, Wallet, WifiOff, Ch
+        +eck, X } from "lucide-react";                                   
+      4  import { useChatSession } from "../hooks/useChatSession";
+      5  import { chatApi, type ChatSenderRole } from "../api/chatApi";
+      6  import RechargeModal from "@/features/wallet/components/Recharge
+         Modal";
+     ...
+       9    USER_ENDED: "You ended this chat.",
+      10    ASTROLOGER_ENDED: "The astrologer ended this chat.",
+      11    BALANCE_EXHAUSTED: "Your wallet balance ran out.",
+      12 -  FREE_LIMIT_REACHED: "Your 7-minute free session has ended.", 
+      12 +  FREE_LIMIT_REACHED: "Your free session has ended.",          
+      13    TIMEOUT: "This chat timed out.",
+      14 +  REJECTED: "The astrologer declined this request.",           
+      15 +  DISCONNECTED: "This chat ended because the connection was los
+         +t for too long.",                                              
+      16  };
+      17  
+      18  function formatTime(seconds: number | null): string {
+
+● Update(frontend\src\features\chat\components\ChatWindow.tsx)
+  ⎿  Added 17 lines, removed 2 lines
+      35  
+      36  export default function ChatWindow({ sessionId, role, onBack }:
+           Props) {
+      37    const navigate = useNavigate();
+      38 -  const { session, isLoading, messages, status, endedReason, re
+         -mainingSeconds, balancePaise, peerTyping, sendMessage, setTypin
+         -g, endChat } =                                                 
+      39 -    useChatSession({ sessionId, role });                       
+      38 +  const {                                                      
+      39 +    session,                                                   
+      40 +    isLoading,                                                 
+      41 +    messages,                                                  
+      42 +    status,                                                    
+      43 +    endedReason,                                               
+      44 +    remainingSeconds,                                          
+      45 +    balancePaise,                                              
+      46 +    freeSecondsRemaining,                                      
+      47 +    peerTyping,                                                
+      48 +    sendMessage,                                               
+      49 +    setTyping,                                                 
+      50 +    endChat,                                                   
+      51 +    acceptRequest,                                             
+      52 +    rejectRequest,                                             
+      53 +  } = useChatSession({ sessionId, role });                     
+      54    const [draft, setDraft] = useState("");
+      55    const [rechargeOpen, setRechargeOpen] = useState(false);
+      56    const [startingNew, setStartingNew] = useState(false);
+      57 +  const [requestActionPending, setRequestActionPending] = useSt
+         +ate(false);                                                    
+      58    const bottomRef = useRef<HTMLDivElement>(null);
+      59  
+      60    useEffect(() => {
+
+● Update(frontend\src\features\chat\components\ChatWindow.tsx)
+  ⎿  Added 20 lines
+       87      );
+       88    }
+       89  
+       90 +  async function handleAccept() {                             
+       91 +    setRequestActionPending(true);                            
+       92 +    try {                                                     
+       93 +      await acceptRequest();                                  
+       94 +    } catch {                                                 
+       95 +      /* onError below is not wired here — a toast is unnecess
+          +ary for a tap that simply failed to accept in time */         
+       96 +    } finally {                                               
+       97 +      setRequestActionPending(false);                         
+       98 +    }                                                         
+       99 +  }                                                           
+      100 +                                                              
+      101 +  async function handleReject() {                             
+      102 +    setRequestActionPending(true);                            
+      103 +    try {                                                     
+      104 +      await rejectRequest();                                  
+      105 +    } finally {                                               
+      106 +      setRequestActionPending(false);                         
+      107 +    }                                                         
+      108 +  }                                                           
+      109 +                                                              
+      110    const isPaid = session && session.ratePerMinutePaise > 0;
+      111    const peerName =
+      112      role === "USER"
+
+● Now update the header (timer badge → show free-seconds + PAUSED indicator) and
+  the bottom panel to branch on REQUESTED/PAUSED/ENDED/ACTIVE:
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(frontend\src\features\chat\components\ChatWindow.tsx)
+  ⎿  Added 114 lines, removed 56 lines
+      137          </div>
+      138  
+      139          <div className="flex items-center gap-2">
+      140 +          {status === "PAUSED" && (                           
+      141 +            <span className="inline-flex items-center gap-1.5 
+          +rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text
+          +-amber-900" aria-live="polite">                               
+      142 +              <WifiOff className="h-3.5 w-3.5" aria-hidden="tr
+          +ue" /> Reconnecting…                                          
+      143 +            </span>                                           
+      144 +          )}                                                  
+      145            {status === "ACTIVE" && (
+      146              <span className="rounded-full bg-[#592209]/10 px-3
+            py-1 text-sm font-semibold text-[#592209]" aria-live="polite"
+           >
+      147                {formatTime(remainingSeconds)}
+      148                {isPaid && balancePaise != null && <span classNa
+           me="ml-1.5 font-normal text-[#6B4A37]">· {formatRupees(balance
+           Paise)}</span>}
+      149 +              {freeSecondsRemaining != null && freeSecondsRema
+          +ining > 0 && (                                                
+      150 +                <span className="ml-1.5 font-normal text-emera
+          +ld-800">· {freeSecondsRemaining}s free left</span>            
+      151 +              )}                                              
+      152              </span>
+      153            )}
+      146 -          {status === "ACTIVE" && (                           
+      154 +          {(status === "ACTIVE" || status === "PAUSED") && (  
+      155              <button
+      156                type="button"
+      157                onClick={endChat}
+     ...
+      163          </div>
+      164        </header>
+      165  
+      158 -      <div className="flex-1 space-y-3 overflow-y-auto px-4 py
+          --4">                                                          
+      159 -        {messages.map((m) => (                                
+      160 -          <div key={m.id} className={`flex ${m.senderRole === 
+          -role ? "justify-end" : "justify-start"}`}>                    
+      161 -            <div                                              
+      162 -              className={`max-w-[75%] rounded-2xl px-3.5 py-2 
+          -text-sm leading-relaxed shadow-sm ${                          
+      163 -                m.senderRole === role ? "bg-[#592209] text-[#F
+          -5E9D6]" : "border border-[#592209]/15 bg-white text-[#2C1810]"
+      164 -              }`}                                             
+      165 -            >                                                 
+      166 -              {m.content}                                     
+      167 -              <span className={`mt-1 block text-[10px] ${m.sen
+          -derRole === role ? "text-[#F5E9D6]/70" : "text-[#6B4A37]"}`}> 
+      168 -                {new Date(m.createdAt).toLocaleTimeString(unde
+          -fined, { hour: "numeric", minute: "2-digit" })}               
+      169 -              </span>                                         
+      166 +      {status === "REQUESTED" ? (                             
+      167 +        <div className="flex flex-1 items-center justify-cente
+          +r p-6 text-center">                                           
+      168 +          {role === "USER" ? (                                
+      169 +            <div>                                             
+      170 +              <Loader2 className="mx-auto mb-3 h-6 w-6 animate
+          +-spin text-[#592209]" aria-hidden="true" />                   
+      171 +              <p className="font-medium text-[#301607]">Waitin
+          +g for {peerName} to respond…</p>                              
+      172 +              <p className="mt-1 text-sm text-[#6B4A37]">You w
+          +on't be charged unless the chat is accepted.</p>              
+      173 +              <button                                         
+      174 +                type="button"                                 
+      175 +                onClick={endChat}                             
+      176 +                className="mt-4 inline-flex items-center gap-1
+          +.5 rounded-lg border border-[#592209]/30 px-3 py-1.5 text-sm f
+          +ont-medium text-[#592209] hover:bg-[#592209]/10"              
+      177 +              >                                               
+      178 +                Cancel request                                
+      179 +              </button>                                       
+      180              </div>
+      171 -          </div>                                              
+      172 -        ))}                                                   
+      173 -        <div ref={bottomRef} />                               
+      174 -      </div>                                                  
+      175 -                                                              
+      176 -      {status === "ENDED" ? (                                 
+      177 -        <div className="border-t border-[#592209]/15 bg-[#F5E9
+          -D6] p-4 text-center">                                         
+      178 -          <p className="text-sm font-medium text-[#301607]">{e
+          -ndedReason ? END_REASON_LABEL[endedReason] : "This chat has en
+          -ded."}</p>                                                    
+      179 -          {role === "USER" && endedReason === "BALANCE_EXHAUST
+          -ED" && (                                                      
+      180 -            <button                                           
+      181 -              type="button"                                   
+      182 -              onClick={() => setRechargeOpen(true)}           
+      183 -              className="mt-3 inline-flex items-center gap-2 r
+          -ounded-xl bg-[#592209] px-4 py-2 text-sm font-semibold text-[#
+          -F5E9D6] hover:bg-[#431906]"                                   
+      184 -            >                                                 
+      185 -              <Wallet className="h-4 w-4" aria-hidden="true" /
+          -> Recharge &amp; continue                                     
+      186 -            </button>                                         
+      181 +          ) : (                                               
+      182 +            <div className="w-full max-w-xs rounded-2xl border
+          + border-[#592209]/15 bg-white p-5 shadow-sm">                 
+      183 +              <p className="font-home-serif font-semibold text
+          +-[#301607]">{peerName} wants to chat</p>                      
+      184 +              <p className="mt-1 text-sm text-[#6B4A37]">Accep
+          +t to start — nothing is charged until you do.</p>             
+      185 +              <div className="mt-4 flex gap-2">               
+      186 +                <button                                       
+      187 +                  type="button"                               
+      188 +                  onClick={handleReject}                      
+      189 +                  disabled={requestActionPending}             
+      190 +                  className="inline-flex flex-1 items-center j
+          +ustify-center gap-1.5 rounded-xl border border-[#592209]/30 px
+          +-3 py-2 text-sm font-medium text-[#592209] hover:bg-[#592209]/
+          +10 disabled:opacity-50"                                       
+      191 +                >                                             
+      192 +                  <X className="h-4 w-4" aria-hidden="true" />
+          + Decline                                                      
+      193 +                </button>                                     
+      194 +                <button                                       
+      195 +                  type="button"                               
+      196 +                  onClick={handleAccept}                      
+      197 +                  disabled={requestActionPending}             
+      198 +                  className="inline-flex flex-1 items-center j
+          +ustify-center gap-1.5 rounded-xl bg-[#592209] px-3 py-2 text-s
+          +m font-semibold text-[#F5E9D6] hover:bg-[#431906] disabled:opa
+          +city-50"                                                      
+      199 +                >                                             
+      200 +                  <Check className="h-4 w-4" aria-hidden="true
+          +" /> Accept                                                   
+      201 +                </button>                                     
+      202 +              </div>                                          
+      203 +            </div>                                            
+      204            )}
+      205          </div>
+      206        ) : (
+      190 -        <div className="flex items-center gap-2 border-t borde
+          -r-[#592209]/15 bg-[#F5E9D6] p-3">                             
+      191 -          <input                                              
+      192 -            value={draft}                                     
+      193 -            onChange={(e) => {                                
+      194 -              setDraft(e.target.value);                       
+      195 -              setTyping(e.target.value.length > 0);           
+      196 -            }}                                                
+      197 -            onBlur={() => setTyping(false)}                   
+      198 -            onKeyDown={(e) => {                               
+      199 -              if (e.key === "Enter") {                        
+      200 -                e.preventDefault();                           
+      201 -                handleSend();                                 
+      202 -              }                                               
+      203 -            }}                                                
+      204 -            placeholder="Type your message…"                  
+      205 -            className="flex-1 rounded-xl border border-[#59220
+          -9]/25 bg-white px-3.5 py-2.5 text-sm text-[#2C1810] placeholde
+          -r:text-[#2C1810]/40 focus:border-[#592209] focus:outline-none 
+          -focus-visible:ring-2 focus-visible:ring-[#592209]/30"         
+      206 -          />                                                  
+      207 -          <button                                             
+      208 -            type="button"                                     
+      209 -            onClick={handleSend}                              
+      210 -            disabled={!draft.trim()}                          
+      211 -            className="inline-flex h-10 w-10 shrink-0 items-ce
+          -nter justify-center rounded-xl bg-[#592209] text-[#F5E9D6] tra
+          -nsition hover:bg-[#431906] disabled:cursor-not-allowed disable
+          -d:opacity-40"                                                 
+      212 -            aria-label="Send message"                         
+      213 -          >                                                   
+      214 -            <Send className="h-4 w-4" aria-hidden="true" />   
+      215 -          </button>                                           
+      216 -        </div>                                                
+      207 +        <>                                                    
+      208 +          <div className="flex-1 space-y-3 overflow-y-auto px-
+          +4 py-4">                                                      
+      209 +            {messages.map((m) => (                            
+      210 +              <div key={m.id} className={`flex ${m.senderRole 
+          +=== role ? "justify-end" : "justify-start"}`}>                
+      211 +                <div                                          
+      212 +                  className={`max-w-[75%] rounded-2xl px-3.5 p
+          +y-2 text-sm leading-relaxed shadow-sm ${                      
+      213 +                    m.senderRole === role ? "bg-[#592209] text
+          +-[#F5E9D6]" : "border border-[#592209]/15 bg-white text-[#2C18
+          +10]"                                                          
+      214 +                  }`}                                         
+      215 +                >                                             
+      216 +                  {m.content}                                 
+      217 +                  <span className={`mt-1 block text-[10px] ${m
+          +.senderRole === role ? "text-[#F5E9D6]/70" : "text-[#6B4A37]"}
+          +`}>                                                           
+      218 +                    {new Date(m.createdAt).toLocaleTimeString(
+          +undefined, { hour: "numeric", minute: "2-digit" })}           
+      219 +                  </span>                                     
+      220 +                </div>                                        
+      221 +              </div>                                          
+      222 +            ))}                                               
+      223 +            <div ref={bottomRef} />                           
+      224 +          </div>                                              
+      225 +                                                              
+      226 +          {status === "PAUSED" && (                           
+      227 +            <p className="bg-amber-50 px-4 py-2 text-center te
+          +xt-xs text-amber-900">                                        
+      228 +              Connection lost — billing is paused. The chat wi
+          +ll resume automatically once both sides reconnect.            
+      229 +            </p>                                              
+      230 +          )}                                                  
+      231 +                                                              
+      232 +          {status === "ENDED" ? (                             
+      233 +            <div className="border-t border-[#592209]/15 bg-[#
+          +F5E9D6] p-4 text-center">                                     
+      234 +              <p className="text-sm font-medium text-[#301607]
+          +">{endedReason ? END_REASON_LABEL[endedReason] : "This chat ha
+          +s ended."}</p>                                                
+      235 +              {role === "USER" && endedReason === "BALANCE_EXH
+          +AUSTED" && (                                                  
+      236 +                <button                                       
+      237 +                  type="button"                               
+      238 +                  onClick={() => setRechargeOpen(true)}       
+      239 +                  className="mt-3 inline-flex items-center gap
+          +-2 rounded-xl bg-[#592209] px-4 py-2 text-sm font-semibold tex
+          +t-[#F5E9D6] hover:bg-[#431906]"                               
+      240 +                >                                             
+      241 +                  <Wallet className="h-4 w-4" aria-hidden="tru
+          +e" /> Recharge &amp; continue                                 
+      242 +                </button>                                     
+      243 +              )}                                              
+      244 +            </div>                                            
+      245 +          ) : (                                               
+      246 +            <div className="flex items-center gap-2 border-t b
+          +order-[#592209]/15 bg-[#F5E9D6] p-3">                         
+      247 +              <input                                          
+      248 +                value={draft}                                 
+      249 +                onChange={(e) => {                            
+      250 +                  setDraft(e.target.value);                   
+      251 +                  setTyping(e.target.value.length > 0);       
+      252 +                }}                                            
+      253 +                onBlur={() => setTyping(false)}               
+      254 +                onKeyDown={(e) => {                           
+      255 +                  if (e.key === "Enter") {                    
+      256 +                    e.preventDefault();                       
+      257 +                    handleSend();                             
+      258 +                  }                                           
+      259 +                }}                                            
+      260 +                placeholder="Type your message…"              
+      261 +                className="flex-1 rounded-xl border border-[#5
+          +92209]/25 bg-white px-3.5 py-2.5 text-sm text-[#2C1810] placeh
+          +older:text-[#2C1810]/40 focus:border-[#592209] focus:outline-n
+          +one focus-visible:ring-2 focus-visible:ring-[#592209]/30"     
+      262 +              />                                              
+      263 +              <button                                         
+      264 +                type="button"                                 
+      265 +                onClick={handleSend}                          
+      266 +                disabled={!draft.trim()}                      
+      267 +                className="inline-flex h-10 w-10 shrink-0 item
+          +s-center justify-center rounded-xl bg-[#592209] text-[#F5E9D6]
+          + transition hover:bg-[#431906] disabled:cursor-not-allowed dis
+          +abled:opacity-40"                                             
+      268 +                aria-label="Send message"                     
+      269 +              >                                               
+      270 +                <Send className="h-4 w-4" aria-hidden="true" /
+          +>                                                             
+      271 +              </button>                                       
+      272 +            </div>                                            
+      273 +          )}                                                  
+      274 +        </>                                                   
+      275        )}
+      276  
+      277        <RechargeModal
+
+● Update(frontend\src\features\chat\components\StartChatButton.tsx)
+  ⎿  Added 5 lines, removed 10 lines
+      50      try {
+      51        const eligibility = await chatApi.getEligibility(astrolog
+          er.id);
+      52  
+      53 -      // `canStart` already accounts for an existing active ses
+         -sion being resumable even                                      
+      54 -      // after the free trial or balance would otherwise block 
+         -a *new* one — check that,                                      
+      55 -      // not the raw freeTrialAvailable/balance flags, or a use
+         -r can never get back into                                      
+      56 -      // a chat they already started.                          
+      53 +      // `canStart` already accounts for an existing pending/ac
+         +tive session being resumable                                   
+      54 +      // even when the balance would otherwise block a *new* on
+         +e — check that, not the raw                                    
+      55 +      // balance flag, or a user can never get back into a chat
+         + they already started.                                         
+      56        if (!eligibility.canStart) {
+      58 -        if (eligibility.type === "FREE_TRIAL") {               
+      59 -          toast.error("You've already used your free session wi
+         -th this astrologer.");                                         
+      60 -        } else {                                               
+      61 -          setMinimumRupees(eligibility.minimumRequiredPaise ? M
+         -ath.ceil(eligibility.minimumRequiredPaise / 100) : undefined); 
+      62 -          setRechargeOpen(true);                               
+      63 -        }                                                      
+      57 +        setMinimumRupees(eligibility.minimumRequiredPaise ? Mat
+         +h.ceil(eligibility.minimumRequiredPaise / 100) : undefined);   
+      58 +        setRechargeOpen(true);                                 
+      59          return;
+      60        }
+      61  
+
+● Now update AstrologerChatPage.tsx's status label for REQUESTED/PAUSED, and
+  ConversationListItem's default text since "No messages yet" won't convey a
+  pending request well enough (statusLabel already passed in). Let's check
+  useConversations.ts for the user-side conversation list too.
+
+● Update(frontend\src\features\astrologer\workspace\pages\AstrologerChatPage.tsx
+        )
+  ⎿  Added 9 lines, removed 1 line
+      79                    lastMessagePreview={c.lastMessage?.content}
+      80                    timestamp={c.lastMessage?.createdAt}
+      81                    unreadCount={c.unreadCount}
+      82 -                  statusLabel={c.status === "ACTIVE" ? "Active 
+         -now" : "Chat ended"}                                           
+      82 +                  statusLabel={                                
+      83 +                    c.status === "REQUESTED"                   
+      84 +                      ? "New request — tap to respond"         
+      85 +                      : c.status === "ACTIVE"                  
+      86 +                        ? "Active now"                         
+      87 +                        : c.status === "PAUSED"                
+      88 +                          ? "Reconnecting…"                    
+      89 +                          : "Chat ended"                       
+      90 +                  }                                            
+      91                    active={c.sessionId === sessionId}
+      92                    onClick={() => navigate(`/astrologer-dashboar
+          d/chat/${c.sessionId}`)}
+      93                  />
+
+  Read 2 files (ctrl+o to expand)
+
+● Update(frontend\src\features\chat\hooks\useConversations.ts)
+  ⎿  Added 2 lines
+      18      const socket = connectSocket();
+      19      const invalidate = () => qc.invalidateQueries({ queryKey: U
+          SER_CONVERSATIONS_QUERY_KEY });
+      20      socket.on("chat:message", invalidate);
+      21 +    socket.on("chat:accepted", invalidate);                    
+      22      socket.on("chat:ended", invalidate);
+      23      return () => {
+      24        socket.off("chat:message", invalidate);
+      25 +      socket.off("chat:accepted", invalidate);                 
+      26        socket.off("chat:ended", invalidate);
+      27      };
+      28    }, [qc]);
+
+● Update(frontend\src\features\chat\pages\UserConversationsPage.tsx)
+  ⎿  Added 9 lines, removed 1 line
+      41              photoUrl={c.astrologer.profilePhotoUrl}
+      42              lastMessagePreview={c.lastMessage?.content}
+      43              timestamp={c.lastMessage?.createdAt}
+      44 -            statusLabel={c.status === "ACTIVE" ? "Active now" :
+         - "Chat ended"}                                                 
+      44 +            statusLabel={                                      
+      45 +              c.status === "REQUESTED"                         
+      46 +                ? "Waiting for response…"                      
+      47 +                : c.status === "ACTIVE"                        
+      48 +                  ? "Active now"                               
+      49 +                  : c.status === "PAUSED"                      
+      50 +                    ? "Reconnecting…"                          
+      51 +                    : "Chat ended"                             
+      52 +            }                                                  
+      53              onClick={() => navigate(`/chat/${c.sessionId}`)}
+      54            />
+      55          ))}
+
+● Update(frontend\src\features\chat\hooks\useAstrologerConversations.ts)
+  ⎿  Added 4 lines
+      24      socket.on("chat:new-session", invalidate);
+      25      socket.on("chat:message", invalidate);
+      26      socket.on("chat:session-ended", invalidate);
+      27 +    socket.on("chat:paused", invalidate);                      
+      28 +    socket.on("chat:resumed", invalidate);                     
+      29      return () => {
+      30        socket.off("chat:new-session", invalidate);
+      31        socket.off("chat:message", invalidate);
+      32        socket.off("chat:session-ended", invalidate);
+      33 +      socket.off("chat:paused", invalidate);                   
+      34 +      socket.off("chat:resumed", invalidate);                  
+      35      };
+      36    }, [qc]);
+      37  
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Typecheck is clean. Now let's quickly verify in the browser with the dev
+  server to confirm nothing's visually broken, then move to the wallet page and
+  superadmin pieces if budget allows.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Build succeeds. Given the remaining scope (wallet page, superadmin tool
+  pricing/complimentary/billing-failures pages), let me continue with a clear
+  priority order, starting with the wallet page since it directly surfaces the
+  new bucket data to users.
+
+  Read 1 file, ran 2 shell commands (ctrl+o to expand)
+
+● Backend already returns full bucket breakdown and allocations — I only need to
+  update the frontend wallet API type and build the wallet page. Let's update
+  walletApi.ts and build the page.
+
+● Update(frontend\src\features\wallet\api\walletApi.ts)  ⎿  Added 13 lines, removed 1 line
+       1  import { authRequest } from "@/lib/authClient";
+       2  
+       3 +export type WalletBalanceBucket = "PURCHASED" | "PROMOTIONAL"; 
+       4 +                                                               
+       5 +export interface WalletLedgerAllocation {                      
+       6 +  id: string;                                                  
+       7 +  bucket: WalletBalanceBucket;                                 
+       8 +  amountPaise: number;                                         
+       9 +}                                                              
+      10 +                                                               
+      11  export interface WalletTransaction {
+      12    id: string;
+      13    type: "CREDIT" | "DEBIT";
+       6 -  reason: "RECHARGE" | "CHAT_CONSUMPTION" | "REFUND" | "ADJUSTM
+         -ENT";                                                          
+      14 +  reason: "RECHARGE" | "CHAT_CONSUMPTION" | "REFUND" | "ADJUSTM
+         +ENT" | "SIGNUP_BONUS" | "TOOL_EXECUTION" | "RESERVATION_RELEASE
+         +";                                                             
+      15    amountPaise: number;
+      16    balanceAfterPaise: number;
+      17    referenceId: string | null;
+      18    createdAt: string;
+      19 +  allocations: WalletLedgerAllocation[];                       
+      20  }
+      21  
+      22  export interface WalletSummary {
+      23    balancePaise: number;
+      24 +  purchasedBalancePaise: number;                               
+      25 +  promotionalBalancePaise: number;                             
+      26 +  reservedBalancePaise: number;                                
+      27    transactions: WalletTransaction[];
+      28  }
+      29  
+
+  Read 2 files, ran 9 shell commands (ctrl+o to expand)
+
+● Good, I have everything I need. Now creating the Wallet page component.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Write(frontend\src\features\wallet\pages\WalletPage.tsx)
+  ⎿  Wrote 89 lines to frontend\src\features\wallet\pages\WalletPage.tsx
+       1 import { useState } from "react";
+       2 import { Coins, Lock, PlusCircle, ShieldCheck } from "lucide-rea
+       3 import { useWallet } from "../hooks/useWallet";
+       4 import type { WalletTransaction } from "../api/walletApi";
+       5 import RechargeModal from "../components/RechargeModal";
+         , StatCard } from "@/features/dashboard/library/ui";
+       7 
+       8 const REASON_LABEL: Record<WalletTransaction["reason"], string> 
+       9   RECHARGE: "Wallet recharge",
+      10   CHAT_CONSUMPTION: "Astrologer chat",
+     … +99 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Good, matches. Now wire the route + nav entry in App.tsx and
+  DashboardLayout.tsx.
+
+● Update(frontend\src\features\dashboard\DashboardLayout.tsx)
+  ⎿  Added 1 line
+       5    Bookmark,
+       6    CalendarCheck,
+       7    CalendarHeart,
+       8 +  Coins,                                                       
+       9    ExternalLink,
+      10    Home,
+      11    LogOut,
+
+● Update(frontend\src\features\dashboard\DashboardLayout.tsx)
+  ⎿  Added 1 line
+      46      label: "Your space",
+      47      items: [
+      48        { to: "/dashboard", label: "Overview", icon: Home, end: t
+          rue },
+      49 +      { to: "/dashboard/wallet", label: "Wallet", icon: Coins }
+         +,                                                              
+      50        { to: "/dashboard/readings", label: "My Readings", icon: 
+          BookOpenText },
+      51        { to: "/dashboard/activity", label: "My Activity", icon: 
+          CalendarHeart },
+      52        { to: "/dashboard/saved", label: "Saved", icon: Bookmark 
+          },
+
+● Update(frontend\src\features\dashboard\DashboardLayout.tsx)
+  ⎿  Added 1 line
+      68  
+      69  const TITLE_BY_PATH: Record<string, string> = {
+      70    "/dashboard": "Dashboard Overview",
+      71 +  "/dashboard/wallet": "Wallet",                               
+      72    "/dashboard/readings": "My Readings",
+      73    "/dashboard/activity": "My Activity",
+      74    "/dashboard/saved": "Saved Items",
+
+● Now add the route in App.tsx:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(frontend\src\App.tsx)
+  ⎿  Added 1 line
+      74  const AdminSettingsPage = lazy(() => import("./features/admin/p
+          anel/pages/SettingsAuditPage"));
+      75  const DashboardLayout = lazy(() => import("./features/dashboard
+          /DashboardLayout"));
+      76  const DashboardHome = lazy(() => import("./features/dashboard/l
+          ibrary/pages").then((m) => ({ default: m.Overview })));
+      77 +const WalletPage = lazy(() => import("./features/wallet/pages/W
+         +alletPage"));                                                  
+      78  const MyReadings = lazy(() => import("./features/dashboard/libr
+          ary/pages").then((m) => ({ default: m.MyReadings })));
+      79  const ReadingDetail = lazy(() => import("./features/dashboard/l
+          ibrary/pages").then((m) => ({ default: m.ReadingDetail })));
+      80  const MyActivity = lazy(() => import("./features/dashboard/libr
+          ary/pages").then((m) => ({ default: m.MyActivity })));
+
+● Update(frontend\src\App.tsx)
+  ⎿  Added 1 line
+      824                }
+      825              >
+      826                <Route index element={<Suspense fallback={<LazyF
+           allback />}><DashboardHome /></Suspense>} />
+      827 +              <Route path="wallet" element={<Suspense fallback
+          +={<LazyFallback />}><WalletPage /></Suspense>} />             
+      828                <Route path="readings" element={<Suspense fallba
+           ck={<LazyFallback />}><MyReadings /></Suspense>} />
+      829                <Route path="readings/:id" element={<Suspense fa
+           llback={<LazyFallback />}><ReadingDetail /></Suspense>} />
+      830                <Route path="activity" element={<Suspense fallba
+           ck={<LazyFallback />}><MyActivity /></Suspense>} />
+
+● Now let's typecheck and build again.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Clean. Now let's spin up the backend+frontend dev servers briefly and verify
+  the wallet page and chat flow actually render in a browser before moving to
+  the superadmin pieces.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Port 5000 is already in use — a backend instance is probably already running
+  from an earlier session. Good, that means it's already up. Let's confirm it's
+  healthy and the frontend dev server too.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● The backend dev server was already running (from earlier in this session) on
+  port 5000 and responds healthy — my duplicate start attempt just hit
+  EADDRINUSE harmlessly. There's no browser-automation tool available in this
+  session, so I can't visually click through the UI the way I normally would for
+  a frontend change; verification here is tsc --noEmit (clean) + full
+  production vite build (clean) + manually tracing every new socket event name
+  against the exact backend emitToRoom call sites in billing.ts/chat.service.ts
+  to confirm each one matches. I want to flag that honestly rather than claim a
+  browser check I didn't actually do.
+
+  What's done in this pass:
+
+  1. Fixed a real break: after Checkpoint 3's backend changes, chat.startSession
+  now creates a REQUESTED session requiring explicit astrologer accept — but
+  the frontend still assumed instant ACTIVE and had zero UI for
+  REQUESTED/PAUSED. Chat was effectively unusable end-to-end. Fixed:
+    - chatApi.ts: updated
+  ChatSessionStatus/ChatEndReason/ChatSessionType/ChatEligibility to match the
+  real backend shapes; added astrologerChatApi.acceptSession/rejectSession.
+    - useChatSession.ts: listens for chat:accepted/chat:paused/chat:resumed;
+  emits a recurring chat:heartbeat every 10s (matching backend's
+  PRESENCE_TIMEOUT_MS); tracks freeSecondsRemaining; exposes
+  acceptRequest/rejectRequest.
+    - ChatWindow.tsx: renders a "waiting for response" screen (user side) /
+  accept-decline card (astrologer side) for REQUESTED, a "Reconnecting…" banner
+  for PAUSED, free-seconds badge, and new end-reason copy for
+  REJECTED/DISCONNECTED.
+    - StartChatButton.tsx: removed dead FREE_TRIAL branch that could never match
+  the new eligibility shape.
+    - Astrologer/user conversation list hooks and status labels updated for the
+  new states.
+  2. Wallet page (previously nonexistent — useWallet/walletApi were unused dead
+  code): added /dashboard/wallet, showing total/purchased/promotional/reserved
+  balances and a transaction ledger with bucket-split detail, wired into
+  DashboardLayout's nav.
+
+  Not yet done (still pending, per the original Checkpoint 6 scope): superadmin
+  pages — astrologer isComplimentary toggle, ToolPrice activation/editing UI,
+  and a billing-failures/RECONCILIATION_REQUIRED view. These are a distinct,
+  sizable chunk of admin-panel work. Want me to continue with those now, or stop
+  here for you to review what's landed so far?
+
+✻ Baked for 15m 25s
+
+❯ are we using zustand here for state management? or use have used react hooks  
+  everywhere                                                                    
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Both — it's a small, deliberate mix, not one-size-fits-all:
+
+  - Zustand: only src/store/authStore.ts (auth/session — token, user,
+  isAuthenticated) and src/store/dailyChatLimitStore.ts. Used for cross-cutting
+  client state that needs to be read from many unrelated places (socket auth,
+  route guards, API clients) outside of React's render tree — e.g.
+  lib/socket.ts's auth callback reads useAuthStore.getState().accessToken
+  directly, which plain React state/context can't do.
+  - Everything else is React Query (useQuery/useMutation) for server state —
+  wallet, chat sessions, conversations, admin panel data all go through hooks
+  like useWallet, useChatSession, usePanel — plus plain useState/useEffect for
+  local UI state (drafts, modals, presence).
+
+  So no app-wide Redux/Context-store pattern — just these two narrow zustand
+  stores for global client state, React Query for anything server-backed, and
+  hooks/local state for the rest. The wallet/chat work I just added follows that
+  same convention (React Query hooks, no new zustand store).
+
+✻ Baked for 27s
+
+❯ ok before moving to next part, tell me how do i review what's landed? like    
+  what & where do i check?                                                      
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Nothing's committed yet, so everything is sitting in your working tree. Here's
+  how to review it in two passes — code review, then a manual click-through
+  (since I don't have a browser tool and haven't verified this visually myself).
+
+  1. See the diff
+
+  git status   # file list above
+  git diff frontend/src/features/chat frontend/src/features/wallet
+  frontend/src/features/dashboard/DashboardLayout.tsx frontend/src/App.tsx
+
+  The backend files in that list (tarotRoutes.ts, aiProxyRoutes.ts,
+  gemstone.route.ts, etc.) are from Checkpoint 5 (tool billing), already
+  reviewed earlier in this session — not part of today's chat/wallet work.
+  Today's relevant files are just the frontend/ ones plus the three new backend
+  tool-billing files.
+
+  2. Code review checklist — what to actually look at
+
+  File: frontend/src/features/chat/hooks/useChatSession.ts
+  What to check: New socket listeners (chat:accepted, chat:paused,
+  chat:resumed),
+  the 10s heartbeat interval, acceptRequest/rejectRequest
+  ────────────────────────────────────────
+  File: frontend/src/features/chat/components/ChatWindow.tsx
+  What to check: The new REQUESTED branch (waiting screen / accept-decline card)
+
+  and PAUSED banner
+  ────────────────────────────────────────
+  File: frontend/src/features/chat/api/chatApi.ts
+  What to check: Type changes — confirm they match
+  backend/src/modules/chat/chat.service.ts's actual return shapes if you want
+  to double-check my work against the source of truth
+  ────────────────────────────────────────
+  File: frontend/src/features/wallet/pages/WalletPage.tsx (new)
+  What to check: The bucket breakdown + ledger rendering
+  ────────────────────────────────────────
+  File: frontend/src/features/dashboard/DashboardLayout.tsx
+  What to check: Just a nav entry + title map addition
+
+  3. Manual click-through (this is the part I couldn't do myself)
+
+  You'll need two logged-in sessions — easiest is one normal browser window as a
+  user, one incognito/private window as an astrologer (an account with an
+  AstrologerProfile).
+
+  Start both dev servers:
+  backend:  npm run dev        (already running on :5000 from earlier)
+  frontend: cd frontend && npm run dev   (not currently running — you'll need to
+  start it)
+
+  Then walk through:
+  1. User opens an astrologer's profile, clicks Chat → should land on a "Waiting
+  for <name> to respond…" screen, not an active chat.
+  2. Astrologer opens /astrologer-dashboard/chat → the new request should appear
+  in the conversation list labeled "New request — tap to respond", with an
+  Accept/Decline card on the right.
+  3. Click Accept → both sides should flip to a live chat (timer starts for user
+  if it's a paid astrologer).
+  4. Click Decline instead (on a fresh request) → user side should show "The
+  astrologer declined this request."
+  5. During an active paid chat, kill the user's network tab / close devtools 
+  socket (or just close the tab) for >15s, reopen → astrologer side should show
+  "Reconnecting…", then resume automatically without re-billing the gap.
+  6. Visit /dashboard/wallet as the user → check the four stat cards
+  (total/purchased/promotional/reserved) and the transaction list render
+  sensibly against your actual dev DB data.
+
+  If any of those steps misbehaves, that's exactly the kind of thing I'd want to
+  know before we move to the superadmin pages.
+
+✻ Worked for 34s
+
+※ recap: Working through the coin-wallet/billing rollout; just fixed the chat accept/reject/pause UI and added a wallet page. Next: review those changes in the browser, then build the superadmin pages (complimentary toggle, tool pricing, billing failures). (disable recaps in /config)
+
+❯ ok i saw the codebase, but why do new chat with same person is seen?? like it 
+  looks weird instead there should be only one ?? Wtf are you even              
+  implementing?? ALso madarchod, timer is not proper, it just changes randomly  
+  after sometime and doesn't see in real time                                   
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● Good catches — both are real. Let me look at the actual causes.
+
+  Read 1 file (ctrl+o to expand)
+
+● You're right on both — found the actual causes, not excuses:
+
+  Bug 1 — duplicate "chats" with the same person.
+  listUserConversations/listAstrologerConversations (chat.service.ts:293-321)
+  just return every ChatSession row for that user/astrologer pair, with zero
+  grouping. Every time you start a new chat with the same astrologer (after a
+  previous one ended — timeout, rejection, you closing it) it's a brand-new DB
+  row, and the list shows one entry per row. So after a few test attempts with
+  the same astrologer you get a wall of "conversations" with that one person.
+  This bug predates my changes, but my accept/reject flow makes it way more
+  visible because testing naturally produces REQUESTED→ENDED rows rapidly.
+
+  Bug 2 — timer jumps instead of ticking. BILLING_TICK_MS = 5_000
+  (chat.constants.ts:12) — the server only emits chat:timer once every 5
+  seconds. The frontend just displays whatever number it last got and sits
+  frozen until the next push. That's the "changes randomly after a while" you're
+  seeing — it's not live, it's a snapshot refreshed every 5s with nothing
+  interpolated in between.
+
+  Fixing both now.
+
+● Update(backend\src\modules\chat\chat.service.ts)
+  ⎿  Added 11 lines, removed 1 line
+      299        messages: { orderBy: { createdAt: "desc" }, take: 1 },
+      300      },
+      301    });
+      302 -  return sessions.map((s) => ({                               
+      302 +  // One row per astrologer, not one per ChatSession — a new p
+          +aid consultation with the same                                
+      303 +  // astrologer after a prior one ended is a new billing event
+          + internally, but it must read as                              
+      304 +  // the same conversation thread, not a second entry for the 
+          +same person. Rows are already                                 
+      305 +  // ordered updatedAt desc, so the first one seen per astrolo
+          +ger is the most recent.                                       
+      306 +  const seen = new Set<string>();                             
+      307 +  const deduped = sessions.filter((s) => {                    
+      308 +    if (seen.has(s.astrologerProfileId)) return false;        
+      309 +    seen.add(s.astrologerProfileId);                          
+      310 +    return true;                                              
+      311 +  });                                                         
+      312 +  return deduped.map((s) => ({                                
+      313      sessionId: s.id,
+      314      status: s.status,
+      315      type: s.type,
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(backend\src\modules\chat\chat.service.ts)
+  ⎿  Added 17 lines, removed 1 line
+      336    });
+      337    const unreadBySession = new Map(unreadCounts.map((u) => [u.s
+           essionId, u._count._all]));
+      338  
+      339 -  return sessions.map((s) => ({                               
+      339 +  // One row per user, not one per ChatSession (same reasoning
+          + as listUserConversations) — unread                           
+      340 +  // counts from that user's older sessions with this astrolog
+          +er are folded into the row that's                             
+      341 +  // actually shown, so a stale unread count from a since-ende
+          +d session is never silently dropped.                          
+      342 +  const seen = new Map<string, number>();                     
+      343 +  const representative: typeof sessions = [];                 
+      344 +  for (const s of sessions) {                                 
+      345 +    const unread = unreadBySession.get(s.id) ?? 0;            
+      346 +    if (seen.has(s.userId)) {                                 
+      347 +      seen.set(s.userId, (seen.get(s.userId) ?? 0) + unread); 
+      348 +      continue;                                               
+      349 +    }                                                         
+      350 +    seen.set(s.userId, unread);                               
+      351 +    representative.push(s);                                   
+      352 +  }                                                           
+      353 +                                                              
+      354 +  return representative.map((s) => ({                         
+      355      sessionId: s.id,
+      356      status: s.status,
+      357      type: s.type,
+      358      user: s.user,
+      359      lastMessage: s.messages[0] ?? null,
+      360 +    unreadCount: seen.get(s.userId) ?? 0,                     
+      361      unreadCount: unreadBySession.get(s.id) ?? 0,
+      362      startedAt: s.startedAt,
+      363      endedAt: s.endedAt,
+
+  Read 1 file (ctrl+o to expand)
+
+● Need to remove the stale duplicate line.
+
+● Update(backend\src\modules\chat\chat.service.ts)
+  ⎿  Removed 1 line
+      358      user: s.user,
+      359      lastMessage: s.messages[0] ?? null,
+      360      unreadCount: seen.get(s.userId) ?? 0,
+      361 -    unreadCount: unreadBySession.get(s.id) ?? 0,              
+      361      startedAt: s.startedAt,
+      362      endedAt: s.endedAt,
+      363    }));
+
+● Now fix the timer. Let's add a locally-ticking countdown in useChatSession.ts
+  that resyncs on each server push instead of just freezing between pushes.
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(frontend\src\features\chat\hooks\useChatSession.ts)
+  ⎿  Added 21 lines, removed 1 line
+      32    const [messages, setMessages] = useState<ChatMessage[]>([]);
+      33    const [status, setStatus] = useState<ChatSessionStatus>("REQU
+          ESTED");
+      34    const [endedReason, setEndedReason] = useState<ChatEndReason 
+          | null>(null);
+      35 -  const [remainingSeconds, setRemainingSeconds] = useState<numb
+         -er | null>(null);                                              
+      35 +  // The server only pushes chat:timer once per BILLING_TICK_MS
+         + (5s) — displaying that number                                 
+      36 +  // verbatim makes the clock look frozen, then jump, instead o
+         +f ticking. Keep the server's value                             
+      37 +  // (remainingSecondsBase) plus the moment it arrived (remaini
+         +ngSyncedAt), and derive a smoothly                             
+      38 +  // decreasing display value every second via `clockTick`, whi
+         +ch only exists to force a re-render.                           
+      39 +  const [remainingSecondsBase, setRemainingSecondsBase] = useSt
+         +ate<number | null>(null);                                      
+      40 +  const [remainingSyncedAt, setRemainingSyncedAt] = useState<nu
+         +mber>(0);                                                      
+      41 +  const [clockTick, setClockTick] = useState(0);               
+      42    const [balancePaise, setBalancePaise] = useState<number | nul
+          l>(null);
+      43    const [freeSecondsRemaining, setFreeSecondsRemaining] = useSt
+          ate<number | null>(null);
+      44    const [pauseGraceEndsAt, setPauseGraceEndsAt] = useState<stri
+          ng | null>(null);
+      45    const [peerTyping, setPeerTyping] = useState(false);
+      46  
+      47    useEffect(() => {
+      48 +    if (remainingSecondsBase == null || status !== "ACTIVE") re
+         +turn;                                                          
+      49 +    const id = setInterval(() => setClockTick((n) => n + 1), 10
+         +00);                                                           
+      50 +    return () => clearInterval(id);                            
+      51 +  }, [remainingSecondsBase, status]);                          
+      52 +                                                               
+      53 +  const remainingSeconds =                                     
+      54 +    remainingSecondsBase == null                               
+      55 +      ? null                                                   
+      56 +      : Math.max(0, remainingSecondsBase - Math.floor((Date.now
+         +() - remainingSyncedAt) / 1000));                              
+      57 +  // clockTick is read here only to satisfy the linter's "used"
+         + check for the interval above —                                
+      58 +  // the actual re-render it causes is what makes `remainingSec
+         +onds` above recompute every second.                            
+      59 +  void clockTick;                                              
+      60 +                                                               
+      61 +  useEffect(() => {                                            
+      62      if (messagesQuery.data) setMessages(messagesQuery.data);
+      63    }, [messagesQuery.data]);
+      64  
+
+● Update(frontend\src\features\chat\hooks\useChatSession.ts)
+  ⎿  Added 2 lines, removed 1 line
+      82      };
+      83      const onTimer = (payload: { sessionId: string; remainingSec
+          onds: number | null; balancePaise: number | null; freeSecondsRe
+          maining?: number }) => {
+      84        if (payload.sessionId !== sessionId) return;
+      85 -      setRemainingSeconds(payload.remainingSeconds);           
+      85 +      setRemainingSecondsBase(payload.remainingSeconds);       
+      86 +      setRemainingSyncedAt(Date.now());                        
+      87        setBalancePaise(payload.balancePaise);
+      88        if (payload.freeSecondsRemaining !== undefined) setFreeSe
+          condsRemaining(payload.freeSecondsRemaining);
+      89      };
+
+  Ran 1 shell command (ctrl+o to expand)
+● Clean. Now the backend side — let's typecheck that too since I edited
+  chat.service.ts.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Both fixed:
+
+  Duplicate chats — chat.service.ts's
+  listUserConversations/listAstrologerConversations now dedupe to one row per
+  peer (keeping the most-recent session, since the query is already ordered
+  updatedAt desc). On the astrologer side, unread counts from older sessions
+  with the same user are folded into the row that's actually shown instead of
+  silently dropped. Backend is running under tsx watch, so this reloaded
+  automatically — no restart needed.
+
+  Timer jumping — useChatSession.ts was just rendering whatever remainingSeconds
+  the last chat:timer socket push contained, and the server only pushes that
+  every 5s (BILLING_TICK_MS). Now it stores the server value plus the timestamp
+  it arrived, and a 1s local interval derives the displayed countdown by
+  subtracting elapsed time since that sync — so it ticks every second and
+  silently resyncs/corrects on each real server push instead of sitting frozen
+  then jumping.
+
+  Both typecheck clean on frontend and backend. Go ahead and retest — refresh
+  both tabs since the astrologer-side conversation list component needs a fresh
+  query, and let me know if either still looks off.
+
+✻ Worked for 3m 39s
+
+❯ /model 
+  ⎿  Kept model as Sonnet 5
+
+❯ BC if same user sends the request then why the history is deleted like it is  
+  not seen there??                                                              
+  What the hell are you doing??? Like first make proper scenario like first     
+  user chat with astrologer for 2 min then ends the chat                        
+  Then if he wants to talk with same astrologer again then why are you deleting 
+  the chat and not seeing previous chats??                                      
+  On what basis you decided to do that?                                         
+
+  Read 1 file, ran 2 shell commands (ctrl+o to expand)
+
+● You're completely right, and that was a bad call — I fixed the "duplicate list
+  entries" symptom by hiding the older session from the list, which also cut
+  off access to that 2-minute chat's message history. I treated the ChatSession
+  row as if it were the conversation itself, when it's actually just one billing
+  episode inside a continuing conversation with that astrologer. The message
+  history needs to span every session between the same user and astrologer, not
+  just the one currently open. Fixing it properly now — no more silent data
+  hiding.
+
+● Update(backend\src\modules\chat\chat.service.ts)
+  ⎿  Added 17 lines, removed 4 lines
+      252    return billing.endSession(sessionId, reason);
+      253  }
+      254  
+      255 +/** Every ChatSession between this pair is one continuous conv
+          +ersation to the two people in it —                            
+      256 + * a new paid session after a prior one ended is a new billing
+          + episode, not a new conversation.                             
+      257 + * Message history (read and unread-marking) must span all of 
+          +them, or ending a chat and starting                           
+      258 + * a new one with the same astrologer would make the earlier m
+          +essages unreachable. */                                       
+      259 +async function peerSessionIds(sessionId: string, userId: strin
+          +g): Promise<{ sessionIds: string[]; role: ChatSenderRole }> { 
+      260 +  const { session, role } = await resolveActor(sessionId, user
+          +Id);                                                          
+      261 +  const sessions = await prisma.chatSession.findMany({        
+      262 +    where: { userId: session.userId, astrologerProfileId: sess
+          +ion.astrologerProfileId },                                    
+      263 +    select: { id: true },                                     
+      264 +  });                                                         
+      265 +  return { sessionIds: sessions.map((s) => s.id), role };     
+      266 +}                                                             
+      267 +                                                              
+      268  export async function postMessage(sessionId: string, userId: s
+           tring, content: string) {
+      269    const { session, role } = await resolveActor(sessionId, user
+           Id);
+      270    if (session.status !== "ACTIVE") throw new ApiError("This ch
+           at has ended", STATUS_CODES.CONFLICT);
+     ...
+      279  }
+      280  
+      281  export async function markRead(sessionId: string, userId: stri
+           ng) {
+      269 -  const { role } = await resolveActor(sessionId, userId);     
+      282 +  const { sessionIds, role } = await peerSessionIds(sessionId,
+          + userId);                                                     
+      283    const otherRole: ChatSenderRole = role === "USER" ? "ASTROLO
+           GER" : "USER";
+      284    await prisma.chatMessage.updateMany({
+      272 -    where: { sessionId, senderRole: otherRole, readAt: null },
+      285 +    where: { sessionId: { in: sessionIds }, senderRole: otherR
+          +ole, readAt: null },                                          
+      286      data: { readAt: new Date() },
+      287    });
+      288  }
+      289  
+      290  export async function getMessages(sessionId: string, userId: s
+           tring, cursor?: string, take = 50) {
+      278 -  await resolveActor(sessionId, userId);                      
+      291 +  const { sessionIds } = await peerSessionIds(sessionId, userI
+          +d);                                                           
+      292    const messages = await prisma.chatMessage.findMany({
+      280 -    where: { sessionId },                                     
+      293 +    where: { sessionId: { in: sessionIds } },                 
+      294      orderBy: { createdAt: "desc" },
+      295      take,
+      296      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Fixed. The root problem: getMessages/markRead were scoped to a single
+  sessionId, so dedup-ing the conversation list to the latest session cut off
+  access to every earlier session's messages. I added a peerSessionIds helper
+  that resolves every ChatSession between that same user and astrologer, and
+  both getMessages and markRead now query across all of them — so opening the
+  conversation again (even in a brand-new session row) returns the full
+  continuous history, 2-minute chat included.
+
+  Model now: a ChatSession row is a billing episode (tracks rate/duration/charge
+  for that stretch), not the conversation itself. The conversation is the
+  (user, astrologer) pair — one thread, spanning as many sessions as they've
+  had. postMessage still writes against the current active session (correct,
+  since that's what billing/audit needs), but reads are peer-scoped. No frontend
+  changes needed — GET /sessions/:id/messages has the same shape, it's just
+  correctly broader now.
+
+  Backend typechecks clean and reloaded automatically under tsx watch. Please
+  retest the exact scenario: chat 2 min → end → start again with the same
+  astrologer → confirm the old messages are still there above the new ones.
+
+✻ Brewed for 1m 13s
+
+❯ Now why there is no option of seeing previous chat ??                         
+  BC i told you to make proper chat application so what the heck are you        
+  making? A small kid even makes the better application then you                
+
+  Read 1 file (ctrl+o to expand)
+
+● Confirmed — the REQUESTED branch replaces the entire chat body with just a
+  spinner/accept card, so the previous messages (now correctly fetched) never
+  even get a chance to render. Restructuring so the message history always
+  shows, and only the footer area changes based on status.
+
+● Update(frontend\src\features\chat\components\ChatWindow.tsx)
+  ⎿  Added 98 lines, removed 98 lines
+      163          </div>
+      164        </header>
+      165  
+      166 +      {/* History (this session plus every earlier session wit
+          +h the same peer — see                                         
+      167 +          chat.service.ts's peerSessionIds) always renders reg
+          +ardless of status, so starting a                              
+      168 +          new request with someone you've chatted with before 
+          +never hides the old conversation                              
+      169 +          behind a waiting screen. */}                        
+      170 +      <div className="flex-1 space-y-3 overflow-y-auto px-4 py
+          +-4">                                                          
+      171 +        {messages.length === 0 && status !== "REQUESTED" && ( 
+      172 +          <p className="pt-10 text-center text-sm text-[#6B4A3
+          +7]">No messages yet.</p>                                      
+      173 +        )}                                                    
+      174 +        {messages.map((m) => (                                
+      175 +          <div key={m.id} className={`flex ${m.senderRole === 
+          +role ? "justify-end" : "justify-start"}`}>                    
+      176 +            <div                                              
+      177 +              className={`max-w-[75%] rounded-2xl px-3.5 py-2 
+          +text-sm leading-relaxed shadow-sm ${                          
+      178 +                m.senderRole === role ? "bg-[#592209] text-[#F
+          +5E9D6]" : "border border-[#592209]/15 bg-white text-[#2C1810]"
+      179 +              }`}                                             
+      180 +            >                                                 
+      181 +              {m.content}                                     
+      182 +              <span className={`mt-1 block text-[10px] ${m.sen
+          +derRole === role ? "text-[#F5E9D6]/70" : "text-[#6B4A37]"}`}> 
+      183 +                {new Date(m.createdAt).toLocaleTimeString(unde
+          +fined, { hour: "numeric", minute: "2-digit" })}               
+      184 +              </span>                                         
+      185 +            </div>                                            
+      186 +          </div>                                              
+      187 +        ))}                                                   
+      188 +        <div ref={bottomRef} />                               
+      189 +      </div>                                                  
+      190 +                                                              
+      191 +      {status === "PAUSED" && (                               
+      192 +        <p className="bg-amber-50 px-4 py-2 text-center text-x
+          +s text-amber-900">                                            
+      193 +          Connection lost — billing is paused. The chat will r
+          +esume automatically once both sides reconnect.                
+      194 +        </p>                                                  
+      195 +      )}                                                      
+      196 +                                                              
+      197        {status === "REQUESTED" ? (
+      167 -        <div className="flex flex-1 items-center justify-cente
+          -r p-6 text-center">                                           
+      168 -          {role === "USER" ? (                                
+      169 -            <div>                                             
+      170 -              <Loader2 className="mx-auto mb-3 h-6 w-6 animate
+          --spin text-[#592209]" aria-hidden="true" />                   
+      171 -              <p className="font-medium text-[#301607]">Waitin
+          -g for {peerName} to respond…</p>                              
+      172 -              <p className="mt-1 text-sm text-[#6B4A37]">You w
+          -on't be charged unless the chat is accepted.</p>              
+      198 +        role === "USER" ? (                                   
+      199 +          <div className="flex items-center justify-between ga
+          +p-3 border-t border-[#592209]/15 bg-[#F5E9D6] p-3">           
+      200 +            <span className="flex items-center gap-2 text-sm t
+          +ext-[#301607]">                                               
+      201 +              <Loader2 className="h-4 w-4 animate-spin" aria-h
+          +idden="true" /> Waiting for {peerName} to respond…            
+      202 +            </span>                                           
+      203 +            <button                                           
+      204 +              type="button"                                   
+      205 +              onClick={endChat}                               
+      206 +              className="inline-flex shrink-0 items-center gap
+          +-1.5 rounded-lg border border-[#592209]/30 px-3 py-1.5 text-sm
+          + font-medium text-[#592209] hover:bg-[#592209]/10"            
+      207 +            >                                                 
+      208 +              Cancel                                          
+      209 +            </button>                                         
+      210 +          </div>                                              
+      211 +        ) : (                                                 
+      212 +          <div className="flex items-center justify-between ga
+          +p-3 border-t border-[#592209]/15 bg-[#F5E9D6] p-3">           
+      213 +            <span className="text-sm font-medium text-[#301607
+          +]">{peerName} wants to chat — nothing is charged until you acc
+          +ept.</span>                                                   
+      214 +            <div className="flex shrink-0 gap-2">             
+      215                <button
+      216                  type="button"
+      175 -                onClick={endChat}                             
+      176 -                className="mt-4 inline-flex items-center gap-1
+          -.5 rounded-lg border border-[#592209]/30 px-3 py-1.5 text-sm f
+          -ont-medium text-[#592209] hover:bg-[#592209]/10"              
+      217 +                onClick={handleReject}                        
+      218 +                disabled={requestActionPending}               
+      219 +                className="inline-flex items-center justify-ce
+          +nter gap-1.5 rounded-xl border border-[#592209]/30 px-3 py-2 t
+          +ext-sm font-medium text-[#592209] hover:bg-[#592209]/10 disabl
+          +ed:opacity-50"                                                
+      220                >
+      178 -                Cancel request                                
+      221 +                <X className="h-4 w-4" aria-hidden="true" /> D
+          +ecline                                                        
+      222                </button>
+      180 -            </div>                                            
+      181 -          ) : (                                               
+      182 -            <div className="w-full max-w-xs rounded-2xl border
+          - border-[#592209]/15 bg-white p-5 shadow-sm">                 
+      183 -              <p className="font-home-serif font-semibold text
+          --[#301607]">{peerName} wants to chat</p>                      
+      184 -              <p className="mt-1 text-sm text-[#6B4A37]">Accep
+          -t to start — nothing is charged until you do.</p>             
+      185 -              <div className="mt-4 flex gap-2">               
+      186 -                <button                                       
+      187 -                  type="button"                               
+      188 -                  onClick={handleReject}                      
+      189 -                  disabled={requestActionPending}             
+      190 -                  className="inline-flex flex-1 items-center j
+          -ustify-center gap-1.5 rounded-xl border border-[#592209]/30 px
+          --3 py-2 text-sm font-medium text-[#592209] hover:bg-[#592209]/
+          -10 disabled:opacity-50"                                       
+      191 -                >                                             
+      192 -                  <X className="h-4 w-4" aria-hidden="true" />
+          - Decline                                                      
+      193 -                </button>                                     
+      194 -                <button                                       
+      195 -                  type="button"                               
+      196 -                  onClick={handleAccept}                      
+      197 -                  disabled={requestActionPending}             
+      198 -                  className="inline-flex flex-1 items-center j
+          -ustify-center gap-1.5 rounded-xl bg-[#592209] px-3 py-2 text-s
+          -m font-semibold text-[#F5E9D6] hover:bg-[#431906] disabled:opa
+          -city-50"                                                      
+      199 -                >                                             
+      200 -                  <Check className="h-4 w-4" aria-hidden="true
+          -" /> Accept                                                   
+      201 -                </button>                                     
+      202 -              </div>                                          
+      203 -            </div>                                            
+      204 -          )}                                                  
+      205 -        </div>                                                
+      206 -      ) : (                                                   
+      207 -        <>                                                    
+      208 -          <div className="flex-1 space-y-3 overflow-y-auto px-
+          -4 py-4">                                                      
+      209 -            {messages.map((m) => (                            
+      210 -              <div key={m.id} className={`flex ${m.senderRole 
+          -=== role ? "justify-end" : "justify-start"}`}>                
+      211 -                <div                                          
+      212 -                  className={`max-w-[75%] rounded-2xl px-3.5 p
+          -y-2 text-sm leading-relaxed shadow-sm ${                      
+      213 -                    m.senderRole === role ? "bg-[#592209] text
+          --[#F5E9D6]" : "border border-[#592209]/15 bg-white text-[#2C18
+          -10]"                                                          
+      214 -                  }`}                                         
+      215 -                >                                             
+      216 -                  {m.content}                                 
+      217 -                  <span className={`mt-1 block text-[10px] ${m
+          -.senderRole === role ? "text-[#F5E9D6]/70" : "text-[#6B4A37]"}
+          -`}>                                                           
+      218 -                    {new Date(m.createdAt).toLocaleTimeString(
+          -undefined, { hour: "numeric", minute: "2-digit" })}           
+      219 -                  </span>                                     
+      220 -                </div>                                        
+      221 -              </div>                                          
+      222 -            ))}                                               
+      223 -            <div ref={bottomRef} />                           
+      224 -          </div>                                              
+      225 -                                                              
+      226 -          {status === "PAUSED" && (                           
+      227 -            <p className="bg-amber-50 px-4 py-2 text-center te
+          -xt-xs text-amber-900">                                        
+      228 -              Connection lost — billing is paused. The chat wi
+          -ll resume automatically once both sides reconnect.            
+      229 -            </p>                                              
+      230 -          )}                                                  
+      231 -                                                              
+      232 -          {status === "ENDED" ? (                             
+      233 -            <div className="border-t border-[#592209]/15 bg-[#
+          -F5E9D6] p-4 text-center">                                     
+      234 -              <p className="text-sm font-medium text-[#301607]
+          -">{endedReason ? END_REASON_LABEL[endedReason] : "This chat ha
+          -s ended."}</p>                                                
+      235 -              {role === "USER" && endedReason === "BALANCE_EXH
+          -AUSTED" && (                                                  
+      236 -                <button                                       
+      237 -                  type="button"                               
+      238 -                  onClick={() => setRechargeOpen(true)}       
+      239 -                  className="mt-3 inline-flex items-center gap
+          --2 rounded-xl bg-[#592209] px-4 py-2 text-sm font-semibold tex
+          -t-[#F5E9D6] hover:bg-[#431906]"                               
+      240 -                >                                             
+      241 -                  <Wallet className="h-4 w-4" aria-hidden="tru
+          -e" /> Recharge &amp; continue                                 
+      242 -                </button>                                     
+      243 -              )}                                              
+      244 -            </div>                                            
+      245 -          ) : (                                               
+      246 -            <div className="flex items-center gap-2 border-t b
+          -order-[#592209]/15 bg-[#F5E9D6] p-3">                         
+      247 -              <input                                          
+      248 -                value={draft}                                 
+      249 -                onChange={(e) => {                            
+      250 -                  setDraft(e.target.value);                   
+      251 -                  setTyping(e.target.value.length > 0);       
+      252 -                }}                                            
+      253 -                onBlur={() => setTyping(false)}               
+      254 -                onKeyDown={(e) => {                           
+      255 -                  if (e.key === "Enter") {                    
+      256 -                    e.preventDefault();                       
+      257 -                    handleSend();                             
+      258 -                  }                                           
+      259 -                }}                                            
+      260 -                placeholder="Type your message…"              
+      261 -                className="flex-1 rounded-xl border border-[#5
+          -92209]/25 bg-white px-3.5 py-2.5 text-sm text-[#2C1810] placeh
+          -older:text-[#2C1810]/40 focus:border-[#592209] focus:outline-n
+          -one focus-visible:ring-2 focus-visible:ring-[#592209]/30"     
+      262 -              />                                              
+      223                <button
+      224                  type="button"
+      265 -                onClick={handleSend}                          
+      266 -                disabled={!draft.trim()}                      
+      267 -                className="inline-flex h-10 w-10 shrink-0 item
+          -s-center justify-center rounded-xl bg-[#592209] text-[#F5E9D6]
+          - transition hover:bg-[#431906] disabled:cursor-not-allowed dis
+          -abled:opacity-40"                                             
+      268 -                aria-label="Send message"                     
+      225 +                onClick={handleAccept}                        
+      226 +                disabled={requestActionPending}               
+      227 +                className="inline-flex items-center justify-ce
+          +nter gap-1.5 rounded-xl bg-[#592209] px-3 py-2 text-sm font-se
+          +mibold text-[#F5E9D6] hover:bg-[#431906] disabled:opacity-50" 
+      228                >
+      270 -                <Send className="h-4 w-4" aria-hidden="true" /
+          ->                                                             
+      229 +                <Check className="h-4 w-4" aria-hidden="true" 
+          +/> Accept                                                     
+      230                </button>
+      231              </div>
+      232 +          </div>                                              
+      233 +        )                                                     
+      234 +      ) : status === "ENDED" ? (                              
+      235 +        <div className="border-t border-[#592209]/15 bg-[#F5E9
+          +D6] p-4 text-center">                                         
+      236 +          <p className="text-sm font-medium text-[#301607]">{e
+          +ndedReason ? END_REASON_LABEL[endedReason] : "This chat has en
+          +ded."}</p>                                                    
+      237 +          {role === "USER" && endedReason === "BALANCE_EXHAUST
+          +ED" && (                                                      
+      238 +            <button                                           
+      239 +              type="button"                                   
+      240 +              onClick={() => setRechargeOpen(true)}           
+      241 +              className="mt-3 inline-flex items-center gap-2 r
+          +ounded-xl bg-[#592209] px-4 py-2 text-sm font-semibold text-[#
+          +F5E9D6] hover:bg-[#431906]"                                   
+      242 +            >                                                 
+      243 +              <Wallet className="h-4 w-4" aria-hidden="true" /
+          +> Recharge &amp; continue                                     
+      244 +            </button>                                         
+      245            )}
+      274 -        </>                                                   
+      246 +        </div>                                                
+      247 +      ) : (                                                   
+      248 +        <div className="flex items-center gap-2 border-t borde
+          +r-[#592209]/15 bg-[#F5E9D6] p-3">                             
+      249 +          <input                                              
+      250 +            value={draft}                                     
+      251 +            onChange={(e) => {                                
+      252 +              setDraft(e.target.value);                       
+      253 +              setTyping(e.target.value.length > 0);           
+      254 +            }}                                                
+      255 +            onBlur={() => setTyping(false)}                   
+      256 +            onKeyDown={(e) => {                               
+      257 +              if (e.key === "Enter") {                        
+      258 +                e.preventDefault();                           
+      259 +                handleSend();                                 
+      260 +              }                                               
+      261 +            }}                                                
+      262 +            placeholder="Type your message…"                  
+      263 +            className="flex-1 rounded-xl border border-[#59220
+          +9]/25 bg-white px-3.5 py-2.5 text-sm text-[#2C1810] placeholde
+          +r:text-[#2C1810]/40 focus:border-[#592209] focus:outline-none 
+          +focus-visible:ring-2 focus-visible:ring-[#592209]/30"         
+      264 +          />                                                  
+      265 +          <button                                             
+      266 +            type="button"                                     
+      267 +            onClick={handleSend}                              
+      268 +            disabled={!draft.trim()}                          
+      269 +            className="inline-flex h-10 w-10 shrink-0 items-ce
+          +nter justify-center rounded-xl bg-[#592209] text-[#F5E9D6] tra
+          +nsition hover:bg-[#431906] disabled:cursor-not-allowed disable
+          +d:opacity-40"                                                 
+      270 +            aria-label="Send message"                         
+      271 +          >                                                   
+      272 +            <Send className="h-4 w-4" aria-hidden="true" />   
+      273 +          </button>                                           
+      274 +        </div>                                                
+      275        )}
+      276  
+      277        <RechargeModal
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Clean. Summary of the fix:
+
+  Root cause: the REQUESTED-state branch in ChatWindow.tsx fully replaced the
+  chat body with just a waiting spinner / accept-decline card, so even though
+  the backend now correctly returns the full merged history across all past
+  sessions with that astrologer, the component never rendered it while a new
+  request was pending.
+
+  Fixed: the message list now always renders (it's the full peer-scoped history,
+  same session or not), and only the footer strip changes based on status —
+  waiting/cancel for the requester, accept/decline for the astrologer, paused
+  banner, ended banner, or the input box. History is visible immediately, even
+  before the astrologer accepts the new request.
+
+  Please retest: end a chat with an astrologer, start a new one with the same
+  person, and confirm the old 2-minute conversation is visible above the new
+  "waiting for response" strip the moment you open it — not just after
+  acceptance.
+
+✻ Crunched for 1m 30s
+
+❯ mother fucker i am talking about normal users                                 
+  Like there is no section of seeing the previous chats with astrologer in      
+  dashboard for normal users..                                                  
+  What the hell are you even implementing?                                      
+  And after ending the chat why the hell there is no option of opening it       
+  again?? Think about more possibilities and then consider all of them and then 
+  implement it                                                                  
+
+  Ran 4 shell commands (ctrl+o to expand)
+
+● Two real gaps. Fixing both.
+
+  Read 1 file (ctrl+o to expand)
+
+● Now move the conversations list under /dashboard/chats instead of orphaned
+  /my-chats:
+
+● Update(frontend\src\App.tsx)
+  ⎿  Added 1 line
+      825              >
+      826                <Route index element={<Suspense fallback={<LazyF
+           allback />}><DashboardHome /></Suspense>} />
+      827                <Route path="wallet" element={<Suspense fallback
+           ={<LazyFallback />}><WalletPage /></Suspense>} />
+      828 +              <Route path="chats" element={<Suspense fallback=
+          +{<LazyFallback />}><UserConversationsPage /></Suspense>} />   
+      829                <Route path="readings" element={<Suspense fallba
+           ck={<LazyFallback />}><MyReadings /></Suspense>} />
+      830                <Route path="readings/:id" element={<Suspense fa
+           llback={<LazyFallback />}><ReadingDetail /></Suspense>} />
+      831                <Route path="activity" element={<Suspense fallba
+           ck={<LazyFallback />}><MyActivity /></Suspense>} />
+● Update(frontend\src\App.tsx)
+  ⎿  Removed 4 lines
+      856                element={<Suspense fallback={<LazyFallback />}><
+           AstrologerChatPage /></Suspense>}
+      857              />
+      858              <Route
+      859 -              path="/my-chats"                                
+      860 -              element={<Suspense fallback={<LazyFallback />}><
+          -UserConversationsPage /></Suspense>}                          
+      861 -            />                                                
+      862 -            <Route                                            
+      859                path="/chat/:sessionId"
+      860                element={<Suspense fallback={<LazyFallback />}><
+           UserChatPage /></Suspense>}
+      861              />
+
+● Now update UserChatPage.tsx's back target and add the dashboard nav entry:
+
+● Update(frontend\src\features\chat\pages\UserChatPage.tsx)
+  ⎿  Added 1 line, removed 1 line
+      10    return (
+      11      <section className="mx-auto h-[calc(100vh-4rem)] w-full max
+          -w-3xl px-0 sm:px-4 sm:py-6">
+      12        <div className="h-full overflow-hidden rounded-none borde
+          r-0 border-[#592209]/15 bg-[#FBF5EC] shadow-none sm:rounded-2xl
+           sm:border sm:shadow-[0_6px_24px_rgba(89,34,9,0.08)]">
+      13 -        <ChatWindow sessionId={sessionId} role="USER" onBack={(
+         -) => navigate("/my-chats")} />                                 
+      13 +        <ChatWindow sessionId={sessionId} role="USER" onBack={(
+         +) => navigate("/dashboard/chats")} />                          
+      14        </div>
+      15      </section>
+      16    );
+
+● Update(frontend\src\features\dashboard\DashboardLayout.tsx)
+  ⎿  Added 1 line
+      47      items: [
+      48        { to: "/dashboard", label: "Overview", icon: Home, end: t
+          rue },
+      49        { to: "/dashboard/wallet", label: "Wallet", icon: Coins }
+          ,
+      50 +      { to: "/dashboard/chats", label: "Astrologer Chats", icon
+         +: MessageCircle },                                             
+      51        { to: "/dashboard/readings", label: "My Readings", icon: 
+          BookOpenText },
+      52        { to: "/dashboard/activity", label: "My Activity", icon: 
+          CalendarHeart },
+      53        { to: "/dashboard/saved", label: "Saved", icon: Bookmark 
+          },
+
+● Update(frontend\src\features\dashboard\DashboardLayout.tsx)
+  ⎿  Added 1 line
+      10    Home,
+      11    LogOut,
+      12    Menu,
+      13 +  MessageCircle,                                               
+      14    MessageCircleHeart,
+      15    PackageOpen,
+      16    PanelLeftClose,
+
+● Update(frontend\src\features\dashboard\DashboardLayout.tsx)
+  ⎿  Added 1 line
+      71  const TITLE_BY_PATH: Record<string, string> = {
+      72    "/dashboard": "Dashboard Overview",
+      73    "/dashboard/wallet": "Wallet",
+      74 +  "/dashboard/chats": "Astrologer Chats",                      
+      75    "/dashboard/readings": "My Readings",
+      76    "/dashboard/activity": "My Activity",
+      77    "/dashboard/saved": "Saved Items",
+
+● Now the "open it again" gap — generalize the recharge-only restart button into
+  a real "Chat again" action for any end reason.
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(frontend\src\features\chat\components\ChatWindow.tsx)
+  ⎿  Added 3 lines, removed 1 line
+       1  import { useEffect, useRef, useState } from "react";
+       2  import { useNavigate } from "react-router-dom";
+       3 -import { ArrowLeft, Loader2, PhoneOff, Send, Wallet, WifiOff, C
+         -heck, X } from "lucide-react";                                 
+       3 +import { ArrowLeft, Loader2, MessageCircle, PhoneOff, Send, Wal
+         +let, WifiOff, Check, X } from "lucide-react";                  
+       4 +import { toast } from "sonner";                                
+       5  import { useChatSession } from "../hooks/useChatSession";
+       6  import { chatApi, type ChatSenderRole } from "../api/chatApi";
+       7 +import { AuthApiError } from "@/lib/authClient";               
+       8  import RechargeModal from "@/features/wallet/components/Recharg
+          eModal";
+       9  
+      10  const END_REASON_LABEL: Record<string, string> = {
+
+● Update(frontend\src\features\chat\components\ChatWindow.tsx)
+  ⎿  Added 13 lines, removed 1 line
+      55    } = useChatSession({ sessionId, role });
+      56    const [draft, setDraft] = useState("");
+      57    const [rechargeOpen, setRechargeOpen] = useState(false);
+      58 +  const [minimumRupees, setMinimumRupees] = useState<number | u
+         +ndefined>(undefined);                                          
+      59    const [startingNew, setStartingNew] = useState(false);
+      60    const [requestActionPending, setRequestActionPending] = useSt
+          ate(false);
+      61    const bottomRef = useRef<HTMLDivElement>(null);
+     ...
+      71      setTyping(false);
+      72    }
+      73  
+      73 -  async function startNewSessionAfterRecharge() {              
+      74 +  /** The general "talk to this astrologer again" action from a
+         +n ENDED screen, for any end                                    
+      75 +   * reason — not just a balance recharge. Re-checks eligibilit
+         +y first (mirrors StartChatButton)                              
+      76 +   * so an insufficient balance opens the recharge modal instea
+         +d of a confusing 403 from startSession. */                     
+      77 +  async function chatAgain() {                                 
+      78      if (!session) return;
+      79      setStartingNew(true);
+      80      try {
+      81 +      const eligibility = await chatApi.getEligibility(session.
+         +astrologerProfileId);                                          
+      82 +      if (!eligibility.canStart) {                             
+      83 +        setMinimumRupees(eligibility.minimumRequiredPaise ? Mat
+         +h.ceil(eligibility.minimumRequiredPaise / 100) : undefined);   
+      84 +        setRechargeOpen(true);                                 
+      85 +        return;                                                
+      86 +      }                                                        
+      87        const next = await chatApi.startSession(session.astrologe
+          rProfileId);
+      88        navigate(`/chat/${next.id}`, { replace: true });
+      89 +    } catch (err) {                                            
+      90 +      toast.error(err instanceof AuthApiError || err instanceof
+         + Error ? err.message : "Could not start a new chat right now.")
+         +;                                                              
+      91      } finally {
+      92        setStartingNew(false);
+      93      }
+
+● Now update the ENDED footer block and the RechargeModal wiring:
+
+● Update(frontend\src\features\chat\components\ChatWindow.tsx)
+  ⎿  Added 12 lines, removed 4 lines
+      248        ) : status === "ENDED" ? (
+      249          <div className="border-t border-[#592209]/15 bg-[#F5E9
+           D6] p-4 text-center">
+      250            <p className="text-sm font-medium text-[#301607]">{e
+           ndedReason ? END_REASON_LABEL[endedReason] : "This chat has en
+           ded."}</p>
+      251 -          {role === "USER" && endedReason === "BALANCE_EXHAUST
+          -ED" && (                                                      
+      251 +          {role === "USER" && (                               
+      252              <button
+      253                type="button"
+      254 -              onClick={() => setRechargeOpen(true)}           
+      255 -              className="mt-3 inline-flex items-center gap-2 r
+          -ounded-xl bg-[#592209] px-4 py-2 text-sm font-semibold text-[#
+          -F5E9D6] hover:bg-[#431906]"                                   
+      254 +              onClick={endedReason === "BALANCE_EXHAUSTED" ? (
+          +) => setRechargeOpen(true) : chatAgain}                       
+      255 +              disabled={startingNew}                          
+      256 +              className="mt-3 inline-flex items-center gap-2 r
+          +ounded-xl bg-[#592209] px-4 py-2 text-sm font-semibold text-[#
+          +F5E9D6] hover:bg-[#431906] disabled:cursor-not-allowed disable
+          +d:opacity-60"                                                 
+      257              >
+      257 -              <Wallet className="h-4 w-4" aria-hidden="true" /
+          -> Recharge &amp; continue                                     
+      258 +              {startingNew ? (                                
+      259 +                <Loader2 className="h-4 w-4 animate-spin" aria
+          +-hidden="true" />                                             
+      260 +              ) : endedReason === "BALANCE_EXHAUSTED" ? (     
+      261 +                <Wallet className="h-4 w-4" aria-hidden="true"
+          + />                                                           
+      262 +              ) : (                                           
+      263 +                <MessageCircle className="h-4 w-4" aria-hidden
+          +="true" />                                                    
+      264 +              )}                                              
+      265 +              {endedReason === "BALANCE_EXHAUSTED" ? "Recharge
+          + & continue" : "Chat again"}                                  
+      266              </button>
+      267            )}
+      268          </div>
+
+● Now update the RechargeModal/startingNew overlay wiring at the bottom to use
+  chatAgain instead of the removed startNewSessionAfterRecharge, and pass
+  minimumRupees:
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● Update(frontend\src\features\chat\components\ChatWindow.tsx)
+  ⎿  Added 2 lines, removed 1 line
+      299        <RechargeModal
+      300          open={rechargeOpen}
+      301          onOpenChange={setRechargeOpen}
+      302 +        minimumRupees={minimumRupees}                         
+      303          onSuccess={() => {
+      304            setRechargeOpen(false);
+      304 -          startNewSessionAfterRecharge();                     
+      305 +          chatAgain();                                        
+      306          }}
+      307        />
+      308        {startingNew && (
+
+● Now typecheck:
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● No stale references left. Let's build to be sure nothing else broke.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Build's clean. Summary of what changed:
+
+  1. Dashboard discoverability: the conversations list page existed but was an
+  orphan route (/my-chats) — nothing anywhere linked to it. Moved it to
+  /dashboard/chats, added it to the sidebar as "Astrologer Chats" (right under
+  Wallet), and added it to the page-title map. "My Conversations" already in
+  that sidebar is a different feature (AI reading history, not astrologer chat)
+  — worth knowing so the two don't get confused later.
+  2. Reopening an ended chat: previously only BALANCE_EXHAUSTED got a restart
+  button. Added a general "Chat again" action for any end reason (declined,
+  timed out, disconnected, you ended it, etc.) — it re-checks eligibility first
+  and routes to the recharge modal if the balance is now insufficient, same as
+  the original "start chat" entry point.
+
+  Both typecheck and build clean. Please retest: from /dashboard, confirm
+  "Astrologer Chats" is visible in the sidebar and lists your past
+  conversations; open an ended one and confirm "Chat again" starts a fresh
+  session with full history intact above it.
+
+✻ Crunched for 3m 40s

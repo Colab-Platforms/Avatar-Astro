@@ -79,7 +79,15 @@ export default function AstrologerChatPage() {
                   lastMessagePreview={c.lastMessage?.content}
                   timestamp={c.lastMessage?.createdAt}
                   unreadCount={c.unreadCount}
-                  statusLabel={c.status === "ACTIVE" ? "Active now" : "Chat ended"}
+                  statusLabel={
+                    c.status === "REQUESTED"
+                      ? "New request — tap to respond"
+                      : c.status === "ACTIVE"
+                        ? "Active now"
+                        : c.status === "PAUSED"
+                          ? "Reconnecting…"
+                          : "Chat ended"
+                  }
                   active={c.sessionId === sessionId}
                   onClick={() => navigate(`/astrologer-dashboard/chat/${c.sessionId}`)}
                 />

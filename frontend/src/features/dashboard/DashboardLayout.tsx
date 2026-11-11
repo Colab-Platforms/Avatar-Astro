@@ -5,10 +5,12 @@ import {
   Bookmark,
   CalendarCheck,
   CalendarHeart,
+  Coins,
   ExternalLink,
   Home,
   LogOut,
   Menu,
+  MessageCircle,
   MessageCircleHeart,
   PackageOpen,
   PanelLeftClose,
@@ -45,6 +47,8 @@ const GROUPS: { label: string; items: Item[] }[] = [
     label: "Your space",
     items: [
       { to: "/dashboard", label: "Overview", icon: Home, end: true },
+      { to: "/dashboard/wallet", label: "Wallet", icon: Coins },
+      { to: "/dashboard/chats", label: "Astrologer Chats", icon: MessageCircle },
       { to: "/dashboard/readings", label: "My Readings", icon: BookOpenText },
       { to: "/dashboard/activity", label: "My Activity", icon: CalendarHeart },
       { to: "/dashboard/saved", label: "Saved", icon: Bookmark },
@@ -66,6 +70,8 @@ const GROUPS: { label: string; items: Item[] }[] = [
 
 const TITLE_BY_PATH: Record<string, string> = {
   "/dashboard": "Dashboard Overview",
+  "/dashboard/wallet": "Wallet",
+  "/dashboard/chats": "Astrologer Chats",
   "/dashboard/readings": "My Readings",
   "/dashboard/activity": "My Activity",
   "/dashboard/saved": "Saved Items",

@@ -1,8 +1,15 @@
 import { authRequest } from "@/lib/authClient";
 
-export type ChatSessionType = "PAID" | "FREE_TRIAL";
-export type ChatSessionStatus = "ACTIVE" | "ENDED";
-export type ChatEndReason = "USER_ENDED" | "ASTROLOGER_ENDED" | "BALANCE_EXHAUSTED" | "FREE_LIMIT_REACHED" | "TIMEOUT";
+export type ChatSessionType = "PAID" | "FREE_TRIAL" | "COMPLIMENTARY";
+export type ChatSessionStatus = "REQUESTED" | "ACTIVE" | "PAUSED" | "ENDED";
+export type ChatEndReason =
+  | "USER_ENDED"
+  | "ASTROLOGER_ENDED"
+  | "BALANCE_EXHAUSTED"
+  | "FREE_LIMIT_REACHED"
+  | "TIMEOUT"
+  | "REJECTED"
+  | "DISCONNECTED";
 export type ChatSenderRole = "USER" | "ASTROLOGER";
 
 export interface ChatSession {
@@ -13,6 +20,8 @@ export interface ChatSession {
   status: ChatSessionStatus;
   ratePerMinutePaise: number;
   freeLimitSeconds: number | null;
+  requestedAt: string;
+  requestExpiresAt: string | null;
   startedAt: string;
   billedSeconds: number;
   amountPaise: number;
@@ -34,13 +43,13 @@ export interface ChatMessage {
 }
 
 export interface ChatEligibility {
-  type: ChatSessionType;
+  type: "PAID" | "COMPLIMENTARY";
   canStart: boolean;
-  freeTrialAvailable: boolean;
   freeLimitSeconds: number | null;
   ratePerMinutePaise: number;
   walletBalancePaise: number | null;
   minimumRequiredPaise?: number;
+  freeAllowanceRemainingSeconds: number;
 }
 
 export interface UserConversationSummary {
@@ -97,6 +106,12 @@ export const astrologerChatApi = {
   },
   endSession(sessionId: string) {
     return authRequest<ChatSession>(`/astrologer/chat/sessions/${sessionId}/end`, { method: "POST" });
+  },
+  acceptSession(sessionId: string) {
+    return authRequest<ChatSession>(`/astrologer/chat/sessions/${sessionId}/accept`, { method: "POST" });
+  },
+  rejectSession(sessionId: string) {
+    return authRequest<ChatSession>(`/astrologer/chat/sessions/${sessionId}/reject`, { method: "POST" });
   },
   setOnline(isOnline: boolean) {
     return authRequest<{ id: string; isOnline: boolean }>("/astrologer/chat/online", { method: "PATCH", body: { isOnline } });

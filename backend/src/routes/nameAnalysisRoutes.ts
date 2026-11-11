@@ -1,6 +1,9 @@
 import { Router, Request, Response } from "express";
 import { createRateLimiter } from "../utils/rateLimit.js";
 import { auth } from "../middleware/authMiddleware.js";
+import { getExecutionId, reserveToolExecution, settleToolExecution, releaseToolExecution } from "../modules/payment/toolBilling.service.js";
+import { TOOL_KEYS } from "../modules/payment/toolKeys.js";
+import { ApiError } from "../utils/ApiError.js";
 
 const router = Router();
 router.use(auth("USER"));
@@ -55,6 +58,10 @@ function mockNarrative(body: NarrativeRequest) {
 }
 
 router.post("/narrative", async (req: Request, res: Response) => {
+  const userId = req.user?.id;
+  const executionId = getExecutionId(req);
+  let billed: Awaited<ReturnType<typeof reserveToolExecution>> | null = null;
+
   try {
     const body = req.body as NarrativeRequest;
     const { name, dob, lifePath, destiny } = body;
@@ -63,8 +70,15 @@ router.post("/narrative", async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Missing required numerology fields" });
     }
 
+    if (userId) {
+      billed = await reserveToolExecution(userId, TOOL_KEYS.NAME_NARRATIVE, executionId);
+      if (billed.alreadySettled) return res.json(billed.execution!.resultPayload);
+    }
+
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
+      // No AI was used — never charge for the mock fallback.
+      if (userId && billed && !billed.skip) await releaseToolExecution(executionId, "RELEASED");
       return res.json(mockNarrative(body));
     }
 
@@ -125,6 +139,7 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
     const data = (await response.json()) as any;
     if (data.error) {
       console.warn("Name analysis narrative: OpenRouter error, using fallback.", data.error?.message);
+      if (userId && billed && !billed.skip) await releaseToolExecution(executionId, "RELEASED");
       return res.json(mockNarrative(body));
     }
 
@@ -133,12 +148,16 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
 
     try {
       const parsed = JSON.parse(clean);
+      if (userId && billed && !billed.skip) await settleToolExecution(executionId, parsed);
       return res.json(parsed);
     } catch {
       console.warn("Name analysis narrative: failed to parse AI JSON, using fallback.");
+      if (userId && billed && !billed.skip) await releaseToolExecution(executionId, "RELEASED");
       return res.json(mockNarrative(body));
     }
   } catch (err: any) {
+    if (userId && billed && !billed.skip) await releaseToolExecution(executionId, "RELEASED").catch(() => {});
+    if (err instanceof ApiError) return res.status(err.statusCode).json({ error: err.message });
     console.error("Name analysis narrative error:", err);
     try {
       return res.json(mockNarrative(req.body as NarrativeRequest));

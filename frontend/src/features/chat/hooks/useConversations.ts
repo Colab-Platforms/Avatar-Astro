@@ -18,9 +18,11 @@ export function useConversations() {
     const socket = connectSocket();
     const invalidate = () => qc.invalidateQueries({ queryKey: USER_CONVERSATIONS_QUERY_KEY });
     socket.on("chat:message", invalidate);
+    socket.on("chat:accepted", invalidate);
     socket.on("chat:ended", invalidate);
     return () => {
       socket.off("chat:message", invalidate);
+      socket.off("chat:accepted", invalidate);
       socket.off("chat:ended", invalidate);
     };
   }, [qc]);

@@ -74,6 +74,7 @@ const AdminReportsPage = lazy(() => import("./features/admin/panel/pages/Reports
 const AdminSettingsPage = lazy(() => import("./features/admin/panel/pages/SettingsAuditPage"));
 const DashboardLayout = lazy(() => import("./features/dashboard/DashboardLayout"));
 const DashboardHome = lazy(() => import("./features/dashboard/library/pages").then((m) => ({ default: m.Overview })));
+const WalletPage = lazy(() => import("./features/wallet/pages/WalletPage"));
 const MyReadings = lazy(() => import("./features/dashboard/library/pages").then((m) => ({ default: m.MyReadings })));
 const ReadingDetail = lazy(() => import("./features/dashboard/library/pages").then((m) => ({ default: m.ReadingDetail })));
 const MyActivity = lazy(() => import("./features/dashboard/library/pages").then((m) => ({ default: m.MyActivity })));
@@ -823,6 +824,8 @@ const App = () => {
               }
             >
               <Route index element={<Suspense fallback={<LazyFallback />}><DashboardHome /></Suspense>} />
+              <Route path="wallet" element={<Suspense fallback={<LazyFallback />}><WalletPage /></Suspense>} />
+              <Route path="chats" element={<Suspense fallback={<LazyFallback />}><UserConversationsPage /></Suspense>} />
               <Route path="readings" element={<Suspense fallback={<LazyFallback />}><MyReadings /></Suspense>} />
               <Route path="readings/:id" element={<Suspense fallback={<LazyFallback />}><ReadingDetail /></Suspense>} />
               <Route path="activity" element={<Suspense fallback={<LazyFallback />}><MyActivity /></Suspense>} />
@@ -851,10 +854,6 @@ const App = () => {
             <Route
               path="/astrologer-dashboard/chat/:sessionId"
               element={<Suspense fallback={<LazyFallback />}><AstrologerChatPage /></Suspense>}
-            />
-            <Route
-              path="/my-chats"
-              element={<Suspense fallback={<LazyFallback />}><UserConversationsPage /></Suspense>}
             />
             <Route
               path="/chat/:sessionId"

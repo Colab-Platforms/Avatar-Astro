@@ -2,6 +2,9 @@ import { Router, Request, Response } from "express";
 import express from "express";
 import { createRateLimiter } from "../utils/rateLimit.js";
 import { auth } from "../middleware/authMiddleware.js";
+import { getExecutionId, reserveToolExecution, settleToolExecution, releaseToolExecution } from "../modules/payment/toolBilling.service.js";
+import { KARMA_GURU_SHLOKA_TOOL_KEYS } from "../modules/payment/toolKeys.js";
+import { ApiError } from "../utils/ApiError.js";
 
 /**
  * Server-side proxy for the Groq chat-completions API so the key never ships
@@ -30,7 +33,19 @@ function bad(res: Response, message: string) {
 }
 
 router.post("/chat", async (req: Request, res: Response) => {
-  const { messages, temperature, max_tokens, json } = req.body ?? {};
+  const { messages, temperature, max_tokens, json, toolKey } = req.body ?? {};
+
+  // This endpoint is shared by Karma, AI Guru and Shloka (and potentially other, unrelated AI
+  // features) — there is no way to tell them apart from the request otherwise. `toolKey` is
+  // OPTIONAL and additive: a caller that doesn't send it (an older client, or an unrelated
+  // feature) is simply never billed here, exactly as today. Only a recognized Karma/Guru/Shloka
+  // toolKey triggers reserve/settle/release; anything else is a 400, not a silent default.
+  const billableToolKey = typeof toolKey === "string" && KARMA_GURU_SHLOKA_TOOL_KEYS.has(toolKey) ? toolKey : undefined;
+  if (toolKey !== undefined && !billableToolKey) return bad(res, "Unrecognized toolKey");
+
+  const userId = req.user!.id;
+  const executionId = getExecutionId(req);
+  let billed: Awaited<ReturnType<typeof reserveToolExecution>> | null = null;
 
   if (!Array.isArray(messages) || messages.length === 0 || messages.length > MAX_MESSAGES) {
     return bad(res, `messages must be an array of 1-${MAX_MESSAGES} items`);
@@ -57,6 +72,16 @@ router.post("/chat", async (req: Request, res: Response) => {
   const maxTokens =
     typeof max_tokens === "number" && isFinite(max_tokens) ? Math.min(Math.max(Math.floor(max_tokens), 1), MAX_TOKENS_CAP) : 1000;
 
+  if (billableToolKey) {
+    try {
+      billed = await reserveToolExecution(userId, billableToolKey, executionId);
+      if (billed.alreadySettled) return res.json(billed.execution!.resultPayload);
+    } catch (err) {
+      if (err instanceof ApiError) return res.status(err.statusCode).json({ error: { message: err.message } });
+      throw err;
+    }
+  }
+
   try {
     const upstream = await fetch(GROQ_URL, {
       method: "POST",
@@ -73,11 +98,15 @@ router.post("/chat", async (req: Request, res: Response) => {
     const data: any = await upstream.json().catch(() => null);
     if (!upstream.ok || !data || data.error) {
       console.error("Groq upstream error:", upstream.status);
+      if (billed && !billed.skip) await releaseToolExecution(executionId, "FAILED");
       return res.status(502).json({ error: { message: "AI service request failed" } });
     }
     const content = data.choices?.[0]?.message?.content;
-    return res.json({ choices: [{ message: { content: typeof content === "string" ? content : "" } }] });
+    const result = { choices: [{ message: { content: typeof content === "string" ? content : "" } }] };
+    if (billed && !billed.skip) await settleToolExecution(executionId, result);
+    return res.json(result);
   } catch (err: any) {
+    if (billed && !billed.skip) await releaseToolExecution(executionId, "FAILED").catch(() => {});
     const timedOut = err?.name === "TimeoutError" || err?.name === "AbortError";
     console.error("Groq proxy error:", timedOut ? "timeout" : err?.name);
     return res
