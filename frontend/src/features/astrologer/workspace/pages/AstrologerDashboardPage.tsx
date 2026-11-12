@@ -1,51 +1,21 @@
 import { useRef, useState } from "react";
-import { Link } from "react-router-dom";
-import { Loader2, MessageCircle, Plus, ShieldAlert, Upload, UserCog, X } from "lucide-react";
-import { btn, card, ErrorBox, field, focusRing, ghost, IconChip, labelCls, Loading, PageHeader } from "@/features/dashboard/library/ui";
-import {
-  useAstrologerAccess, useSetOwnPublication, useUpdateAstrologerProfile, useUploadAstrologerPhoto,
-} from "../hooks/useAstrologerWorkspace";
+import { useOutletContext } from "react-router-dom";
+import { Loader2, Plus, Upload, UserCog, X } from "lucide-react";
+import { btn, card, field, focusRing, ghost, IconChip, labelCls, PageHeader } from "@/features/dashboard/library/ui";
+import { useSetOwnPublication, useUpdateAstrologerProfile, useUploadAstrologerPhoto } from "../hooks/useAstrologerWorkspace";
+import type { AstrologerOutletContext } from "../AstrologerDashboardLayout";
 
-/**
- * Astrologer workspace — reachable only once approved. requireAstrologer on every API call
- * is the real gate; this page just renders a friendly message when that 403s instead of a
- * generic error, same pattern as the admin panel's MainOnly guard.
- */
+/** Profile editor for the astrologer workspace. The requireAstrologer access gate and the
+ * approved profile both live one level up in AstrologerDashboardLayout. */
 export default function AstrologerDashboardPage() {
-  const access = useAstrologerAccess();
-
-  if (access.isLoading) return <Loading label="Loading your astrologer workspace…" />;
-
-  if (access.denied) {
-    return (
-      <section className="mx-auto flex min-h-[50vh] max-w-lg flex-col items-center justify-center gap-3 px-4 text-center">
-        <ShieldAlert className="h-8 w-8 text-[#A8803A]" aria-hidden="true" />
-        <h1 className="font-home-serif text-xl font-semibold text-[#2A1A10]">Astrologer access required</h1>
-        <p className="text-sm text-[#6E5D4E]">
-          This workspace is only available once your astrologer application has been approved. Check your application status from your dashboard.
-        </p>
-        <Link to="/dashboard" className={ghost}>Back to dashboard</Link>
-      </section>
-    );
-  }
-
-  if (access.error || !access.profile) {
-    return <ErrorBox error={access.error} onRetry={() => access.refetch()} />;
-  }
-
-  const profile = access.profile;
+  const { profile } = useOutletContext<AstrologerOutletContext>();
 
   return (
-    <section className="mx-auto w-full max-w-3xl px-4 pb-16 pt-10 sm:px-6">
+    <section className="w-full">
       <PageHeader
         eyebrow="Astrologer"
         title="Your Astrologer Profile"
         sub="Manage how you appear once published. Approval and publication are separate — nothing goes live until you publish."
-        actions={
-          <Link to="/astrologer-dashboard/chat" className={ghost}>
-            <MessageCircle className="h-4 w-4" aria-hidden="true" /> Chats
-          </Link>
-        }
       />
 
       {profile.suspendedAt && (

@@ -133,6 +133,10 @@ export default function DashboardLayout() {
 
   const name = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.email || "Account";
   const title = useMemo(() => getDashboardTitle(location.pathname), [location.pathname]);
+  // The chat workspace manages its own full-bleed split-pane layout (list + conversation) and
+  // needs the entire main area with no padding/centering — every other dashboard page keeps the
+  // standard padded, max-width-constrained content column.
+  const isFullBleed = location.pathname.startsWith("/dashboard/chats");
 
   const toggle = () => {
     setCollapsed((c) => {
@@ -465,10 +469,11 @@ export default function DashboardLayout() {
         </header>
 
         {/* Scrollable Main Dashboard Area */}
-        <main id="dashboard-main" className="flex-1 overflow-y-auto bg-[#FAF8F5] p-4 sm:p-6 lg:p-8">
-          <div className="mx-auto w-full max-w-[1400px]">
-            <Outlet />
-          </div>
+        <main
+          id="dashboard-main"
+          className={cn("flex-1 bg-[#FAF8F5]", isFullBleed ? "overflow-hidden" : "overflow-y-auto p-4 sm:p-6 lg:p-8")}
+        >
+          {isFullBleed ? <Outlet /> : <div className="mx-auto w-full max-w-[1400px]"><Outlet /></div>}
         </main>
       </div>
     </div>
