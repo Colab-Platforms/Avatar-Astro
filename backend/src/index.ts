@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from "express";
+import { createServer } from "http";
 import cors from "cors";
 import dotenv from "dotenv";
-import axios from "axios";
 import interpretationRoutes from "./routes/interpretationRoutes.js";
 import compatibilityRoutes from "./routes/compatibilityRoutes.js";
 import birthChartRoutes from "./routes/birthChartRoutes.js";
@@ -13,7 +13,6 @@ import inquiryRoutes from "./routes/inquiryRoutes.js";
 import { auth, optionalAuth } from "./middleware/authMiddleware.js";
 import { captureReadings } from "./modules/library/readingCapture.js";
 import { ttsLanguageCode } from "./utils/responseLanguage.js";
-import { createRateLimiter } from "./utils/rateLimit.js";
 import { feature } from "./utils/usage.js";
 import { installAiUsageCapture } from "./utils/aiUsageCapture.js";
 import { createMeRouter } from "./modules/me/me.route.js";
@@ -31,6 +30,15 @@ import publicShopRoutes from "./modules/shop/shop.public.route.js";
 import gemstoneRoutes from "./modules/gemstone/gemstone.route.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { startDarshanRefreshLoop } from "./modules/darshan/darshan.refresh.js";
+import { createWalletRouter } from "./modules/payment/wallet.route.js";
+import { createChatRouter } from "./modules/chat/chat.route.js";
+import { createAstrologerChatRouter } from "./modules/chat/chat.astrologer.route.js";
+import { resumeAllActiveSessions } from "./modules/chat/billing.js";
+import { initSocketServer } from "./realtime/socketServer.js";
+import { isOriginAllowed } from "./utils/corsOrigins.js";
+import { getExecutionId, reserveToolExecution, settleToolExecution, releaseToolExecution } from "./modules/payment/toolBilling.service.js";
+import { TOOL_KEYS } from "./modules/payment/toolKeys.js";
+import { ApiError } from "./utils/ApiError.js";
 
 dotenv.config();
 
@@ -51,35 +59,11 @@ const app = express();
 app.set("trust proxy", 1);
 const PORT = process.env.PORT || 5001;
 
-// Middleware
-const EXPLICIT_ALLOWED_ORIGINS = [
-  "http://localhost:5173",
-  "http://127.0.0.1:5173",
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
-  "http://localhost:8081",
-  "http://192.168.1.126:8081",
-  "https://avatar-astro.vercel.app",
-];
-// This project's actual Vite dev port (see frontend/vite.config.ts) — kept
-// in addition to the explicit list above since that's what's really running.
-// Also allows LAN IPs (192.168.x.x / 10.x.x.x / 172.16-31.x.x) so phones and
-// other devices on the same WiFi can hit a locally-running backend during dev.
-const LOCAL_DEV_ORIGIN_REGEX =
-  /^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})(:\d+)?$/;
-// Optional production origin, set via env — unrelated to local dev, unchanged.
-const PRODUCTION_ORIGIN = process.env.CORS_ORIGIN;
-
+// Middleware — origin allow-list lives in utils/corsOrigins.ts (shared with Socket.IO's CORS config).
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (server-to-server proxy, curl, mobile)
-      if (!origin) return callback(null, true);
-      if (EXPLICIT_ALLOWED_ORIGINS.includes(origin))
-        return callback(null, true);
-      if (LOCAL_DEV_ORIGIN_REGEX.test(origin)) return callback(null, true);
-      if (PRODUCTION_ORIGIN && origin === PRODUCTION_ORIGIN)
-        return callback(null, true);
+      if (isOriginAllowed(origin)) return callback(null, true);
       console.warn(`✗ CORS rejected origin: ${origin}`);
       callback(Object.assign(new Error("Not allowed by CORS"), { statusCode: 403 }));
     },
@@ -332,6 +316,12 @@ app.use("/api/darshan", darshanRoutes);
 app.use("/api/astrologer", createAstrologerRouter());
 app.use("/api/astrologers", createAstrologerPublicRouter());
 
+// Wallet (mock-gateway recharge) and the real-time astrologer chat REST surface — live
+// message delivery and billing ticks happen over Socket.IO (see realtime/socketServer.ts).
+app.use("/api/wallet", createWalletRouter());
+app.use("/api/chat", createChatRouter());
+app.use("/api/astrologer/chat", createAstrologerChatRouter());
+
 // Published astrology About-section audio (public, read-only; never calls ElevenLabs)
 app.use("/api/astrology", createAstrologyAudioPublicRouter());
 
@@ -350,7 +340,13 @@ app.post("/api/tts", ...feature("tts"), auth("USER"), async (req: Request, res: 
   if (!langCode) {
     return res.status(422).json({ error: "Voice is not available for this language", code: "tts_language_unsupported" });
   }
+  const userId = req.user!.id;
+  const executionId = getExecutionId(req);
+  let billed: Awaited<ReturnType<typeof reserveToolExecution>> | null = null;
   try {
+    billed = await reserveToolExecution(userId, TOOL_KEYS.TTS_MAIN, executionId);
+    if (billed.alreadySettled) return res.json(billed.execution!.resultPayload);
+
     const sarvamRes = await fetch("https://api.sarvam.ai/text-to-speech", {
       method: "POST",
       headers: {
@@ -370,141 +366,36 @@ app.post("/api/tts", ...feature("tts"), auth("USER"), async (req: Request, res: 
     if (!sarvamRes.ok) {
       const errText = await sarvamRes.text();
       console.error("Sarvam TTS error:", sarvamRes.status, errText);
+      if (billed && !billed.skip) await releaseToolExecution(executionId, "FAILED");
       return res.status(502).json({ error: "Sarvam TTS failed" });
     }
     const data = (await sarvamRes.json()) as any;
     const audio = data.audios?.[0];
-    if (!audio)
+    if (!audio) {
+      if (billed && !billed.skip) await releaseToolExecution(executionId, "FAILED");
       return res.status(502).json({ error: "No audio in Sarvam response" });
-    return res.json({ audio });
+    }
+    const result = { audio };
+    if (billed && !billed.skip) await settleToolExecution(executionId, result);
+    return res.json(result);
   } catch (err: any) {
+    if (billed && !billed.skip) await releaseToolExecution(executionId, "FAILED").catch(() => {});
+    if (err instanceof ApiError) return res.status(err.statusCode).json({ error: err.message });
     console.error("TTS proxy error:", err.message);
     return res.status(500).json({ error: "TTS proxy failed" });
   }
 });
 
 // ── Palm Reading ────────────────────────────────────────────────────────────
-// Note: the current Palm Reading page analyses the photo in the browser and does not call this endpoint.
-// It is kept (and locked down) because it forwards an image to a paid vision model.
-// /check carries no image and does no analysis: the page calls it first purely to consume one use of the
-// admin's per-24h "palm-reading" limit before running the (free, client-side) analysis.
+// The live page analyses the photo in the browser (real MediaPipe hand-landmark detection,
+// fixed narrative text per hand shape) and never calls a server AI route — it's fully free.
+// A paid-vision-model endpoint used to exist here (forwarding the photo to Claude 3.5 Sonnet for
+// a fabricated-precision "reading") but was never called by the frontend and has been removed;
+// see git history if it's ever worth rebuilding properly on top of the real landmark data instead.
+// /check carries no image and does no analysis: the page calls it first purely to consume one use
+// of the admin's per-24h "palm-reading" limit before running the free, client-side analysis.
 app.post("/api/palm-reading/check", ...feature("palm-reading"), auth("USER"), (_req: Request, res: Response) => {
   res.json({ success: true });
-});
-const PALM_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
-const PALM_MAX_BASE64_CHARS = 8_000_000; // ~6 MB of image data
-app.post("/api/palm-reading", ...feature("palm-reading"), auth("USER"), createRateLimiter({ windowMs: 60_000, max: 5 }), async (req: Request, res: Response) => {
-  const { imageBase64, imageType, fingerprint } = req.body;
-  if (!imageBase64 || !imageType) {
-    return res.status(400).json({
-      success: false,
-      error: "imageBase64 and imageType are required",
-    });
-  }
-  if (typeof imageType !== "string" || !PALM_IMAGE_TYPES.has(imageType)) {
-    return res.status(400).json({ success: false, error: "Unsupported image type" });
-  }
-  if (typeof imageBase64 !== "string" || imageBase64.length > PALM_MAX_BASE64_CHARS || !/^[A-Za-z0-9+/]+={0,2}$/.test(imageBase64)) {
-    return res.status(400).json({ success: false, error: "Invalid or too large image" });
-  }
-
-  const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-  if (!OPENROUTER_API_KEY) {
-    return res
-      .status(500)
-      .json({ success: false, error: "The reading service is not configured" });
-  }
-
-  const seedNum = fingerprint
-    ? parseInt(fingerprint) % 1000
-    : Math.floor(Math.random() * 1000);
-  const prompt = `You are a master Vedic palmistry expert with 40+ years of experience. Carefully analyze this palm image.
-
-Look at the actual lines, mounts, and hand shape visible in the image. Use seed number ${seedNum} to ensure this user always gets the same consistent reading.
-
-Return ONLY valid JSON, no markdown fences, no extra text. Use this exact structure:
-{
-  "handType": "Earth Hand",
-  "element": "Earth 🌍",
-  "palmScore": 8.4,
-  "confidence": 93,
-  "dominance": "Right (Active)",
-  "lines": {
-    "heart": { "quality": "Long & deeply curved", "depth": "Deep", "headline": "Your Heart — Emotions & Love", "reading": "3-4 detailed sentences about emotional nature, love life, relationships.", "strengths": ["Deep emotional loyalty","Strong empathy","Passionate connections","Intuitive heart"], "challenges": ["Tendency to over-give","Difficulty letting go","Emotional sensitivity"], "advice": "One sentence of personalized practical advice." },
-    "head":  { "quality": "Long, sweeping across palm", "depth": "Moderate", "headline": "Your Mind — Intelligence & Clarity", "reading": "3-4 detailed sentences about intellect, decision-making, mental strengths.", "strengths": ["Strategic thinking","Creative problem solving","Strong focus","Intellectual curiosity"], "challenges": ["Overthinking","Analysis paralysis","Difficulty with quick decisions"], "advice": "One sentence of personalized practical advice." },
-    "life":  { "quality": "Strong sweeping arc", "depth": "Deep", "headline": "Your Life — Vitality & Path", "reading": "3-4 detailed sentences about vitality, energy, life transitions.", "strengths": ["High vitality","Resilience","Strong adaptability","Personal growth"], "challenges": ["Taking on too much","Need for rest","Restless energy"], "advice": "One sentence of personalized practical advice." },
-    "fate":  { "quality": "Clear vertical line", "depth": "Strong", "headline": "Your Destiny — Career & Purpose", "reading": "3-4 detailed sentences about career path, life purpose, destiny markers.", "strengths": ["Clear life direction","Career focus","Natural leadership","Purpose-driven"], "challenges": ["Rigidity in plans","Difficulty pivoting","External pressure sensitivity"], "advice": "One sentence of personalized practical advice." }
-  },
-  "mounts": [
-    {"name":"Mount of Jupiter","planet":"Jupiter","strength":82,"symbol":"♃","reading":"Two sentences about ambition and leadership."},
-    {"name":"Mount of Saturn","planet":"Saturn","strength":71,"symbol":"♄","reading":"Two sentences about discipline and karma."},
-    {"name":"Mount of Sun (Apollo)","planet":"Sun","strength":88,"symbol":"☉","reading":"Two sentences about creative power and charisma."},
-    {"name":"Mount of Mercury","planet":"Mercury","strength":75,"symbol":"☿","reading":"Two sentences about communication and business acumen."},
-    {"name":"Mount of Venus","planet":"Venus","strength":79,"symbol":"♀","reading":"Two sentences about love and sensuality."},
-    {"name":"Mount of Moon (Luna)","planet":"Moon","strength":69,"symbol":"☽","reading":"Two sentences about intuition and imagination."}
-  ],
-  "personality": [
-    {"trait":"Leadership","score":81,"description":"One sentence insight."},
-    {"trait":"Emotional Depth","score":88,"description":"One sentence insight."},
-    {"trait":"Creative Power","score":76,"description":"One sentence insight."},
-    {"trait":"Intellectual Force","score":83,"description":"One sentence insight."},
-    {"trait":"Spiritual Sensitivity","score":72,"description":"One sentence insight."},
-    {"trait":"Willpower","score":79,"description":"One sentence insight."}
-  ],
-  "love": { "style": "Devoted & Passionate", "summary": "2-3 sentence love life overview.", "soulmate": "Describe ideal partner qualities.", "warning": "One sentence about the main relationship pitfall." },
-  "career": { "path": "The Visionary Creator", "summary": "2-3 sentence career overview.", "bestRoles": ["Role 1","Role 2","Role 3","Role 4"], "wealthLine": "One sentence about wealth potential." },
-  "timeline": [
-    {"phase":"Foundation Years","years":"Age 0–20","theme":"Learning & Self-Discovery","insight":"Two sentences for this phase."},
-    {"phase":"Rise & Ambition","years":"Age 21–35","theme":"Growth & Bold Choices","insight":"Two sentences for this phase."},
-    {"phase":"Mastery Period","years":"Age 36–55","theme":"Achievement & Impact","insight":"Two sentences for this phase."},
-    {"phase":"Legacy Years","years":"Age 56+","theme":"Wisdom & Fulfillment","insight":"Two sentences for this phase."}
-  ],
-  "hiddenGifts": ["Hidden gift 1","Hidden gift 2","Hidden gift 3","Hidden gift 4","Hidden gift 5"],
-  "luckyElements": {"number":"7","color":"Deep Indigo","day":"Thursday","gem":"Amethyst","direction":"Northeast"},
-  "summary": "A powerful 3-4 sentence master summary of the entire palm reading."
-}`;
-
-  try {
-    const response = await axios.post(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        model: "anthropic/claude-3.5-sonnet",
-        max_tokens: 3000,
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "image_url",
-                image_url: { url: `data:${imageType};base64,${imageBase64}` },
-              },
-              { type: "text", text: prompt },
-            ],
-          },
-        ],
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": "http://localhost:8081",
-          "X-Title": "Spiritual AI Palm Reading",
-        },
-      },
-    );
-
-    const text = response.data.choices[0].message.content || "";
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("Could not parse JSON from AI response");
-    const result = JSON.parse(jsonMatch[0]);
-    res.json({ success: true, data: result });
-  } catch (err: any) {
-    console.error("Palm reading error:", err.message);
-    res.status(502).json({
-      success: false,
-      error: "The reading service is unavailable right now",
-    });
-  }
 });
 
 // Error handling middleware (must be last).
@@ -522,13 +413,20 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     .json({ success: false, error: err.message || "Internal Server Error" });
 });
 
+// Wrapped (rather than a bare app.listen) so Socket.IO can attach to the same HTTP
+// server/port — Render only exposes one port per service.
+const httpServer = createServer(app);
+initSocketServer(httpServer);
+
 // Start server
 function startServer() {
   startDarshanRefreshLoop();
+  resumeAllActiveSessions().catch((err) => console.error("[chat.billing] failed to resume active sessions:", err));
 
-  app.listen(PORT, () => {
+  httpServer.listen(PORT, () => {
     console.log(`✓ Server running on http://localhost:${PORT}`);
     console.log(`✓ API available at http://localhost:${PORT}/api`);
+    console.log(`✓ Socket.IO ready on the same port`);
   });
 }
 

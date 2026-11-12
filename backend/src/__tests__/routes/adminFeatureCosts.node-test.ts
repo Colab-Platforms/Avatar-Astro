@@ -76,8 +76,8 @@ before(async () => {
       ...[0, 1].map(() => row({ feature: "ai-chat", metadata: { method: "POST", route: "/api/ai/chat" }, aiProvider: "groq", aiModel: "openai/gpt-oss-120b", inputTokens: 2000, outputTokens: 1000, totalTokens: 3000 })),
       // verified free model reporting $0
       ...[0, 1, 2].map(() => row({ feature: "inner-voice", metadata: { method: "POST", route: "/api/inner-voice/diagnose" }, aiProvider: "openrouter", aiModel: "google/gemma-4-31b-it:free", costUsd: "0", costBasis: "actual" })),
-      // a model with no price and no reported cost
-      row({ feature: "palm-reading", metadata: { method: "POST", route: "/api/palm-reading" }, aiProvider: "openrouter", aiModel: "anthropic/claude-3.5-sonnet" }),
+      // a model with no price and no reported cost, on a route outside the operation catalogue
+      row({ feature: "legacy-feature", metadata: { method: "POST", route: "/api/legacy-feature" }, aiProvider: "openrouter", aiModel: "some-unpriced-vendor-model" }),
     ],
   });
 
@@ -128,7 +128,7 @@ test("tokens without a stored cost are Estimated from the verified rate and kept
   assert.ok(Math.abs(d.totals.estimatedUsd - 2 * 0.0009) < 1e-12);
   assert.equal(d.totals.requestsWithActual, 4 + 3);
   assert.equal(d.totals.requestsWithEstimate, 2);
-  assert.equal(d.totals.unpricedRequests, 1); // the palm row
+  assert.equal(d.totals.unpricedRequests, 1); // the legacy-feature row
 });
 
 test("free model and unknown price are reported honestly", async () => {
@@ -136,9 +136,9 @@ test("free model and unknown price are reported honestly", async () => {
   const iv = find(d, "iv.diagnose");
   assert.equal(iv.classification, "free-model");
   assert.equal(iv.costPerGenerationUsd, 0);
-  const palm = find(d, "palm.reading");
-  assert.equal(palm.classification, "unknown");
-  assert.equal(palm.costPerGenerationUsd, null);
+  const legacy = find(d, "observed.legacy-feature./api/legacy-feature");
+  assert.equal(legacy.classification, "unknown");
+  assert.equal(legacy.costPerGenerationUsd, null);
   assert.equal(find(d, "free.zodiac").classification, "free");
 });
 

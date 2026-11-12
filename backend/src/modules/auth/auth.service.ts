@@ -11,6 +11,7 @@ import { sendOtpEmail, sendPasswordResetEmail } from "@/utils/mailer.js";
 import { verifyMsg91AccessToken, getMsg91WidgetConfig } from "@/utils/msg91.js";
 import { verifyGoogleIdToken, type GoogleProfile } from "@/utils/googleAuth.js";
 import { recordEvent } from "@/utils/usage.js";
+import { grantSignupBonusIfEligible } from "@/modules/payment/signupBonus.service.js";
 import {
   MAX_OTP_ATTEMPTS,
   MAX_OTPS_PER_HOUR,
@@ -312,9 +313,12 @@ class AuthService {
     if (!user) throw new ApiError("User not found", STATUS_CODES.NOT_FOUND);
 
     if (data.type === "REGISTER" && !user.isEmailVerified) {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { isEmailVerified: true },
+      // The activation write always commits unconditionally; the signup bonus grant inside this
+      // same transaction is the only conditional part (see signupBonus.service.ts for why it's
+      // safe under concurrent/retried verifyOtp calls without any try/catch around a unique-violation).
+      await prisma.$transaction(async (tx) => {
+        await tx.user.update({ where: { id: user.id }, data: { isEmailVerified: true } });
+        await grantSignupBonusIfEligible(tx, user.id);
       });
       user.isEmailVerified = true;
     }
@@ -378,9 +382,11 @@ class AuthService {
       );
     }
 
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { isPhoneVerified: true },
+    // Phone verification is an alternative account-activation path to email OTP verification
+    // (register() lets the user choose either) — same transactional, exactly-once bonus grant.
+    await prisma.$transaction(async (tx) => {
+      await tx.user.update({ where: { id: user.id }, data: { isPhoneVerified: true } });
+      await grantSignupBonusIfEligible(tx, user.id);
     });
 
     user.isPhoneVerified = true;
@@ -532,6 +538,9 @@ class AuthService {
           await tx.userRoleMapping.create({
             data: { userId: newUser.id, roleId: roleRecord.id },
           });
+          // Brand-new account only — the existingByEmail branch above links an existing user and
+          // never reaches this transaction, so the signup bonus is never backfilled onto them.
+          await grantSignupBonusIfEligible(tx, newUser.id);
 
           return newUser;
         });

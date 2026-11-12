@@ -5,7 +5,13 @@
  * from the same facts is returned. The response always states its source.
  */
 import axios from "axios";
-import { GEMSTONES, SIGNS, type GemstoneInfo, type Planet, type Sign } from "./gemstone.catalogue.js";
+import {
+  GEMSTONES,
+  SIGNS,
+  type GemstoneInfo,
+  type Planet,
+  type Sign,
+} from "./gemstone.catalogue.js";
 import type { Recommendation } from "./recommendation.js";
 import { NAKSHATRAS } from "./analysis.js";
 
@@ -64,9 +70,13 @@ export const validateExplanation = (
   if (hasOutcomePromise(t)) return "contains guaranteed-outcome language";
 
   const rec = ctx.recommendation;
-  const allowedStones = new Set([rec.primary.key, ...rec.secondary.map((s) => s.stone.key)]);
+  const allowedStones = new Set([
+    rec.primary.key,
+    ...rec.secondary.map((s) => s.stone.key),
+  ]);
   for (const [re, key] of STONE_PATTERNS) {
-    if (re.test(t) && !allowedStones.has(key)) return `mentions unsupported gemstone (${key})`;
+    if (re.test(t) && !allowedStones.has(key))
+      return `mentions unsupported gemstone (${key})`;
   }
   if (!new RegExp(rec.primary.name.split(" or ")[0], "i").test(t)) {
     return "does not mention the calculated Ratna";
@@ -79,27 +89,45 @@ export const validateExplanation = (
     ...Object.values(ctx.planetSigns),
   ]);
   for (const m of t.matchAll(new RegExp(SIGN_RE, "g"))) {
-    if (!allowedSigns.has(m[0])) return `mentions sign not in the chart (${m[0]})`;
+    if (!allowedSigns.has(m[0]))
+      return `mentions sign not in the chart (${m[0]})`;
   }
-  for (const m of t.matchAll(new RegExp(`\\b(${PLANET_RE})\\b[^.]{0,25}?\\bin (${SIGN_RE})\\b`, "g"))) {
+  for (const m of t.matchAll(
+    new RegExp(`\\b(${PLANET_RE})\\b[^.]{0,25}?\\bin (${SIGN_RE})\\b`, "g"),
+  )) {
     const actual = ctx.planetSigns[m[1] as Planet];
     if (actual && actual !== m[2]) return `contradicts ${m[1]} placement`;
     if (!actual) return `invents ${m[1]} placement`;
   }
   const allowedNak = new Set<string>(
-    [rec.analysis.primary, ...rec.analysis.alternatives].map((a) => a.profile.nakshatra),
+    [rec.analysis.primary, ...rec.analysis.alternatives].map(
+      (a) => a.profile.nakshatra,
+    ),
   );
   allowedNak.add(rec.analysis.lagna.nakshatra);
   allowedNak.add(rec.analysis.moon.nakshatra);
   for (const n of NAKSHATRAS) {
-    if (new RegExp(`\\b${n}\\b`, "i").test(t) && !allowedNak.has(n)) return `mentions nakshatra not in the chart (${n})`;
+    if (new RegExp(`\\b${n}\\b`, "i").test(t) && !allowedNak.has(n))
+      return `mentions nakshatra not in the chart (${n})`;
   }
-  if (/\d+(\.\d+)?\s?(%|percent)|\bshadbala\b|\bstrength score\b/i.test(t)) return "states a strength figure that was not calculated";
-  for (const m of t.matchAll(new RegExp(`\\b(${PLANET_RE})\\b[^.]{0,30}?\\b(Mahadasha|Antardasha)\\b`, "g"))) {
+  if (/\d+(\.\d+)?\s?(%|percent)|\bshadbala\b|\bstrength score\b/i.test(t))
+    return "states a strength figure that was not calculated";
+  for (const m of t.matchAll(
+    new RegExp(
+      `\\b(${PLANET_RE})\\b[^.]{0,30}?\\b(Mahadasha|Antardasha)\\b`,
+      "g",
+    ),
+  )) {
     const d = rec.analysis.dasha;
-    if (!d || (d.mahadasha.lord !== m[1] && d.antardasha.lord !== m[1])) return `invents a dasha period (${m[1]})`;
+    if (!d || (d.mahadasha.lord !== m[1] && d.antardasha.lord !== m[1]))
+      return `invents a dasha period (${m[1]})`;
   }
-  for (const m of t.matchAll(new RegExp(`\\b(Ascendant|Lagna|rising sign)\\b[^.]{0,20}?\\b(${SIGN_RE})\\b`, "gi"))) {
+  for (const m of t.matchAll(
+    new RegExp(
+      `\\b(Ascendant|Lagna|rising sign)\\b[^.]{0,20}?\\b(${SIGN_RE})\\b`,
+      "gi",
+    ),
+  )) {
     if (m[2] !== rec.lagnaSign) return "contradicts Ascendant sign";
   }
   return null;
@@ -112,13 +140,19 @@ export const buildRuleExplanation = (ctx: ExplanationContext): string => {
     `In your chart ${r.lagnaLord} is placed in ${r.lagnaLordSign}, in the ${r.lagnaLordHouse}${suffix(r.lagnaLordHouse)} house, in ${r.analysis.primary.profile.nakshatra} nakshatra (pada ${r.analysis.primary.profile.pada}).`,
   ];
   const dignity = r.analysis.primary.profile.dignity;
-  if (dignity !== "not assessed" && dignity !== "neutral sign") parts.push(`${r.lagnaLord} is in ${dignity === "exalted" ? "its sign of exaltation" : dignity === "debilitated" ? "its sign of debilitation" : dignity === "mooltrikona" ? "its mooltrikona sign" : dignity}.`);
+  if (dignity !== "not assessed" && dignity !== "neutral sign")
+    parts.push(
+      `${r.lagnaLord} is in ${dignity === "exalted" ? "its sign of exaltation" : dignity === "debilitated" ? "its sign of debilitation" : dignity === "mooltrikona" ? "its mooltrikona sign" : dignity}.`,
+    );
   const dn = r.analysis.primary.dashaNote;
   if (dn) parts.push(dn);
   if (r.secondary.length > 0) {
     parts.push(
       `As optional secondary perspectives, ${r.secondary
-        .map((s) => `${s.planet} (${s.house}${suffix(s.house)} house lord, associated with ${s.stone.name})`)
+        .map(
+          (s) =>
+            `${s.planet} (${s.house}${suffix(s.house)} house lord, associated with ${s.stone.name})`,
+        )
         .join(" and ")} are also noted. These are not required.`,
     );
   }
@@ -128,7 +162,8 @@ export const buildRuleExplanation = (ctx: ExplanationContext): string => {
   return parts.join(" ");
 };
 
-const suffix = (n: number) => (n === 1 ? "st" : n === 2 ? "nd" : n === 3 ? "rd" : "th");
+const suffix = (n: number) =>
+  n === 1 ? "st" : n === 2 ? "nd" : n === 3 ? "rd" : "th";
 
 const buildPrompt = (ctx: ExplanationContext) => {
   const r = ctx.recommendation;
@@ -140,7 +175,9 @@ const buildPrompt = (ctx: ExplanationContext) => {
     recommendedGemstone: r.primary.name,
     lagnaLordNakshatra: `${r.analysis.primary.profile.nakshatra} pada ${r.analysis.primary.profile.pada}`,
     lagnaLordDignity: r.analysis.primary.profile.dignity,
-    currentDasha: r.analysis.dasha ? `${r.analysis.dasha.mahadasha.lord} Mahadasha / ${r.analysis.dasha.antardasha.lord} Antardasha` : "not calculated",
+    currentDasha: r.analysis.dasha
+      ? `${r.analysis.dasha.mahadasha.lord} Mahadasha / ${r.analysis.dasha.antardasha.lord} Antardasha`
+      : "not calculated",
     chartReasons: r.analysis.primary.reasons,
     secondaryPerspectives: r.secondary.map((s) => ({
       house: s.house,
@@ -153,7 +190,7 @@ const buildPrompt = (ctx: ExplanationContext) => {
     {
       role: "system",
       content:
-        "You write short, careful explanations of a Vedic astrology Ratna result. The Ratna is already decided; never suggest another. Use only the supplied facts; never invent planetary positions, signs, nakshatras, dasha periods or strength percentages. Describe the stone as a traditional association. Never promise or guarantee outcomes (wealth, job, marriage, health, luck). Do not give medical advice. Reply as JSON: {\"explanation\": \"<two short paragraphs, 90-150 words>\"}.",
+        'You write short, careful explanations of a Vedic astrology Ratna result. The Ratna is already decided; never suggest another. Use only the supplied facts; never invent planetary positions, signs, nakshatras, dasha periods or strength percentages. Describe the stone as a traditional association. Never promise or guarantee outcomes (wealth, job, marriage, health, luck). Do not give medical advice. Reply as JSON: {"explanation": "<two short paragraphs, 90-150 words>"}.',
     },
     { role: "user", content: JSON.stringify(facts) },
   ];
@@ -180,14 +217,17 @@ const askGroq = async (
     const res = await post(
       "https://api.groq.com/openai/v1/chat/completions",
       {
-        model: opts.model ?? process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile",
+        model: opts.model ?? process.env.GROQ_MODEL ?? "openai/gpt-oss-20b",
         temperature: 0.4,
         max_tokens: 500,
         response_format: { type: "json_object" },
         messages,
       },
       {
-        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
         timeout: opts.timeoutMs ?? 8000,
       },
     );
@@ -210,9 +250,17 @@ export const generateExplanation = async (
   ctx: ExplanationContext,
   opts: ExplainOptions = {},
 ): Promise<Explanation> => {
-  const res = await askGroq(buildPrompt(ctx), (t) => validateExplanation(t, ctx), opts);
+  const res = await askGroq(
+    buildPrompt(ctx),
+    (t) => validateExplanation(t, ctx),
+    opts,
+  );
   if ("source" in res) return res;
-  return { text: buildRuleExplanation(ctx), source: "rules", fallbackReason: res.fallbackReason };
+  return {
+    text: buildRuleExplanation(ctx),
+    source: "rules",
+    fallbackReason: res.fallbackReason,
+  };
 };
 
 /* ------------------------------------------------------------------ */
@@ -231,8 +279,10 @@ export interface DateExplanationContext {
 }
 
 const WEEKDAY_RE = "Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday";
-const CHART_CLAIM_RE = /\b(ascendant|lagna|rising sign|houses?|[0-9]+(?:st|nd|rd|th) house)\b/i;
-const NEGATION_RE = /\b(not|no|cannot|can't|without|unknown|neither|nor|isn't|doesn't|does not|unavailable)\b/i;
+const CHART_CLAIM_RE =
+  /\b(ascendant|lagna|rising sign|houses?|[0-9]+(?:st|nd|rd|th) house)\b/i;
+const NEGATION_RE =
+  /\b(not|no|cannot|can't|without|unknown|neither|nor|isn't|doesn't|does not|unavailable)\b/i;
 
 export const validateDateExplanation = (
   text: unknown,
@@ -244,7 +294,8 @@ export const validateDateExplanation = (
   if (hasOutcomePromise(t)) return "contains guaranteed-outcome language";
 
   for (const [re, key] of STONE_PATTERNS) {
-    if (re.test(t) && key !== ctx.stone.key) return `mentions unsupported gemstone (${key})`;
+    if (re.test(t) && key !== ctx.stone.key)
+      return `mentions unsupported gemstone (${key})`;
   }
   if (!new RegExp(ctx.stone.name.split(" or ")[0], "i").test(t)) {
     return "does not mention the calculated Ratna";
@@ -261,9 +312,12 @@ export const validateDateExplanation = (
   for (const s of ctx.stableSigns) planetSigns[s.planet] = s.sign;
   const allowedSigns = new Set<string>(Object.values(planetSigns));
   for (const m of t.matchAll(new RegExp(SIGN_RE, "g"))) {
-    if (!allowedSigns.has(m[0])) return `mentions sign not established for the date (${m[0]})`;
+    if (!allowedSigns.has(m[0]))
+      return `mentions sign not established for the date (${m[0]})`;
   }
-  for (const m of t.matchAll(new RegExp(`\\b(${PLANET_RE})\\b[^.]{0,25}?\\bin (${SIGN_RE})\\b`, "g"))) {
+  for (const m of t.matchAll(
+    new RegExp(`\\b(${PLANET_RE})\\b[^.]{0,25}?\\bin (${SIGN_RE})\\b`, "g"),
+  )) {
     const actual = planetSigns[m[1] as Planet];
     if (!actual) return `invents ${m[1]} placement`;
     if (actual !== m[2]) return `contradicts ${m[1]} placement`;
@@ -274,7 +328,9 @@ export const validateDateExplanation = (
   return null;
 };
 
-export const buildDateRuleExplanation = (ctx: DateExplanationContext): string => {
+export const buildDateRuleExplanation = (
+  ctx: DateExplanationContext,
+): string => {
   const parts = [
     `Using your local birth date and birthplace, you were born on a ${ctx.weekday} (${ctx.localDate}) in ${ctx.place}. In the traditional weekday-ruler convention, ${ctx.weekday} belongs to ${ctx.weekdayLord}, and the Ratna traditionally associated with ${ctx.weekdayLord} is ${ctx.stone.name}.`,
   ];
@@ -293,7 +349,7 @@ const buildDatePrompt = (ctx: DateExplanationContext) => [
   {
     role: "system",
     content:
-      "You write short, careful explanations of a Vedic astrology Ratna result that was chosen from the birth DATE and PLACE only, because the birth time is unknown. The Ratna is already decided by the weekday-ruler rule; never suggest another. Use only the supplied facts; never invent planetary positions, signs, weekdays or timings. Do not mention an Ascendant, rising sign, Lagna or houses except to say they are not known. Say plainly that the reading is less specific than a full birth chart. Describe the stone as a traditional association. Never promise or guarantee outcomes (wealth, job, marriage, health, luck). Do not give medical advice. Reply as JSON: {\"explanation\": \"<two short paragraphs, 90-150 words>\"}.",
+      'You write short, careful explanations of a Vedic astrology Ratna result that was chosen from the birth DATE and PLACE only, because the birth time is unknown. The Ratna is already decided by the weekday-ruler rule; never suggest another. Use only the supplied facts; never invent planetary positions, signs, weekdays or timings. Do not mention an Ascendant, rising sign, Lagna or houses except to say they are not known. Say plainly that the reading is less specific than a full birth chart. Describe the stone as a traditional association. Never promise or guarantee outcomes (wealth, job, marriage, health, luck). Do not give medical advice. Reply as JSON: {"explanation": "<two short paragraphs, 90-150 words>"}.',
   },
   {
     role: "user",
@@ -306,7 +362,9 @@ const buildDatePrompt = (ctx: DateExplanationContext) => [
       rule: "The ruling planet of the local birth weekday gives its traditional Ratna.",
       recommendedGemstone: ctx.stone.name,
       weekdayLordSignAllDay: ctx.weekdayLordSign,
-      planetarySignsUnchangedAllDay: ctx.stableSigns.map((s) => `${s.planet} in ${s.sign}`),
+      planetarySignsUnchangedAllDay: ctx.stableSigns.map(
+        (s) => `${s.planet} in ${s.sign}`,
+      ),
     }),
   },
 ];
@@ -315,9 +373,17 @@ export const generateDateExplanation = async (
   ctx: DateExplanationContext,
   opts: ExplainOptions = {},
 ): Promise<Explanation> => {
-  const res = await askGroq(buildDatePrompt(ctx), (t) => validateDateExplanation(t, ctx), opts);
+  const res = await askGroq(
+    buildDatePrompt(ctx),
+    (t) => validateDateExplanation(t, ctx),
+    opts,
+  );
   if ("source" in res) return res;
-  return { text: buildDateRuleExplanation(ctx), source: "rules", fallbackReason: res.fallbackReason };
+  return {
+    text: buildDateRuleExplanation(ctx),
+    source: "rules",
+    fallbackReason: res.fallbackReason,
+  };
 };
 
 export { GEMSTONES };

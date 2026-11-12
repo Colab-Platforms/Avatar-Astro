@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Loader2, Plus, ShieldAlert, Upload, UserCog, X } from "lucide-react";
+import { Loader2, MessageCircle, Plus, ShieldAlert, Upload, UserCog, X } from "lucide-react";
 import { btn, card, ErrorBox, field, focusRing, ghost, IconChip, labelCls, Loading, PageHeader } from "@/features/dashboard/library/ui";
 import {
   useAstrologerAccess, useSetOwnPublication, useUpdateAstrologerProfile, useUploadAstrologerPhoto,
@@ -37,7 +37,16 @@ export default function AstrologerDashboardPage() {
 
   return (
     <section className="mx-auto w-full max-w-3xl px-4 pb-16 pt-10 sm:px-6">
-      <PageHeader eyebrow="Astrologer" title="Your Astrologer Profile" sub="Manage how you appear once published. Approval and publication are separate — nothing goes live until you publish." />
+      <PageHeader
+        eyebrow="Astrologer"
+        title="Your Astrologer Profile"
+        sub="Manage how you appear once published. Approval and publication are separate — nothing goes live until you publish."
+        actions={
+          <Link to="/astrologer-dashboard/chat" className={ghost}>
+            <MessageCircle className="h-4 w-4" aria-hidden="true" /> Chats
+          </Link>
+        }
+      />
 
       {profile.suspendedAt && (
         <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-900">
@@ -86,10 +95,19 @@ function PublicationCard({ profile }: { profile: { isPublished: boolean; suspend
 
 function PricingCard({ profile }: { profile: { pricePerMinute: number | null } }) {
   const update = useUpdateAstrologerProfile();
+  // "Free" here means an unset price (pricePerMinute: null) — the same state the chat
+  // backend already reads as "this astrologer is free", giving every visitor a one-time
+  // 7-minute free chat with them instead of billing per minute.
+  const [isFree, setIsFree] = useState(profile.pricePerMinute == null);
   const [value, setValue] = useState(profile.pricePerMinute?.toString() ?? "");
   const [error, setError] = useState<string | null>(null);
 
   function save() {
+    if (isFree) {
+      setError(null);
+      update.mutate({ pricePerMinute: null });
+      return;
+    }
     const n = Number(value);
     if (!value.trim() || !Number.isInteger(n) || n < 1 || n > 10_000) {
       setError("Enter a whole number between ₹1 and ₹10,000 per minute.");
@@ -104,14 +122,32 @@ function PricingCard({ profile }: { profile: { pricePerMinute: number | null } }
       <div>
         <p className="font-home-serif text-base font-semibold text-[#2A1A10]">Consultation pricing</p>
         <p className="mt-1 text-sm text-[#6E5D4E]">
-          Set what you charge per minute. Your public profile hides pricing entirely until you set this — visitors never see ₹0.
+          Set what you charge per minute, or offer free chat instead. Your public profile hides pricing entirely until you set one — visitors never see ₹0.
         </p>
       </div>
-      <div className="flex max-w-xs items-center gap-2">
-        <span className="text-sm font-medium text-[#6E5D4E]">₹</span>
-        <input type="number" min={1} max={10000} className={field} value={value} onChange={(e) => setValue(e.target.value)} />
-        <span className="text-sm text-[#6E5D4E]">/min</span>
-      </div>
+
+      <label className="flex max-w-xs items-center gap-2 text-sm text-[#2A1A10]">
+        <input
+          type="checkbox"
+          checked={isFree}
+          onChange={(e) => {
+            setIsFree(e.target.checked);
+            setError(null);
+          }}
+        />
+        Offer free chat (no charge)
+      </label>
+
+      {isFree ? (
+        <p className="max-w-xs text-xs text-[#6E5D4E]">Each visitor gets a one-time 7-minute free chat with you. No wallet or payment is involved.</p>
+      ) : (
+        <div className="flex max-w-xs items-center gap-2">
+          <span className="text-sm font-medium text-[#6E5D4E]">₹</span>
+          <input type="number" min={1} max={10000} className={field} value={value} onChange={(e) => setValue(e.target.value)} />
+          <span className="text-sm text-[#6E5D4E]">/min</span>
+        </div>
+      )}
+
       {error && <p className="text-xs text-red-700">{error}</p>}
       <button type="button" className={btn} onClick={save} disabled={update.isPending}>
         {update.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null} Save price

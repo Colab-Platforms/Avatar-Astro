@@ -35,6 +35,7 @@ const PUBLIC_SELECT = {
   qualifications: true,
   isDemo: true,
   publishedAt: true,
+  isOnline: true,
 } satisfies Prisma.AstrologerProfileSelect;
 
 type PublicProfileRow = Prisma.AstrologerProfileGetPayload<{ select: typeof PUBLIC_SELECT }>;
@@ -56,7 +57,9 @@ function toPublicShape(p: PublicProfileRow) {
     verified: true,
     recognition: p.recognition,
     photo: p.profilePhotoUrl,
-    online: true,
+    // Demo rows keep a static "online" badge for launch-content presentation; real
+    // astrologers reflect their actual Socket.IO presence (realtime/socketServer.ts).
+    online: p.isDemo ? true : p.isOnline,
     expertise: p.specialtyLabels,
     languages: p.languages,
     experienceYears: p.yearsOfExperience,

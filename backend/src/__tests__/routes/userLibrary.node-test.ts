@@ -129,7 +129,6 @@ const CASES: Case[] = [
   { name: "Compatibility (relationship analysis)", feature: "compatibility", says: { loveInsight: "A warm and honest bond", marriageWindow: "2027-2029" }, run: (k) => call("POST", "/api/compatibility/analyze", k, { p1: { name: "A", dob: "1990-01-01", zodiac: "Aries", lifePath: 1 }, p2: { name: "B", dob: "1991-02-02", zodiac: "Leo", lifePath: 3 }, scores: { overall: 80, love: 80, marriage: 80 } }), expected: (b) => b },
   { name: "Birth chart analysis", feature: "birth-chart", says: { overview: "A balanced chart with strong communication themes" }, run: (k) => call("POST", "/api/birthchart/analyze", k, { name: "A", zodiac: "Aries", lifePath: 1, dob: "1990-01-01", place: "Delhi" }), expected: (b) => b },
   { name: "Name analysis", feature: "name-analysis", says: { summary: "A name that carries leadership and warmth" }, run: (k) => call("POST", "/api/name-analysis/narrative", k, { name: "Asha", dob: "1990-01-01", lifePath: 1, destiny: 2 }), expected: (b) => b },
-  { name: "Palm reading", feature: "palm-reading", says: { summary: "A clear head line suggests a thoughtful nature" }, run: (k) => call("POST", "/api/palm-reading", k, { imageBase64: "AAAA", imageType: "image/png", fingerprint: "1" }), expected: (b) => b.data },
   { name: "Gemstone calculator", feature: "gemstone", says: "not valid explanation json", run: (k) => call("POST", "/api/gemstone-calculator/calculate", k, GEM), expected: (b) => b.data },
   { name: "Karma (AI chat proxy)", feature: "karma", says: { karmicSummary: "Past choices shape the present", practice: "Daily gratitude" }, run: (k) => call("POST", "/api/ai/chat", k, { messages: [{ role: "user", content: "my situation" }], library: { feature: "karma" } }), expected: () => ({ karmicSummary: "Past choices shape the present", practice: "Daily gratitude" }) },
   { name: "Sacred Shloka (AI chat proxy)", feature: "shloka", says: { shloka: "karmanye vadhikaraste", meaning: "Act without attachment" }, run: (k) => call("POST", "/api/ai/chat", k, { messages: [{ role: "user", content: "guide me" }], library: { feature: "shloka" } }), expected: () => ({ shloka: "karmanye vadhikaraste", meaning: "Act without attachment" }) },
@@ -197,7 +196,7 @@ test("library: search, feature and date filters, pagination, save / unsave, dele
   assert.equal((await me(t.A, "/readings?saved=true")).total, 0);
 
   // delete
-  const victim = all.items.find((i: any) => i.feature === "palm-reading");
+  const victim = all.items.find((i: any) => i.feature === "tarot");
   assert.equal((await call("DELETE", `/api/me/readings/${victim.id}`, t.A)).status, 200);
   assert.equal((await call("GET", `/api/me/readings/${victim.id}`, t.A)).status, 404);
   assert.equal((await me(t.A, "/readings?pageSize=50")).total, all.total - 1);
@@ -354,12 +353,20 @@ test("profile update is recorded in the personal timeline and persists; admin an
 
 test("when saving fails the user still gets their result, and is told it was NOT saved", { skip }, async () => {
   setMode("ok");
-  // larger than the storage limit: the save must fail cleanly
-  says({ summary: "x".repeat(450_000) });
+  // larger than the storage limit: the save must fail cleanly. Inner Voice's /diagnose returns
+  // the parsed AI reply directly with no sanitization/truncation of field values (unlike tarot's
+  // sanitizeReading), so the inflated field survives into the response unmodified — only the
+  // separate library-save step is expected to fail on size.
+  says({
+    lifeDomain: "Career & Purpose", emotionalState: "Hopeful",
+    karmicPattern: "x".repeat(450_000),
+    spiritualInsight: "A note on dharma.", suggestedAction: "Reflect for a moment.",
+    karmaType: "Kriyamana", severity: "Gentle Lesson", affirmation: "I move forward with clarity.",
+  });
   const before = (await me(t.A, "/readings?pageSize=50")).total;
-  const r = await call("POST", "/api/palm-reading", t.A, { imageBase64: "AAAA", imageType: "image/png", fingerprint: "9" });
+  const r = await call("POST", "/api/inner-voice/diagnose", t.A, { text: "I feel stuck at work" });
   assert.equal(r.status, 200, "the generated result is still delivered");
-  assert.ok(r.data.data.summary.length > 400_000);
+  assert.ok(JSON.stringify(r.data).length > 400_000);
   assert.equal(r.headers.get("x-reading-saved"), "false");
   assert.equal(r.headers.get("x-reading-id"), null);
   assert.equal((await me(t.A, "/readings?pageSize=50")).total, before, "nothing was stored");

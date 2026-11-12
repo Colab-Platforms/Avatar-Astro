@@ -1,7 +1,10 @@
 import { Router, Request, Response } from "express";
 import express from "express";
 import { createRateLimiter } from "../utils/rateLimit.js";
-import { auth } from "../middleware/authMiddleware.js";
+import { auth, type AuthRequest } from "../middleware/authMiddleware.js";
+import { ApiError } from "../utils/ApiError.js";
+import { getExecutionId, reserveToolExecution, settleToolExecution, releaseToolExecution } from "../modules/payment/toolBilling.service.js";
+import { TOOL_KEYS } from "../modules/payment/toolKeys.js";
 import { WrongLanguageError, generateInLanguage, languageRule, requestLanguage, tokenBudget } from "../utils/responseLanguage.js";
 
 const HINGLISH_DEFAULT_RULE =
@@ -182,6 +185,19 @@ router.post("/reading", async (req: Request, res: Response) => {
     return fail(res, 503, "The reading service is not configured");
   }
 
+  const userId = (req as AuthRequest).user?.id;
+  const executionId = getExecutionId(req);
+  let billed: Awaited<ReturnType<typeof reserveToolExecution>> | null = null;
+  if (userId) {
+    try {
+      billed = await reserveToolExecution(userId, TOOL_KEYS.TAROT_READING, executionId);
+    } catch (err) {
+      if (err instanceof ApiError) return fail(res, err.statusCode, err.message);
+      throw err;
+    }
+    if (billed.alreadySettled) return res.json({ success: true, data: billed.execution!.resultPayload });
+  }
+
   // The visitor's chosen language, if any; otherwise the reading stays in Hinglish as before.
   const lang = requestLanguage(req);
 
@@ -215,6 +231,7 @@ router.post("/reading", async (req: Request, res: Response) => {
     try {
       content = await generateInLanguage(lang, askTarot);
     } catch (e) {
+      if (userId && billed && !billed.skip) await releaseToolExecution(executionId, "FAILED").catch(() => {});
       if (e instanceof WrongLanguageError) return res.status(502).json({ success: false, error: e.message, code: e.code, language: e.language });
       if (e instanceof TarotProviderDown) return fail(res, 502, "The reading service is unavailable right now");
       throw e;
@@ -231,10 +248,13 @@ router.post("/reading", async (req: Request, res: Response) => {
     const reading = sanitizeReading(mode, parsed, names);
     if (!reading) {
       console.error("Tarot provider returned an unusable reading");
+      if (userId && billed && !billed.skip) await releaseToolExecution(executionId, "FAILED");
       return fail(res, 502, "The reading came back incomplete. Please try again");
     }
+    if (userId && billed && !billed.skip) await settleToolExecution(executionId, reading);
     return res.json({ success: true, data: reading });
   } catch (err) {
+    if (userId && billed && !billed.skip) await releaseToolExecution(executionId, "FAILED").catch(() => {});
     const name = (err as { name?: string })?.name;
     if (name === "TimeoutError" || name === "AbortError") return fail(res, 504, "The reading took too long. Please try again");
     console.error("Tarot reading error:", (err as Error)?.message);

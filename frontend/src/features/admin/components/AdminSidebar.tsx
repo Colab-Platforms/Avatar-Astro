@@ -2,6 +2,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, Activity, Sparkles, MessageCircleHeart, MessageCircleWarning, Flame, Store, FileText, CreditCard,
   Plug, BarChart3, ScrollText, LogOut, X, Lock, ShieldCheck, Library, History, AudioLines, UserCog, ClipboardList, Settings, BookOpen,
+  Coins, AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,8 @@ const ADMINISTRATION: NavDef[] = [
 const NAV: NavDef[] = [
   { to: "/admin/reports", label: "Reports", icon: BarChart3, mainOnly: true },
   { to: "/admin/tools", label: "Astrology tools", icon: Sparkles, mainOnly: true },
+  { to: "/admin/tool-pricing", label: "Tool Pricing", icon: Coins, mainOnly: true },
+  { to: "/admin/billing-failures", label: "Billing Failures", icon: AlertTriangle, mainOnly: true },
   { to: "/admin/astrology-audio", label: "Astrology Audio Manager", icon: AudioLines, mainOnly: true },
   { to: "/admin/inner-voice", label: "Inner Voice", icon: MessageCircleHeart, mainOnly: true },
   { to: "/admin/chat-escalations", label: "Chat escalations", icon: MessageCircleWarning, mainOnly: true },

@@ -400,6 +400,27 @@ export async function setPublication(applicationId: string, isPublished: boolean
   return updated;
 }
 
+/** Complimentary (fully free, unmetered up to a cap) consultations are a superadmin-only grant —
+ * never settable by the astrologer's own profile-edit endpoints. `complimentaryMaxSeconds: null`
+ * means "use the platform default" (chat.service.ts's resolveComplimentaryMaxSeconds). */
+export async function setComplimentary(applicationId: string, isComplimentary: boolean, complimentaryMaxSeconds: number | null, req: Request) {
+  const profile = await prisma.astrologerProfile.findUnique({ where: { applicationId } });
+  if (!profile) throw new ApiError("No astrologer profile exists for this application yet.", STATUS_CODES.CONFLICT);
+  const updated = await prisma.astrologerProfile.update({
+    where: { applicationId },
+    data: { isComplimentary, complimentaryMaxSeconds },
+  });
+  await writeAudit(req, {
+    action: "astrologer.profile.complimentary_changed",
+    entityType: "AstrologerProfile",
+    entityId: profile.id,
+    summary: isComplimentary
+      ? `Granted complimentary chat (cap: ${complimentaryMaxSeconds ?? "platform default"}s)`
+      : "Revoked complimentary chat",
+  });
+  return updated;
+}
+
 // ── settings: document-scanning toggle, specialties, document requirements ─
 
 export async function getScanningSetting() {

@@ -64,6 +64,8 @@ const AdminCustomerDetailPage = lazy(() => import("./features/admin/panel/pages/
 const AdminAdminsPage = lazy(() => import("./features/admin/panel/pages/AdminsPage"));
 const AdminCustomerLibraryPage = lazy(() => import("./features/admin/panel/pages/CustomerLibraryPage"));
 const AdminToolsPage = lazy(() => import("./features/admin/panel/pages/ToolsPage"));
+const AdminToolPricingPage = lazy(() => import("./features/admin/panel/pages/ToolPricingPage"));
+const AdminBillingFailuresPage = lazy(() => import("./features/admin/panel/pages/BillingFailuresPage"));
 const AdminAstrologyAudioPage = lazy(() => import("./features/admin/panel/pages/AstrologyAudioPage"));
 const AdminActivityPage = lazy(() => import("./features/admin/panel/pages/ActivityPage"));
 const AdminChatEscalationsPage = lazy(() => import("./features/admin/panel/pages/ChatEscalationsPage"));
@@ -77,6 +79,7 @@ const AdminReportsPage = lazy(() => import("./features/admin/panel/pages/Reports
 const AdminSettingsPage = lazy(() => import("./features/admin/panel/pages/SettingsAuditPage"));
 const DashboardLayout = lazy(() => import("./features/dashboard/DashboardLayout"));
 const DashboardHome = lazy(() => import("./features/dashboard/library/pages").then((m) => ({ default: m.Overview })));
+const WalletPage = lazy(() => import("./features/wallet/pages/WalletPage"));
 const MyReadings = lazy(() => import("./features/dashboard/library/pages").then((m) => ({ default: m.MyReadings })));
 const ReadingDetail = lazy(() => import("./features/dashboard/library/pages").then((m) => ({ default: m.ReadingDetail })));
 const MyActivity = lazy(() => import("./features/dashboard/library/pages").then((m) => ({ default: m.MyActivity })));
@@ -111,6 +114,9 @@ const AstrologerProfile = lazy(() => import("./pages/AstrologerProfile"));
 const BecomeAstrologerPage = lazy(() => import("./features/astrologer/pages/BecomeAstrologerPage"));
 const ApplicationWizardPage = lazy(() => import("./features/astrologer/pages/ApplicationWizardPage"));
 const AstrologerDashboardPage = lazy(() => import("./features/astrologer/workspace/pages/AstrologerDashboardPage"));
+const AstrologerChatPage = lazy(() => import("./features/astrologer/workspace/pages/AstrologerChatPage"));
+const UserChatPage = lazy(() => import("./features/chat/pages/UserChatPage"));
+const UserConversationsPage = lazy(() => import("./features/chat/pages/UserConversationsPage"));
 const AdminAstrologersOverviewPage = lazy(() => import("./features/admin/astrologers/pages/AstrologersOverviewPage"));
 const AdminAstrologerApplicationsPage = lazy(() => import("./features/admin/astrologers/pages/AstrologerApplicationsPage"));
 const AdminAstrologerApplicationDetailPage = lazy(() => import("./features/admin/astrologers/pages/AstrologerApplicationDetailPage"));
@@ -687,6 +693,22 @@ const App = () => {
                 }
               />
               <Route
+                path="tool-pricing"
+                element={
+                  <Suspense fallback={<AdminLazyFallback />}>
+                    <MainOnly><AdminToolPricingPage /></MainOnly>
+                  </Suspense>
+                }
+              />
+              <Route
+                path="billing-failures"
+                element={
+                  <Suspense fallback={<AdminLazyFallback />}>
+                    <MainOnly><AdminBillingFailuresPage /></MainOnly>
+                  </Suspense>
+                }
+              />
+              <Route
                 path="astrology-audio"
                 element={
                   <Suspense fallback={<AdminLazyFallback />}>
@@ -854,6 +876,8 @@ const App = () => {
               }
             >
               <Route index element={<Suspense fallback={<LazyFallback />}><DashboardHome /></Suspense>} />
+              <Route path="wallet" element={<Suspense fallback={<LazyFallback />}><WalletPage /></Suspense>} />
+              <Route path="chats" element={<Suspense fallback={<LazyFallback />}><UserConversationsPage /></Suspense>} />
               <Route path="readings" element={<Suspense fallback={<LazyFallback />}><MyReadings /></Suspense>} />
               <Route path="readings/:id" element={<Suspense fallback={<LazyFallback />}><ReadingDetail /></Suspense>} />
               <Route path="activity" element={<Suspense fallback={<LazyFallback />}><MyActivity /></Suspense>} />
@@ -875,6 +899,18 @@ const App = () => {
             <Route
               path="/astrologer-dashboard"
               element={<Suspense fallback={<LazyFallback />}><AstrologerDashboardPage /></Suspense>}
+            />
+            <Route
+              path="/astrologer-dashboard/chat"
+              element={<Suspense fallback={<LazyFallback />}><AstrologerChatPage /></Suspense>}
+            />
+            <Route
+              path="/astrologer-dashboard/chat/:sessionId"
+              element={<Suspense fallback={<LazyFallback />}><AstrologerChatPage /></Suspense>}
+            />
+            <Route
+              path="/chat/:sessionId"
+              element={<Suspense fallback={<LazyFallback />}><UserChatPage /></Suspense>}
             />
           </Route>
 

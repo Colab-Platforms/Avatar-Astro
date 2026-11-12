@@ -76,9 +76,14 @@ export interface Astrologer {
 
 /**
  * Live chat and calls need a consultation service. Until one is connected this stays false and the
- * Chat/Call buttons are not shown at all (nothing implies a working service).
+ * Call button is not shown at all (nothing implies a working service).
  */
 export const CONSULTATION_ENABLED = false;
+
+/** Chat is live (wallet + Socket.IO backed, see features/chat) independently of voice
+ * calling above — the Chat button renders whenever this is true, Call stays gated by
+ * CONSULTATION_ENABLED alone. */
+export const CHAT_ENABLED = true;
 
 export const ALL_ASTROLOGERS: Astrologer[] = [
   {

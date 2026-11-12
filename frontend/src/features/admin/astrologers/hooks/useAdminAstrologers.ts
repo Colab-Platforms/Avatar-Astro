@@ -110,6 +110,16 @@ export function useSetPublication(id: string) {
   });
 }
 
+export function useSetComplimentary(id: string) {
+  const invalidate = useInvalidateAstrologers();
+  return useMutation({
+    mutationFn: ({ isComplimentary, complimentaryMaxSeconds }: { isComplimentary: boolean; complimentaryMaxSeconds: number | null }) =>
+      astrologerAdminApi.setComplimentary(id, isComplimentary, complimentaryMaxSeconds),
+    onSuccess: () => { invalidate(); toast.success("Complimentary chat setting updated"); },
+    onError: (e) => toast.error(errorMessage(e, "Could not update complimentary setting")),
+  });
+}
+
 export function useAddNote(id: string) {
   const invalidate = useInvalidateAstrologers();
   return useMutation({

@@ -43,6 +43,12 @@
     "test:astro-audio": "tsx --test --test-timeout=240000 src/__tests__/routes/astrologyAudio.node-test.ts",
     "test:admin": "tsx --test src/__tests__/routes/adminPanel.node-test.ts",
     "test:inquiry": "tsx --test src/__tests__/routes/inquiryRoutes.node-test.ts",
+    "test:wallet-ledger": "tsx --test --test-timeout=240000 src/__tests__/routes/walletLedger.node-test.ts",
+    "test:wallet-reservations": "tsx --test --test-timeout=240000 src/__tests__/routes/walletReservations.node-test.ts",
+    "test:chat-state-machine": "tsx --test --test-timeout=240000 src/__tests__/routes/chatStateMachine.node-test.ts",
+    "test:billing-formula": "tsx --test src/modules/chat/__tests__/billingFormula.test.ts",
+    "test:free-allowance": "tsx --test --test-timeout=240000 src/__tests__/routes/freeAllowance.node-test.ts",
+    "test:tool-billing": "tsx --test --test-timeout=240000 src/__tests__/routes/toolBilling.node-test.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy"
@@ -73,7 +79,8 @@
     "joi": "^18.2.3",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.2.0",
-    "resend": "^6.18.1"
+    "resend": "^6.18.1",
+    "socket.io": "^4.8.4"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",

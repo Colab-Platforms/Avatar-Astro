@@ -113,7 +113,14 @@ export interface AdminApplicationDetail {
   notes: AdminNote[];
   agreements: AdminAgreement[];
   interviews: AdminInterview[];
-  profile: { id: string; isPublished: boolean; suspendedAt: string | null; suspensionReason: string | null } | null;
+  profile: {
+    id: string;
+    isPublished: boolean;
+    suspendedAt: string | null;
+    suspensionReason: string | null;
+    isComplimentary: boolean;
+    complimentaryMaxSeconds: number | null;
+  } | null;
   user: { id: string; email: string; firstName: string | null; lastName: string | null; isActive: boolean };
 }
 

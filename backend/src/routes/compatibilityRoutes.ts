@@ -1,6 +1,9 @@
 import { Router, Request, Response } from "express";
 import { createRateLimiter } from "../utils/rateLimit.js";
 import { auth } from "../middleware/authMiddleware.js";
+import { getExecutionId, reserveToolExecution, settleToolExecution, releaseToolExecution } from "../modules/payment/toolBilling.service.js";
+import { TOOL_KEYS } from "../modules/payment/toolKeys.js";
+import { ApiError } from "../utils/ApiError.js";
 import { WrongLanguageError, generateInLanguage, languageRule, requestLanguage, tokenBudget } from "../utils/responseLanguage.js";
 
 class ProviderDown extends Error {}
@@ -18,6 +21,10 @@ router.post("/check", (_req: Request, res: Response) => {
 });
 
 router.post("/analyze", async (req: Request, res: Response) => {
+  const userId = req.user?.id;
+  const executionId = getExecutionId(req);
+  let billed: Awaited<ReturnType<typeof reserveToolExecution>> | null = null;
+
   try {
     const { p1, p2, scores } = req.body;
 
@@ -28,6 +35,11 @@ router.post("/analyze", async (req: Request, res: Response) => {
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
       return res.status(500).json({ error: "OpenRouter API key not configured" });
+    }
+
+    if (userId) {
+      billed = await reserveToolExecution(userId, TOOL_KEYS.COMPAT_ANALYZE, executionId);
+      if (billed.alreadySettled) return res.json(billed.execution!.resultPayload);
     }
 
     const prompt = `You are an expert astrologer and relationship counselor. Given:
@@ -85,6 +97,7 @@ Respond ONLY with valid JSON (no markdown, no explanation) in exactly this struc
               return data.choices?.[0]?.message?.content || "";
       });
     } catch (e) {
+      if (userId && billed && !billed.skip) await releaseToolExecution(executionId, "FAILED").catch(() => {});
       if (e instanceof WrongLanguageError) return res.status(502).json({ error: e.message, code: e.code, language: e.language });
       if (e instanceof ProviderDown) return res.status(502).json({ error: "The reading service is unavailable right now" });
       throw e;
@@ -92,8 +105,11 @@ Respond ONLY with valid JSON (no markdown, no explanation) in exactly this struc
     const clean = raw.replace(/```json|```/g, "").trim();
     const parsed = JSON.parse(clean);
 
+    if (userId && billed && !billed.skip) await settleToolExecution(executionId, parsed);
     return res.json(parsed);
   } catch (err: any) {
+    if (userId && billed && !billed.skip) await releaseToolExecution(executionId, "FAILED").catch(() => {});
+    if (err instanceof ApiError) return res.status(err.statusCode).json({ error: err.message });
     console.error("Compatibility route error:", err);
     return res.status(500).json({ error: "Failed to generate compatibility report" });
   }

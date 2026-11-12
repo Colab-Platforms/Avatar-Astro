@@ -7,6 +7,9 @@ import { getDailyChatStatus, consumeDailyChatSession } from "../utils/dailyChatS
 import { screenMessage, ESCALATION_REPLY, OFF_TOPIC_REPLY } from "../utils/chatScreening.js";
 import prisma from "@root/prisma.js";
 import { OPENROUTER_MODEL } from "../config/aiModels.js";
+import { getExecutionId, reserveToolExecution, settleToolExecution, releaseToolExecution } from "../modules/payment/toolBilling.service.js";
+import { TOOL_KEYS } from "../modules/payment/toolKeys.js";
+import { ApiError } from "../utils/ApiError.js";
 import { WrongLanguageError, generateInLanguage, languageRule, matchesResponseLanguage, namesCalendarTermIn, requestLanguage, tokenBudget, type ResponseLanguage } from "../utils/responseLanguage.js";
 
 const router = Router();
@@ -162,12 +165,18 @@ function parseJSON(raw: string): any {
 
 // ── POST /api/inner-voice/diagnose ────────────────────────────────────────────
 router.post("/diagnose", async (req: Request, res: Response) => {
+  const userId = req.user!.id;
+  const executionId = getExecutionId(req);
+  let billed: Awaited<ReturnType<typeof reserveToolExecution>> | null = null;
   try {
     const { text } = req.body;
     if (!text?.trim()) return res.status(400).json({ error: "text is required" });
 
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) return res.status(500).json({ error: "OpenRouter API key not configured" });
+
+    billed = await reserveToolExecution(userId, TOOL_KEYS.IV_DIAGNOSE, executionId);
+    if (billed.alreadySettled) return res.json(billed.execution!.resultPayload);
 
     const prompt = `You are a compassionate Vedic karma counselor and spiritual guide with deep knowledge of dharma, karma, and the Bhagavad Gita.
 
@@ -189,8 +198,11 @@ Analyze this through the lens of karma and dharma. Respond ONLY with valid JSON 
     const lang = requestLanguage(req);
     const raw = await callAIInLanguage(apiKey, prompt, 900, lang);
     const result = parseJSON(raw);
+    if (billed && !billed.skip) await settleToolExecution(executionId, result);
     return res.json(result);
   } catch (err: any) {
+    if (billed && !billed.skip) await releaseToolExecution(executionId, "FAILED").catch(() => {});
+    if (err instanceof ApiError) return res.status(err.statusCode).json({ error: err.message });
     console.error("Karma diagnosis error:", err.message);
     return aiFailure(res, err, "Failed to generate karma diagnosis");
   }
@@ -198,12 +210,18 @@ Analyze this through the lens of karma and dharma. Respond ONLY with valid JSON 
 
 // ── POST /api/inner-voice/guru-chat ───────────────────────────────────────────
 router.post("/guru-chat", async (req: Request, res: Response) => {
+  const userId = req.user!.id;
+  const executionId = getExecutionId(req);
+  let billed: Awaited<ReturnType<typeof reserveToolExecution>> | null = null;
   try {
     const { message, history = [] } = req.body;
     if (!message?.trim()) return res.status(400).json({ error: "message is required" });
 
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) return res.status(500).json({ error: "OpenRouter API key not configured" });
+
+    billed = await reserveToolExecution(userId, TOOL_KEYS.IV_GURU_CHAT, executionId);
+    if (billed.alreadySettled) return res.json(billed.execution!.resultPayload);
 
     const historyText = (history as { role: string; content: string }[])
       .slice(-6)
@@ -243,8 +261,11 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
     const lang = requestLanguage(req);
     const raw = await callAIInLanguage(apiKey, prompt, 800, lang);
     const result = parseJSON(raw);
+    if (billed && !billed.skip) await settleToolExecution(executionId, result);
     return res.json(result);
   } catch (err: any) {
+    if (billed && !billed.skip) await releaseToolExecution(executionId, "FAILED").catch(() => {});
+    if (err instanceof ApiError) return res.status(err.statusCode).json({ error: err.message });
     console.error("Guru chat error:", err.message);
     return aiFailure(res, err, "Failed to get guru response");
   }
@@ -252,12 +273,18 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
 
 // ── POST /api/inner-voice/analyze-journal ─────────────────────────────────────
 router.post("/analyze-journal", async (req: Request, res: Response) => {
+  const userId = req.user!.id;
+  const executionId = getExecutionId(req);
+  let billed: Awaited<ReturnType<typeof reserveToolExecution>> | null = null;
   try {
     const { entry, date } = req.body;
     if (!entry?.trim()) return res.status(400).json({ error: "entry is required" });
 
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) return res.status(500).json({ error: "OpenRouter API key not configured" });
+
+    billed = await reserveToolExecution(userId, TOOL_KEYS.IV_JOURNAL, executionId);
+    if (billed.alreadySettled) return res.json(billed.execution!.resultPayload);
 
     const prompt = `You are a Vedic karma analyst and spiritual counselor. A seeker has written the following journal entry${date ? ` on ${date}` : ""}:
 
@@ -277,8 +304,11 @@ Analyze this journal entry for karmic patterns, emotional states, and spiritual 
     const lang = requestLanguage(req);
     const raw = await callAIInLanguage(apiKey, prompt, 700, lang);
     const result = parseJSON(raw);
+    if (billed && !billed.skip) await settleToolExecution(executionId, result);
     return res.json(result);
   } catch (err: any) {
+    if (billed && !billed.skip) await releaseToolExecution(executionId, "FAILED").catch(() => {});
+    if (err instanceof ApiError) return res.status(err.statusCode).json({ error: err.message });
     console.error("Journal analysis error:", err.message);
     return aiFailure(res, err, "Failed to analyze journal entry");
   }
@@ -286,12 +316,18 @@ Analyze this journal entry for karmic patterns, emotional states, and spiritual 
 
 // ── POST /api/inner-voice/wisdom ──────────────────────────────────────────────
 router.post("/wisdom", async (req: Request, res: Response) => {
+  const userId = req.user!.id;
+  const executionId = getExecutionId(req);
+  let billed: Awaited<ReturnType<typeof reserveToolExecution>> | null = null;
   try {
     const { situation, mood, domain } = req.body;
     if (!situation?.trim()) return res.status(400).json({ error: "situation is required" });
 
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) return res.status(500).json({ error: "OpenRouter API key not configured" });
+
+    billed = await reserveToolExecution(userId, TOOL_KEYS.IV_WISDOM, executionId);
+    if (billed.alreadySettled) return res.json(billed.execution!.resultPayload);
 
     const prompt = `You are a Sanskrit scholar and Vedic wisdom keeper with mastery of the Bhagavad Gita, Upanishads, Vedas, Yoga Sutras of Patanjali, and Dharmashastra.
 
@@ -316,8 +352,11 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
     const lang = requestLanguage(req);
     const raw = await callAIInLanguage(apiKey, prompt, 900, lang);
     const result = parseJSON(raw);
+    if (billed && !billed.skip) await settleToolExecution(executionId, result);
     return res.json(result);
   } catch (err: any) {
+    if (billed && !billed.skip) await releaseToolExecution(executionId, "FAILED").catch(() => {});
+    if (err instanceof ApiError) return res.status(err.statusCode).json({ error: err.message });
     console.error("Wisdom/shloka error:", err.message);
     return aiFailure(res, err, "Failed to fetch shloka wisdom");
   }
@@ -365,6 +404,9 @@ export function shortText(v: unknown, max: number): string {
 const LIFE_PATH_FOCUS = ["general", "career", "relationships", "personal-growth", "finance"] as const;
 
 router.post("/life-path", createRateLimiter({ windowMs: 60_000, max: 10 }), async (req: Request, res: Response) => {
+  const userId = req.user!.id;
+  const executionId = getExecutionId(req);
+  let billed: Awaited<ReturnType<typeof reserveToolExecution>> | null = null;
   try {
     const { dob, tob, pob, focus = "general" } = req.body ?? {};
 
@@ -406,6 +448,13 @@ router.post("/life-path", createRateLimiter({ windowMs: 60_000, max: 10 }), asyn
       console.error("OPENROUTER_API_KEY is not configured");
       return res.status(503).json({ error: "The reading service is not configured" });
     }
+
+    // Reserved ONCE here, before any of this route's internal retries (up to 3 provider attempts
+    // x 2 content-validation passes = up to 6 real provider calls below) — those retries all
+    // happen inside this single reservation, so "one user-confirmed action = one charge" holds
+    // regardless of how many provider calls the retry logic below makes.
+    billed = await reserveToolExecution(userId, TOOL_KEYS.IV_LIFE_PATH, executionId);
+    if (billed.alreadySettled) return res.json(billed.execution!.resultPayload);
 
     // Calendar facts are CALCULATED here (see panchang.birth.ts). "What it means" is built from them in code, so it is
     // always exact; the model only writes a short piece of guidance, one step and one thought, and may not name
@@ -477,6 +526,7 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
       const status = err instanceof ProviderError ? err.status : undefined;
       // Kind and status only: never the provider message (it can echo request details) and never the key.
       console.error(`Life path provider error: model=${OPENROUTER_MODEL} kind=${timedOut ? "timeout" : err?.name} providerStatus=${status ?? "none"}`);
+      if (billed && !billed.skip) await releaseToolExecution(executionId, "FAILED").catch(() => {});
       if (status === 429) {
         return res.status(503).json({ error: "The reading service is busy right now. Please try again in a minute.", code: "provider_busy" });
       }
@@ -485,9 +535,10 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
         .json({ error: timedOut ? "The reading service timed out" : "The reading service is unavailable" });
     }
     if (!text) {
+      if (billed && !billed.skip) await releaseToolExecution(executionId, "FAILED").catch(() => {});
       return res.status(502).json({ error: unreadable ? "The reading service returned an unreadable response" : "The reading service returned an incomplete response" });
     }
-    return res.json({
+    const payload = {
       panchang: { birth: birthBlock, today: todayBlock, birthNeedsPlace: !birthPlace },
       panchangBased: !!birthBlock && birthBlock.facts.length > 0,
       basis: {
@@ -515,8 +566,12 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
       meaning: meaning || undefined,
       oneGoodStep: text.step,
       thought: text.thought || undefined,
-    });
+    };
+    if (billed && !billed.skip) await settleToolExecution(executionId, payload);
+    return res.json(payload);
   } catch (err: any) {
+    if (billed && !billed.skip) await releaseToolExecution(executionId, "FAILED").catch(() => {});
+    if (err instanceof ApiError) return res.status(err.statusCode).json({ error: err.message });
     console.error("Life path error:", err?.name);
     return res.status(500).json({ error: "Failed to generate life path reading" });
   }
@@ -524,12 +579,18 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
 
 // ── POST /api/inner-voice/tts ─────────────────────────────────────────────────
 router.post("/tts", async (req: Request, res: Response) => {
+  const userId = req.user!.id;
+  const executionId = getExecutionId(req);
+  let billed: Awaited<ReturnType<typeof reserveToolExecution>> | null = null;
   try {
     const { text, language } = req.body;
     if (!text?.trim()) return res.status(400).json({ error: "text is required" });
 
     const apiKey = process.env.SARVAM_API_KEY;
     if (!apiKey) return res.status(500).json({ error: "SARVAM_API_KEY not configured" });
+
+    billed = await reserveToolExecution(userId, TOOL_KEYS.TTS_INNER_VOICE, executionId);
+    if (billed.alreadySettled) return res.json(billed.execution!.resultPayload);
 
     const langCode = (language as string)?.startsWith("en") ? "en-IN" : "hi-IN";
     console.log("[Sarvam TTS] Request — model: bulbul:v3, speaker: manan, lang:", langCode, "chars:", text.trim().length);
@@ -554,15 +615,23 @@ router.post("/tts", async (req: Request, res: Response) => {
     if (!sarvamRes.ok) {
       const errText = await sarvamRes.text();
       console.error("Sarvam TTS error:", sarvamRes.status, errText);
+      if (billed && !billed.skip) await releaseToolExecution(executionId, "FAILED");
       return res.status(502).json({ error: "Sarvam TTS request failed" });
     }
 
     const data = await sarvamRes.json() as any;
     const audio = data.audios?.[0];
-    if (!audio) return res.status(502).json({ error: "No audio in Sarvam response" });
+    if (!audio) {
+      if (billed && !billed.skip) await releaseToolExecution(executionId, "FAILED");
+      return res.status(502).json({ error: "No audio in Sarvam response" });
+    }
 
-    return res.json({ audio });
+    const result = { audio };
+    if (billed && !billed.skip) await settleToolExecution(executionId, result);
+    return res.json(result);
   } catch (err: any) {
+    if (billed && !billed.skip) await releaseToolExecution(executionId, "FAILED").catch(() => {});
+    if (err instanceof ApiError) return res.status(err.statusCode).json({ error: err.message });
     console.error("TTS proxy error:", err.message);
     return res.status(500).json({ error: "TTS proxy failed" });
   }

@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
-import { BadgeCheck, Clock3, MessageCircle, Phone, Star } from "lucide-react";
-import { CONSULTATION_ENABLED, formatCount, type Astrologer } from "@/data/astrologers";
+import { BadgeCheck, Clock3, Phone, Star } from "lucide-react";
+import { CHAT_ENABLED, CONSULTATION_ENABLED, formatCount, type Astrologer } from "@/data/astrologers";
 import AstrologerIllustration from "./AstrologerIllustration";
+import StartChatButton from "@/features/chat/components/StartChatButton";
 
 /** Portrait: the approved photo when there is one, otherwise an original illustrated portrait. */
 export const AstrologerAvatar = ({ a, size = 96, className = "" }: { a: Astrologer; size?: number; className?: string }) =>
@@ -46,20 +47,21 @@ export const PriceLine = ({ a }: { a: Astrologer }) => {
   );
 };
 
-/** Chat and Call appear only when a consultation service is connected; otherwise nothing is shown. */
-export const ConsultButtons = ({ compact = false }: { a?: Astrologer; compact?: boolean }) => {
-  if (!CONSULTATION_ENABLED) return null;
+/** Chat is live (wallet + Socket.IO backed); Call stays hidden until a voice consultation
+ * service is connected. */
+export const ConsultButtons = ({ a, compact = false }: { a?: Astrologer; compact?: boolean }) => {
+  if (!CHAT_ENABLED && !CONSULTATION_ENABLED) return null;
   const cls = `inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#592209]/40 bg-[#FBF5EC] font-semibold text-[#592209] hover:bg-[#592209]/10 ${
     compact ? "px-3 py-2 text-sm" : "px-5 py-3 text-base"
   }`;
   return (
     <div className="flex gap-2">
-      <button type="button" className={cls}>
-        <MessageCircle className="h-4 w-4" aria-hidden="true" /> Chat
-      </button>
-      <button type="button" className={cls}>
-        <Phone className="h-4 w-4" aria-hidden="true" /> Call
-      </button>
+      {CHAT_ENABLED && a && <StartChatButton astrologer={a} compact={compact} />}
+      {CONSULTATION_ENABLED && (
+        <button type="button" className={cls}>
+          <Phone className="h-4 w-4" aria-hidden="true" /> Call
+        </button>
+      )}
     </div>
   );
 };
@@ -128,7 +130,7 @@ export const AstrologerCard = ({ a }: { a: Astrologer }) => (
       </Link>
     </div>
 
-    {CONSULTATION_ENABLED && (
+    {(CHAT_ENABLED || CONSULTATION_ENABLED) && (
       <div className="mt-3">
         <ConsultButtons a={a} compact />
       </div>

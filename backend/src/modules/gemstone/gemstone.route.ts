@@ -13,6 +13,9 @@ import { buildBabyName, parseBabyNameInput } from "./babyName.js";
 import { buildVehicleProfile, parseVehicleProfileInput } from "./vehicleNumber.js";
 import { MuhuratInputError, parseMuhuratRequest, searchMuhurat } from "../muhurat/search.js";
 import { auth } from "../../middleware/authMiddleware.js";
+import { getExecutionId, reserveToolExecution, settleToolExecution, releaseToolExecution } from "../payment/toolBilling.service.js";
+import { TOOL_KEYS } from "../payment/toolKeys.js";
+import { ApiError } from "../../utils/ApiError.js";
 
 // Mounted at /api/gemstone-calculator. Stateless: nothing is stored. Generating a result (/calculate, /kundali)
 // needs a signed-in user; the birthplace search and shop matches stay public.
@@ -69,10 +72,31 @@ router.get("/locations", limiter(60), async (req, res) => {
 });
 
 router.post("/calculate", auth("USER"), limiter(20), async (req, res) => {
+  const userId = req.user!.id;
+  const executionId = getExecutionId(req);
+  let billed: Awaited<ReturnType<typeof reserveToolExecution>> | null = null;
   try {
+    billed = await reserveToolExecution(userId, TOOL_KEYS.GEMSTONE_EXPLAIN, executionId);
+    if (billed.alreadySettled) {
+      sendResponse(res, true, billed.execution!.resultPayload, "Calculated");
+      return;
+    }
+
     const result = await calculateRatna(parseInput(req.body));
+
+    // Only charge when the explanation actually used AI — the rule-based fallback (no API key,
+    // provider failure, or AI output rejected by validateExplanation) must never be billed.
+    if (billed && !billed.skip) {
+      if (result.explanation.source === "ai") await settleToolExecution(executionId, result);
+      else await releaseToolExecution(executionId, "RELEASED");
+    }
     sendResponse(res, true, result, "Calculated");
   } catch (e) {
+    if (billed && !billed.skip) await releaseToolExecution(executionId, "FAILED").catch(() => {});
+    if (e instanceof ApiError) {
+      sendResponse(res, false, null, e.message, e.statusCode);
+      return;
+    }
     if (e instanceof ValidationError || e instanceof BirthTimeError) {
       sendResponse(res, false, null, e.message, STATUS_CODES.BAD_REQUEST);
       return;

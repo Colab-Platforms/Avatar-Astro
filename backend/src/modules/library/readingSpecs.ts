@@ -109,7 +109,6 @@ export const SPECS: CaptureSpec[] = [
   simple("POST", /^\/compatibility\/analyze$/, "compatibility", "Relationship compatibility analysis", rawBody),
   simple("POST", /^\/birthchart\/analyze$/, "birth-chart", "Birth chart analysis", rawBody),
   simple("POST", /^\/name-analysis\/narrative$/, "name-analysis", "Name numerology narrative", rawBody),
-  simple("POST", /^\/palm-reading$/, "palm-reading", "Palm reading", dataBody),
   {
     method: "POST", path: /^\/gemstone-calculator\/calculate$/,
     build: (_req, body) => {

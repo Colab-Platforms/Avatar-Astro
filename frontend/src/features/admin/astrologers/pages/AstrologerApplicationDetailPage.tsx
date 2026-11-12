@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   useAddNote, useAdminApplication, useAdminReadiness, useApproveApplication, useRecordInterview,
-  useReinstateAstrologer, useRejectApplication, useReviewDocument, useSetPublication, useSuspendAstrologer,
+  useReinstateAstrologer, useRejectApplication, useReviewDocument, useSetComplimentary, useSetPublication, useSuspendAstrologer,
   useTransitionStatus, useViewSignedDocument,
 } from "../hooks/useAdminAstrologers";
 import type { AdminDocument, AstrologerApplicationStatus, DocumentVerificationStatus } from "../types";
@@ -41,6 +41,49 @@ function ReasonDialog({ trigger, title, description, onConfirm, confirmLabel = "
   );
 }
 
+/** SUPERADMIN-only grant of a fully free, unmetered (up to a cap) chat — never settable from the
+ * astrologer's own profile-edit pages. Asking for the cap inline (blank = platform default) keeps
+ * this a single action instead of a separate settings screen. */
+function ComplimentaryDialog({ trigger, currentMaxSeconds, onConfirm, busy }: {
+  trigger: React.ReactNode; currentMaxSeconds: number | null; onConfirm: (maxSeconds: number | null) => void; busy?: boolean;
+}) {
+  const [maxSeconds, setMaxSeconds] = useState(currentMaxSeconds != null ? String(Math.round(currentMaxSeconds / 60)) : "");
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
+      <AlertDialogContent className="border-[#E8E3DC] bg-white text-[#1F1B16]">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Grant complimentary chat</AlertDialogTitle>
+          <AlertDialogDescription className="text-[#6B6259]">
+            This astrologer's consultations will be fully free and consume neither coins nor the user's global free-chat allowance, up to the cap below.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <label className="text-sm text-[#1F1B16]">
+          Maximum free session length (minutes, blank = platform default)
+          <input
+            className={inputClass}
+            type="number"
+            min={1}
+            placeholder="Platform default"
+            value={maxSeconds}
+            onChange={(e) => setMaxSeconds(e.target.value)}
+          />
+        </label>
+        <AlertDialogFooter>
+          <AlertDialogCancel className="border-[#DDD6CC] bg-white text-[#1F1B16] hover:bg-[#F7F4EF]">Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            disabled={busy}
+            onClick={() => onConfirm(maxSeconds.trim() ? Math.round(Number(maxSeconds) * 60) : null)}
+            className="bg-[#803003] text-white hover:bg-[#6B2802]"
+          >
+            Grant
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
 export default function AstrologerApplicationDetailPage() {
   const { id = "" } = useParams();
   const detail = useAdminApplication(id);
@@ -51,6 +94,7 @@ export default function AstrologerApplicationDetailPage() {
   const reinstate = useReinstateAstrologer(id);
   const transition = useTransitionStatus(id);
   const setPublication = useSetPublication(id);
+  const setComplimentary = useSetComplimentary(id);
 
   if (detail.isLoading) return <Loading label="Loading application…" />;
   if (detail.error || !detail.data) return <ErrorState message="Could not load this application." onRetry={() => detail.refetch()} />;
@@ -62,7 +106,9 @@ export default function AstrologerApplicationDetailPage() {
     <div>
       <PageHeader
         title={a.displayName || a.fullLegalName || "Application"}
-        subtitle={`${a.user.email} · Attempt #${a.attemptNumber} · ${status.replace(/_/g, " ")}`}
+        subtitle={`${a.user.email} · Attempt #${a.attemptNumber} · ${status.replace(/_/g, " ")}${
+          a.profile?.isComplimentary ? ` · Complimentary chat (cap: ${a.profile.complimentaryMaxSeconds != null ? `${Math.round(a.profile.complimentaryMaxSeconds / 60)}min` : "platform default"})` : ""
+        }`}
         actions={
           <div className="flex flex-wrap gap-2">
             {status === "SUBMITTED" && (
@@ -104,6 +150,22 @@ export default function AstrologerApplicationDetailPage() {
                 <button className={ghostBtn} onClick={() => setPublication.mutate(!a.profile?.isPublished)} disabled={setPublication.isPending}>
                   {a.profile?.isPublished ? "Unpublish profile" : "Publish profile"}
                 </button>
+                {a.profile?.isComplimentary ? (
+                  <button
+                    className={ghostBtn}
+                    onClick={() => setComplimentary.mutate({ isComplimentary: false, complimentaryMaxSeconds: null })}
+                    disabled={setComplimentary.isPending}
+                  >
+                    Revoke complimentary chat
+                  </button>
+                ) : (
+                  <ComplimentaryDialog
+                    trigger={<button className={ghostBtn}>Grant complimentary chat</button>}
+                    currentMaxSeconds={a.profile?.complimentaryMaxSeconds ?? null}
+                    busy={setComplimentary.isPending}
+                    onConfirm={(complimentaryMaxSeconds) => setComplimentary.mutate({ isComplimentary: true, complimentaryMaxSeconds })}
+                  />
+                )}
                 <ReasonDialog
                   trigger={<button className={`${ghostBtn} border-red-200 text-red-800 hover:bg-red-50`}>Suspend</button>}
                   title="Suspend astrologer"

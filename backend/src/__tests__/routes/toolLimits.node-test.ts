@@ -294,8 +294,8 @@ test("analytics come from real usage rows: requests, failures, blocked (switch o
 });
 
 // ── OpenRouter key usage (unit level, with a fake fetch: no real key, no network) ──
-const SECRET = "sk-or-v1-abcdef0123456789ZZZZ";
-const keyEnv = { OPENROUTER_API_KEY: SECRET, OPENROUTER_MANAGEMENT_KEY: "sk-or-MGMT" } as any;
+const OR_KEY = "sk-or-v1-abcdef0123456789ZZZZ";
+const keyEnv = { OPENROUTER_API_KEY: OR_KEY, OPENROUTER_MANAGEMENT_KEY: "sk-or-MGMT" } as any;
 const reply = (status: number, data?: object, headers: Record<string, string> = {}) => (() => Promise.resolve(new Response(JSON.stringify(data ? { data } : {}), { status, headers }))) as any;
 
 test("OpenRouter key usage: limit, unlimited, remaining, label safety and not_configured", { skip }, async () => {
@@ -342,7 +342,7 @@ test("OpenRouter key usage: 401, 429, outage, no retry loops, stale snapshot kep
   await pb.checkOpenRouter(keyEnv, counted(200, { usage: 1 }), limited.keyUsage);
   assert.equal(calls, 0, "no call before the retry time");
 
-  const down = await pb.checkOpenRouter(keyEnv, (() => Promise.reject(new Error("network down " + SECRET))) as any);
+  const down = await pb.checkOpenRouter(keyEnv, (() => Promise.reject(new Error("network down " + OR_KEY))) as any);
   assert.equal(down.keyUsage?.status, "unavailable");
   for (const failed of [down, limited]) {
     const kept = pb.mergeWithPrevious([failed], [good])[0].keyUsage!;

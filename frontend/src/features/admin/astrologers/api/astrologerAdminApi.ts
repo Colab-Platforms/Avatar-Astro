@@ -67,6 +67,13 @@ export const astrologerAdminApi = {
     return authRequest<unknown>(`${BASE}/applications/${id}/publish`, { method: "PATCH", body: { isPublished } });
   },
 
+  setComplimentary(id: string, isComplimentary: boolean, complimentaryMaxSeconds: number | null) {
+    return authRequest<unknown>(`${BASE}/applications/${id}/complimentary`, {
+      method: "PATCH",
+      body: { isComplimentary, complimentaryMaxSeconds },
+    });
+  },
+
   addNote(id: string, note: string) {
     return authRequest<unknown>(`${BASE}/applications/${id}/notes`, { method: "POST", body: { note } });
   },

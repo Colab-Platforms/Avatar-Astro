@@ -146,7 +146,6 @@ const CASES: { name: string; feature: string; run: () => Promise<{ status: numbe
   { name: "Name analysis narrative", feature: "name-analysis", run: () => call("POST", "/api/name-analysis/narrative", t.alice, { name: "Asha", dob: "1990-01-01", lifePath: 1, destiny: 2 }), provider: "openrouter", model: "stub/openrouter-model", basis: "actual", customer: true },
   { name: "Daily horoscope (anonymous, axios)", feature: "interpretation", run: () => call("GET", "/api/interpretation/horoscope/aries"), provider: "openrouter", model: "stub/openrouter-model", basis: "actual", customer: false },
   { name: "Chart interpretation (axios)", feature: "interpretation", run: () => call("GET", "/api/interpretation/compatibility?sign1=aries&sign2=leo", t.alice), provider: "openrouter", model: "stub/openrouter-model", basis: "actual", customer: true },
-  { name: "Palm reading (axios)", feature: "palm-reading", run: () => call("POST", "/api/palm-reading", t.alice, { imageBase64: "AAAA", imageType: "image/png", fingerprint: "1" }), provider: "openrouter", model: "stub/openrouter-model", basis: "actual", customer: true },
   { name: "Gemstone explanation (Groq via axios)", feature: "gemstone", run: () => call("POST", "/api/gemstone-calculator/calculate", undefined, GEM), provider: "groq", model: "stub-groq-model", basis: "estimated", customer: false },
 ];
 
