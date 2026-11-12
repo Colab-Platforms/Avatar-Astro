@@ -1,8 +1,9 @@
 import React, { useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion } from "framer-motion";
 import AskDivyaSection from "@/features/guru/AskDivyaSection";
 import { FEATURES } from "@/data/featureCatalog";
-import type { TarotCard } from "@/data/tarotData";
+import { tarotCardKeywords, tarotCardMeaning, tarotCardName, tarotCardShadow, tarotCardTopLabel, tarotCategoryLabel, type TarotCard } from "@/data/tarotData";
 import TarotArt from "./TarotArt";
 
 // Result screens for Tarot Bhagya and Karma Mirror. Both are built only from the cards that were drawn, the
@@ -74,11 +75,13 @@ export const tarotContext = (cards: TarotCard[], positions: string[], reading: A
 
 // ─── Visual card ─────────────────────────────────────────────────────────────
 
-const numeral = (c: TarotCard) => (c.arcana === "major" ? c.number : c.suit ?? "");
-
 export const TarotCardVisual: React.FC<{
   card: TarotCard; label: string; sublabel?: string; index: number; selected?: boolean; onSelect?: () => void;
-}> = ({ card, label, sublabel, index, selected = false, onSelect }) => (
+}> = ({ card, label, sublabel, index, selected = false, onSelect }) => {
+  const { t } = useTranslation();
+  const numeral = tarotCardTopLabel(t, card);
+  const name = tarotCardName(t, card);
+  return (
   <motion.div
     className="trr-card-col"
     initial={{ opacity: 0, y: 28, rotateY: 90 }}
@@ -89,19 +92,20 @@ export const TarotCardVisual: React.FC<{
       type="button"
       onClick={onSelect}
       aria-pressed={selected}
-      aria-label={`${numeral(card)} ${card.name}, ${label}. Show meaning`}
+      aria-label={t("tarot.result.cardAria", { numeral, name, label })}
       whileHover={{ y: -8, scale: 1.03 }}
       whileTap={{ scale: 0.98 }}
       className={`trr-card${selected ? " is-selected" : ""}`}
     >
       <TarotArt card={card} />
-      <span className="trr-card-num">{numeral(card)}</span>
-      <span className="trr-card-name">{card.name}</span>
+      <span className="trr-card-num">{numeral}</span>
+      <span className="trr-card-name">{name}</span>
     </motion.button>
     <span className="trr-card-pos">{label}</span>
     {sublabel && <span className="trr-card-sub">{sublabel}</span>}
   </motion.div>
-);
+  );
+};
 
 // ─── Building blocks ─────────────────────────────────────────────────────────
 
@@ -141,7 +145,10 @@ interface StoryProps {
 }
 
 /** Same layout for every card: artwork, position, simple meaning, what it means for the situation, what to learn. */
-const CardStory: React.FC<StoryProps> = ({ card, index, label, sublabel, positionQuestion, insight, insightTitle, extras = [], compact = false, highlighted = false, id }) => (
+const CardStory: React.FC<StoryProps> = ({ card, index, label, sublabel, positionQuestion, insight, insightTitle, extras = [], compact = false, highlighted = false, id }) => {
+  const { t } = useTranslation();
+  const numeral = tarotCardTopLabel(t, card);
+  return (
   <motion.article
     id={id}
     className={`trr-story${highlighted ? " is-highlighted" : ""}${compact ? " is-compact" : ""}`}
@@ -151,16 +158,16 @@ const CardStory: React.FC<StoryProps> = ({ card, index, label, sublabel, positio
     transition={{ duration: 0.45, delay: compact ? 0 : Math.min(index, 2) * 0.06 }}
   >
     <div className="trr-story-art">
-      <div className="trr-mini"><TarotArt card={card} /><span className="trr-card-num">{numeral(card)}</span></div>
+      <div className="trr-mini"><TarotArt card={card} /><span className="trr-card-num">{numeral}</span></div>
     </div>
     <div className="trr-story-body">
-      <p className="trr-eyebrow">Card {index + 1} · {label}{sublabel ? ` · ${sublabel}` : ""}</p>
-      <h3 className="trr-story-title">{card.name}</h3>
+      <p className="trr-eyebrow">{t("tarot.result.eyebrow", { number: index + 1, label })}{sublabel ? ` · ${sublabel}` : ""}</p>
+      <h3 className="trr-story-title">{tarotCardName(t, card)}</h3>
       <p className="trr-story-q">{positionQuestion}</p>
 
       <div className="trr-block">
-        <h4>Simple Card Meaning</h4>
-        <p>{card.meaning}</p>
+        <h4>{t("tarot.result.simpleMeaning")}</h4>
+        <p>{tarotCardMeaning(t, card)}</p>
       </div>
       {insight && (
         <div className="trr-block trr-block--accent">
@@ -170,9 +177,9 @@ const CardStory: React.FC<StoryProps> = ({ card, index, label, sublabel, positio
       )}
       {!compact && (
         <div className="trr-block">
-          <h4>What You Can Learn From This Card</h4>
-          <ul className="trr-chips">{card.keywords.map((k) => <li key={k}>{k}</li>)}</ul>
-          {card.shadow && <p className="trr-watch"><strong>Worth watching for: </strong>{card.shadow}</p>}
+          <h4>{t("tarot.result.learnTitle")}</h4>
+          <ul className="trr-chips">{tarotCardKeywords(t, card).map((k) => <li key={k}>{k}</li>)}</ul>
+          {card.shadow && <p className="trr-watch"><strong>{t("tarot.result.watching")}</strong>{tarotCardShadow(t, card)}</p>}
         </div>
       )}
       {!compact && extras.filter((e) => e.text).map((e) => (
@@ -183,48 +190,57 @@ const CardStory: React.FC<StoryProps> = ({ card, index, label, sublabel, positio
       ))}
     </div>
   </motion.article>
-);
+  );
+};
 
 // ─── Shared header + card row ────────────────────────────────────────────────
 
-const ResultHeader: React.FC<{ product: string; title: React.ReactNode; area?: string; instruction: string }> = ({ product, title, area, instruction }) => (
+const ResultHeader: React.FC<{ product: string; title: React.ReactNode; area?: string; instruction: string }> = ({ product, title, area, instruction }) => {
+  const { t } = useTranslation();
+  return (
   <motion.header className="trr-header" initial={{ opacity: 0, y: -14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
     <p className="trr-kicker">{FEATURES.tarot.name}</p>
     <p className="trr-product">{product}</p>
     <h1>{title}</h1>
-    {area && <p className="trr-area"><span>Life area</span> {area}</p>}
+    {area && <p className="trr-area"><span>{t("tarot.result.lifeArea")}</span> {tarotCategoryLabel(t, area)}</p>}
     <p className="trr-instruction">{instruction}</p>
   </motion.header>
-);
+  );
+};
 
-const Hint: React.FC<{ selected: boolean }> = ({ selected }) => (
-  <p className="trr-hint" aria-live="polite">{selected ? "Select the same card again to close it." : "Tap a card to read its meaning."}</p>
-);
+const Hint: React.FC<{ selected: boolean }> = ({ selected }) => {
+  const { t } = useTranslation();
+  return <p className="trr-hint" aria-live="polite">{selected ? t("tarot.result.hintClose") : t("tarot.result.hintOpen")}</p>;
+};
 
 // ─── Tarot Bhagya ─────────────────────────────────────────────────────
 
 export const TimelineResult: React.FC<{ cards: TarotCard[]; reading: AIReading; question?: string; embedded?: boolean; children?: React.ReactNode }> = ({ cards, reading, question, embedded = false, children }) => {
+  const { t } = useTranslation();
   const [active, setActive] = useState<number | null>(null);
+  const resultLabels = TIMELINE_RESULT_LABELS.map((l, i) => t(`tarot.resultLabels.${i}`, { defaultValue: l }));
+  const positionLabels = TIMELINE_POSITIONS.map((p, i) => t(`tarot.positions.timeline.${i}`, { defaultValue: p }));
+  const positionQuestions = TIMELINE_POSITION_QUESTIONS.map((q, i) => t(`tarot.positionQuestions.timeline.${i}`, { defaultValue: q }));
   const storyRef = useRef<HTMLDivElement>(null);
   const overall = useMemo(() => splitOverall(reading.overallMessage), [reading.overallMessage]);
   const area = question || undefined;
   const narrative = reading.timelineNarrative ?? [];
-  const situation = area ? `What This Means for Your ${area}` : "What This Means for Your Situation";
+  const situation = area ? t("tarot.result.situationArea", { area: tarotCategoryLabel(t, area) }) : t("tarot.result.situation");
   const activeCard = active !== null ? cards[active] : null;
 
   return (
     <div className="trr-root" data-testid="tarot-timeline-result">
       <TarotResultStyles />
       {!embedded && <ResultHeader
-        product="Tarot Bhagya™"
-        title={<>Your Soul&apos;s <em>Timeline</em></>}
+        product={`${t("tarot.modes.timeline.name")}™`}
+        title={<>{t("tarot.result.timelineTitleA")} <em>{t("tarot.result.timelineTitleB")}</em></>}
         area={area}
-        instruction="Explore the five cards to understand each stage of your reading. Select a card to discover its meaning and guidance."
+        instruction={t("tarot.result.timelineInstruction")}
       />}
 
-      <div className="trr-cards trr-cards--5" role="group" aria-label="Your five cards">
+      <div className="trr-cards trr-cards--5" role="group" aria-label={t("tarot.result.fiveCardsGroup")}>
         {cards.map((card, i) => (
-          <TarotCardVisual key={card.id} card={card} index={i} label={TIMELINE_RESULT_LABELS[i]} sublabel={TIMELINE_POSITIONS[i]}
+          <TarotCardVisual key={card.id} card={card} index={i} label={resultLabels[i]} sublabel={positionLabels[i]}
             selected={active === i} onSelect={() => setActive((cur) => (cur === i ? null : i))} />
         ))}
       </div>
@@ -233,29 +249,29 @@ export const TimelineResult: React.FC<{ cards: TarotCard[]; reading: AIReading; 
       <AnimatePresence mode="wait">
         {activeCard && active !== null && (
           <motion.div key={active} className="trr-panel" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} transition={{ duration: 0.3 }} data-testid="tarot-card-panel">
-            <CardStory compact card={activeCard} index={active} label={TIMELINE_RESULT_LABELS[active]} sublabel={TIMELINE_POSITIONS[active]}
-              positionQuestion={TIMELINE_POSITION_QUESTIONS[active]} insight={narrative[active]?.insight} insightTitle={situation} />
+            <CardStory compact card={activeCard} index={active} label={resultLabels[active]} sublabel={positionLabels[active]}
+              positionQuestion={positionQuestions[active]} insight={narrative[active]?.insight} insightTitle={situation} />
           </motion.div>
         )}
       </AnimatePresence>
 
       {overall.main && (
         <section className="trr-overall" aria-labelledby="trr-overall-h">
-          <SectionTitle title="Overall Reading" hint="The whole spread in three short parts." />
+          <SectionTitle title={t("tarot.result.overallTitle")} hint={t("tarot.result.overallHint")} />
           <div className="trr-overall-grid">
             <motion.div className="trr-overall-main" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.45 }}>
-              <h3 id="trr-overall-h">Main Message</h3>
+              <h3 id="trr-overall-h">{t("tarot.result.mainMessage")}</h3>
               <p className="trr-lead">{overall.main}</p>
             </motion.div>
             {overall.means && (
               <motion.div className="trr-overall-means" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.45, delay: 0.08 }}>
-                <h3>What This Means for You</h3>
+                <h3>{t("tarot.result.meansForYou")}</h3>
                 <p>{overall.means}</p>
               </motion.div>
             )}
             {overall.takeaway && (
               <motion.div className="trr-takeaway" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.45, delay: 0.16 }}>
-                <h3>Key Takeaway</h3>
+                <h3>{t("tarot.result.keyTakeaway")}</h3>
                 <p>{overall.takeaway}</p>
               </motion.div>
             )}
@@ -264,24 +280,24 @@ export const TimelineResult: React.FC<{ cards: TarotCard[]; reading: AIReading; 
       )}
 
       <section className="trr-sections">
-        <SectionTitle title="Your Reading, Step by Step" hint="Each part answers one simple question." />
+        <SectionTitle title={t("tarot.result.stepsTitle")} hint={t("tarot.result.stepsHint")} />
         <div className="trr-guide-grid">
-          <GuidanceCard icon="🌱" title="Where You Are Now" question="What does your present situation look like?" value={reading.currentLifeStage} />
-          <GuidanceCard icon="✨" title="What's Helping You" question="Which strengths or supports are on your side?" value={reading.mainOpportunity} />
-          <GuidanceCard icon="🌫" title="What's Blocking You" question="Which habits, fears or circumstances may be getting in the way?" value={reading.hiddenChallenge} />
-          <GuidanceCard icon="🧭" title="A Theme To Prepare For" question="What is worth keeping in mind over the next six months? It is a possibility, not a prediction." value={reading.nextMajorTurningPoint} />
-          <GuidanceCard icon="👣" title="A Step You Could Take" question="What is one practical thing you can try?" value={reading.recommendedAction} tone="soft" />
-          <GuidanceCard icon="🪔" title="Reflective Guidance" question="What simple thought can you carry with you?" value={reading.spiritualGuidance} tone="soft" />
+          <GuidanceCard icon="🌱" title={t("tarot.result.guide.stage.title")} question={t("tarot.result.guide.stage.question")} value={reading.currentLifeStage} />
+          <GuidanceCard icon="✨" title={t("tarot.result.guide.helping.title")} question={t("tarot.result.guide.helping.question")} value={reading.mainOpportunity} />
+          <GuidanceCard icon="🌫" title={t("tarot.result.guide.blocking.title")} question={t("tarot.result.guide.blocking.question")} value={reading.hiddenChallenge} />
+          <GuidanceCard icon="🧭" title={t("tarot.result.guide.theme.title")} question={t("tarot.result.guide.theme.question")} value={reading.nextMajorTurningPoint} />
+          <GuidanceCard icon="👣" title={t("tarot.result.guide.step.title")} question={t("tarot.result.guide.step.question")} value={reading.recommendedAction} tone="soft" />
+          <GuidanceCard icon="🪔" title={t("tarot.result.guide.reflective.title")} question={t("tarot.result.guide.reflective.question")} value={reading.spiritualGuidance} tone="soft" />
         </div>
       </section>
 
       {narrative.length > 0 && (
         <section className="trr-stories" ref={storyRef}>
-          <SectionTitle title="Your Card-by-Card Story" hint="How each card connects to your question." />
+          <SectionTitle title={t("tarot.result.storyTitle")} hint={t("tarot.result.storyHint")} />
           <div className="trr-story-list">
             {narrative.map((n, i) => cards[i] && (
-              <CardStory key={i} id={`trr-story-${i}`} card={cards[i]} index={i} label={TIMELINE_RESULT_LABELS[i]} sublabel={TIMELINE_POSITIONS[i]}
-                positionQuestion={TIMELINE_POSITION_QUESTIONS[i]} insight={n.insight} insightTitle={situation} highlighted={active === i} />
+              <CardStory key={i} id={`trr-story-${i}`} card={cards[i]} index={i} label={resultLabels[i]} sublabel={positionLabels[i]}
+                positionQuestion={positionQuestions[i]} insight={n.insight} insightTitle={situation} highlighted={active === i} />
             ))}
           </div>
         </section>
@@ -296,7 +312,10 @@ export const TimelineResult: React.FC<{ cards: TarotCard[]; reading: AIReading; 
 // ─── Karma Mirror ────────────────────────────────────────────────────────────
 
 export const KarmaResult: React.FC<{ cards: TarotCard[]; reading: AIReading; embedded?: boolean; children?: React.ReactNode }> = ({ cards, reading, embedded = false, children }) => {
+  const { t } = useTranslation();
   const [active, setActive] = useState<number | null>(null);
+  const positionLabels = KARMA_POSITIONS.map((p, i) => t(`tarot.positions.karma.${i}`, { defaultValue: p }));
+  const positionQuestions = KARMA_POSITION_QUESTIONS.map((q, i) => t(`tarot.positionQuestions.karma.${i}`, { defaultValue: q }));
   const insights = reading.cardInsights ?? [];
   const areas = reading.lifeAreasAffected ?? [];
   const select = (i: number) => {
@@ -306,8 +325,8 @@ export const KarmaResult: React.FC<{ cards: TarotCard[]; reading: AIReading; emb
   // What each stage adds on top of the card's own insight (all from the generated reading).
   const extras: { title: string; text?: string }[][] = [
     [],
-    [{ title: "Where This Pattern May Come From", text: reading.rootCause }],
-    [{ title: "A Habit To Build", text: reading.recommendedHabit }, { title: "Say This To Yourself", text: reading.positiveAffirmation }],
+    [{ title: t("tarot.result.extraRoot"), text: reading.rootCause }],
+    [{ title: t("tarot.result.extraHabit"), text: reading.recommendedHabit }, { title: t("tarot.result.extraSay"), text: reading.positiveAffirmation }],
   ];
   const hasActions = !!(reading.dailyAction || reading.weeklyAction || reading.spiritualPractice || reading.reflectionQuestion);
 
@@ -315,27 +334,27 @@ export const KarmaResult: React.FC<{ cards: TarotCard[]; reading: AIReading; emb
     <div className="trr-root" data-testid="tarot-karma-result">
       <TarotResultStyles />
       {!embedded && <ResultHeader
-        product="Karma Mirror™"
-        title={<>The Mirror <em>Reveals</em></>}
-        instruction="Explore the three cards to understand the pattern, what may be holding you back, and your path forward. Select a card to read its meaning. This is a reflection, not a prediction."
+        product={`${t("tarot.modes.karma.name")}™`}
+        title={<>{t("tarot.result.karmaTitleA")} <em>{t("tarot.result.karmaTitleB")}</em></>}
+        instruction={t("tarot.result.karmaInstruction")}
       />}
 
-      <div className="trr-cards trr-cards--3" role="group" aria-label="Your three cards">
+      <div className="trr-cards trr-cards--3" role="group" aria-label={t("tarot.result.threeCardsGroup")}>
         {cards.map((card, i) => (
-          <TarotCardVisual key={card.id} card={card} index={i} label={KARMA_POSITIONS[i]} selected={active === i} onSelect={() => select(i)} />
+          <TarotCardVisual key={card.id} card={card} index={i} label={positionLabels[i]} selected={active === i} onSelect={() => select(i)} />
         ))}
       </div>
       <Hint selected={active !== null} />
 
       {reading.currentKarmaTheme && (
         <section className="trr-overall">
-          <SectionTitle title="Overall Karma Reflection" hint="The central pattern your three cards point to." />
+          <SectionTitle title={t("tarot.result.karmaOverallTitle")} hint={t("tarot.result.karmaOverallHint")} />
           <div className="trr-overall-grid trr-overall-grid--one">
             <motion.div className="trr-overall-main" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.45 }}>
-              <h3>What Your Pattern Is Showing You</h3>
+              <h3>{t("tarot.result.patternShowing")}</h3>
               <p className="trr-lead">{reading.currentKarmaTheme}</p>
               {areas.length > 0 && (
-                <div className="trr-areas"><span>Areas of life this may touch</span>
+                <div className="trr-areas"><span>{t("tarot.result.areasTouch")}</span>
                   <ul className="trr-chips">{areas.map((a) => <li key={a}>{a}</li>)}</ul>
                 </div>
               )}
@@ -346,11 +365,11 @@ export const KarmaResult: React.FC<{ cards: TarotCard[]; reading: AIReading; emb
 
       {insights.length > 0 && (
         <section className="trr-stories">
-          <SectionTitle title="Your Three Steps" hint="Current Karma → Hidden Blockage → Healing Path" />
+          <SectionTitle title={t("tarot.result.threeStepsTitle")} hint={positionLabels.join(" → ")} />
           <div className="trr-story-list">
             {insights.map((n, i) => cards[i] && (
-              <CardStory key={i} id={`trr-karma-${i}`} card={cards[i]} index={i} label={KARMA_POSITIONS[i]} positionQuestion={KARMA_POSITION_QUESTIONS[i]}
-                insight={n.insight} insightTitle="What This Means for Your Situation" extras={extras[i]} highlighted={active === i} />
+              <CardStory key={i} id={`trr-karma-${i}`} card={cards[i]} index={i} label={positionLabels[i]} positionQuestion={positionQuestions[i]}
+                insight={n.insight} insightTitle={t("tarot.result.situation")} extras={extras[i]} highlighted={active === i} />
             ))}
           </div>
         </section>
@@ -358,12 +377,12 @@ export const KarmaResult: React.FC<{ cards: TarotCard[]; reading: AIReading; emb
 
       {hasActions && (
         <section className="trr-sections">
-          <SectionTitle title="Practical Reflection and Actions" hint="Small things you can try, at your own pace." />
+          <SectionTitle title={t("tarot.result.practicalTitle")} hint={t("tarot.result.practicalHint")} />
           <div className="trr-guide-grid">
-            <GuidanceCard icon="☀" title="Every Day" question="What small practice can you repeat daily?" value={reading.dailyAction} tone="soft" />
-            <GuidanceCard icon="🌙" title="Once a Week" question="What deeper step can you take each week?" value={reading.weeklyAction} tone="soft" />
-            <GuidanceCard icon="🧘" title="A Quiet Practice" question="How can you reflect on your Healing Path?" value={reading.spiritualPractice} />
-            <GuidanceCard icon="🔍" title="Think About This" question="One question to sit with." value={reading.reflectionQuestion} />
+            <GuidanceCard icon="☀" title={t("tarot.result.guide.daily.title")} question={t("tarot.result.guide.daily.question")} value={reading.dailyAction} tone="soft" />
+            <GuidanceCard icon="🌙" title={t("tarot.result.guide.weekly.title")} question={t("tarot.result.guide.weekly.question")} value={reading.weeklyAction} tone="soft" />
+            <GuidanceCard icon="🧘" title={t("tarot.result.guide.quiet.title")} question={t("tarot.result.guide.quiet.question")} value={reading.spiritualPractice} />
+            <GuidanceCard icon="🔍" title={t("tarot.result.guide.think.title")} question={t("tarot.result.guide.think.question")} value={reading.reflectionQuestion} />
           </div>
         </section>
       )}
@@ -371,7 +390,7 @@ export const KarmaResult: React.FC<{ cards: TarotCard[]; reading: AIReading; emb
       {reading.positiveAffirmation && (
         <section className="trr-overall trr-overall--narrow">
           <motion.div className="trr-takeaway" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.45 }}>
-            <h3>Key Takeaway</h3>
+            <h3>{t("tarot.result.keyTakeaway")}</h3>
             <p>&ldquo;{reading.positiveAffirmation}&rdquo;</p>
           </motion.div>
         </section>

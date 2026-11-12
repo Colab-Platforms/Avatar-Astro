@@ -1,11 +1,26 @@
 import type { KundaliResult } from "./types";
 import { getTerm } from "@/lib/astroGlossary";
+import i18n from "@/i18n";
+import { glossName } from "@/i18n/glossary";
 
 // Plain-language reading of a calculated Janma Kundali. Every item has two parts that are kept apart on screen:
 //   fact    - read straight from the chart the server calculated (sign, house, lord, dignity, dasha). Never guessed.
 //   meaning - the traditional Jyotish significance of that fact, from the fixed tables below. It is general, not a prediction.
 // Nothing here recalculates the chart or adds a planetary position. If the chart lacks something (no birth time, no houses),
 // the item is simply not produced and the guide says why.
+// The sentences live in the dictionary (kundali.insight.*); this file decides WHICH sentence applies and fills in the calculated parts.
+
+const T = (key: string, values?: Record<string, string | number>): string => i18n.t(key, values) as string;
+/** Static English text looked up by a stable key; the English text is the fallback. */
+const D = (key: string, english: string): string => i18n.t(key, { defaultValue: english }) as string;
+
+/** Displayed name of a Rashi. The server's Sanskrit name is shown as is in English; other languages use the glossary entry of the sign. */
+export const rashiName = (r: { sign: string; name: string }): string =>
+  (i18n.language ?? "en").startsWith("en") ? r.name : glossName("rashi", r.sign, r.name);
+/** Displayed names of calculated values (the calculated value itself never changes). */
+export const planetName = (p: string): string => glossName("planet", p);
+export const nakshatraName = (n: string): string => glossName("nakshatra", n);
+export const signName = (s: string): string => glossName("rashi", s);
 
 export interface Insight { title: string; fact: string; meaning: string }
 export interface KundaliGuideData {
@@ -95,7 +110,7 @@ const GRAHA_TOPIC: Record<string, string> = {
 };
 
 /** A running period (Mahadasha) is traditionally read through the nature of its lord. */
-const DASHA_THEME: Record<string, string> = {
+export const DASHA_THEME: Record<string, string> = {
   Sun: "self-confidence, status and taking responsibility",
   Moon: "emotions, home life, care for others and the mind",
   Mars: "energy, effort, courage and taking action",
@@ -108,7 +123,15 @@ const DASHA_THEME: Record<string, string> = {
 };
 
 const asSign = (s: string | undefined): Sign | null => (SIGNS as readonly string[]).includes(s ?? "") ? (s as Sign) : null;
-const ord = (n: number) => { const v = n % 100; return `${n}${["th", "st", "nd", "rd"][(v - 20) % 10] || ["th", "st", "nd", "rd"][v] || "th"}`; };
+const ordEn = (n: number) => { const v = n % 100; return `${n}${["th", "st", "nd", "rd"][(v - 20) % 10] || ["th", "st", "nd", "rd"][v] || "th"}`; };
+const ord = (n: number) => D(`kundali.ordinal.${n}`, ordEn(n));
+
+/** Lookups of the static tables above by stable key (English text is the fallback). */
+export const houseTopic = (n: number): string => D(`kundali.houseTopic.${n}`, HOUSE_TOPIC[n]);
+export const dashaTheme = (lord: string): string | undefined => (DASHA_THEME[lord] ? D(`kundali.dashaTheme.${lord}`, DASHA_THEME[lord]) : undefined);
+const lagnaText = (s: Sign) => D(`kundali.lagnaText.${s}`, LAGNA_TEXT[s]);
+const moonText = (s: Sign) => D(`kundali.moonText.${s}`, MOON_TEXT[s]);
+const grahaTopic = (p: string) => D(`kundali.grahaTopic.${p}`, GRAHA_TOPIC[p]);
 
 export function buildKundaliGuide(k: KundaliResult): KundaliGuideData {
   const g: KundaliGuideData = { houses: !!k.lagna && !!k.planets, personality: [], career: [], relationships: [], strengths: [], challenges: [], important: [], notes: [] };
@@ -117,103 +140,119 @@ export function buildKundaliGuide(k: KundaliResult): KundaliGuideData {
   const lagnaSign = asSign(k.lagna?.rashi.sign);
   const houseSign = (house: number): Sign | null => (lagnaSign ? SIGNS[(SIGNS.indexOf(lagnaSign) + house - 1) % 12] : null);
   const occupants = (house: number) => planets.filter((p) => p.house === house).map((p) => p.planet);
+  /** "Falls in <sign>; <planets> sit(s) there" or "; no planet sits there". */
+  const houseFact = (house: number, sign: Sign) => {
+    const n = occupants(house).length;
+    return T(n === 0 ? "kundali.insight.houseFact.none" : n === 1 ? "kundali.insight.houseFact.one" : "kundali.insight.houseFact.other", {
+      sign: signName(sign),
+      planets: occupants(house).map(planetName).join(", "),
+    });
+  };
 
   // ── Personality ──
   if (lagnaSign && k.lagna) {
     g.personality.push({
-      title: "Your Lagna (rising sign)",
-      fact: `${k.lagna.rashi.name} (${k.lagna.rashi.hindi}), ${k.lagna.degreeInSign}°.`,
-      meaning: `${LAGNA_TEXT[lagnaSign]} The Lagna is the sign rising on the eastern horizon at your birth; it shapes how you present yourself.`,
+      title: T("kundali.insight.lagna.title"),
+      fact: T("kundali.insight.lagna.fact", { rashi: rashiName(k.lagna.rashi), hindi: k.lagna.rashi.hindi, degree: k.lagna.degreeInSign }),
+      meaning: T("kundali.insight.lagna.meaning", { text: lagnaText(lagnaSign) }),
     });
     const lord = LORD[lagnaSign];
     const lp = where(lord);
     if (lp) g.personality.push({
-      title: "Your Lagna lord",
-      fact: `${lord} rules your Lagna and sits in ${lp.rashi.name} in your ${ord(lp.house)} house.`,
-      meaning: `The Lagna lord shows where your life energy tends to go. Being in the ${ord(lp.house)} house points toward ${HOUSE_TOPIC[lp.house]}.`,
+      title: T("kundali.insight.lagnaLord.title"),
+      fact: T("kundali.insight.lagnaLord.fact", { lord: planetName(lord), rashi: rashiName(lp.rashi), ord: ord(lp.house) }),
+      meaning: T("kundali.insight.lagnaLord.meaning", { ord: ord(lp.house), topic: houseTopic(lp.house) }),
     });
   }
   const moonSign = asSign(k.moon.rashi?.sign);
   if (moonSign && k.moon.rashi) g.personality.push({
-    title: "Your Chandra Rashi (Moon sign)",
-    fact: `${k.moon.rashi.name} (${k.moon.rashi.hindi})${k.moon.nakshatra ? `, in ${k.moon.nakshatra.name} nakshatra` : ""}.`,
-    meaning: `${MOON_TEXT[moonSign]} In Jyotish the Moon sign is your Rashi, the sign most people mean when they ask "what is my Rashi?".`,
+    title: T("kundali.insight.moon.title"),
+    fact: k.moon.nakshatra
+      ? T("kundali.insight.moon.factWithNakshatra", { rashi: rashiName(k.moon.rashi), hindi: k.moon.rashi.hindi, nakshatra: nakshatraName(k.moon.nakshatra.name) })
+      : T("kundali.insight.moon.fact", { rashi: rashiName(k.moon.rashi), hindi: k.moon.rashi.hindi }),
+    meaning: T("kundali.insight.moon.meaning", { text: moonText(moonSign) }),
   });
-  else if (k.moon.candidates.length) g.notes.push(`Your Moon changed sign on your birth date, so your Chandra Rashi could be ${k.moon.candidates.map((c) => c.name).join(" or ")}. Your exact birth time decides which one applies.`);
+  else if (k.moon.candidates.length) g.notes.push(T("kundali.insight.moon.uncertainNote", { list: k.moon.candidates.map((c) => rashiName(c)).join(T("kundali.insight.or")) }));
 
   if (g.houses && lagnaSign) {
     // ── Career ──
     const s10 = houseSign(10)!; const l10 = LORD[s10]; const p10 = where(l10);
     g.career.push({
-      title: "Your 10th house (Karma Bhava)",
-      fact: `Falls in ${s10}${occupants(10).length ? `; ${occupants(10).join(", ")} sit${occupants(10).length === 1 ? "s" : ""} there` : "; no planet sits there"}.`,
-      meaning: `The 10th house is about ${HOUSE_TOPIC[10]}.`,
+      title: T("kundali.insight.house10.title"),
+      fact: houseFact(10, s10),
+      meaning: T("kundali.insight.house10.meaning", { topic: houseTopic(10) }),
     });
     if (p10) g.career.push({
-      title: "The lord of your 10th house",
-      fact: `${l10} rules it and is placed in ${p10.rashi.name} in your ${ord(p10.house)} house.`,
-      meaning: `Where the 10th lord sits shows which area of life your work is closely tied to: ${HOUSE_TOPIC[p10.house]}.`,
+      title: T("kundali.insight.lord10.title"),
+      fact: T("kundali.insight.lord10.fact", { lord: planetName(l10), rashi: rashiName(p10.rashi), ord: ord(p10.house) }),
+      meaning: T("kundali.insight.lord10.meaning", { topic: houseTopic(p10.house) }),
     });
     const s2 = houseSign(2)!, s11 = houseSign(11)!;
     g.career.push({
-      title: "Income and gains (2nd and 11th houses)",
-      fact: `The 2nd house is in ${s2} (ruled by ${LORD[s2]}) and the 11th house is in ${s11} (ruled by ${LORD[s11]}).`,
-      meaning: `The 2nd house is about ${HOUSE_TOPIC[2]}; the 11th is about ${HOUSE_TOPIC[11]}.`,
+      title: T("kundali.insight.income.title"),
+      fact: T("kundali.insight.income.fact", { sign2: signName(s2), lord2: planetName(LORD[s2]), sign11: signName(s11), lord11: planetName(LORD[s11]) }),
+      meaning: T("kundali.insight.income.meaning", { topic2: houseTopic(2), topic11: houseTopic(11) }),
     });
 
     // ── Relationships ──
     const s7 = houseSign(7)!; const l7 = LORD[s7]; const p7 = where(l7);
     g.relationships.push({
-      title: "Your 7th house (Kalatra Bhava)",
-      fact: `Falls in ${s7}${occupants(7).length ? `; ${occupants(7).join(", ")} sit${occupants(7).length === 1 ? "s" : ""} there` : "; no planet sits there"}.`,
-      meaning: `The 7th house is about ${HOUSE_TOPIC[7]}.`,
+      title: T("kundali.insight.house7.title"),
+      fact: houseFact(7, s7),
+      meaning: T("kundali.insight.house7.meaning", { topic: houseTopic(7) }),
     });
     if (p7) g.relationships.push({
-      title: "The lord of your 7th house",
-      fact: `${l7} rules it and is placed in ${p7.rashi.name} in your ${ord(p7.house)} house.`,
-      meaning: `This links partnership with ${HOUSE_TOPIC[p7.house]}.`,
+      title: T("kundali.insight.lord7.title"),
+      fact: T("kundali.insight.lord7.fact", { lord: planetName(l7), rashi: rashiName(p7.rashi), ord: ord(p7.house) }),
+      meaning: T("kundali.insight.lord7.meaning", { topic: houseTopic(p7.house) }),
     });
     const venus = where("Venus");
     if (venus) g.relationships.push({
-      title: "Venus (the graha of love and comfort)",
-      fact: `Venus is in ${venus.rashi.name} in your ${ord(venus.house)} house.`,
-      meaning: `Venus stands for ${GRAHA_TOPIC.Venus}. Its house shows where you look for affection and enjoyment.`,
+      title: T("kundali.insight.venus.title"),
+      fact: T("kundali.insight.venus.fact", { rashi: rashiName(venus.rashi), ord: ord(venus.house) }),
+      meaning: T("kundali.insight.venus.meaning", { topic: grahaTopic("Venus") }),
     });
 
     // ── Strengths & challenges: classical dignity of each graha ──
     for (const p of planets) {
       const sign = asSign(p.rashi.sign);
       if (!sign || !GRAHA_TOPIC[p.planet] || p.planet === "Rahu" || p.planet === "Ketu") continue;
+      const vals = { planet: planetName(p.planet), rashi: rashiName(p.rashi), ord: ord(p.house), topic: grahaTopic(p.planet) };
       if (EXALTED[p.planet] === sign) g.strengths.push({
-        title: `${p.planet} is exalted (Uchcha)`,
-        fact: `${p.planet} is in ${p.rashi.name}, its sign of exaltation, in your ${ord(p.house)} house.`,
-        meaning: `A graha in its exaltation sign is traditionally considered strong and able to give good results for ${GRAHA_TOPIC[p.planet]}.`,
+        title: T("kundali.insight.exalted.title", vals),
+        fact: T("kundali.insight.exalted.fact", vals),
+        meaning: T("kundali.insight.exalted.meaning", vals),
       });
       else if (OWN[p.planet]?.includes(sign)) g.strengths.push({
-        title: `${p.planet} is in its own sign (Swakshetra)`,
-        fact: `${p.planet} is in ${p.rashi.name}, a sign it rules, in your ${ord(p.house)} house.`,
-        meaning: `A graha in its own sign is traditionally comfortable and steady, supporting ${GRAHA_TOPIC[p.planet]}.`,
+        title: T("kundali.insight.own.title", vals),
+        fact: T("kundali.insight.own.fact", vals),
+        meaning: T("kundali.insight.own.meaning", vals),
       });
       else if (DEBILITATED[p.planet] === sign) g.challenges.push({
-        title: `${p.planet} is in its weaker sign (Neecha)`,
-        fact: `${p.planet} is in ${p.rashi.name}, its sign of debilitation, in your ${ord(p.house)} house.`,
-        meaning: `Traditionally this asks for conscious effort in the area of ${GRAHA_TOPIC[p.planet]}. Other factors in the chart can soften it, so it is not a fixed verdict.`,
+        title: T("kundali.insight.debilitated.title", vals),
+        fact: T("kundali.insight.debilitated.fact", vals),
+        meaning: T("kundali.insight.debilitated.meaning", vals),
       });
     }
   }
 
   // ── Important insights ──
   if (k.dasha) g.important.push({
-    title: "Your running Dasha (Vimshottari period)",
-    fact: `${k.dasha.mahadasha.lord} Mahadasha (${k.dasha.mahadasha.start} to ${k.dasha.mahadasha.end}) with ${k.dasha.antardasha.lord} Antardasha, counted from your Moon in ${k.dasha.moonNakshatra}.`,
-    meaning: `A Dasha is a long period of life read through one graha. ${k.dasha.mahadasha.lord} periods are traditionally linked with ${DASHA_THEME[k.dasha.mahadasha.lord] ?? "its own themes"}. It describes emphasis, not fixed events.`,
+    title: T("kundali.insight.dasha.title"),
+    fact: T("kundali.insight.dasha.fact", {
+      mahadasha: planetName(k.dasha.mahadasha.lord), start: k.dasha.mahadasha.start, end: k.dasha.mahadasha.end,
+      antardasha: planetName(k.dasha.antardasha.lord), nakshatra: nakshatraName(k.dasha.moonNakshatra),
+    }),
+    meaning: T("kundali.insight.dasha.meaning", { lord: planetName(k.dasha.mahadasha.lord), theme: dashaTheme(k.dasha.mahadasha.lord) ?? T("kundali.insight.dasha.ownThemes") }),
   });
   if (k.moon.nakshatra) g.important.push({
-    title: "Your Janma Nakshatra",
-    fact: `${k.moon.nakshatra.name}${k.moon.nakshatra.pada ? `, pada ${k.moon.nakshatra.pada}` : ""}, ruled by ${k.moon.nakshatra.lord}.`,
-    meaning: "Your Janma Nakshatra is the lunar mansion the Moon was in at birth. It is used for the Dasha sequence, naming and traditional matching.",
+    title: T("kundali.insight.nakshatra.title"),
+    fact: k.moon.nakshatra.pada
+      ? T("kundali.insight.nakshatra.factWithPada", { nakshatra: nakshatraName(k.moon.nakshatra.name), pada: k.moon.nakshatra.pada, lord: planetName(k.moon.nakshatra.lord) })
+      : T("kundali.insight.nakshatra.fact", { nakshatra: nakshatraName(k.moon.nakshatra.name), lord: planetName(k.moon.nakshatra.lord) }),
+    meaning: T("kundali.insight.nakshatra.meaning"),
   });
-  if (!g.houses) g.notes.push("Houses, Lagna and the career and relationship sections need your exact birth time, so they are not shown for this chart. Add your birth time to see them.");
+  if (!g.houses) g.notes.push(T("kundali.insight.noHousesNote"));
   return g;
 }
 

@@ -4,6 +4,11 @@
  * language lives here. Use this everywhere a feature name or subtitle is shown.
  */
 
+import i18n from "@/i18n";
+
+/** Subtitle in the chosen language (features.<id>.subtitle); the English below is the fallback. Read at render time, so it follows the language. */
+const localizedSubtitle = (id: string, english: string): string => i18n.t(`features.${id}.subtitle`, { defaultValue: english });
+
 export type FeatureCategory = "astrology" | "inner-voice";
 
 export interface FeatureMeta {
@@ -29,21 +34,27 @@ export const FEATURES = {
   zodiac: {
     id: "zodiac",
     name: "Daily Horoscope",
-    subtitle: "Explore your zodiac sign, planetary influences and the qualities that shape your personality.",
+    get subtitle() {
+      return localizedSubtitle("zodiac", "Explore your zodiac sign, planetary influences and the qualities that shape your personality.");
+    },
     path: "/zodiac",
     category: "astrology",
   },
   birthChart: {
     id: "birth-chart",
     name: "Janma Kundali",
-    subtitle: "Understand your life's cosmic blueprint through the positions of planets at your birth.",
+    get subtitle() {
+      return localizedSubtitle("birth-chart", "Understand your life's cosmic blueprint through the positions of planets at your birth.");
+    },
     path: "/birth-chart",
     category: "astrology",
   },
   compatibility: {
     id: "compatibility",
     name: "Love Compatibility",
-    subtitle: "Explore your connection, compatibility and relationship harmony through Vedic astrology.",
+    get subtitle() {
+      return localizedSubtitle("compatibility", "Explore your connection, compatibility and relationship harmony through Vedic astrology.");
+    },
     path: "/compatibility",
     category: "astrology",
   },
@@ -107,6 +118,39 @@ export const FEATURES = {
 
 export type FeatureKey = keyof typeof FEATURES;
 
+/**
+ * Baby Name Jyotish. Defined beside, not inside, FEATURES: that object is the approved twelve and a test locks its size.
+ * It is listed in the Astrology Seva navigation and has a card in the home-page Astrology Seva grid.
+ */
+export const BABY_NAME_FEATURE = {
+  id: "baby-name-jyotish",
+  name: "Baby Name Jyotish",
+  subtitle: "Discover a meaningful name for your little one through Nakshatra and Vedic naming traditions.",
+  path: "/baby-name-jyotish",
+  category: "astrology",
+} as const satisfies FeatureMeta;
+
+/** Lucky Vehicle Number (Vahana Ank Jyotish). Defined beside FEATURES for the same reason as Baby Name Jyotish. */
+export const LUCKY_VEHICLE_FEATURE = {
+  id: "lucky-vehicle-number",
+  name: "Lucky Vehicle Number",
+  subtitle: "Find meaningful vehicle number combinations inspired by your birth details and traditional numerology.",
+  path: "/lucky-vehicle-number",
+  category: "astrology",
+} as const satisfies FeatureMeta;
+
+/**
+ * Muhurat Finder. Defined beside FEATURES for the same reason as the two above. It is listed in the Astrology Seva navigation
+ * and has a card in the home-page Astrology Seva grid.
+ */
+export const MUHURAT_FEATURE = {
+  id: "muhurat-finder",
+  name: "Muhurat Finder",
+  subtitle: "Find an auspicious time for life's important beginnings.",
+  path: "/muhurat-finder",
+  category: "astrology",
+} as const satisfies FeatureMeta;
+
 /** Navigation group labels. "Seva" replaces "Tools" across the site. */
 export const ASTROLOGY_SEVA_LABEL = "Astrology Seva";
 export const INNER_VOICE_LABEL = "Inner Voice";
@@ -120,6 +164,9 @@ export const ASTROLOGY_SEVA_NAV: FeatureMeta[] = [
   FEATURES.palm,
   FEATURES.ratna,
   FEATURES.numerology,
+  BABY_NAME_FEATURE,
+  LUCKY_VEHICLE_FEATURE,
+  MUHURAT_FEATURE,
 ];
 
 export const INNER_VOICE_NAV: FeatureMeta[] = [

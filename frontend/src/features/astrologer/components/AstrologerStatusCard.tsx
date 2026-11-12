@@ -16,7 +16,7 @@ export function AstrologerStatusCard() {
         <IconChip icon={Sparkles} tone="gold" size="sm" />
         <div>
           <h3 className="font-home-serif text-base font-semibold text-[#2A1A10]">Become an Astrologer</h3>
-          <p className="mt-1 text-sm text-[#6E5D4E]">Share your astrology expertise with seekers on MyBhagya. Applications are reviewed manually.</p>
+          <p className="mt-1 text-sm text-[#6E5D4E]">Share your astrology expertise with seekers on Bhagya. Applications are reviewed manually.</p>
         </div>
         <Link to="/become-astrologer" className={ghost}>Learn more</Link>
       </div>

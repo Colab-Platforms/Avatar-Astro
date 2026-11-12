@@ -36,6 +36,9 @@ import { AdminRoute } from "./routes/AdminRoute";
 import { LegacyShell, MainOnly } from "./features/admin/panel/guards";
 import Loader from "./components/Loader/Loader";
 
+const BabyNameJyotish = lazy(() => import("./pages/BabyNameJyotish"));
+const LuckyVehicleNumber = lazy(() => import("./pages/LuckyVehicleNumber"));
+const MuhuratFinder = lazy(() => import("./pages/MuhuratFinder"));
 const LoginPage = lazy(() => import("./features/auth/pages/LoginPage"));
 const RegisterPage = lazy(() => import("./features/auth/pages/RegisterPage"));
 const VerifyOtpPage = lazy(() => import("./features/auth/pages/VerifyOtpPage"));
@@ -364,6 +367,36 @@ export const AnimatedRoutes = () => {
             <PageTransition>
               <Suspense fallback={<LazyFallback />}>
                 <ChadhawaDetail />
+              </Suspense>
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/muhurat-finder"
+          element={
+            <PageTransition>
+              <Suspense fallback={<LazyFallback />}>
+                <MuhuratFinder />
+              </Suspense>
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/lucky-vehicle-number"
+          element={
+            <PageTransition>
+              <Suspense fallback={<LazyFallback />}>
+                <LuckyVehicleNumber />
+              </Suspense>
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/baby-name-jyotish"
+          element={
+            <PageTransition>
+              <Suspense fallback={<LazyFallback />}>
+                <BabyNameJyotish />
               </Suspense>
             </PageTransition>
           }

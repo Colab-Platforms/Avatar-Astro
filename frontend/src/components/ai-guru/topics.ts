@@ -2,9 +2,12 @@ import { Briefcase, Compass, Flower2, HeartHandshake, Leaf, type LucideIcon } fr
 
 export interface GuruTopic {
   id: string;
+  /** Key under guru.topic in the dictionaries (title, s1, s2 are the visible texts). */
+  tkey: string;
+  /** English title: also what the model is told, so the prompt is the same in every language. */
   title: string;
   icon: LucideIcon;
-  /** Soft background tint for the card (MyBhagya palette: cream, blush, sage, lavender, pale gold). */
+  /** Soft background tint for the card (Bhagya palette: cream, blush, sage, lavender, pale gold). */
   tint: string;
   /** Border and icon accent for the card. */
   accent: string;
@@ -17,6 +20,7 @@ export interface GuruTopic {
 export const GURU_TOPICS: GuruTopic[] = [
   {
     id: "career",
+    tkey: "career",
     title: "Career & Finance",
     icon: Briefcase,
     tint: "#F7EBD0",
@@ -26,6 +30,7 @@ export const GURU_TOPICS: GuruTopic[] = [
   },
   {
     id: "relationships",
+    tkey: "relationships",
     title: "Relationships",
     icon: HeartHandshake,
     tint: "#F8E3E0",
@@ -35,6 +40,7 @@ export const GURU_TOPICS: GuruTopic[] = [
   },
   {
     id: "health",
+    tkey: "health",
     title: "Health",
     icon: Leaf,
     tint: "#E4EEDD",
@@ -44,6 +50,7 @@ export const GURU_TOPICS: GuruTopic[] = [
   },
   {
     id: "spiritual",
+    tkey: "spiritual",
     title: "Spiritual Growth",
     icon: Flower2,
     tint: "#ECE5F3",
@@ -53,6 +60,7 @@ export const GURU_TOPICS: GuruTopic[] = [
   },
   {
     id: "life-path",
+    tkey: "lifePath",
     title: "Life Path",
     icon: Compass,
     tint: "#FBF0D5",

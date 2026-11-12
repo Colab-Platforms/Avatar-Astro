@@ -3,7 +3,7 @@ import { Resend } from "resend";
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM_EMAIL = process.env.SMTP_FROM_EMAIL;
-const APP_NAME = process.env.APP_NAME || "MyBhagya";
+const APP_NAME = process.env.APP_NAME || "Bhagya";
 
 if (!RESEND_API_KEY || !FROM_EMAIL) {
   console.warn(
@@ -174,7 +174,7 @@ const ASTROLOGER_STATUS_COPY: Record<AstrologerNotificationStatus, { subject: st
   SUBMITTED: {
     subject: `Your ${APP_NAME} astrologer application was received`,
     heading: "Application received",
-    body: () => "Thanks for applying to become an astrologer on MyBhagya. Our team manually reviews every application and document — we'll email you as soon as there's an update.",
+    body: () => "Thanks for applying to become an astrologer on Bhagya. Our team manually reviews every application and document — we'll email you as soon as there's an update.",
   },
   UNDER_REVIEW: {
     subject: `Your ${APP_NAME} astrologer application is under review`,

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { PalmAnalysisResult } from "@/lib/palmAnalysis";
 
 // ─── Phase timeline ────────────────────────────────────────────────────────
@@ -73,6 +74,7 @@ interface ScanSequenceProps {
 }
 
 export function ScanSequence({ imageUrl, result, onComplete }: ScanSequenceProps) {
+  const { t } = useTranslation();
   const [phaseIndex, setPhaseIndex] = useState(0);
   const completedRef = useRef(false);
   const mesh = useMemo(() => buildMesh(result.landmarkPoints), [result.landmarkPoints]);
@@ -120,7 +122,7 @@ export function ScanSequence({ imageUrl, result, onComplete }: ScanSequenceProps
       `}</style>
 
       {/* Base image */}
-      <img src={imageUrl} alt="Palm being analyzed" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+      <img src={imageUrl} alt={t("palm.scan.imageAlt")} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
 
       {/* Holographic grid */}
       <div style={{
@@ -205,7 +207,7 @@ export function ScanSequence({ imageUrl, result, onComplete }: ScanSequenceProps
       {/* Status + progress */}
       <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "18px 20px 20px", background: "linear-gradient(180deg, transparent, rgba(6,4,14,0.85) 55%)" }}>
         <div key={phaseIndex} style={{ color: "#BC6A4D", fontSize: 14, fontWeight: 700, letterSpacing: "0.08em", marginBottom: 10, animation: "ss-text-swap 0.35s ease" }}>
-          {PHASES[phaseIndex].message}
+          {t(`palm.scan.phase.${PHASES[phaseIndex].key}`, { defaultValue: PHASES[phaseIndex].message })}
         </div>
         <div style={{ height: 4, background: "rgba(255,255,255,0.12)", borderRadius: 4, overflow: "hidden" }}>
           <div style={{ height: "100%", width: `${((CUM[phaseIndex] + PHASES[phaseIndex].duration) / TOTAL_MS) * 100}%`, background: "linear-gradient(90deg,#BC6A4D,#e8b23f)", borderRadius: 4, boxShadow: "0 0 10px rgba(232,178,63,0.6)", transition: "width 0.4s ease" }} />

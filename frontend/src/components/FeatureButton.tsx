@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
+import Tx from "@/i18n/Tx";
 import { ArrowRight } from "lucide-react";
 import { useFeatureFlags } from "@/lib/featureFlags";
 
 interface FeatureButtonProps {
   to: string;
-  label: string;
+  label: React.ReactNode;
   className?: string;
 }
 
@@ -14,7 +15,7 @@ const FeatureButton = ({ to, label, className = "" }: FeatureButtonProps) => {
   if (isPathDisabled(to)) {
     return (
       <span className={`inline-flex h-9 items-center rounded-lg border border-home-line px-3 font-home-sans text-sm text-home-muted ${className}`}>
-        Temporarily unavailable
+        <Tx k="common.temporarilyUnavailable" />
       </span>
     );
   }

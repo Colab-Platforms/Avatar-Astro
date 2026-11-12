@@ -1,5 +1,6 @@
 import { OPENROUTER_MODEL } from '../config/aiModels.js';
 import axios from 'axios';
+import { WrongLanguageError, generateInLanguage, languageRule, tokenBudget, type ResponseLanguage } from '../utils/responseLanguage.js';
 
 interface BirthChartData {
   sign?: string;
@@ -24,7 +25,8 @@ interface HumanReadableInterpretation {
 const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
 
 export const generateHumanReadableInterpretation = async (
-  birthData: BirthChartData
+  birthData: BirthChartData,
+  lang?: ResponseLanguage
 ): Promise<HumanReadableInterpretation> => {
   try {
     const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
@@ -33,7 +35,7 @@ export const generateHumanReadableInterpretation = async (
       throw new Error('OPENROUTER_API_KEY is not set in environment variables');
     }
 
-    const prompt = `You are an expert astrologer. Based on the following birth chart data, provide a detailed but easy-to-understand interpretation in simple Hindi-English mix (Hinglish). Make it relatable and practical.
+    const prompt = `You are an expert astrologer. Based on the following birth chart data, provide a detailed but easy-to-understand interpretation${lang ? '' : ' in simple Hindi-English mix (Hinglish)'}. Make it relatable and practical.
 
 Birth Chart Data:
 ${JSON.stringify(birthData, null, 2)}
@@ -49,36 +51,38 @@ Please provide the response in this exact JSON format:
   "lifeAdvice": "A paragraph with practical life advice based on their chart"
 }
 
-Use simple, conversational language. Avoid complex astrological jargon. Make it feel personal and helpful.`;
+Use simple, conversational language. Avoid complex astrological jargon. Make it feel personal and helpful.${languageRule(lang, '')}`;
 
-    const response = await axios.post(
-      `${OPENROUTER_BASE_URL}/chat/completions`,
-      {
-        model: OPENROUTER_MODEL,
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a friendly astrologer who explains birth charts in simple, easy-to-understand language. Always respond with valid JSON.'
-          },
-          {
-            role: 'user',
-            content: prompt
+    const content = await generateInLanguage(lang, async (retryNote) => {
+      const response = await axios.post(
+        `${OPENROUTER_BASE_URL}/chat/completions`,
+        {
+          model: OPENROUTER_MODEL,
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a friendly astrologer who explains birth charts in simple, easy-to-understand language. Always respond with valid JSON.'
+            },
+            {
+              role: 'user',
+              content: prompt + retryNote
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: tokenBudget(1500, lang)
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'http://localhost:8081',
+            'X-Title': 'Astrology App'
           }
-        ],
-        temperature: 0.7,
-        max_tokens: 1500
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'http://localhost:8081',
-          'X-Title': 'Astrology App'
         }
-      }
-    );
+      );
 
-    const content = response.data.choices[0].message.content;
+      return response.data.choices[0].message.content as string;
+    });
     
     // Parse JSON from response
     const jsonMatch = content.match(/\{[\s\S]*\}/);
@@ -89,6 +93,7 @@ Use simple, conversational language. Avoid complex astrological jargon. Make it 
     const interpretation: HumanReadableInterpretation = JSON.parse(jsonMatch[0]);
     return interpretation;
   } catch (error: any) {
+    if (error instanceof WrongLanguageError) throw error;
     console.error('OpenRouter Service Error:', error.response?.status, error.response?.data?.error?.message || error.message);
     
     // Fallback: Return mock data for testing UI
@@ -172,7 +177,8 @@ Keep it positive, practical, and easy to understand. Use Hinglish (Hindi-English
 
 export const generateCompatibilityAnalysis = async (
   sign1: string,
-  sign2: string
+  sign2: string,
+  lang?: ResponseLanguage
 ): Promise<string> => {
   try {
     const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
@@ -190,37 +196,40 @@ Provide:
 4. Tips for a successful relationship
 5. Best areas of connection
 
-Use simple, encouraging language. Make it practical and relatable. Use Hinglish for better understanding.`;
+Use simple, encouraging language. Make it practical and relatable.${languageRule(lang, ' Use Hinglish for better understanding.')}`;
 
-    const response = await axios.post(
-      `${OPENROUTER_BASE_URL}/chat/completions`,
-      {
-        model: OPENROUTER_MODEL,
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an expert relationship astrologer providing compatibility analysis in simple, helpful language.'
-          },
-          {
-            role: 'user',
-            content: prompt
+    return await generateInLanguage(lang, async (retryNote) => {
+      const response = await axios.post(
+        `${OPENROUTER_BASE_URL}/chat/completions`,
+        {
+          model: OPENROUTER_MODEL,
+          messages: [
+            {
+              role: 'system',
+              content: 'You are an expert relationship astrologer providing compatibility analysis in simple, helpful language.'
+            },
+            {
+              role: 'user',
+              content: prompt + retryNote
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: tokenBudget(1000, lang)
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'http://localhost:8081',
+            'X-Title': 'Astrology App'
           }
-        ],
-        temperature: 0.7,
-        max_tokens: 1000
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'http://localhost:8081',
-          'X-Title': 'Astrology App'
         }
-      }
-    );
+      );
 
-    return response.data.choices[0].message.content;
+      return response.data.choices[0].message.content as string;
+    });
   } catch (error: any) {
+    if (error instanceof WrongLanguageError) throw error;
     console.error('OpenRouter Compatibility Error:', error.response?.status, error.response?.data || error.message);
     throw new Error(`Failed to generate compatibility analysis: ${error.response?.data?.error?.message || error.message}`);
   }

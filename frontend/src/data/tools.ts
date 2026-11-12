@@ -1,4 +1,5 @@
-import { FEATURES } from "./featureCatalog";
+import { FEATURES, LUCKY_VEHICLE_FEATURE, MUHURAT_FEATURE } from "./featureCatalog";
+import { BABY_NAME_FEATURE } from "@/features/babyName/feature";
 
 export interface AstrologyTool {
   title: string;
@@ -7,6 +8,8 @@ export interface AstrologyTool {
   image: string;
   /** CSS object-position for the card photo (default: centre). Used where the artwork is taller than the card. */
   imagePosition?: string;
+  /** A brand logo shown over the card image (transparent PNG under /public). Hidden, never replaced, if the file is missing. */
+  logo?: string;
   button: string;
   path: string;
 }
@@ -55,5 +58,27 @@ export const tools: AstrologyTool[] = [
     image: "/placeholders/Daily-horoscope.webp",
     button: "Read Now",
     path: "/horoscopes",
+  },
+  {
+    title: BABY_NAME_FEATURE.name,
+    description: BABY_NAME_FEATURE.subtitle,
+    image: "/images/tools/baby-name-card.png",
+    button: "Find a Name",
+    path: BABY_NAME_FEATURE.path,
+  },
+  {
+    title: LUCKY_VEHICLE_FEATURE.name,
+    description: LUCKY_VEHICLE_FEATURE.subtitle,
+    image: "/images/tools/lucky-vehicle-card.png",
+    button: "Find My Number",
+    path: LUCKY_VEHICLE_FEATURE.path,
+  },
+  {
+    title: MUHURAT_FEATURE.name,
+    description: "Explore suitable dates and timings for important events based on Hindu Panchang.",
+    image: "/images/tools/muhurat-finder-card.png",
+    logo: "/images/muhurat-logo.png",
+    button: "Find a Muhurat",
+    path: MUHURAT_FEATURE.path,
   },
 ];

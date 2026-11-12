@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { API_BASE_URL } from '@/lib/api';
+import i18n from '@/i18n';
 import { authedFetch, SignInRequiredError } from '@/lib/authedFetch';
 
 interface ChatMessage {
@@ -53,7 +54,11 @@ export function useChartChat() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to get response');
+        if (response.status === 502) {
+          const body = await response.json().catch(() => null);
+          if (body?.code === 'wrong_language') throw new Error(i18n.t('guru.errors.wrongLanguage'));
+        }
+        throw new Error(i18n.t('chartAi.errors.chat'));
       }
 
       const result = await response.json();
@@ -75,7 +80,7 @@ export function useChartChat() {
 
       return result.data.response;
     } catch (err: any) {
-      const error = err.message || 'Failed to get response';
+      const error = err.message || i18n.t('chartAi.errors.chat');
       setState(prev => ({
         ...prev,
         loading: false,

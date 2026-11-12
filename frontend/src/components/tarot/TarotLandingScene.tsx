@@ -1,11 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
-import { MAJOR_ARCANA } from "@/data/tarotData";
+import { useTranslation } from "react-i18next";
+import { MAJOR_ARCANA, tarotCardName } from "@/data/tarotData";
 import TarotArt from "./TarotArt";
 import NewAdvancedBadge from "../NewAdvancedBadge";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface TarotMode {
   id: string;
+  /** Dictionary key group: tarot.modes.<key>.* and tarot.positions.<key>.* */
+  key: "timeline" | "karma";
   name: string;
   cardCount: number;
   intro: string;
@@ -25,6 +28,7 @@ interface TarotLandingSceneProps {
 const TAROT_MODES: TarotMode[] = [
   {
     id: "life-timeline",
+    key: "timeline",
     name: "Tarot Bhagya",
     cardCount: 5,
     intro: "Understand your life's journey through five Tarot cards. Each card represents a different part of your journey:",
@@ -40,6 +44,7 @@ const TAROT_MODES: TarotMode[] = [
   },
   {
     id: "karma-mirror",
+    key: "karma",
     name: "Karma Mirror",
     cardCount: 3,
     intro: "Explore repeated patterns in your life and understand what may be holding you back. Three Tarot cards help you reflect on:",
@@ -129,22 +134,27 @@ const StarField: React.FC = () => {
 };
 
 /** Three overlapping cards drawn with the deck's own artwork */
-const CardFan: React.FC<{ ids: number[] }> = ({ ids }) => (
-  <div className="tls-fan" aria-hidden>
-    {ids.map((id, i) => {
-      const card = MAJOR_ARCANA[id];
-      return (
-        <div key={id} className={`tls-fan-card tls-fan-card--${i}`}>
-          <TarotArt card={card} />
-          <span className="tls-fan-name">{card.name}</span>
-        </div>
-      );
-    })}
-  </div>
-);
+const CardFan: React.FC<{ ids: number[] }> = ({ ids }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="tls-fan" aria-hidden>
+      {ids.map((id, i) => {
+        const card = MAJOR_ARCANA[id];
+        return (
+          <div key={id} className={`tls-fan-card tls-fan-card--${i}`}>
+            <TarotArt card={card} />
+            <span className="tls-fan-name">{tarotCardName(t, card)}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
 
 const ModeCard: React.FC<{ mode: TarotMode; onSelect: (id: string) => void; animDelay: number; variant: "a" | "b" }> = ({ mode, onSelect, animDelay, variant }) => {
   const [hovered, setHovered] = useState(false);
+  const { t } = useTranslation();
+  const name = t(`tarot.modes.${mode.key}.name`, { defaultValue: mode.name });
   return (
     <article
       className={`tls-card tls-card--${variant} tarot-anim-slide-up`}
@@ -156,49 +166,52 @@ const ModeCard: React.FC<{ mode: TarotMode; onSelect: (id: string) => void; anim
       <div className="tls-card-top">
         <CardFan ids={mode.preview} />
         <div className="tls-card-head">
-          <span className="tls-badge">{mode.cardCount} cards</span>
-          <h2>{mode.name}<sup>™</sup>{mode.id === "karma-mirror" && <NewAdvancedBadge className="ml-2" />}</h2>
+          <span className="tls-badge">{t("tarot.landing.cardsBadge", { number: mode.cardCount })}</span>
+          <h2>{name}<sup>™</sup>{mode.id === "karma-mirror" && <NewAdvancedBadge className="ml-2" />}</h2>
         </div>
       </div>
-      <p className="tls-intro">{mode.intro}</p>
+      <p className="tls-intro">{t(`tarot.modes.${mode.key}.intro`, { defaultValue: mode.intro })}</p>
       <ol className="tls-steps">
         {mode.steps.map((s, i) => (
           <li key={s.title}>
             <span className="tls-step-n">{i + 1}</span>
-            <span><strong>{s.title}</strong><em> – {s.question}</em></span>
+            <span><strong>{t(`tarot.positions.${mode.key}.${i}`, { defaultValue: s.title })}</strong><em> – {t(`tarot.positionQuestions.${mode.key}.${i}`, { defaultValue: s.question })}</em></span>
           </li>
         ))}
       </ol>
-      <p className="tls-purpose"><strong>Purpose: </strong>{mode.purpose}</p>
-      <button type="button" className="tls-cta" onClick={() => onSelect(mode.id)} aria-label={`Begin reading: ${mode.name}`}>
-        <span>Begin Reading</span>
+      <p className="tls-purpose"><strong>{t("tarot.landing.purposeLabel")}</strong>{t(`tarot.modes.${mode.key}.purpose`, { defaultValue: mode.purpose })}</p>
+      <button type="button" className="tls-cta" onClick={() => onSelect(mode.id)} aria-label={t("tarot.landing.beginAria", { name })}>
+        <span>{t("tarot.landing.beginReading")}</span>
         <span className="arrow" style={{ transform: hovered ? "translateX(4px)" : "translateX(0)" }}>→</span>
       </button>
     </article>
   );
 };
 
-const Comparison: React.FC = () => (
+const Comparison: React.FC = () => {
+  const { t } = useTranslation();
+  return (
   <section className="tls-compare tarot-anim-fade" style={{ animationDelay: "0.55s" }} aria-labelledby="tls-compare-h">
-    <h2 id="tls-compare-h">Which reading is right for you?</h2>
+    <h2 id="tls-compare-h">{t("tarot.landing.compareTitle")}</h2>
     <div className="tls-table-wrap">
       <table>
         <thead>
-          <tr><th scope="col">Tarot Bhagya™</th><th scope="col">Karma Mirror™ <NewAdvancedBadge /></th></tr>
+          <tr><th scope="col">{t("tarot.modes.timeline.name")}™</th><th scope="col">{t("tarot.modes.karma.name")}™ <NewAdvancedBadge /></th></tr>
         </thead>
         <tbody>
-          {COMPARISON.map(([a, b]) => (
-            <tr key={a}><td>{a}</td><td>{b}</td></tr>
+          {COMPARISON.map(([a, b], i) => (
+            <tr key={a}><td>{t(`tarot.landing.rows.${i}.a`, { defaultValue: a })}</td><td>{t(`tarot.landing.rows.${i}.b`, { defaultValue: b })}</td></tr>
           ))}
         </tbody>
       </table>
     </div>
     <ul className="tls-reco">
-      <li><strong>Choose Tarot Bhagya</strong> if you want to explore your past, present and possible future.</li>
-      <li><strong>Choose Karma Mirror</strong> if you want to understand repeated patterns and what you can change.</li>
+      <li><strong>{t("tarot.landing.chooseBhagya")}</strong>{t("tarot.landing.chooseBhagyaRest")}</li>
+      <li><strong>{t("tarot.landing.chooseKarma")}</strong>{t("tarot.landing.chooseKarmaRest")}</li>
     </ul>
   </section>
-);
+  );
+};
 
 const LANDING_CSS = `
 .tls-root{align-items:flex-start!important;overflow-x:clip}
@@ -256,6 +269,7 @@ const LANDING_CSS = `
 
 // ─── Main Component ────────────────────────────────────────────────────────────
 const TarotLandingScene: React.FC<TarotLandingSceneProps> = ({ onModeSelect }) => {
+  const { t } = useTranslation();
   return (
     <div className="tarot-landing-root tls-root">
       <StarField />
@@ -264,15 +278,15 @@ const TarotLandingScene: React.FC<TarotLandingSceneProps> = ({ onModeSelect }) =
       <div className="tls-inner">
         <div className="tarot-anim-fade" style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 10, animationDelay: "0.05s" }}>
           <div className="tarot-divider-line tarot-divider-line--gold-right" style={{ flex: "none", width: 40 }} />
-          <span className="tarot-eyebrow">Select Your Intuitive Path</span>
+          <span className="tarot-eyebrow">{t("tarot.landing.eyebrow")}</span>
           <div className="tarot-divider-line tarot-divider-line--gold-left" style={{ flex: "none", width: 40 }} />
         </div>
 
         <h1 className="tarot-headline tarot-anim-slide-up" style={{ animationDelay: "0.15s", marginBottom: 14 }}>
-          <span className="tarot-headline-line1">What Are You Seeking</span>
-          <span className="tarot-headline-line2">Clarity On Today?</span>
+          <span className="tarot-headline-line1">{t("tarot.landing.headline1")}</span>
+          <span className="tarot-headline-line2">{t("tarot.landing.headline2")}</span>
         </h1>
-        <p className="tls-sub tarot-anim-fade" style={{ animationDelay: "0.25s" }}>Two readings, two different purposes. Pick the one that fits what is on your mind.</p>
+        <p className="tls-sub tarot-anim-fade" style={{ animationDelay: "0.25s" }}>{t("tarot.landing.sub")}</p>
 
         <div className="tls-grid">
           {TAROT_MODES.map((mode, i) => (
@@ -282,7 +296,7 @@ const TarotLandingScene: React.FC<TarotLandingSceneProps> = ({ onModeSelect }) =
 
         <Comparison />
 
-        <p className="tarot-footer-label tarot-anim-fade tls-foot" style={{ animationDelay: "0.7s" }}>Pick a Card. Find Your Clarity. Move Forward.</p>
+        <p className="tarot-footer-label tarot-anim-fade tls-foot" style={{ animationDelay: "0.7s" }}>{t("tarot.landing.footer")}</p>
       </div>
     </div>
   );

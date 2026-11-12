@@ -1,6 +1,7 @@
 import { forwardRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Flower2, User } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { GuruMessage } from "./types";
 
 /** Turns **bold** into <strong> (used for the short section headings); everything else stays plain text. */
@@ -49,7 +50,9 @@ interface GuruConversationProps {
  * columns.
  */
 const GuruConversation = forwardRef<HTMLDivElement, GuruConversationProps>(
-  ({ messages, loading, guruName, onRetry }, bottomRef) => (
+  ({ messages, loading, guruName, onRetry }, bottomRef) => {
+    const { t } = useTranslation();
+    return (
     <div className="flex w-full flex-col gap-5 py-2">
       <AnimatePresence initial={false}>
         {messages.map((msg, i) => (
@@ -83,7 +86,7 @@ const GuruConversation = forwardRef<HTMLDivElement, GuruConversationProps>(
                   onClick={() => onRetry(msg.retryText as string)}
                   className="mt-2 rounded-full border border-[#FF9D4D]/40 px-3 py-1 text-sm text-[#FF9D4D] hover:bg-[#FF9D4D]/10"
                 >
-                  Try again
+                  {t("common.retry")}
                 </button>
               )}
             </div>
@@ -97,7 +100,7 @@ const GuruConversation = forwardRef<HTMLDivElement, GuruConversationProps>(
             <Flower2 className="h-4 w-4 text-[#592209]" aria-hidden="true" />
           </div>
           <div className="flex items-center gap-1.5 rounded-2xl rounded-tl-sm border border-primary/15 bg-[#FBF5EC] px-4 py-3.5">
-            <span className="mr-1 text-xs italic text-[#6B4A37]">{guruName ? `${guruName} is typing` : "Typing"}</span>
+            <span className="mr-1 text-xs italic text-[#6B4A37]">{guruName ? t("guru.chat.typingNamed", { name: guruName }) : t("guru.chat.typing")}</span>
             {[0, 1, 2].map((d) => (
               <motion.span
                 key={d}
@@ -112,7 +115,8 @@ const GuruConversation = forwardRef<HTMLDivElement, GuruConversationProps>(
 
       <div ref={bottomRef} />
     </div>
-  ),
+    );
+  },
 );
 
 GuruConversation.displayName = "GuruConversation";

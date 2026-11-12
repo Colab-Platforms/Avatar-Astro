@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import AskDivyaSection from "@/features/guru/AskDivyaSection";
 import FeatureFaq from "@/components/FeatureFaq";
 import { FEATURES } from "@/data/featureCatalog";
@@ -293,6 +294,7 @@ function StarCanvas() {
 }
 
 export default function InnerVoice() {
+  const { t } = useTranslation();
   useFeatureTitle(FEATURES.karma);
   const [lastThought, setLastThought] = useState("");
 
@@ -327,15 +329,15 @@ export default function InnerVoice() {
           <span className="iv-hero-om" style={{ filter: "none", marginBottom: 10 }}>
             <img src="/images/tools/inner-voice-logo.png" alt="" aria-hidden="true" data-testid="inner-voice-logo" width={104} height={118} className="mx-auto select-none" draggable={false} />
           </span>
-          <h1 className="iv-hero-title" style={{ marginBottom: 10 }}>Inner Voice</h1>
-          <h2 className="iv-hero-tagline" style={{ marginBottom: 22, letterSpacing: 3, fontSize: 15 }}>Know Your Karma for a Better Life</h2>
+          <h1 className="iv-hero-title" style={{ marginBottom: 10 }}>{t("innerVoice.page.title")}</h1>
+          <h2 className="iv-hero-tagline" style={{ marginBottom: 22, letterSpacing: 3, fontSize: 15 }}>{t("innerVoice.page.tagline")}</h2>
           <figure className="mx-auto max-w-xl" data-testid="inner-voice-quote">
-            <blockquote className="font-home-serif text-xl italic leading-relaxed text-[#592209] sm:text-2xl">“Every kind thought and small good deed plants a seed for a better tomorrow.”</blockquote>
+            <blockquote className="font-home-serif text-xl italic leading-relaxed text-[#592209] sm:text-2xl">{t("innerVoice.page.quote")}</blockquote>
           </figure>
           {latestScore !== null && (
             <div className="iv-karma-strip" style={{ marginTop: 28 }}>
-              <div className="iv-ks-item"><div className="iv-ks-val">{latestScore}</div><div className="iv-ks-lbl">{FEATURES.karmaScore.name}</div></div>
-              <div className="iv-ks-item"><div className="iv-ks-val">{karmaHistory.length}</div><div className="iv-ks-lbl">Days Saved</div></div>
+              <div className="iv-ks-item"><div className="iv-ks-val">{latestScore}</div><div className="iv-ks-lbl">{t("features.karma-score.name", { defaultValue: FEATURES.karmaScore.name })}</div></div>
+              <div className="iv-ks-item"><div className="iv-ks-val">{karmaHistory.length}</div><div className="iv-ks-lbl">{t("innerVoice.page.daysSaved")}</div></div>
             </div>
           )}
         </div>

@@ -26,6 +26,7 @@
     "db:seed:astrologer-backfill-slugs": "tsx prisma/seeds/backfillAstrologerSlugs.ts",
     "test:astrologer": "tsx --test src/modules/astrologer/__tests__/*.test.ts src/modules/admin/astrologers/__tests__/*.test.ts",
     "test:ai": "tsx --test src/__tests__/routes/aiRoutes.node-test.ts",
+    "test:language": "tsx --test --test-timeout=240000 src/__tests__/routes/responseLanguage.node-test.ts",
     "test:tarot": "tsx --test src/__tests__/routes/tarotRoutes.node-test.ts",
     "test:websub": "tsx --test src/__tests__/routes/websub.node-test.ts",
     "test:chat-session": "tsx --test --test-timeout=240000 src/__tests__/routes/dailyChatSession.node-test.ts",

@@ -1049,7 +1049,10 @@ import { Link } from "react-router-dom";
 import FullScreenLoader from "@/components/Loader/FullScreenLoader";
 import { useBackOverride } from "../context/NavigationContext";
 import { User, ArrowRight } from "lucide-react";
-import { zodiacSigns } from "@/data/zodiacData";
+import { Trans, useTranslation } from "react-i18next";
+import i18n from "@/i18n";
+import { useGlossary } from "@/i18n/glossary";
+import { zodiacSigns, useZodiacText } from "@/data/zodiacData";
 import CompatibilityEducation from "@/components/CompatibilityEducation";
 import zodiacAries from "@/assets/zodiac-gold/aries.png";
 import zodiacTaurus from "@/assets/zodiac-gold/taurus.png";
@@ -1401,6 +1404,7 @@ const YEARS = Array.from({ length: 120 }, (_, i) => new Date().getFullYear() - i
 
 // Gender is collected separately for each partner. It is optional and is not used in the Sun-sign comparison.
 const GENDER_OPTIONS = ["Male", "Female", "Other", "Prefer not to say"] as const;
+const GENDER_KEY: Record<string, string> = { Male: "male", Female: "female", Other: "other", "Prefer not to say": "preferNot" };
 type Person = { name: string; gender: string; day: string; month: string; year: string; time: string; place: PlaceResult | null };
 const empty = (): Person => ({ name: "", gender: "", day: "", month: "", year: "", time: "", place: null });
 
@@ -1421,6 +1425,7 @@ function getZodiac(day: number, month: number) {
 const ELEMENT_OF = Object.fromEntries(zodiacSigns.map(z => [z.name, z.element])) as Record<string, string>;
 const SIGN_INDEX = Object.fromEntries(zodiacSigns.map((z, i) => [z.name, i])) as Record<string, number>;
 
+// English data. The shown text is looked up by key (compat.aspect.<distance>.*, compat.elementNote.*, compat.elementStyle.*, ...) with this English as the fallback.
 type Aspect = { distance: number; name: string; tone: string; text: string };
 const ASPECTS: Aspect[] = [
   { distance: 0, name: "Same sign", tone: "Mirror", text: "You share the same Sun sign, so you tend to react in similar ways and share the same blind spots. Traditionally this brings instant familiarity, and it can feel like looking in a mirror." },
@@ -1488,7 +1493,7 @@ function loveScores(distance: number, e1: string, e2: string) {
   const clamp = (n: number) => Math.max(0, Math.min(100, n));
   return { aspectPts, elementPts, overall, p1: clamp(overall + adj(e1, e2)), p2: clamp(overall + adj(e2, e1)) };
 }
-const scoreBand = (n: number) => (n >= 80 ? "Very harmonious" : n >= 65 ? "Comfortable, with some effort" : n >= 50 ? "Mixed: ease and effort" : "Asks for conscious effort");
+const scoreBand = (n: number) => (n >= 80 ? "veryHarmonious" : n >= 65 ? "comfortable" : n >= 50 ? "mixed" : "conscious"); // key suffix of compat.band.*
 
 function comparePair(sign1: string, sign2: string) {
   const d = (SIGN_INDEX[sign2] - SIGN_INDEX[sign1] + 12) % 12;
@@ -1534,6 +1539,7 @@ const formCss = `
 `;
 
 function PersonForm({ idp, title, accentColor, data, onChange }: { idp: string; title: string; accentColor: string; data: Person; onChange: (p: Person) => void }) {
+  const { t } = useTranslation();
   const up = <K extends keyof Person>(k: K, v: Person[K]) => onChange({ ...data, [k]: v });
   return (
     <div style={{background:"#FBF5EC", border:`1px solid ${accentColor}33`, borderRadius:20, padding:"28px 24px"}}>
@@ -1543,65 +1549,67 @@ function PersonForm({ idp, title, accentColor, data, onChange }: { idp: string; 
       </div>
 
       <div style={{marginBottom:20}}>
-        <label htmlFor={`${idp}-name`} style={ccLabelStyle}>Name *</label>
+        <label htmlFor={`${idp}-name`} style={ccLabelStyle}>{t("compat.form.name")}</label>
         <div style={{position:"relative"}}>
           <User size={16} style={{position:"absolute", left:14, top:"50%", transform:"translateY(-50%)", color:"rgba(48,22,7,0.72)", pointerEvents:"none"}}/>
-          <input id={`${idp}-name`} maxLength={60} autoComplete="off" value={data.name} onChange={e => up("name", e.target.value)} placeholder="First name or nickname" style={{...ccInputStyle, paddingLeft:38}} />
+          <input id={`${idp}-name`} maxLength={60} autoComplete="off" value={data.name} onChange={e => up("name", e.target.value)} placeholder={t("compat.form.namePlaceholder")} style={{...ccInputStyle, paddingLeft:38}} />
         </div>
       </div>
 
       <div style={{marginBottom:20}}>
-        <label htmlFor={`${idp}-gender`} style={ccLabelStyle}>Gender <span style={{opacity:0.7, fontWeight:400}}>(optional)</span></label>
+        <label htmlFor={`${idp}-gender`} style={ccLabelStyle}>{t("compat.form.gender")} <span style={{opacity:0.7, fontWeight:400}}>{t("compat.form.optional")}</span></label>
         <select id={`${idp}-gender`} value={data.gender} onChange={e => up("gender", e.target.value)} style={ccInputStyle}>
-          <option value="">Select gender</option>
-          {GENDER_OPTIONS.map(g => <option key={g} value={g}>{g}</option>)}
+          <option value="">{t("compat.form.selectGender")}</option>
+          {GENDER_OPTIONS.map(g => <option key={g} value={g}>{t(`compat.gender.${GENDER_KEY[g]}`, { defaultValue: g })}</option>)}
         </select>
       </div>
 
       <div>
-        <label htmlFor={`${idp}-day`} style={ccLabelStyle}>Date of Birth *</label>
+        <label htmlFor={`${idp}-day`} style={ccLabelStyle}>{t("compat.form.dob")}</label>
         <div style={{display:"grid", gridTemplateColumns:"1fr 1fr 1.3fr", gap:10}}>
-          <select id={`${idp}-day`} aria-label={`${title} day of birth`} value={data.day} onChange={e => up("day", e.target.value)} style={ccInputStyle}>
-            <option value="">DD</option>
+          <select id={`${idp}-day`} aria-label={t("compat.form.dayAria", { title })} value={data.day} onChange={e => up("day", e.target.value)} style={ccInputStyle}>
+            <option value="">{t("compat.form.dd")}</option>
             {DAYS.map(d => <option key={d} value={d}>{String(d).padStart(2,"0")}</option>)}
           </select>
-          <select id={`${idp}-month`} aria-label={`${title} month of birth`} value={data.month} onChange={e => up("month", e.target.value)} style={ccInputStyle}>
-            <option value="">MM</option>
-            {MONTHS.map((m, i) => <option key={m} value={i+1}>{m}</option>)}
+          <select id={`${idp}-month`} aria-label={t("compat.form.monthAria", { title })} value={data.month} onChange={e => up("month", e.target.value)} style={ccInputStyle}>
+            <option value="">{t("compat.form.mm")}</option>
+            {MONTHS.map((m, i) => <option key={m} value={i+1}>{t(`compat.months.${i}`, { defaultValue: m })}</option>)}
           </select>
-          <select id={`${idp}-year`} aria-label={`${title} year of birth`} value={data.year} onChange={e => up("year", e.target.value)} style={ccInputStyle}>
-            <option value="">YYYY</option>
+          <select id={`${idp}-year`} aria-label={t("compat.form.yearAria", { title })} value={data.year} onChange={e => up("year", e.target.value)} style={ccInputStyle}>
+            <option value="">{t("compat.form.yyyy")}</option>
             {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
         </div>
       </div>
 
       <div style={{marginTop:20}}>
-        <label htmlFor={`${idp}-time`} style={ccLabelStyle}>Birth Time <span style={{opacity:0.7, fontWeight:400}}>(for Guna Milan)</span></label>
+        <label htmlFor={`${idp}-time`} style={ccLabelStyle}>{t("compat.form.birthTime")} <span style={{opacity:0.7, fontWeight:400}}>{t("compat.form.forGuna")}</span></label>
         <input id={`${idp}-time`} type="time" value={data.time} onChange={e => up("time", e.target.value)} style={ccInputStyle} />
       </div>
       <div style={{marginTop:20}}>
-        <span style={ccLabelStyle}>Birth Place <span style={{opacity:0.7, fontWeight:400}}>(for Guna Milan)</span></span>
+        <span style={ccLabelStyle}>{t("compat.form.birthPlace")} <span style={{opacity:0.7, fontWeight:400}}>{t("compat.form.forGuna")}</span></span>
         <LocationPicker value={data.place} onSelect={v => up("place", v)} />
       </div>
       <p style={{marginTop:14, fontSize:13, lineHeight:1.5, color:"#6B4A37"}}>
-        Why we ask: the traditional Vedic Guna Milan score uses the Moon's Nakshatra, which changes about every day, so it needs the exact birth time and place of both people. Leave both blank to get the Sun sign comparison only.
+        {t("compat.form.whyAsk")}
       </p>
     </div>
   );
 }
 
-const LOADING_STEPS = ["Finding both Sun signs", "Comparing the elements", "Comparing the signs' aspect"];
-
 function LoadingScreen() {
-  return <FullScreenLoader title="Comparing Your Signs" description="Finding both Sun signs and comparing them…" steps={LOADING_STEPS} testId="compatibility-loader" />;
+  const { t } = useTranslation();
+  const steps = [t("compat.loading.step1"), t("compat.loading.step2"), t("compat.loading.step3")];
+  return <FullScreenLoader title={t("compat.loading.title")} description={t("compat.loading.description")} steps={steps} testId="compatibility-loader" />;
 }
 
 function ZodiacPortrait({ zodiac, color }: { zodiac: string; color: string }) {
+  const { t } = useTranslation();
+  const { g } = useGlossary();
   return (
     <div className="cc-portrait">
       <div style={{position:"absolute", inset:0, borderRadius:"50%", background:`radial-gradient(circle, ${color}12, transparent 65%)`}}></div>
-      <img src={ZODIAC_IMAGES[zodiac]} alt={`${zodiac} symbol`} style={{position:"relative", width:"96%", height:"96%", objectFit:"contain", filter:`drop-shadow(0 0 14px ${color}33)`}}/>
+      <img src={ZODIAC_IMAGES[zodiac]} alt={t("compat.results.symbolAlt", { sign: g("rashi", zodiac) })} style={{position:"relative", width:"96%", height:"96%", objectFit:"contain", filter:`drop-shadow(0 0 14px ${color}33)`}}/>
     </div>
   );
 }
@@ -1609,10 +1617,25 @@ function ZodiacPortrait({ zodiac, color }: { zodiac: string; color: string }) {
 type Result = { p1: Person & { zodiac: string }; p2: Person & { zodiac: string } };
 
 function Results({ result, onReset, onAddDetails }: { result: Result; onReset: () => void; onAddDetails: () => void }) {
+  const { t } = useTranslation();
+  const { g } = useGlossary();
+  const zt = useZodiacText();
   const { p1, p2 } = result;
   const c = comparePair(p1.zodiac, p2.zodiac);
   const info1 = zodiacSigns.find(z => z.name === p1.zodiac);
   const info2 = zodiacSigns.find(z => z.name === p2.zodiac);
+
+  // Displayed text for the fixed English data above (the data and its ids never change).
+  const dist = c.aspect.distance;
+  const aspectName = t(`compat.aspect.${dist}.name`, { defaultValue: c.aspect.name });
+  const aspectTone = t(`compat.aspect.${dist}.tone`, { defaultValue: c.aspect.tone });
+  const aspectText = t(`compat.aspect.${dist}.text`, { defaultValue: c.aspect.text });
+  const elName = (e: string) => zt.element(e);
+  const styleOf = (e: string, field: "emotional" | "communication" | "strength" | "watch") => t(`compat.elementStyle.${e}.${field}`, { defaultValue: ELEMENT_STYLE[e][field] });
+  const elementNote = t(`compat.elementNote.${c.elementKey.replace("+", "_")}`, { defaultValue: c.elementNote });
+  const harmonyLower = c.harmonious ? t("compat.harmony.harmoniousLower") : t("compat.harmony.contrastingLower");
+  const harmonyPill = c.harmonious ? t("compat.harmony.harmonious") : t("compat.harmony.contrasting");
+  const traitsOf = (i: typeof info1) => (i ? i.traits.slice(0, 3).map((_, idx) => zt.trait(i, idx)) : []);
 
   const cardStyle: CSSProperties = { background:"#FBF5EC", border:"1px solid rgba(89,34,9,0.2)", borderRadius:16, padding:28 };
   const sectionTitle: CSSProperties = { fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:"clamp(20px,4vw,26px)", color:"#301607", fontWeight:700, textAlign:"center", textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:28 };
@@ -1627,7 +1650,7 @@ function Results({ result, onReset, onAddDetails }: { result: Result; onReset: (
           {p1.name} <span style={{color:"#592209"}}>✦</span> {p2.name}
         </h1>
         <div style={{color:"#592209", fontWeight:600, fontSize:15, letterSpacing:"0.05em", textTransform:"uppercase", marginTop:10}}>
-          {FEATURES.compatibility.name} · Sun Sign Compatibility · {p1.zodiac} &amp; {p2.zodiac}
+          {t("features.compatibility.name", { defaultValue: FEATURES.compatibility.name })} · {t("compat.sunSignTitle")} · {g("rashi", p1.zodiac)} &amp; {g("rashi", p2.zodiac)}
         </div>
       </div>
 
@@ -1640,9 +1663,9 @@ function Results({ result, onReset, onAddDetails }: { result: Result; onReset: (
       <GunaMilanPanel people={[p1,p2]} onAddDetails={onAddDetails}/>
 
       <div className="r-note" style={{...cardStyle, marginBottom:40, borderColor:"rgba(89,34,9,0.35)"}}>
-        <div style={{...label, color:"#592209"}}>How this comparison was made</div>
+        <div style={{...label, color:"#592209"}}>{t("compat.results.howMadeTitle")}</div>
         <p style={{fontSize:16, lineHeight:1.7, color:"#4A2E1F"}}>
-          Each person's Sun sign comes from their birth date. The Seva then compares the two signs' elements and the traditional aspect between them. It uses fixed written text and a fixed scoring table (shown under the percentages), with no generated text and no randomness. The percentages describe Sun-sign tendencies for reflection; they are not Guna Milan. Names are shown only for display and do not affect the result.
+          {t("compat.results.howMadeBody")}
         </p>
       </div>
 
@@ -1650,8 +1673,8 @@ function Results({ result, onReset, onAddDetails }: { result: Result; onReset: (
         {[{p:p1, i:info1}, {p:p2, i:info2}].map(({p,i}) => (
           <div key={p.name + p.zodiac} style={cardStyle}>
             <div style={label}>{p.name}</div>
-            <div style={{color:"#301607", fontWeight:800, fontSize:24, marginBottom:6}}>{p.zodiac}</div>
-            {i && <div style={{color:"#6B4A37", fontSize:15, lineHeight:1.6}}>{i.dates} · {i.element} · {i.traits.slice(0,3).join(", ")}</div>}
+            <div style={{color:"#301607", fontWeight:800, fontSize:24, marginBottom:6}}>{g("rashi", p.zodiac)}</div>
+            {i && <div style={{color:"#6B4A37", fontSize:15, lineHeight:1.6}}>{zt.dates(i)} · {elName(i.element)} · {traitsOf(i).join(", ")}</div>}
           </div>
         ))}
       </div>
@@ -1665,15 +1688,15 @@ function Results({ result, onReset, onAddDetails }: { result: Result; onReset: (
           </div>
         );
         const person = (who: typeof p1, n: number, e: string, i: typeof info1, k: "p1" | "p2") => {
-          const st = ELEMENT_STYLE[e];
+          const values = { sign: g("rashi", who.zodiac), element: elName(e), name: who.name, emotional: styleOf(e, "emotional"), communication: styleOf(e, "communication"), strength: styleOf(e, "strength"), watch: styleOf(e, "watch"), traits: traitsOf(i).join(", ").toLowerCase() };
           return (
             <div data-testid={`cc-${k}-love`} style={{...cardStyle, textAlign:"center"}}>
-              <div style={label}>{who.name} · {who.zodiac}</div>
+              <div style={label}>{who.name} · {g("rashi", who.zodiac)}</div>
               {ring(n, false)}
-              <div style={{fontWeight:800, fontSize:18, color:"#592209", margin:"10px 0 4px"}}>{who.name}'s Love Compatibility</div>
-              <div style={{fontSize:14, color:"#6B4A37", marginBottom:10}}>{scoreBand(n)}</div>
+              <div style={{fontWeight:800, fontSize:18, color:"#592209", margin:"10px 0 4px"}}>{t("compat.love.personTitle", { name: who.name })}</div>
+              <div style={{fontSize:14, color:"#6B4A37", marginBottom:10}}>{t(`compat.band.${scoreBand(n)}`)}</div>
               <p style={{fontSize:16, lineHeight:1.65, color:"#301607", margin:0, textAlign:"left"}}>
-                As a {who.zodiac} ({e}){i ? `, ${i.traits.slice(0,3).join(", ").toLowerCase()}` : ""}, {st.emotional}. In conversation {who.name} is {st.communication}. {who.name} brings {st.strength}, and may need to watch for {st.watch}.
+                {t(i ? "compat.love.personTextWithTraits" : "compat.love.personText", values)}
               </p>
             </div>
           );
@@ -1681,11 +1704,11 @@ function Results({ result, onReset, onAddDetails }: { result: Result; onReset: (
         return (
           <div style={{marginBottom:40}} data-testid="cc-love">
             <div data-testid="cc-overall" style={{...cardStyle, marginBottom:20, textAlign:"center", background:"linear-gradient(150deg,#592209,#3b1706)", color:"#F5E9D6", borderColor:"#592209"}}>
-              <div style={{...label, color:"#E9B872"}}>Overall Love Compatibility</div>
+              <div style={{...label, color:"#E9B872"}}>{t("compat.love.overallTitle")}</div>
               <div data-testid="cc-overall-pct">{ring(sc.overall, true)}</div>
-              <div style={{fontWeight:800, fontSize:"clamp(20px,4vw,26px)", margin:"12px 0 6px"}}>{p1.name} &amp; {p2.name}: {scoreBand(sc.overall)}</div>
+              <div style={{fontWeight:800, fontSize:"clamp(20px,4vw,26px)", margin:"12px 0 6px"}}>{p1.name} &amp; {p2.name}: {t(`compat.band.${scoreBand(sc.overall)}`)}</div>
               <p style={{fontSize:16, lineHeight:1.7, margin:"0 auto", maxWidth:660}}>
-                This percentage comes from two things: the element pairing ({c.harmonious ? "traditionally harmonious" : "traditionally contrasting"}, {sc.elementPts} points) and the aspect between your signs ({c.aspect.name}, {sc.aspectPts} points). It shows how easily your Sun-sign styles fit. It is not a prediction, and couples with any score can build a good relationship.
+                {t("compat.love.overallBody", { harmony: harmonyLower, elementPts: sc.elementPts, aspect: aspectName, aspectPts: sc.aspectPts })}
               </p>
             </div>
             <div className="cc-two" style={{marginBottom:12}}>
@@ -1693,10 +1716,9 @@ function Results({ result, onReset, onAddDetails }: { result: Result; onReset: (
               {person(p2, sc.p2, c.e2, info2, "p2")}
             </div>
             <details data-testid="cc-score-method" style={{...cardStyle, padding:18}}>
-              <summary style={{cursor:"pointer", fontWeight:700, color:"#592209"}}>How these percentages are worked out</summary>
+              <summary style={{cursor:"pointer", fontWeight:700, color:"#592209"}}>{t("compat.love.methodTitle")}</summary>
               <p style={{fontSize:15, lineHeight:1.7, color:"#4A2E1F", margin:"10px 0 0"}}>
-                Overall = average of the aspect points and the element points. Aspect points: same sign 70, neighbouring signs 55, sextile 75, square 50, trine 90, quincunx 45, opposition 65. Element points: same element 90, Air with Fire or Earth with Water 80, Earth with Fire 55, Air with Water 55, Air with Earth 50, Fire with Water 45.
-                Each person's figure is the overall score plus 4 if the partner's element traditionally feeds theirs (Air feeds Fire, Water nourishes Earth), or minus 4 for the feeding partner. Here: ({sc.aspectPts} + {sc.elementPts}) ÷ 2 = {sc.overall}%.
+                {t("compat.love.methodBody")}{" "}{t("compat.love.methodExample", { aspectPts: sc.aspectPts, elementPts: sc.elementPts, overall: sc.overall })}
               </p>
             </details>
           </div>
@@ -1704,38 +1726,47 @@ function Results({ result, onReset, onAddDetails }: { result: Result; onReset: (
       })()}
 
       <div style={{marginBottom:40}}>
-        <div style={sectionTitle}>Matching Factors</div>
-        <p style={{textAlign:"center", color:"#4A2E1F", fontSize:15, margin:"-14px auto 20px", maxWidth:600}}>The two individual factors behind the overall result.</p>
+        <div style={sectionTitle}>{t("compat.factors.title")}</div>
+        <p style={{textAlign:"center", color:"#4A2E1F", fontSize:15, margin:"-14px auto 20px", maxWidth:600}}>{t("compat.factors.subtitle")}</p>
         <div className="cc-two" style={{marginBottom:0}}>
           <div data-testid="cc-aspect" style={cardStyle}>
-            <div style={label}>Aspect between the signs</div>
-            <div style={{color:"#301607", fontWeight:800, fontSize:22, marginBottom:10}}>{c.aspect.name}</div>
-            <div style={{marginBottom:14}}><span style={pill(["Flowing","Supportive","Mirror"].includes(c.aspect.tone))}>{c.aspect.tone}</span></div>
-            <p style={{fontSize:16, lineHeight:1.7, color:"#4A2E1F"}}>{c.aspect.text}</p>
+            <div style={label}>{t("compat.factors.aspectLabel")}</div>
+            <div style={{color:"#301607", fontWeight:800, fontSize:22, marginBottom:10}}>{aspectName}</div>
+            <div style={{marginBottom:14}}><span style={pill(["Flowing","Supportive","Mirror"].includes(c.aspect.tone))}>{aspectTone}</span></div>
+            <p style={{fontSize:16, lineHeight:1.7, color:"#4A2E1F"}}>{aspectText}</p>
           </div>
           <div data-testid="cc-elements" style={cardStyle}>
-            <div style={label}>Element pairing</div>
-            <div style={{color:"#301607", fontWeight:800, fontSize:22, marginBottom:10}}>{c.e1 === c.e2 ? `Two ${c.e1} signs` : `${c.e1} with ${c.e2}`}</div>
-            <div style={{marginBottom:14}}><span style={pill(c.harmonious)}>{c.harmonious ? "Traditionally harmonious" : "Traditionally contrasting"}</span></div>
-            <p style={{fontSize:16, lineHeight:1.7, color:"#4A2E1F"}}>{c.elementNote}</p>
+            <div style={label}>{t("compat.factors.elementLabel")}</div>
+            <div style={{color:"#301607", fontWeight:800, fontSize:22, marginBottom:10}}>{c.e1 === c.e2 ? t("compat.factors.twoSigns", { element: elName(c.e1) }) : t("compat.factors.withOther", { element1: elName(c.e1), element2: elName(c.e2) })}</div>
+            <div style={{marginBottom:14}}><span style={pill(c.harmonious)}>{harmonyPill}</span></div>
+            <p style={{fontSize:16, lineHeight:1.7, color:"#4A2E1F"}}>{elementNote}</p>
           </div>
         </div>
       </div>
 
       {(() => {
-        const st1 = ELEMENT_STYLE[c.e1], st2 = ELEMENT_STYLE[c.e2];
         const same = c.e1 === c.e2;
+        const v = {
+          name1: p1.name, name2: p2.name, element1: elName(c.e1), element2: elName(c.e2),
+          strength1: styleOf(c.e1, "strength"), strength2: styleOf(c.e2, "strength"),
+          communication1: styleOf(c.e1, "communication"), communication2: styleOf(c.e2, "communication"),
+          emotional1: styleOf(c.e1, "emotional"), emotional2: styleOf(c.e2, "emotional"),
+          watch1: styleOf(c.e1, "watch"), watch2: styleOf(c.e2, "watch"),
+          aspect: aspectName.toLowerCase(), tone: aspectTone.toLowerCase(),
+          closing: c.harmonious ? t("compat.guide.strengths.closingHarmonious") : t("compat.guide.strengths.closingContrast"),
+        };
+        const sd = same ? "same" : "different";
         const blocks: { key: string; title: string; ask: string; text: string }[] = [
-          { key:"strengths", title:"Relationship strengths", ask:"What can help you two the most?", text: `${p1.name}'s ${c.e1} nature brings ${st1.strength}${same ? "" : `, and ${p2.name}'s ${c.e2} nature brings ${st2.strength}`}. ${c.harmonious ? "The pairing is traditionally harmonious, which supports these strengths." : "The contrast can become a strength when each respects the other's style."}` },
-          { key:"differences", title:"Where you differ", ask:"How are you not the same?", text: same ? `You share the ${c.e1} element, so your styles are alike. Differences will come more from personal experience than from the sign.` : `${p1.name} is ${c.e1}: ${st1.communication}. ${p2.name} is ${c.e2}: ${st2.communication}.` },
-          { key:"emotional", title:"Emotional connection", ask:"How do you each feel and show feelings?", text: same ? `For both ${p1.name} and ${p2.name}, ${st1.emotional}. Because you feel in a similar way, you are likely to understand each other without much explanation.` : `For ${p1.name}, ${st1.emotional}. For ${p2.name}, ${st2.emotional}.` },
-          { key:"communication", title:"Communication", ask:"How do you each talk things through?", text: same ? `Both of you are usually ${st1.communication}. You will probably understand each other quickly, and it can help to slow down when you are both strongly opinionated.` : `${p1.name} is usually ${st1.communication}; ${p2.name} is usually ${st2.communication}. Putting your point in the other person's style helps a lot.` },
-          { key:"challenges", title:"Possible challenges", ask:"What could you stumble on?", text: `Each of you may need to watch for ${st1.watch}${same ? "" : ` (${p1.name}) and ${st2.watch} (${p2.name})`}. The aspect between your signs is a ${c.aspect.name.toLowerCase()}, read as ${c.aspect.tone.toLowerCase()}.` },
-          { key:"guidance", title:"Practical guidance", ask:"What can you do about it?", text: ASPECT_ADVICE[c.aspect.distance] },
+          { key:"strengths", title:t("compat.guide.strengths.title"), ask:t("compat.guide.strengths.ask"), text: t(`compat.guide.strengths.${sd}`, v) },
+          { key:"differences", title:t("compat.guide.differences.title"), ask:t("compat.guide.differences.ask"), text: t(`compat.guide.differences.${sd}`, v) },
+          { key:"emotional", title:t("compat.guide.emotional.title"), ask:t("compat.guide.emotional.ask"), text: t(`compat.guide.emotional.${sd}`, v) },
+          { key:"communication", title:t("compat.guide.communication.title"), ask:t("compat.guide.communication.ask"), text: t(`compat.guide.communication.${sd}`, v) },
+          { key:"challenges", title:t("compat.guide.challenges.title"), ask:t("compat.guide.challenges.ask"), text: t(`compat.guide.challenges.${sd}`, v) },
+          { key:"guidance", title:t("compat.guide.guidance.title"), ask:t("compat.guide.guidance.ask"), text: t(`compat.advice.${c.aspect.distance}`, { defaultValue: ASPECT_ADVICE[c.aspect.distance] }) },
         ];
         return (
           <div style={{marginBottom:40}} data-testid="cc-guide">
-            <div style={sectionTitle}>Your Pairing, Step by Step</div>
+            <div style={sectionTitle}>{t("compat.guide.title")}</div>
             <div style={{display:"grid", gap:16, gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))"}}>
               {blocks.map(b => (
                 <div key={b.key} data-testid={`cc-${b.key}`} style={{...cardStyle, padding:22}}>
@@ -1750,47 +1781,48 @@ function Results({ result, onReset, onAddDetails }: { result: Result; onReset: (
       })()}
 
       <div data-testid="cc-vedic-note" style={{...cardStyle, marginBottom:40, borderColor:"rgba(201,135,58,0.6)", background:"#FFF7E6"}}>
-        <div style={{...label, color:"#592209"}}>About traditional Vedic matching</div>
+        <div style={{...label, color:"#592209"}}>{t("compat.vedic.title")}</div>
         <p style={{fontSize:16, lineHeight:1.7, color:"#301607", margin:"0 0 10px"}}>
-          This Seva compares Western (tropical) Sun signs from your birth dates. It is not Guna Milan (Ashtakoota), the traditional Indian method that gives a score out of 36 by comparing both people's <strong>Moon signs and Nakshatras</strong>. That method needs each person's exact birth time and place, which this tool does not ask for, so it is not calculated here. The percentages above are Sun-sign tendencies, not a Guna score.
+          <Trans i18nKey="compat.vedic.body" components={{ strong: <strong /> }} />
         </p>
         <p style={{fontSize:15, lineHeight:1.7, color:"#4A2E1F", margin:0}}>
-          To see each person's Chandra Rashi and Janma Nakshatra, which are the starting point for Guna Milan, open <Link to="/birth-chart" style={{color:"#592209", fontWeight:700}}>Janma Kundali</Link> for each of you.
+          <Trans i18nKey="compat.vedic.link" components={{ kundali: <Link to="/birth-chart" style={{color:"#592209", fontWeight:700}}>x</Link> }} />
         </p>
       </div>
 
       <div style={{marginBottom:40}}>
-        <div style={sectionTitle}>Questions to Talk About Together</div>
+        <div style={sectionTitle}>{t("compat.starters.title")}</div>
         <div style={cardStyle}>
-          <p style={{fontSize:14, color:"#6B4A37", marginBottom:14}}>These conversation starters are the same for every pair. They are prompts for you both, not part of the astrological result.</p>
+          <p style={{fontSize:14, color:"#6B4A37", marginBottom:14}}>{t("compat.starters.intro")}</p>
           <ul style={{paddingLeft:20, display:"grid", gap:10, fontSize:16, lineHeight:1.6, color:"#301607"}}>
-            {CONVERSATION_STARTERS.map(q => <li key={q}>{q}</li>)}
+            {CONVERSATION_STARTERS.map((q, idx) => <li key={q}>{t(`compat.starters.${idx}`, { defaultValue: q })}</li>)}
           </ul>
         </div>
       </div>
 
       <p style={{maxWidth:680, margin:"0 auto 28px", textAlign:"center", fontSize:14, lineHeight:1.7, fontStyle:"italic", color:"#6B4A37"}}>
-        Sun sign compatibility is a traditional idea for personal interest and reflection. It does not predict whether a relationship will succeed, and people with any pairing can have a good relationship.
+        {t("compat.results.disclaimer")}
       </p>
       <AskDivyaSection feature="compatibility" context={`${p1.name} (${p1.zodiac}) and ${p2.name} (${p2.zodiac}). Element pairing: ${c.e1} with ${c.e2}. Aspect between the signs: ${c.aspect.name}. This compares sun signs only.`} />
       <button onClick={onReset} style={{display:"block", margin:"28px auto 0", padding:"16px 44px", background:"#592209", border:"none", borderRadius:40, color:"#F5E9D6", fontWeight:700, fontSize:16, cursor:"pointer"}}>
-        Compare Another Pair ✦
+        {t("compat.results.compareAnother")}
       </button>
     </div>
   );
 }
 
 function checkPerson(p: Person, who: string): string | null {
-  if (!p.name.trim() || !p.day || !p.month || !p.year) return `${who}: please enter a name and a complete date of birth.`;
+  if (!p.name.trim() || !p.day || !p.month || !p.year) return i18n.t("compat.errors.incomplete", { who });
   const day = +p.day, month = +p.month, year = +p.year;
   const dt = new Date(year, month - 1, day);
-  if (dt.getFullYear() !== year || dt.getMonth() !== month - 1 || dt.getDate() !== day) return `${who}: that date of birth doesn't exist. Please check the day, month and year.`;
-  if (dt > new Date()) return `${who}: the date of birth can't be in the future.`;
-  if ((p.time && !p.place) || (!p.time && p.place)) return `${who}: for Guna Milan please enter both the birth time and the birth place, or leave both blank.`;
+  if (dt.getFullYear() !== year || dt.getMonth() !== month - 1 || dt.getDate() !== day) return i18n.t("compat.errors.noSuchDate", { who });
+  if (dt > new Date()) return i18n.t("compat.errors.future", { who });
+  if ((p.time && !p.place) || (!p.time && p.place)) return i18n.t("compat.errors.timePlace", { who });
   return null;
 }
 
 export default function App() {
+  const { t } = useTranslation();
   useFeatureTitle(FEATURES.compatibility);
   const [p1,setP1] = useState<Person>(empty());
   const [p2,setP2] = useState<Person>(empty());
@@ -1812,7 +1844,7 @@ export default function App() {
     if (phase !== "form") return; // ignore double submits
     if (!requireSignIn(() => { void compute(); })) return; // signed out: ask, keep the form, then run this once
     setError("");
-    const problem = checkPerson(p1, "Person 1") || checkPerson(p2, "Person 2");
+    const problem = checkPerson(p1, i18n.t("compat.form.person1")) || checkPerson(p2, i18n.t("compat.form.person2"));
     if (problem) { setError(problem); return; }
     const run = ++runRef.current;
     setPhase("loading");
@@ -1822,13 +1854,13 @@ export default function App() {
         const body = await checkRes.json().catch(() => null);
         if (run !== runRef.current) return;
         setPhase("form");
-        setError(body?.message || "This feature is temporarily unavailable. Please try again later.");
+        setError(body?.message || i18n.t("compat.errors.unavailable"));
         return;
       }
     } catch (err) {
       if (run !== runRef.current) return;
       setPhase("form");
-      if (!(err instanceof SignInRequiredError)) setError("Couldn't verify usage limit. Please check your connection and try again.");
+      if (!(err instanceof SignInRequiredError)) setError(i18n.t("compat.errors.usageLimit"));
       return;
     }
     const z1 = getZodiac(+p1.day, +p1.month), z2 = getZodiac(+p2.day, +p2.month);
@@ -1852,25 +1884,25 @@ export default function App() {
             <style>{formCss}</style>
             <div style={{textAlign:"center", padding:"60px 20px 40px"}}>
               <div style={{color:"#301607", fontStyle:"italic", fontSize:15, letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:24}}>
-                <span style={{color:"#592209"}}>✦</span> {FEATURES.compatibility.name} <span style={{color:"#592209"}}>✦</span>
+                <span style={{color:"#592209"}}>✦</span> {t("features.compatibility.name", { defaultValue: FEATURES.compatibility.name })} <span style={{color:"#592209"}}>✦</span>
               </div>
               <h1 style={{fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:"clamp(28px,5vw,48px)", fontWeight:700, color:"#301607", letterSpacing:"0.05em", textTransform:"uppercase", lineHeight:1.25, marginBottom:20}}>
-                {FEATURES.compatibility.name}<br/><span style={{color:"#592209"}}>Sun Sign Compatibility</span>
+                {t("features.compatibility.name", { defaultValue: FEATURES.compatibility.name })}<br/><span style={{color:"#592209"}}>{t("compat.sunSignTitle")}</span>
               </h1>
-              <p style={{color:"#301607", fontStyle:"italic", fontSize:18, maxWidth:620, margin:"0 auto 8px"}}>{FEATURES.compatibility.subtitle}</p>
-              <p style={{color:"#301607", fontStyle:"italic", fontSize:16, maxWidth:560, margin:"0 auto"}}>This Seva compares the two Western (tropical) Sun signs only. It is not Ashtakoota Guna Milan, which uses both Moon signs and Nakshatras. Enter two birth dates to compare.</p>
+              <p style={{color:"#301607", fontStyle:"italic", fontSize:18, maxWidth:620, margin:"0 auto 8px"}}>{t("features.compatibility.subtitle", { defaultValue: FEATURES.compatibility.subtitle })}</p>
+              <p style={{color:"#301607", fontStyle:"italic", fontSize:16, maxWidth:560, margin:"0 auto"}}>{t("compat.form.intro")}</p>
             </div>
             <div style={{maxWidth:1000, margin:"0 auto", padding:"20px 24px 80px"}}>
               {error && <div role="alert" style={{background:"rgba(248,113,113,0.08)", border:"1px solid rgba(248,113,113,0.3)", borderRadius:10, padding:"12px 16px", color:"#9B2C1D", fontSize:14, marginBottom:24, textAlign:"center"}}>⚠ {error}</div>}
               <div className="cc-forms">
-                <PersonForm idp="cc1" title="Person 1" accentColor="#60a5fa" data={p1} onChange={setP1}/>
-                <PersonForm idp="cc2" title="Person 2" accentColor="#592209" data={p2} onChange={setP2}/>
+                <PersonForm idp="cc1" title={t("compat.form.person1")} accentColor="#60a5fa" data={p1} onChange={setP1}/>
+                <PersonForm idp="cc2" title={t("compat.form.person2")} accentColor="#592209" data={p2} onChange={setP2}/>
               </div>
               <button
                 onClick={compute}
                 style={{display:"flex", alignItems:"center", justifyContent:"center", gap:8, width:"100%", maxWidth:420, margin:"0 auto", padding:"18px", background:"#592209", border:"none", borderRadius:40, color:"#F5E9D6", fontWeight:800, fontSize:17, letterSpacing:"0.05em", textTransform:"uppercase", cursor:"pointer"}}
               >
-                Compare Signs <ArrowRight size={18}/>
+                {t("compat.form.compare")} <ArrowRight size={18}/>
               </button>
             </div>
           </>

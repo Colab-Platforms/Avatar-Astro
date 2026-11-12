@@ -1,4 +1,5 @@
 import { Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { IconChip } from "../ui";
 import { StructuredView } from "../ReadingView";
@@ -34,6 +35,8 @@ function resolveSpread(output: Record<string, unknown>): { mode: "timeline" | "k
 }
 
 export default function TarotSaved({ output }: { output: Record<string, unknown> }) {
+  const { t } = useTranslation();
+  const label = (k: string, english: string) => t(`tarot.saved.labels.${k}`, { defaultValue: english });
   // A complete spread looks exactly like a freshly generated reading (same cards, same sections).
   const full = resolveSpread(output);
   if (full) {
@@ -53,14 +56,14 @@ export default function TarotSaved({ output }: { output: Record<string, unknown>
   return (
     <div data-testid="reading-output" className="space-y-5">
       {spread.length > 0 && (
-        <section aria-label="Your spread">
+        <section aria-label={t("tarot.saved.spreadAria")}>
           <ol className={cn("grid grid-cols-1 gap-3", spread.length >= 5 ? "sm:grid-cols-2 xl:grid-cols-3" : "sm:grid-cols-3")}>
             {spread.map((c, i) => (
               <li key={i} className="flex flex-col gap-2 rounded-2xl border border-[#D9C28F] bg-gradient-to-b from-[#FFFDF8] to-[#F7ECD3] p-4">
                 <div className="flex items-center gap-3">
                   <IconChip icon={Sparkles} tone="gold" size="sm" />
                   <div className="min-w-0">
-                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#A8803A]">{text(c.position) ?? `Card ${i + 1}`}</p>
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#A8803A]">{text(c.position) ?? t("tarot.saved.cardN", { number: i + 1 })}</p>
                     <p className="truncate font-home-serif text-base font-semibold text-[#2A1A10]">{text(c.card) ?? "—"}</p>
                   </div>
                 </div>
@@ -70,29 +73,29 @@ export default function TarotSaved({ output }: { output: Record<string, unknown>
           </ol>
         </section>
       )}
-      {LEAD.map(([k, label]) => text(output[k]) && (
+      {LEAD.map(([k, en]) => text(output[k]) && (
         <section key={k} className="rounded-2xl border border-[#D9C28F] bg-gradient-to-br from-[#FFFDF8] to-[#F7ECD3] p-5">
-          <h3 className="mb-1.5 font-home-serif text-base font-semibold text-[#2A1A10]">{label}</h3>
+          <h3 className="mb-1.5 font-home-serif text-base font-semibold text-[#2A1A10]">{label(k, en)}</h3>
           <p className="whitespace-pre-line text-sm leading-relaxed text-[#4A3A2C]">{output[k] as string}</p>
         </section>
       ))}
       {areas.length > 0 && (
         <section className={box}>
-          <h3 className="mb-2 font-home-serif text-base font-semibold text-[#2A1A10]">Life areas affected</h3>
+          <h3 className="mb-2 font-home-serif text-base font-semibold text-[#2A1A10]">{t("tarot.saved.lifeAreas")}</h3>
           <ul className="flex flex-wrap gap-2">{areas.map((a) => <li key={a} className="rounded-full bg-[#F3E8D4] px-3 py-1 text-xs font-medium text-[#6B4A12]">{a}</li>)}</ul>
         </section>
       )}
       <div className="grid gap-4 md:grid-cols-2">
-        {GUIDE.map(([k, label]) => text(output[k]) && (
+        {GUIDE.map(([k, en]) => text(output[k]) && (
           <section key={k} className={box}>
-            <h3 className="mb-1.5 font-home-serif text-base font-semibold text-[#2A1A10]">{label}</h3>
+            <h3 className="mb-1.5 font-home-serif text-base font-semibold text-[#2A1A10]">{label(k, en)}</h3>
             <p className="whitespace-pre-line text-sm leading-relaxed text-[#4A3A2C]">{output[k] as string}</p>
           </section>
         ))}
       </div>
-      {CLOSING.map(([k, label]) => text(output[k]) && (
+      {CLOSING.map(([k, en]) => text(output[k]) && (
         <section key={k} className="rounded-2xl border border-[#E9DDC9] bg-[#FBF6EA] p-5">
-          <h3 className="mb-1.5 font-home-serif text-base font-semibold text-[#2A1A10]">{label}</h3>
+          <h3 className="mb-1.5 font-home-serif text-base font-semibold text-[#2A1A10]">{label(k, en)}</h3>
           <p className="whitespace-pre-line text-sm italic leading-relaxed text-[#4A3A2C]">{output[k] as string}</p>
         </section>
       ))}

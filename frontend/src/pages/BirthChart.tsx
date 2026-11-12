@@ -1064,6 +1064,7 @@ import "@/features/ratna/ratna.css";
 import { kundaliApi } from "@/features/kundali/api";
 import KundaliPanels from "@/features/kundali/KundaliPanels";
 import KundaliGuide from "@/features/kundali/KundaliGuide";
+import KundaliGrowthGuide from "@/features/kundali/KundaliGrowthGuide";
 import FullScreenLoader from "@/components/Loader/FullScreenLoader";
 import { useBackOverride } from "../context/NavigationContext";
 import { Link } from "react-router-dom";
@@ -1088,6 +1089,10 @@ import zodiacCapricorn from "@/assets/zodiac-gold/capricorn.png";
 import zodiacAquarius from "@/assets/zodiac-gold/aquarius.png";
 import zodiacPisces from "@/assets/zodiac-gold/pisces.png";
 import { requireSignIn } from "@/lib/authedFetch";
+import { useTranslation } from "react-i18next";
+import i18n from "@/i18n";
+import { useGlossary } from "@/i18n/glossary";
+import { useZodiacText } from "@/data/zodiacData";
 
 // ── Google Fonts ─────────────────────────────────────────────────────────────
 
@@ -1426,6 +1431,7 @@ function Starfield(){
 
 // ── Place input ───────────────────────────────────────────────────────────────
 function PlaceInput({value,onChange}){
+  const {t:tr}=useTranslation();
   const [q,setQ]=useState(value?.display||"");
   const [res,setRes]=useState([]);
   const [open,setOpen]=useState(false);
@@ -1439,16 +1445,17 @@ function PlaceInput({value,onChange}){
   const pick=r=>{setQ(r.display);onChange(r);setOpen(false);};
   return(
     <div className="pl-wrap">
-      <input id="bc-place" autoComplete="off" className="f-input" value={q} onChange={handleChange} onBlur={()=>setTimeout(()=>setOpen(false),200)} placeholder="Type city name…"/>
+      <input id="bc-place" autoComplete="off" className="f-input" value={q} onChange={handleChange} onBlur={()=>setTimeout(()=>setOpen(false),200)} placeholder={tr("birthChart.form.cityPlaceholder")}/>
       {open&&<div className="pl-drop">{res.map((r,i)=><div key={i} className="pl-item" onMouseDown={()=>pick(r)}>{r.display}<small>{r.lat?.toFixed(4)}, {r.lon?.toFixed(4)}</small></div>)}</div>}
     </div>
   );
 }
 
 // ── Loading ───────────────────────────────────────────────────────────────────
-const LSTEPS=["Finding your Sun sign","Adding up your Life Path number","Preparing your profile"];
 function Loading({name}){
-  return <FullScreenLoader title={name?`Preparing ${name}'s Profile`:"Preparing Your Profile"} description="Working out your Sun sign and Life Path number…" steps={LSTEPS} testId="birthchart-loader" />;
+  const {t}=useTranslation();
+  const LSTEPS=[t("birthChart.loading.step1"),t("birthChart.loading.step2"),t("birthChart.loading.step3")];
+  return <FullScreenLoader title={name?t("birthChart.loading.titleNamed",{name}):t("birthChart.loading.title")} description={t("birthChart.loading.description")} steps={LSTEPS} testId="birthchart-loader" />;
 }
 
 // ── Detailed Insights tab data (per-zodiac descriptions + generic advice/pattern) ──
@@ -1542,8 +1549,10 @@ function getInsightText(category, zodiac, name, lifePath){
       Pisces:`${n}, you were born to transcend. Your purpose is to dissolve boundaries between the seen and unseen through art, compassion, and spiritual depth. Life Path ${lp} confirms this calling.`,
     },
   };
-  const m=maps[category]||maps.career;
-  return m[z]||m.Leo;
+  const cat=maps[category]?category:"career";
+  const m=maps[cat];
+  const key=m[z]?z:"Leo";
+  return i18n.t(`birthChart.insightText.${cat}.${key}`,{n,lp,defaultValue:m[key]});
 }
 
 // ── Results ───────────────────────────────────────────────────────────────────
@@ -1563,7 +1572,7 @@ function lifePathWorking(dob:string){
 }
 
 const RASHI_BY_SIGN:Record<string,string>={Aries:"Mesha",Taurus:"Vrishabha",Gemini:"Mithuna",Cancer:"Karka",Leo:"Simha",Virgo:"Kanya",Libra:"Tula",Scorpio:"Vrischika",Sagittarius:"Dhanu",Capricorn:"Makara",Aquarius:"Kumbha",Pisces:"Meena"};
-function formatCoord(v:number,pos:string,neg:string){return `${Math.abs(v).toFixed(2)}° ${v>=0?pos:neg}`;}
+function formatCoord(v:number,pos:string,neg:string){const d=v>=0?pos:neg;return `${Math.abs(v).toFixed(2)}° ${i18n.t(`birthChart.compass.${d.toLowerCase()}`,{defaultValue:d})}`;}
 
 const resultsCss=`
 .bcp-hero{display:grid;grid-template-columns:1.3fr 1fr;gap:48px;align-items:center;margin-bottom:56px;padding-top:20px;}
@@ -1579,22 +1588,26 @@ const resultsCss=`
 `;
 
 function Results({data,onReset}){
+  const {t}=useTranslation();
+  const {g}=useGlossary();
+  const zt=useZodiacText();
   const {name,zodiac,lifePath,dob,time,place,kundali}=data;
-  const rashiName=RASHI_BY_SIGN[zodiac]||zodiac;
+  const rashiOf=(sign:string,fallback:string)=>t(`birthChart.rashiName.${sign}`,{defaultValue:fallback});
+  const rashiName=rashiOf(zodiac,RASHI_BY_SIGN[zodiac]||zodiac);
   const sign=zodiacSigns.find(z=>z.name===zodiac);
   const zodiacImg=ZODIAC_IMAGES[zodiac];
   const [insightTab,setInsightTab]=useState("love");
 
   const [dy,dm,dd]=dob.split("-");
-  const dobFormatted=`${dd} ${MONTHS[+dm-1]} ${dy}`;
-  const heroDesc=`Your Surya Rashi (Vedic Sun sign), ${rashiName}, brings ${ZODIAC_HERO_TRAITS[zodiac]||"a distinctive presence"}. Life Path ${lifePath} adds ${LIFE_PATH_TRAITS[lifePath]||"its own blend of themes"}. Your Vedic Rashi, Lagna and Nakshatra are calculated below from your birth details.`;
+  const dobFormatted=`${dd} ${t(`birthChart.months.${+dm-1}`,{defaultValue:MONTHS[+dm-1]})} ${dy}`;
+  const heroDesc=t("birthChart.hero.desc",{rashi:rashiName,traits:ZODIAC_HERO_TRAITS[zodiac]?t(`birthChart.heroTraits.${zodiac}`,{defaultValue:ZODIAC_HERO_TRAITS[zodiac]}):t("birthChart.heroTraitsFallback"),lifePath,lpTraits:LIFE_PATH_TRAITS[lifePath]?t(`birthChart.lifePathTraits.${lifePath}`,{defaultValue:LIFE_PATH_TRAITS[lifePath]}):t("birthChart.lifePathFallbackHero")});
   const working=lifePathWorking(dob);
 
   const cardStyle:CSSProperties={background:"#FBF5EC",border:"1px solid rgba(89,34,9,0.2)",borderRadius:16,padding:28};
   const sectionTitle:CSSProperties={fontFamily:"'DM Sans', system-ui, sans-serif",fontSize:"clamp(22px,4vw,28px)",color:"#301607",fontWeight:700,textAlign:"center",textTransform:"uppercase",marginBottom:28,letterSpacing:"0.03em"};
   const smallLabel:CSSProperties={color:"#6B4A37",fontWeight:700,fontSize:13,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:10};
 
-  const activeTab=INSIGHT_TABS.find(t=>t.key===insightTab);
+  const activeTab=INSIGHT_TABS.find(tb=>tb.key===insightTab);
   const insightText=getInsightText(insightTab,zodiac,name,lifePath);
   const insightExtra=INSIGHT_EXTRA[insightTab];
 
@@ -1605,22 +1618,22 @@ function Results({data,onReset}){
       {/* ── HERO ── */}
       <div className="r-sec bcp-hero">
         <div>
-          <div style={{color:"#6B4A37",fontWeight:700,fontSize:14,letterSpacing:"0.15em",marginBottom:12}}>{FEATURES.birthChart.name.toUpperCase()} · VEDIC RASHI &amp; LIFE PATH PROFILE</div>
+          <div style={{color:"#6B4A37",fontWeight:700,fontSize:14,letterSpacing:"0.15em",marginBottom:12}}>{t("birthChart.hero.eyebrow",{feature:FEATURES.birthChart.name.toUpperCase()})}</div>
           <h1 style={{fontFamily:"'DM Sans', system-ui, sans-serif",fontSize:"clamp(30px,5vw,52px)",color:"#301607",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.04em",marginBottom:16,lineHeight:1.1,wordBreak:"break-word"}}>{name}</h1>
-          <div style={{color:"#592209",fontWeight:700,fontSize:18,marginBottom:20}}>{kundali?.moon.rashi?`CHANDRA RASHI ${kundali.moon.rashi.name.toUpperCase()} (MOON SIGN)`:kundali?`CHANDRA RASHI: DEPENDS ON BIRTH TIME`:`SURYA RASHI ${rashiName.toUpperCase()} (SUN SIGN)`} &nbsp;•&nbsp; LIFE PATH {lifePath}</div>
+          <div style={{color:"#592209",fontWeight:700,fontSize:18,marginBottom:20}}>{kundali?.moon.rashi?t("birthChart.hero.chandra",{rashi:rashiOf(kundali.moon.rashi.sign,kundali.moon.rashi.name).toUpperCase()}):kundali?t("birthChart.hero.chandraUnknown"):t("birthChart.hero.surya",{rashi:rashiName.toUpperCase()})} &nbsp;•&nbsp; {t("birthChart.hero.lifePath",{n:lifePath})}</div>
           <p style={{fontSize:18,fontStyle:"italic",lineHeight:1.7,color:"#301607",marginBottom:28}}>{heroDesc}</p>
           <div className="bcp-facts">
             <div style={{display:"flex",alignItems:"center",gap:12}}>
               <div style={{width:44,height:44,borderRadius:"50%",background:"rgba(89,34,9,0.12)",display:"flex",alignItems:"center",justifyContent:"center"}}><Calendar size={20} color="#592209"/></div>
               <div style={{textAlign:"left"}}>
-                <div style={{fontWeight:700,fontSize:15}}>Born {dobFormatted}</div>
-                <div style={{fontSize:13,color:"#6B4A37"}}>{time||"Birth time not entered"}</div>
+                <div style={{fontWeight:700,fontSize:15}}>{t("birthChart.hero.born",{date:dobFormatted})}</div>
+                <div style={{fontSize:13,color:"#6B4A37"}}>{time||t("birthChart.hero.noTime")}</div>
               </div>
             </div>
             <div style={{display:"flex",alignItems:"center",gap:12}}>
               <div style={{width:44,height:44,borderRadius:"50%",background:"rgba(89,34,9,0.12)",display:"flex",alignItems:"center",justifyContent:"center"}}><MapPin size={20} color="#ff7e47"/></div>
               <div style={{textAlign:"left"}}>
-                <div style={{fontWeight:700,fontSize:15}}>{place?.name?`${place.name}${place.country?", "+place.country:""}`:"Birth place not entered"}</div>
+                <div style={{fontWeight:700,fontSize:15}}>{place?.name?`${place.name}${place.country?", "+place.country:""}`:t("birthChart.hero.noPlace")}</div>
                 <div style={{fontSize:13,color:"#6B4A37"}}>{place?.latitude!=null?`${formatCoord(place.latitude,"N","S")}, ${formatCoord(place.longitude,"E","W")} · ${place.timezone}`:"—"}</div>
               </div>
             </div>
@@ -1628,58 +1641,50 @@ function Results({data,onReset}){
         </div>
         <div className="bcp-hero-art">
           <div style={{position:"absolute",inset:"2%",borderRadius:"50%",background:"radial-gradient(circle,rgba(89,34,9,0.18),transparent 70%)",filter:"blur(20px)"}}/>
-          <img src={zodiacImg} alt={`${zodiac} symbol`} style={{position:"relative"}}/>
+          <img src={zodiacImg} alt={t("birthChart.hero.symbolAlt",{sign:g("rashi",zodiac)})} style={{position:"relative"}}/>
         </div>
       </div>
 
       {kundali&&<div className="r-sec" style={{marginBottom:40}}><KundaliGuide k={kundali}/></div>}
-      {kundali&&<div className="r-sec" style={{marginBottom:40}}><div style={{...sectionTitle,marginBottom:16}}>The Calculations Behind It</div><KundaliPanels k={kundali}/></div>}
-
-      {/* ── HOW THIS PROFILE WAS MADE ── */}
-      <div className="r-sec" style={{...cardStyle,marginBottom:56,borderColor:"rgba(255,126,71,0.35)"}}>
-        <div style={{...smallLabel,color:"#592209"}}>How this profile was made</div>
-        <p style={{fontSize:16,lineHeight:1.7,color:"#4A2E1F"}}>
-          The Rashis, Nakshatra, Lagna and Panchang above are calculated from your birth date, time and place (Vedic sidereal zodiac, Lahiri ayanamsa); nothing is looked up from a table or generated text. The sign descriptions and insight tabs below are traditional written text for each Rashi, so people with the same Surya Rashi and Life Path read the same text. Your Life Path number is numerology, worked out by adding the digits of your birth date.
-        </p>
-      </div>
+      {kundali&&<div className="r-sec" style={{marginBottom:40}}><div style={{...sectionTitle,marginBottom:16}}>{t("birthChart.results.chartDetails")}</div><KundaliPanels k={kundali}/></div>}
 
       {/* ── SUN SIGN + LIFE PATH ── */}
       <div className="r-sec bcp-two">
         <div className="r-hcard" style={cardStyle}>
-          <div style={smallLabel}>Your Surya Rashi (Vedic Sun sign, sidereal zodiac)</div>
-          <div style={{color:"#301607",fontWeight:800,fontSize:26,marginBottom:4}}>{rashiName} ({zodiac}) {ZODIAC_SYMBOLS[zodiac]}</div>
+          <div style={smallLabel}>{t("birthChart.card.suryaLabel")}</div>
+          <div style={{color:"#301607",fontWeight:800,fontSize:26,marginBottom:4}}>{rashiName} ({g("rashi",zodiac)}) {ZODIAC_SYMBOLS[zodiac]}</div>
           {sign&&<>
-            <div style={{color:"rgba(48,22,7,0.85)",fontSize:15,marginBottom:14}}>{sign.element} · Ruler: {sign.traditionalRuling?`${sign.ruling} (modern), ${sign.traditionalRuling} (traditional)`:sign.ruling}</div>
-            <p style={{fontSize:16,lineHeight:1.65,color:"#4A2E1F",marginBottom:16}}>{sign.description}</p>
-            <div style={{marginBottom:12}}>{sign.traits.map(t=><span key={t} className="bcp-chip">{t}</span>)}</div>
-            <div style={{fontSize:15,lineHeight:1.6,color:"#4A2E1F"}}><b style={{color:"#301607"}}>Strengths:</b> {sign.strengths.join(", ")}.<br/><b style={{color:"#301607"}}>Areas to watch:</b> {sign.weaknesses.join(", ")}.</div>
-            <Link to={`/zodiac/${zodiac.toLowerCase()}`} style={{display:"inline-block",marginTop:16,color:"#592209",fontWeight:700,fontSize:14}}>Read the full {zodiac} profile →</Link>
+            <div style={{color:"rgba(48,22,7,0.85)",fontSize:15,marginBottom:14}}>{zt.element(sign.element)} · {t("birthChart.card.ruler",{ruler:sign.traditionalRuling?t("birthChart.card.rulerPair",{modern:zt.planet(sign.ruling),traditional:zt.planet(sign.traditionalRuling)}):zt.planet(sign.ruling)})}</div>
+            <p style={{fontSize:16,lineHeight:1.65,color:"#4A2E1F",marginBottom:16}}>{zt.description(sign)}</p>
+            <div style={{marginBottom:12}}>{sign.traits.map((tr,i)=><span key={tr} className="bcp-chip">{zt.trait(sign,i)}</span>)}</div>
+            <div style={{fontSize:15,lineHeight:1.6,color:"#4A2E1F"}}><b style={{color:"#301607"}}>{t("birthChart.card.strengths")}</b> {sign.strengths.map((_,i)=>zt.strength(sign,i)).join(", ")}.<br/><b style={{color:"#301607"}}>{t("birthChart.card.watch")}</b> {sign.weaknesses.map((_,i)=>zt.weakness(sign,i)).join(", ")}.</div>
+            <Link to={`/zodiac/${zodiac.toLowerCase()}`} style={{display:"inline-block",marginTop:16,color:"#592209",fontWeight:700,fontSize:14}}>{t("birthChart.card.readFull",{sign:g("rashi",zodiac)})}</Link>
           </>}
         </div>
         <div className="r-hcard" style={cardStyle}>
-          <div style={smallLabel}>Your Life Path number</div>
-          <div style={{color:"#301607",fontWeight:800,fontSize:26,marginBottom:14}}>Life Path {lifePath}</div>
-          <p style={{fontSize:16,lineHeight:1.65,color:"#4A2E1F",marginBottom:16}}>In numerology, Life Path {lifePath} is associated with {LIFE_PATH_TRAITS[lifePath]||"its own set of themes"}.</p>
-          <div style={{...smallLabel,marginBottom:6}}>The working</div>
+          <div style={smallLabel}>{t("birthChart.card.lifePathLabel")}</div>
+          <div style={{color:"#301607",fontWeight:800,fontSize:26,marginBottom:14}}>{t("birthChart.hero.lifePathTitle",{n:lifePath})}</div>
+          <p style={{fontSize:16,lineHeight:1.65,color:"#4A2E1F",marginBottom:16}}>{t("birthChart.card.numerology",{n:lifePath,traits:LIFE_PATH_TRAITS[lifePath]?t(`birthChart.lifePathTraits.${lifePath}`,{defaultValue:LIFE_PATH_TRAITS[lifePath]}):t("birthChart.lifePathFallbackCard")})}</p>
+          <div style={{...smallLabel,marginBottom:6}}>{t("birthChart.card.working")}</div>
           <div data-testid="lp-working" style={{fontFamily:"'Space Mono',monospace",fontSize:14,lineHeight:1.9,color:"#301607",background:"rgba(89,34,9,0.05)",border:"1px solid rgba(89,34,9,0.28)",borderRadius:10,padding:"12px 14px"}}>
             {working.map((w,i)=><div key={i}>{w}</div>)}
-            <div style={{color:"#592209"}}>Life Path = {lifePath}</div>
+            <div style={{color:"#592209"}}>{t("birthChart.card.lifePathEquals",{n:lifePath})}</div>
           </div>
-          <p style={{fontSize:13,lineHeight:1.6,color:"#6B4A37",marginTop:10}}>Digits of {dob} are added, then reduced until one digit remains, except that 11 and 22 are kept as master numbers.</p>
+          <p style={{fontSize:13,lineHeight:1.6,color:"#6B4A37",marginTop:10}}>{t("birthChart.card.digitsNote",{dob})}</p>
         </div>
       </div>
 
       {/* ── DETAILED INSIGHTS ── */}
       <div className="r-sec" style={{marginBottom:56}}>
-        <div style={sectionTitle}>Detailed Insights</div>
+        <div style={sectionTitle}>{t("birthChart.insights.title")}</div>
         <div style={{...cardStyle,padding:"28px 24px"}}>
-          <div className="bcp-tabs" role="tablist" aria-label="Insight areas">
-            {INSIGHT_TABS.map(t=>(
-              <button key={t.key} role="tab" aria-selected={insightTab===t.key} onClick={()=>setInsightTab(t.key)}
+          <div className="bcp-tabs" role="tablist" aria-label={t("birthChart.insights.areas")}>
+            {INSIGHT_TABS.map(tb=>(
+              <button key={tb.key} role="tab" aria-selected={insightTab===tb.key} onClick={()=>setInsightTab(tb.key)}
                 style={{background:"none",border:"none",cursor:"pointer",padding:"12px 18px",fontSize:15,fontWeight:600,
-                  color:insightTab===t.key?"#301607":"#6B4A37",
-                  borderBottom:insightTab===t.key?`2px solid ${t.color}`:"2px solid transparent"}}>
-                {t.label}
+                  color:insightTab===tb.key?"#301607":"#6B4A37",
+                  borderBottom:insightTab===tb.key?`2px solid ${tb.color}`:"2px solid transparent"}}>
+                {t(`birthChart.insightTabs.${tb.key}`,{defaultValue:tb.label})}
               </button>
             ))}
           </div>
@@ -1690,18 +1695,18 @@ function Results({data,onReset}){
             </div>
 
             <div>
-              <div style={{fontSize:24,fontWeight:800,color:"#301607",marginBottom:6}}>{activeTab.label}</div>
-              <div style={{fontSize:13,color:"#6B4A37",marginBottom:14}}>Traditional {zodiac} themes, written for this area</div>
+              <div style={{fontSize:24,fontWeight:800,color:"#301607",marginBottom:6}}>{t(`birthChart.insightTabs.${activeTab.key}`,{defaultValue:activeTab.label})}</div>
+              <div style={{fontSize:13,color:"#6B4A37",marginBottom:14}}>{t("birthChart.insights.themes",{sign:g("rashi",zodiac)})}</div>
               <div style={{fontSize:16,lineHeight:1.7,color:"#4A2E1F",marginBottom:20}}>{insightText}</div>
               <div style={{background:"rgba(89,34,9,0.06)",border:"1px solid rgba(89,34,9,0.25)",borderRadius:12,padding:"16px 18px"}}>
-                <div style={{color:"#592209",fontWeight:700,fontSize:14,marginBottom:6,display:"flex",alignItems:"center",gap:8}}><Star size={16}/> A REFLECTION PROMPT</div>
-                <div style={{fontSize:15,color:"#301607"}}>{insightExtra.advice}</div>
+                <div style={{color:"#592209",fontWeight:700,fontSize:14,marginBottom:6,display:"flex",alignItems:"center",gap:8}}><Star size={16}/> {t("birthChart.insights.prompt")}</div>
+                <div style={{fontSize:15,color:"#301607"}}>{t(`birthChart.insightExtra.${insightTab}.advice`,{defaultValue:insightExtra.advice})}</div>
               </div>
             </div>
 
             <div style={{display:"flex",flexDirection:"column",gap:18}}>
-              {[{label:"Pattern to notice",text:insightExtra.pattern,Icon:Heart},{label:"Focus",text:insightExtra.focus,Icon:Target},{label:"Growth",text:insightExtra.growth,Icon:Compass}].map(({label,text,Icon})=>(
-                <div key={label} style={{display:"flex",gap:12}}>
+              {[{id:"pattern",label:t("birthChart.insights.pattern"),text:t(`birthChart.insightExtra.${insightTab}.pattern`,{defaultValue:insightExtra.pattern}),Icon:Heart},{id:"focus",label:t("birthChart.insights.focus"),text:t(`birthChart.insightExtra.${insightTab}.focus`,{defaultValue:insightExtra.focus}),Icon:Target},{id:"growth",label:t("birthChart.insights.growth"),text:t(`birthChart.insightExtra.${insightTab}.growth`,{defaultValue:insightExtra.growth}),Icon:Compass}].map(({id,label,text,Icon})=>(
+                <div key={id} style={{display:"flex",gap:12}}>
                   <div style={{width:36,height:36,borderRadius:"50%",background:"rgba(89,34,9,0.1)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon size={16} color="#ff7e47"/></div>
                   <div>
                     <div style={{color:"#301607",fontWeight:700,fontSize:15,marginBottom:3}}>{label}</div>
@@ -1714,12 +1719,14 @@ function Results({data,onReset}){
         </div>
       </div>
 
+      {kundali&&<div className="r-sec" style={{marginBottom:40}}><KundaliGrowthGuide k={kundali} sunSign={zodiac} lifePath={lifePath} name={name}/></div>}
+
       <p style={{maxWidth:640,margin:"0 auto 28px",textAlign:"center",fontSize:14,lineHeight:1.7,fontStyle:"italic",color:"#6B4A37"}}>
-        This profile is for personal interest and reflection. It describes traditional themes for your Sun sign and Life Path number and is not a prediction or professional advice.
+        {t("birthChart.results.disclaimer")}
       </p>
       {kundali&&<AskDivyaSection feature="birthChart" context={kundaliContext(kundali)+`\nLife Path number: ${lifePath}.`}/>}
       <button onClick={onReset} style={{display:"block",margin:"28px auto 0",padding:"14px 40px",background:"transparent",border:"1px solid rgba(89,34,9,0.28)",borderRadius:50,color:"#4A2E1F",fontSize:13,letterSpacing:"0.1em",textTransform:"uppercase",cursor:"pointer"}}>
-        ✦ New Profile
+        {t("birthChart.results.newProfile")}
       </button>
     </div>
   );
@@ -1745,6 +1752,7 @@ function BcDivider(){
 }
 
 export default function App(){
+  const {t}=useTranslation();
   useFeatureTitle(FEATURES.birthChart);
   const [form,setForm]=useState(emptyForm());
   const [phase,setPhase]=useState("form");
@@ -1771,25 +1779,25 @@ export default function App(){
     setError("");
     const day=+form.day, month=+form.month, year=+form.year;
     if(!form.firstName.trim()||!form.day||!form.month||!form.year){
-      setError("Please enter your first name and complete date of birth.");
+      setError(i18n.t("birthChart.form.errFirstName"));
       return;
     }
     const dt=new Date(year,month-1,day);
     if(dt.getFullYear()!==year||dt.getMonth()!==month-1||dt.getDate()!==day){
-      setError("That date doesn't exist. Please check the day, month and year.");
+      setError(i18n.t("birthChart.form.errDate"));
       return;
     }
     if(dt>new Date()){
-      setError("Your date of birth can't be in the future.");
+      setError(i18n.t("birthChart.form.errFuture"));
       return;
     }
     if(!!form.hour!==!!form.min){
-      setError("Please choose both the hour and the minute of birth, or leave both blank.");
+      setError(i18n.t("birthChart.form.errTime"));
       return;
     }
     if(!form.place){
-      setPlaceError("Please choose your birthplace from the suggestions: the Vedic calculation needs its coordinates and time zone.");
-      setError("Please choose your birthplace from the suggestions.");
+      setPlaceError(i18n.t("birthChart.form.errPlaceLong"));
+      setError(i18n.t("birthChart.form.errPlace"));
       return;
     }
     setPlaceError(undefined);
@@ -1810,7 +1818,7 @@ export default function App(){
       });
     }catch(e){
       if(run!==runRef.current)return;
-      setError(e?.message||"We could not calculate your Janma Kundali. Please check your details and try again.");
+      setError(e?.message||i18n.t("birthChart.form.errCalc"));
       setPhase("form");
       return;
     }
@@ -1843,22 +1851,22 @@ export default function App(){
                 <div style={{width:80, height:1, background:"linear-gradient(90deg, rgba(89,34,9,0.6), transparent)"}}></div>
               </div>
               <h1 style={{fontFamily:"'DM Sans', system-ui, sans-serif", fontSize:"clamp(30px,5vw,48px)", fontWeight:700, color:"#301607", letterSpacing:"0.06em", textTransform:"uppercase", lineHeight:1.25, marginBottom:20}}>
-                Your Vedic Rashi &amp;<br/><span style={{color:"#592209"}}>Life Path Profile</span>
+                {t("birthChart.form.heading1")}<br/><span style={{color:"#592209"}}>{t("birthChart.form.heading2")}</span>
               </h1>
               <p style={{color:"#301607", fontStyle:"italic", fontSize:18, maxWidth:620, margin:"0 auto 8px"}}>{FEATURES.birthChart.subtitle}</p>
-              <p style={{color:"#301607", fontStyle:"italic", fontSize:16}}>Enter your birth details to see your Surya Rashi, Chandra Rashi, Nakshatra and Panchang.</p>
+              <p style={{color:"#301607", fontStyle:"italic", fontSize:16}}>{t("birthChart.form.intro")}</p>
             </div>
 
             {error&&<div role="alert" style={{background:"rgba(248,113,113,0.08)", border:"1px solid rgba(248,113,113,0.3)", borderRadius:10, padding:"12px 16px", color:"#9B2C1D", fontSize:14, marginBottom:24, textAlign:"center"}}>⚠ {error}</div>}
 
             <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:20, marginBottom:8}}>
               <div>
-                <label htmlFor="bc-first" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>First Name *</label>
-                <input id="bc-first" maxLength={60} autoComplete="given-name" style={bcInputStyle} value={form.firstName} onChange={e=>up("firstName",e.target.value)} placeholder="e.g. Luna"/>
+                <label htmlFor="bc-first" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>{t("birthChart.form.firstName")}</label>
+                <input id="bc-first" maxLength={60} autoComplete="given-name" style={bcInputStyle} value={form.firstName} onChange={e=>up("firstName",e.target.value)} placeholder={t("birthChart.form.firstNamePh")}/>
               </div>
               <div>
-                <label htmlFor="bc-last" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Last Name <span style={{opacity:0.6, fontWeight:400}}>(Optional)</span></label>
-                <input id="bc-last" maxLength={60} autoComplete="family-name" style={bcInputStyle} value={form.lastName} onChange={e=>up("lastName", e.target.value)} placeholder="e.g. Starlight"/>
+                <label htmlFor="bc-last" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>{t("birthChart.form.lastName")} <span style={{opacity:0.6, fontWeight:400}}>{t("birthChart.form.optional")}</span></label>
+                <input id="bc-last" maxLength={60} autoComplete="family-name" style={bcInputStyle} value={form.lastName} onChange={e=>up("lastName", e.target.value)} placeholder={t("birthChart.form.lastNamePh")}/>
               </div>
             </div>
 
@@ -1866,21 +1874,21 @@ export default function App(){
 
             <div style={{display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:20, marginBottom:8}}>
               <div>
-                <label htmlFor="bc-day" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Day *</label>
+                <label htmlFor="bc-day" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>{t("birthChart.form.day")}</label>
                 <select id="bc-day" style={bcInputStyle} value={form.day} onChange={e=>up("day",e.target.value)}>
-                  <option value="">DD</option>{DAYS.map(d=><option key={d} value={d}>{String(d).padStart(2,"0")}</option>)}
+                  <option value="">{t("birthChart.form.ddPh")}</option>{DAYS.map(d=><option key={d} value={d}>{String(d).padStart(2,"0")}</option>)}
                 </select>
               </div>
               <div>
-                <label htmlFor="bc-month" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Month *</label>
+                <label htmlFor="bc-month" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>{t("birthChart.form.month")}</label>
                 <select id="bc-month" style={bcInputStyle} value={form.month} onChange={e=>up("month",e.target.value)}>
-                  <option value="">MM</option>{MONTHS.map((m,i)=><option key={m} value={i+1}>{m}</option>)}
+                  <option value="">{t("birthChart.form.mmPh")}</option>{MONTHS.map((m,i)=><option key={m} value={i+1}>{t(`birthChart.months.${i}`,{defaultValue:m})}</option>)}
                 </select>
               </div>
               <div>
-                <label htmlFor="bc-year" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Year *</label>
+                <label htmlFor="bc-year" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>{t("birthChart.form.year")}</label>
                 <select id="bc-year" style={bcInputStyle} value={form.year} onChange={e=>up("year", e.target.value)}>
-                  <option value="">YYYY</option>{YEARS.map(y=><option key={y} value={y}>{y}</option>)}
+                  <option value="">{t("birthChart.form.yyyyPh")}</option>{YEARS.map(y=><option key={y} value={y}>{y}</option>)}
                 </select>
               </div>
             </div>
@@ -1889,30 +1897,30 @@ export default function App(){
 
             <div style={{display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:20, marginBottom:10}}>
               <div>
-                <label htmlFor="bc-hour" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Hour</label>
+                <label htmlFor="bc-hour" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>{t("birthChart.form.hour")}</label>
                 <select id="bc-hour" style={bcInputStyle} value={form.hour} onChange={e=>up("hour",e.target.value)}>
-                  <option value="">HH</option>{HOURS.map(h=><option key={h} value={h}>{h}</option>)}
+                  <option value="">{t("birthChart.form.hhPh")}</option>{HOURS.map(h=><option key={h} value={h}>{h}</option>)}
                 </select>
               </div>
               <div>
-                <label htmlFor="bc-min" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Minute</label>
+                <label htmlFor="bc-min" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>{t("birthChart.form.minute")}</label>
                 <select id="bc-min" style={bcInputStyle} value={form.min} onChange={e=>up("min",e.target.value)}>
-                  <option value="">MM</option>{MINS.map(m=><option key={m} value={m}>{m}</option>)}
+                  <option value="">{t("birthChart.form.mmPh")}</option>{MINS.map(m=><option key={m} value={m}>{m}</option>)}
                 </select>
               </div>
               <div>
-                <label htmlFor="bc-ampm" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Period</label>
+                <label htmlFor="bc-ampm" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>{t("birthChart.form.period")}</label>
                 <select id="bc-ampm" style={bcInputStyle} value={form.ampm} onChange={e=>up("ampm",e.target.value)}>
-                  <option value="AM">AM</option><option value="PM">PM</option>
+                  <option value="AM">{t("birthChart.form.am")}</option><option value="PM">{t("birthChart.form.pm")}</option>
                 </select>
               </div>
             </div>
-            <div style={{color:"#592209", fontStyle:"italic", fontSize:14, opacity:0.85, marginBottom:8}}>Optional, but the Lagna, houses and an exact Moon sign need your birth time. Without it, anything that changes during your birth date is marked uncertain.</div>
+            <div style={{color:"#592209", fontStyle:"italic", fontSize:14, opacity:0.85, marginBottom:8}}>{t("birthChart.form.timeHint")}</div>
 
             <BcDivider/>
 
             <div style={{marginBottom:40}}>
-              <label htmlFor="bc-place" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>Place of Birth *</label>
+              <label htmlFor="bc-place" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>{t("birthChart.form.place")}</label>
               <LocationPicker value={form.place} onSelect={v=>up("place",v)} error={placeError}/>
             </div>
 
@@ -1927,7 +1935,7 @@ export default function App(){
               onMouseOver={(e)=>{e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.boxShadow="0 0 40px rgba(255,126,71,0.5)";}}
               onMouseOut={(e)=>{e.currentTarget.style.transform="translateY(0)"; e.currentTarget.style.boxShadow="0 0 30px rgba(255,126,71,0.35)";}}
             >
-              ✦ Show My Profile ✦
+              {t("birthChart.form.submit")}
             </button>
           </div>
         )}

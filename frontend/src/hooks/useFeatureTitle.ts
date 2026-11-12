@@ -7,7 +7,7 @@ export const useFeatureTitle = (feature: FeatureMeta): void => {
     const prevTitle = document.title;
     const meta = document.querySelector('meta[name="description"]');
     const prevDesc = meta?.getAttribute("content");
-    document.title = `${feature.name} | MyBhagya`;
+    document.title = `${feature.name} | Bhagya`;
     meta?.setAttribute("content", feature.subtitle);
     return () => {
       document.title = prevTitle;

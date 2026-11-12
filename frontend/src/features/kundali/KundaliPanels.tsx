@@ -1,8 +1,11 @@
 import type { ReactNode } from "react";
+import { Trans, useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import type { KundaliResult, LuminaryResult } from "./types";
-import TermInfo, { ExplainTerms } from "@/components/astrology/TermInfo";
-import { findTerms } from "@/lib/astroGlossary";
 import { D1Chart, D9Chart } from "./BirthChartDiagram";
+import { useGlossary } from "@/i18n/glossary";
+import { rashiName } from "./kundaliInsights";
+import { tb } from "./backendText";
 
 const Card = ({ label, children, testId }: { label: ReactNode; children: ReactNode; testId?: string }) => (
   <li className="min-w-0 rounded-xl border border-[#592209]/20 bg-[#FBF5EC] p-3" data-testid={testId}>
@@ -18,127 +21,130 @@ const Panel = ({ title, testId, children }: { title: string; testId: string; chi
   </section>
 );
 
-const rashiLine = (l: LuminaryResult, whenUncertain: string): ReactNode =>
+type Gloss = ReturnType<typeof useGlossary>["g"];
+
+const rashiLine = (l: LuminaryResult, whenUncertain: string, g: Gloss, t: TFunction): ReactNode =>
   l.rashi ? (
     <>
-      {l.rashi.name} ({l.rashi.hindi}) <span className="text-base text-[#6B4A37]">· {l.rashi.sign}</span>
+      {rashiName(l.rashi)} ({l.rashi.hindi}) <span className="text-base text-[#6B4A37]">· {g("rashi", l.rashi.sign)}</span>
     </>
   ) : (
     <span className="text-base">
-      {l.candidates.map((c) => `${c.name} (${c.sign})`).join(" or ")}
+      {l.candidates.map((c) => `${rashiName(c)} (${g("rashi", c.sign)})`).join(t("kundali.panels.or"))}
       <span className="block text-sm text-[#6B4A37]">{whenUncertain}</span>
     </span>
   );
 
-const nak = (l: LuminaryResult): string =>
-  l.nakshatra ? `${l.nakshatra.name}${l.nakshatra.pada ? `, pada ${l.nakshatra.pada}` : ""}` : "Needs your exact birth time";
+const nak = (l: LuminaryResult, g: Gloss, t: TFunction): string =>
+  l.nakshatra
+    ? l.nakshatra.pada
+      ? t("kundali.panels.nakshatraPada", { nakshatra: g("nakshatra", l.nakshatra.name), pada: l.nakshatra.pada })
+      : g("nakshatra", l.nakshatra.name)
+    : t("kundali.panels.needsBirthTime");
 
 /** Vedic (sidereal, Lahiri) results: Surya/Chandra Rashi, Nakshatra, Lagna, grahas, Panchang, basis and limits. */
 export const KundaliPanels = ({ k }: { k: KundaliResult }) => {
+  const { t } = useTranslation();
+  const { g } = useGlossary();
   const p = k.panchang;
-  const ayan = k.method.ayanamsaDegrees ? `${k.method.ayanamsaDegrees.toFixed(0)}°` : "about 24°";
   return (
     <div className="space-y-4" data-testid="kundali-panels">
-      <Panel title="Your Vedic Rashi and Nakshatra" testId="kundali-rashi">
-        <ul className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 lg:grid-cols-4">
-          <Card label={<TermInfo term="Surya Rashi">Surya Rashi (Sun sign)</TermInfo>} testId="surya-rashi">
-            {rashiLine(k.sun, "The Sun changes sign on your birth date. Your birth time decides which applies.")}
-          </Card>
-          <Card label={<TermInfo term="Chandra Rashi">Chandra Rashi (Moon sign)</TermInfo>} testId="chandra-rashi">
-            {rashiLine(k.moon, "The Moon changes sign on your birth date. Your birth time decides which applies.")}
-          </Card>
-          <Card label={<TermInfo term="Nakshatra">Janma Nakshatra</TermInfo>} testId="janma-nakshatra">
-            {nak(k.moon)}
-            {k.moon.nakshatra && <span className="block text-sm text-[#6B4A37]">Ruled by {k.moon.nakshatra.lord}</span>}
-          </Card>
-          <Card label={<TermInfo term="Lagna">Lagna (Ascendant)</TermInfo>} testId="lagna">
-            {k.lagna ? (
-              <>
-                {k.lagna.rashi.name} ({k.lagna.rashi.hindi})
-                <span className="block text-sm text-[#6B4A37]">
-                  {k.lagna.degreeInSign}° · {k.lagna.nakshatra.name}, pada {k.lagna.nakshatra.pada}
-                </span>
-              </>
-            ) : (
-              <span className="text-base">Not calculated: needs your exact birth time</span>
-            )}
-          </Card>
-        </ul>
-        <p className="text-sm text-[#6B4A37]">
-          Calculated in the <TermInfo term="Sidereal zodiac (Nirayana)">sidereal (Nirayana) zodiac</TermInfo> with the Lahiri <TermInfo term="Ayanamsa">ayanamsa</TermInfo>. It differs from the Western <TermInfo term="Tropical zodiac">tropical zodiac</TermInfo> by {ayan}, so
-          your Vedic Rashi is often one sign earlier than the Western sign printed in newspapers.
+      {!k.timeKnown && (
+        <p className="rounded-xl border border-[#592209]/20 bg-[#F5E9D6]/70 p-3 text-sm text-[#4A2E1F]" data-testid="kundali-time-notice">
+          {t("kundali.panels.timeNotice")}
         </p>
-      </Panel>
-
-      <Panel title="Panchang at birth" testId="kundali-panchang">
+      )}
+      <Panel title={t("kundali.panels.panchang.title")} testId="kundali-panchang">
         <ul className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 lg:grid-cols-4">
-          <Card label={<TermInfo term="Vikram Samvat">Vikram Samvat</TermInfo>}>{p.vikramSamvat}</Card>
-          <Card label={<TermInfo term="Masa">Hindu month (Masa)</TermInfo>}>
-            {p.masa.adhika ? "Adhika " : ""}
-            {p.masa.name} ({p.masa.hindi})
+          <Card label={t("kundali.panels.panchang.vikramSamvat")}>{p.vikramSamvat}</Card>
+          <Card label={t("kundali.panels.panchang.masa")}>
+            {p.masa.adhika ? t("kundali.panels.panchang.adhika") : ""}
+            {g("masa", p.masa.name)} ({p.masa.hindi})
           </Card>
-          <Card label={<TermInfo term="Paksha">Paksha</TermInfo>}>{p.paksha === "shukla" ? "Shukla (शुक्ल)" : "Krishna (कृष्ण)"}</Card>
-          <Card label={<TermInfo term="Tithi">Tithi</TermInfo>}>
-            {p.tithi.name} ({p.tithi.hindi})
+          <Card label={t("kundali.panels.panchang.paksha")}>{p.paksha === "shukla" ? t("kundali.panels.panchang.shukla") : t("kundali.panels.panchang.krishna")}</Card>
+          <Card label={t("kundali.panels.panchang.tithi")}>
+            {g("tithi", p.tithi.name)} ({p.tithi.hindi})
           </Card>
-          <Card label={<TermInfo term="Nakshatra">Nakshatra</TermInfo>}>
-            {p.nakshatra.name}, pada {p.nakshatra.pada}
+          <Card label={t("kundali.panels.panchang.nakshatra")}>
+            {t("kundali.panels.nakshatraPada", { nakshatra: g("nakshatra", p.nakshatra.name), pada: p.nakshatra.pada })}
           </Card>
-          <Card label={<TermInfo term="Yoga">Yoga</TermInfo>}>{p.yoga}</Card>
-          <Card label={<TermInfo term="Karana">Karana</TermInfo>}>{p.karana}</Card>
-          <Card label={<TermInfo term="Vara">Vara (weekday)</TermInfo>}>{p.vara.name}</Card>
+          <Card label={t("kundali.panels.panchang.yoga")}>{g("yoga", p.yoga)}</Card>
+          <Card label={t("kundali.panels.panchang.karana")}>{g("karana", p.karana)}</Card>
+          <Card label={t("kundali.panels.panchang.vara")}>{g("weekday", p.vara.name)}</Card>
         </ul>
-        <ExplainTerms terms={["Panchang", "Pada", ...findTerms([p.convention.label, p.convention.note, ...p.uncertainties, ...p.notes].join(" "))]} label="Also explained" />
         <p className="text-sm text-[#6B4A37]">
-          {p.convention.label}. Your tithi ran from {p.tithi.startLocal} to {p.tithi.endLocal} (local time at your birthplace).
-          {p.uncertain ? " Some of these depend on your birth time and are marked uncertain below." : ""}
+          {t("kundali.panels.panchang.tithiRan", { start: p.tithi.startLocal, end: p.tithi.endLocal })}
+          {p.uncertain ? t("kundali.panels.panchang.dependOnTime") : ""}
         </p>
         {p.uncertain && (
           <ul className="list-disc space-y-1 pl-5 text-sm text-[#301607]" data-testid="kundali-panchang-uncertain">
             {p.uncertainties.map((u) => (
-              <li key={u}>{u}</li>
+              <li key={u}>{tb(t, g, u)}</li>
             ))}
           </ul>
         )}
       </Panel>
 
+      <Panel title={t("kundali.panels.rashi.title")} testId="kundali-rashi">
+        <ul className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 lg:grid-cols-4">
+          <Card label={t("kundali.panels.rashi.surya")} testId="surya-rashi">
+            {rashiLine(k.sun, t("kundali.panels.rashi.sunChanges"), g, t)}
+          </Card>
+          <Card label={t("kundali.panels.rashi.chandra")} testId="chandra-rashi">
+            {rashiLine(k.moon, t("kundali.panels.rashi.moonChanges"), g, t)}
+          </Card>
+          <Card label={t("kundali.panels.rashi.janmaNakshatra")} testId="janma-nakshatra">
+            {nak(k.moon, g, t)}
+            {k.moon.nakshatra && <span className="block text-sm text-[#6B4A37]">{t("kundali.panels.rashi.ruledBy", { lord: g("planet", k.moon.nakshatra.lord) })}</span>}
+          </Card>
+          <Card label={t("kundali.panels.rashi.lagna")} testId="lagna">
+            {k.lagna ? (
+              <>
+                {rashiName(k.lagna.rashi)} ({k.lagna.rashi.hindi})
+                <span className="block text-sm text-[#6B4A37]">
+                  {k.lagna.degreeInSign}° · {t("kundali.panels.nakshatraPada", { nakshatra: g("nakshatra", k.lagna.nakshatra.name), pada: k.lagna.nakshatra.pada })}
+                </span>
+              </>
+            ) : (
+              <span className="text-base">{t("kundali.panels.rashi.lagnaNotCalculated")}</span>
+            )}
+          </Card>
+        </ul>
+        <p className="text-sm text-[#6B4A37]">{t("kundali.panels.rashi.siderealNote")}</p>
+      </Panel>
+
       {k.planets && k.lagna && (
-        <Panel title="Your birth charts" testId="kundali-charts">
+        <Panel title={t("kundali.panels.charts.title")} testId="kundali-charts">
           <div className="grid gap-6 md:grid-cols-2">
             <D1Chart k={k} />
             <D9Chart k={k} />
           </div>
-          <p className="text-sm text-[#6B4A37]">
-            Drawn in the North Indian style from the positions calculated above: the top diamond is the <TermInfo term="Lagna">Lagna</TermInfo> (house 1), houses run anticlockwise, and the small number in each
-            house is the <TermInfo term="Rashi">Rashi</TermInfo> number (1 = Mesha ... 12 = Meena). Surya (Sun), Chandra (Moon), Mangal (Mars), Budh (Mercury), Guru (Jupiter), Shukra (Venus), Shani (Saturn), <TermInfo term="Rahu">Rahu</TermInfo> and <TermInfo term="Ketu">Ketu</TermInfo>.
-            The left chart is the <TermInfo term="D1 (Rashi chart)">Rashi chart (D1)</TermInfo>, the main birth chart. The right-hand chart is the <TermInfo term="Navamsa (D9)">Navamsa (D9)</TermInfo>, an extra view tradition reads for marriage and inner strength.
-          </p>
+          <p className="text-sm text-[#6B4A37]">{t("kundali.panels.charts.note")}</p>
         </Panel>
       )}
 
       {k.planets && (
-        <Panel title="Grahas in your Janma Kundali" testId="kundali-planets">
-          <ExplainTerms terms={["Janma Kundali"]} label="Also explained" />
+        <Panel title={t("kundali.panels.grahas.title")} testId="kundali-planets">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[420px] text-left text-base">
               <thead className="text-sm text-[#6B4A37]">
                 <tr>
-                  <th className="py-1 pr-3"><TermInfo term="Graha">Graha</TermInfo></th>
-                  <th className="py-1 pr-3"><TermInfo term="Rashi">Rashi (sign, degree)</TermInfo></th>
-                  <th className="py-1 pr-3"><TermInfo term="Bhava (house)">House</TermInfo></th>
-                  <th className="py-1"><TermInfo term="Nakshatra">Nakshatra</TermInfo></th>
+                  <th className="py-1 pr-3">{t("kundali.panels.grahas.graha")}</th>
+                  <th className="py-1 pr-3">{t("kundali.panels.grahas.rashiColumn")}</th>
+                  <th className="py-1 pr-3">{t("kundali.panels.grahas.house")}</th>
+                  <th className="py-1">{t("kundali.panels.grahas.nakshatra")}</th>
                 </tr>
               </thead>
               <tbody>
-                {k.planets.map((g) => (
-                  <tr key={g.planet} className="border-t border-[#592209]/15 text-[#301607]">
-                    <td className="py-1 pr-3">{g.planet}</td>
+                {k.planets.map((pl) => (
+                  <tr key={pl.planet} className="border-t border-[#592209]/15 text-[#301607]">
+                    <td className="py-1 pr-3">{g("planet", pl.planet)}</td>
                     <td className="py-1 pr-3">
-                      {g.rashi.name} {g.degreeInSign}°
+                      {rashiName(pl.rashi)} {pl.degreeInSign}°
                     </td>
-                    <td className="py-1 pr-3">{g.house}</td>
+                    <td className="py-1 pr-3">{pl.house}</td>
                     <td className="py-1">
-                      {g.nakshatra}, {g.pada}
+                      {g("nakshatra", pl.nakshatra)}, {pl.pada}
                     </td>
                   </tr>
                 ))}
@@ -147,34 +153,16 @@ export const KundaliPanels = ({ k }: { k: KundaliResult }) => {
           </div>
           {k.dasha && (
             <p>
-              Running <TermInfo term="Dasha">Vimshottari period</TermInfo> (as of {k.dasha.asOf}): <strong>{k.dasha.mahadasha.lord}</strong> <TermInfo term="Mahadasha">Mahadasha</TermInfo> /{" "}
-              <strong>{k.dasha.antardasha.lord}</strong> <TermInfo term="Antardasha">Antardasha</TermInfo>, counted from your Moon in {k.dasha.moonNakshatra}.
+              <Trans
+                i18nKey="kundali.panels.grahas.dasha"
+                values={{ asOf: k.dasha.asOf, mahadasha: g("planet", k.dasha.mahadasha.lord), antardasha: g("planet", k.dasha.antardasha.lord), nakshatra: g("nakshatra", k.dasha.moonNakshatra) }}
+                components={{ b: <strong /> }}
+              />
             </p>
           )}
         </Panel>
       )}
 
-      {!k.timeKnown && k.stableSigns.length > 0 && (
-        <Panel title="Grahas that stay in one Rashi on your birth date" testId="kundali-stable">
-          <p>{k.stableSigns.map((s) => `${s.planet} in ${s.rashi.name}`).join(", ")}.</p>
-          <ExplainTerms terms={["Rashi", ...findTerms(k.stableSigns.map((s) => s.planet).join(" "))]} label="Terms explained" />
-        </Panel>
-      )}
-
-      <Panel title="How this was calculated" testId="kundali-basis">
-        <ul className="list-disc space-y-1 pl-5">
-          {k.basis.map((b) => (
-            <li key={b}>{b}</li>
-          ))}
-        </ul>
-        <p className="font-semibold text-[#592209]">Limits of this reading</p>
-        <ul className="list-disc space-y-1 pl-5">
-          {k.limitations.map((l) => (
-            <li key={l}>{l}</li>
-          ))}
-        </ul>
-        <ExplainTerms terms={["Bhava (house)", ...findTerms([...k.basis, ...k.limitations, k.method.houses].join(" "))]} label="Terms explained" />
-      </Panel>
     </div>
   );
 };

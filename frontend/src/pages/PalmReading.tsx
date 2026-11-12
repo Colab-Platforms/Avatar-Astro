@@ -1,4 +1,6 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import i18n from "@/i18n";
 import AskDivyaSection from "@/features/guru/AskDivyaSection";
 import { FEATURES } from "@/data/featureCatalog";
 import { useFeatureTitle } from "@/hooks/useFeatureTitle";
@@ -181,14 +183,17 @@ function LiveBlueprintOverlay({ landmarks, locked }: { landmarks: HandLandmarks 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function PalmReading() {
   useFeatureTitle(FEATURES.palm);
+  const { t } = useTranslation();
+  const featureName = t("features.palm-reading.name", { defaultValue: FEATURES.palm.name });
+  const hl = (type: HandType, field: string, def: string) => t(`palm.hand.${type}.${field}`, { defaultValue: def });
   const [stage, setStage]           = useState<Stage>("landing");
   const [imageUrl, setImageUrl]     = useState<string | null>(null); // preprocessed (cropped/aligned/enhanced) palm photo
   const [imageDims, setImageDims]   = useState({ width: 3, height: 4 });
   const [analysis, setAnalysis]     = useState<PalmAnalysisResult | null>(null);
-  const [processingMessage, setProcessingMessage] = useState("Preparing hand detection...");
+  const [processingMessage, setProcessingMessage] = useState(() => i18n.t("palm.processing.preparing"));
   const [processingPct, setProcessingPct]         = useState(0);
   const [retakeMessage, setRetakeMessage]         = useState<string | null>(null);
-  const [liveMessage, setLiveMessage]             = useState("Align your palm within the frame. Keep fingers relaxed and palm visible.");
+  const [liveMessage, setLiveMessage]             = useState(() => i18n.t("palm.live.align"));
   const [cameraError, setCameraError]             = useState<string | null>(null);
   const [cameraRetryTick, setCameraRetryTick]     = useState(0);
   const [cameraReady, setCameraReady]             = useState(false);
@@ -234,13 +239,13 @@ export default function PalmReading() {
       const checkRes = await authedFetch(`${AUTH_API_BASE_URL}/palm-reading/check`, { method: "POST" });
       if (!checkRes.ok) {
         const body = await checkRes.json().catch(() => null);
-        setRetakeMessage(body?.message || "This feature is temporarily unavailable. Please try again later.");
+        setRetakeMessage(body?.message || i18n.t("palm.errors.unavailable"));
         setStage("retake");
         return;
       }
     } catch (err) {
       if (!(err instanceof SignInRequiredError)) {
-        setRetakeMessage("Couldn't verify usage limit. Please check your connection and try again.");
+        setRetakeMessage(i18n.t("palm.errors.usageLimit"));
         setStage("retake");
       }
       return;
@@ -248,13 +253,13 @@ export default function PalmReading() {
 
     setStage("processing");
     setProcessingPct(0);
-    setProcessingMessage("Preparing hand detection...");
+    setProcessingMessage(i18n.t("palm.processing.preparing"));
     // Never leave the user waiting: if detection stalls, give up after 60s and offer a retake.
     const run = ++runIdRef.current;
     const watchdog = window.setTimeout(() => {
       if (runIdRef.current !== run) return;
       runIdRef.current++;
-      setRetakeMessage("The scan is taking too long. Please try again, or try a different photo.");
+      setRetakeMessage(i18n.t("palm.errors.tooLong"));
       setStage("retake");
     }, 60000);
     try {
@@ -263,29 +268,29 @@ export default function PalmReading() {
         sourceImg = await loadImageFromDataUrl(dataUrl);
       } catch {
         window.clearTimeout(watchdog);
-        setRetakeMessage("We couldn't open that file as an image. Please use a JPG, PNG or WebP photo.");
+        setRetakeMessage(i18n.t("palm.errors.openImage"));
         setStage("retake");
         return;
       }
 
       await defaultPalmAnalysisEngine.ensureReady((pct) => setProcessingPct(pct * 0.45));
-      setProcessingMessage("Detecting your palm...");
+      setProcessingMessage(i18n.t("palm.processing.detecting"));
       const quality = await defaultPalmAnalysisEngine.checkQuality(sourceImg);
       setProcessingPct(60);
 
       if (!quality.ok || !quality.landmarks) {
         window.clearTimeout(watchdog);
-        setRetakeMessage(quality.message ?? "We couldn't get a clear reading from this photo.");
+        setRetakeMessage(quality.message ?? i18n.t("palm.errors.noClearReading"));
         setStage("retake");
         return;
       }
 
-      setProcessingMessage("Cropping, aligning and enhancing image...");
+      setProcessingMessage(i18n.t("palm.processing.cropping"));
       const processed = await defaultPalmAnalysisEngine.preprocess(sourceImg, quality.landmarks);
       setProcessingPct(82);
       const processedImg = await loadImageFromDataUrl(processed.dataUrl);
 
-      setProcessingMessage("Measuring hand proportions...");
+      setProcessingMessage(i18n.t("palm.processing.measuring"));
       const fullAnalysis = await defaultPalmAnalysisEngine.analyze(processedImg, quality.landmarks);
       setProcessingPct(100);
 
@@ -299,7 +304,7 @@ export default function PalmReading() {
       window.clearTimeout(watchdog);
       if (runIdRef.current !== run) return;
       console.error("[PalmReading] analysis pipeline failed", err);
-      setRetakeMessage("The hand-detection model couldn't load. Check your connection and try again.");
+      setRetakeMessage(i18n.t("palm.errors.modelLoad"));
       setStage("retake");
     }
   }, []);
@@ -333,13 +338,13 @@ export default function PalmReading() {
 
         if (!quality.ok || !quality.landmarks) {
           setLiveLocked(false);
-          setLiveMessage(quality.message ?? "A clear palm was not detected yet. Keep it steady inside the frame.");
+          setLiveMessage(quality.message ?? i18n.t("palm.live.notDetected"));
           captureTimeoutRef.current = window.setTimeout(captureFrame, 900);
           return;
         }
 
         setLiveLocked(true);
-        setLiveMessage("Palm detected. Capturing the best scan...");
+        setLiveMessage(i18n.t("palm.live.capturing"));
         const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
         setStage("processing");
         runAnalysisPipeline(dataUrl);
@@ -347,7 +352,7 @@ export default function PalmReading() {
         console.error("[PalmReading] live capture failed", err);
         if (!isActive) return;
         setLiveLocked(false);
-        setLiveMessage("Still scanning... move your palm slowly and hold it steady.");
+        setLiveMessage(i18n.t("palm.live.stillScanning"));
         captureTimeoutRef.current = window.setTimeout(captureFrame, 1100);
       }
     }
@@ -374,12 +379,12 @@ export default function PalmReading() {
 
     async function initLiveCamera() {
       if (!navigator.mediaDevices?.getUserMedia) {
-        setCameraError("Camera access is not supported in this browser.");
+        setCameraError(i18n.t("palm.errors.cameraUnsupported"));
         return;
       }
 
       setCameraError(null);
-      setLiveMessage("Preparing live palm scanner...");
+      setLiveMessage(i18n.t("palm.live.preparing"));
       setProcessingPct(0);
 
       try {
@@ -393,7 +398,7 @@ export default function PalmReading() {
         }
 
         setCameraReady(true);
-        setLiveMessage("Hold your palm in the frame. Scanning for your hand structure...");
+        setLiveMessage(i18n.t("palm.live.holdPalm"));
         await defaultPalmAnalysisEngine.ensureReady((pct) => setProcessingPct(Math.round(pct * 0.6)));
         captureFrame();
       } catch (err) {
@@ -402,8 +407,8 @@ export default function PalmReading() {
         const denied = err instanceof DOMException && (err.name === "NotAllowedError" || err.name === "SecurityError");
         setCameraError(
           denied
-            ? "Camera permission was denied. Allow camera access in your browser's site settings, then try again."
-            : "Could not access your camera. Make sure no other app is using it, then try again."
+            ? i18n.t("palm.errors.cameraDenied")
+            : i18n.t("palm.errors.cameraFailed")
         );
       }
     }
@@ -422,24 +427,24 @@ export default function PalmReading() {
     // Signed out: ask first. The chosen photo stays in memory and is analysed once after sign-in.
     if (!requireSignIn(() => handleFile({ target: { files: [file], value: "" } } as unknown as React.ChangeEvent<HTMLInputElement>))) return;
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      setRetakeMessage("That file type isn't supported. Please upload a JPG, PNG or WebP photo of your palm.");
+      setRetakeMessage(i18n.t("palm.errors.fileType"));
       setStage("retake");
       return;
     }
     if (file.size > MAX_UPLOAD_BYTES) {
-      setRetakeMessage("That photo is larger than 10 MB. Please choose a smaller photo.");
+      setRetakeMessage(i18n.t("palm.errors.fileTooLarge"));
       setStage("retake");
       return;
     }
     if (file.size === 0) {
-      setRetakeMessage("That file is empty. Please choose another photo.");
+      setRetakeMessage(i18n.t("palm.errors.fileEmpty"));
       setStage("retake");
       return;
     }
     const reader = new FileReader();
     reader.onload = ev => runAnalysisPipeline(ev.target?.result as string);
     reader.onerror = () => {
-      setRetakeMessage("We couldn't read that file. Please try another photo.");
+      setRetakeMessage(i18n.t("palm.errors.fileRead"));
       setStage("retake");
     };
     reader.readAsDataURL(file);
@@ -450,7 +455,7 @@ export default function PalmReading() {
   const goldBtn: React.CSSProperties = { background: "#F5E9D6", color: "#000", fontWeight: 800, fontSize: 16, letterSpacing: "0.1em", padding: "16px 36px", borderRadius: 32, border: "none", cursor: "pointer", boxShadow: "0 0 24px rgba(89,34,9,0.4)" };
 
   // Shared across landing + retake so both can trigger the same upload dialog.
-  const fileInput = <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" aria-label="Upload a photo of your palm" onChange={handleFile} style={{ display: "none" }} />;
+  const fileInput = <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" aria-label={t("palm.upload.ariaLabel")} onChange={handleFile} style={{ display: "none" }} />;
 
   // ── LANDING ────────────────────────────────────────────────────────────────
   if (stage === "landing") return (
@@ -471,19 +476,19 @@ export default function PalmReading() {
 
         {/* Hero */}
         <div style={{ textAlign: "center", marginBottom: 72, animation: "fade-in 0.7s ease" }}>
-          <div style={{ fontSize: 14, color: "#592209", letterSpacing: "0.3em", marginBottom: 16, fontWeight: 600 }}>✦ HAND SHAPE ANALYSIS ✦</div>
+          <div style={{ fontSize: 14, color: "#592209", letterSpacing: "0.3em", marginBottom: 16, fontWeight: 600 }}>✦ {t("palm.hero.eyebrow")} ✦</div>
           <h1 style={{ fontSize: 58, fontWeight: 900, color: "#301607", letterSpacing: "0.06em", margin: "0 0 20px", lineHeight: 1.1 }}>
-            {FEATURES.palm.name}<br/>
-            <span style={{ background: "#592209", backgroundSize: "200% auto", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", animation: "shimmer 3s linear infinite" }}>Hand Shape</span>
+            {featureName}<br/>
+            <span style={{ background: "#592209", backgroundSize: "200% auto", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", animation: "shimmer 3s linear infinite" }}>{t("palm.hero.titleAccent")}</span>
           </h1>
           <p style={{ fontSize: 20, color: "rgba(48,22,7,0.72)", maxWidth: 620, margin: "0 auto 40px", lineHeight: 1.8 }}>
-            Upload a photo of your palm or use your camera. The Seva detects your hand, measures its proportions and describes your hand shape (Earth, Air, Water or Fire) using classical palmistry rules. Your photo is processed on your device and is not uploaded.
+            {t("palm.hero.intro")}
           </p>
           {/* Premium palm hero image */}
           <div className="pr-hero-img-wrap" style={{ marginBottom: 48, marginTop: 8, borderRadius: 28 }}>
             <img
               src="/images/palm-reading/premium-palm.jpeg"
-              alt="Illustration of a glowing palm"
+              alt={t("palm.hero.imageAlt")}
               loading="eager"
               decoding="async"
               style={{ width: "100%", height: "auto", display: "block", borderRadius: 28 }}
@@ -497,38 +502,38 @@ export default function PalmReading() {
           <div className="pr-card" style={{ ...sec, textAlign: "center", cursor: "pointer", marginBottom: 0 }} onClick={() => fileRef.current?.click()}>
             {fileInput}
             <div style={{ fontSize: 56, marginBottom: 20 }}>🖼️</div>
-            <h3 style={{ color: "#592209", fontSize: 22, fontWeight: 800, marginBottom: 12 }}>Upload Palm Photo</h3>
-            <p style={{ color: "#592209", fontSize: 16, lineHeight: 1.7, marginBottom: 28 }}>Choose a photo of your palm from your device. JPG, PNG or WebP, up to 10 MB.</p>
-            <button style={goldBtn}>📤 Upload Photo</button>
+            <h3 style={{ color: "#592209", fontSize: 22, fontWeight: 800, marginBottom: 12 }}>{t("palm.upload.title")}</h3>
+            <p style={{ color: "#592209", fontSize: 16, lineHeight: 1.7, marginBottom: 28 }}>{t("palm.upload.desc")}</p>
+            <button style={goldBtn}>📤 {t("palm.upload.button")}</button>
           </div>
           {/* Live scan */}
           <div className="pr-card" style={{ ...sec, textAlign: "center", marginBottom: 0 }}>
             <div style={{ fontSize: 56, marginBottom: 20 }}>📷</div>
-            <h3 style={{ color: "#592209", fontSize: 22, fontWeight: 800, marginBottom: 12 }}>Live Palm Scan</h3>
-            <p style={{ color: "#592209", fontSize: 16, lineHeight: 1.7, marginBottom: 28 }}>Use your camera. The scanner tracks your hand live and captures automatically once it has a clear view.</p>
-            <button style={goldBtn} onClick={() => setStage("live")}>📱 Start Live Scan</button>
+            <h3 style={{ color: "#592209", fontSize: 22, fontWeight: 800, marginBottom: 12 }}>{t("palm.live.cardTitle")}</h3>
+            <p style={{ color: "#592209", fontSize: 16, lineHeight: 1.7, marginBottom: 28 }}>{t("palm.live.cardDesc")}</p>
+            <button style={goldBtn} onClick={() => setStage("live")}>📱 {t("palm.live.start")}</button>
           </div>
         </div>
 
         {/* Guidelines */}
         <div style={sec}>
-          <SectionTitle icon="📋" title="Photo & Scan Guidelines for Best Results"/>
+          <SectionTitle icon="📋" title={t("palm.guidelines.title")}/>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
             <div style={card}>
-              <div style={{ color: "#301607", fontWeight: 700, fontSize: 14, letterSpacing: "0.15em", marginBottom: 16 }}>✅ IDEAL</div>
-              {["Full palm clearly visible","Bright, even natural lighting","Fingers slightly spread apart","Palm centered in frame","Sharp, high-resolution image"].map(g=>(
+              <div style={{ color: "#301607", fontWeight: 700, fontSize: 14, letterSpacing: "0.15em", marginBottom: 16 }}>✅ {t("palm.guidelines.ideal")}</div>
+              {["Full palm clearly visible","Bright, even natural lighting","Fingers slightly spread apart","Palm centered in frame","Sharp, high-resolution image"].map((g, gi)=>(
                 <div key={g} style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 10 }}>
                   <span style={{ color: "#301607", fontSize: 16 }}>✓</span>
-                  <span style={{ fontSize: 15, color: "rgba(48,22,7,0.8)" }}>{g}</span>
+                  <span style={{ fontSize: 15, color: "rgba(48,22,7,0.8)" }}>{t(`palm.guidelines.idealItems.${gi}`, { defaultValue: g })}</span>
                 </div>
               ))}
             </div>
             <div style={card}>
-              <div style={{ color: "#9B2C1D", fontWeight: 700, fontSize: 14, letterSpacing: "0.15em", marginBottom: 16 }}>❌ AVOID</div>
-              {["Blurry or out-of-focus image","Dark or shadowed lighting","Fingers closed or curled","Palm partially cropped","Low resolution photos"].map(b=>(
+              <div style={{ color: "#9B2C1D", fontWeight: 700, fontSize: 14, letterSpacing: "0.15em", marginBottom: 16 }}>❌ {t("palm.guidelines.avoid")}</div>
+              {["Blurry or out-of-focus image","Dark or shadowed lighting","Fingers closed or curled","Palm partially cropped","Low resolution photos"].map((b, bi)=>(
                 <div key={b} style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 10 }}>
                   <span style={{ color: "#9B2C1D", fontSize: 16 }}>✗</span>
-                  <span style={{ fontSize: 15, color: "rgba(48,22,7,0.8)" }}>{b}</span>
+                  <span style={{ fontSize: 15, color: "rgba(48,22,7,0.8)" }}>{t(`palm.guidelines.avoidItems.${bi}`, { defaultValue: b })}</span>
                 </div>
               ))}
             </div>
@@ -537,14 +542,14 @@ export default function PalmReading() {
 
         {/* Hand type legend */}
         <div style={sec}>
-          <SectionTitle icon="🤲" title="Hand Structures We Recognize"/>
+          <SectionTitle icon="🤲" title={t("palm.legend.title")}/>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16 }}>
             {HAND_TYPE_LEGEND.map(h=>(
               <div key={h.type} style={{ ...card, textAlign: "center" }}>
                 <div style={{ fontSize: 32, marginBottom: 10 }}>{h.emoji}</div>
-                <div style={{ color: "#592209", fontWeight: 700, fontSize: 14, marginBottom: 6 }}>{h.label}</div>
-                <div style={{ color: "rgba(48,22,7,0.72)", fontSize: 11, marginBottom: 8 }}>{h.shape}</div>
-                <div style={{ color: "#592209", fontSize: 13, lineHeight: 1.5 }}>{h.traits}</div>
+                <div style={{ color: "#592209", fontWeight: 700, fontSize: 14, marginBottom: 6 }}>{hl(h.type, "label", h.label)}</div>
+                <div style={{ color: "rgba(48,22,7,0.72)", fontSize: 11, marginBottom: 8 }}>{hl(h.type, "shape", h.shape)}</div>
+                <div style={{ color: "#592209", fontSize: 13, lineHeight: 1.5 }}>{hl(h.type, "traits", h.traits)}</div>
               </div>
             ))}
           </div>
@@ -552,23 +557,23 @@ export default function PalmReading() {
 
         {/* Line legend */}
         <div style={sec}>
-          <SectionTitle icon="🖐️" title="What This Seva Does"/>
+          <SectionTitle icon="🖐️" title={t("palm.scope.title")}/>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }} className="pr-scope">
             <div style={card}>
-              <div style={{ color: "#2F6B3A", fontWeight: 700, fontSize: 14, letterSpacing: "0.15em", marginBottom: 16 }}>✅ MEASURED FROM YOUR PHOTO</div>
-              {["Hand shape: palm width and length", "Finger length compared with the palm", "Thumb angle", "Whether the photo shows a left or right hand"].map(t => (
-                <div key={t} style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 10 }}>
+              <div style={{ color: "#2F6B3A", fontWeight: 700, fontSize: 14, letterSpacing: "0.15em", marginBottom: 16 }}>✅ {t("palm.scope.measured")}</div>
+              {["Hand shape: palm width and length", "Finger length compared with the palm", "Thumb angle", "Whether the photo shows a left or right hand"].map((item, ii) => (
+                <div key={item} style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 10 }}>
                   <span style={{ color: "#2F6B3A", fontSize: 16 }}>✓</span>
-                  <span style={{ fontSize: 15, color: "#4A2E1F" }}>{t}</span>
+                  <span style={{ fontSize: 15, color: "#4A2E1F" }}>{t(`palm.scope.measuredItems.${ii}`, { defaultValue: item })}</span>
                 </div>
               ))}
             </div>
             <div style={card}>
-              <div style={{ color: "#9B2C1D", fontWeight: 700, fontSize: 14, letterSpacing: "0.15em", marginBottom: 16 }}>❌ NOT READ</div>
-              {["The lines on your palm (heart, head, life, fate)", "Mounts, marks or skin features", "Any prediction of your future, health or relationships"].map(t => (
-                <div key={t} style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 10 }}>
+              <div style={{ color: "#9B2C1D", fontWeight: 700, fontSize: 14, letterSpacing: "0.15em", marginBottom: 16 }}>❌ {t("palm.scope.notRead")}</div>
+              {["The lines on your palm (heart, head, life, fate)", "Mounts, marks or skin features", "Any prediction of your future, health or relationships"].map((item, ii) => (
+                <div key={item} style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 10 }}>
                   <span style={{ color: "#9B2C1D", fontSize: 16 }}>✗</span>
-                  <span style={{ fontSize: 15, color: "#4A2E1F" }}>{t}</span>
+                  <span style={{ fontSize: 15, color: "#4A2E1F" }}>{t(`palm.scope.notReadItems.${ii}`, { defaultValue: item })}</span>
                 </div>
               ))}
             </div>
@@ -585,7 +590,7 @@ export default function PalmReading() {
     <div>
       <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
       <div style={{ minHeight: "80vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px", color: "#301607" }}>
-        <div style={{ fontSize: 14, color: "#592209", letterSpacing: "0.3em", marginBottom: 32, fontWeight: 600 }}>✦ HAND SCAN ✦</div>
+        <div style={{ fontSize: 14, color: "#592209", letterSpacing: "0.3em", marginBottom: 32, fontWeight: 600 }}>✦ {t("palm.processing.eyebrow")} ✦</div>
         <div style={{ width: 64, height: 64, borderRadius: "50%", border: "3px solid rgba(89,34,9,0.18)", borderTopColor: "#592209", animation: "spin 0.9s linear infinite", marginBottom: 28 }}/>
         <div style={{ color: "#592209", fontSize: 16, fontWeight: 700, letterSpacing: "0.04em", marginBottom: 22, textAlign: "center" }}>{processingMessage}</div>
         <div style={{ width: "100%", maxWidth: 320, height: 6, background: "rgba(89,34,9,0.2)", borderRadius: 6, overflow: "hidden" }}>
@@ -601,7 +606,7 @@ export default function PalmReading() {
       <style>{`@keyframes pulse-glow{0%,100%{opacity:0.6;transform:scale(1)}50%{opacity:1;transform:scale(1.3)}}`}</style>
       {fileInput}
       <div style={{ minHeight: "80vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px", textAlign: "center", color: "#301607" }}>
-        <div style={{ fontSize: 14, color: "#592209", letterSpacing: "0.3em", marginBottom: 32, fontWeight: 600 }}>✦ LIVE HAND SCANNER ✦</div>
+        <div style={{ fontSize: 14, color: "#592209", letterSpacing: "0.3em", marginBottom: 32, fontWeight: 600 }}>✦ {t("palm.live.eyebrow")} ✦</div>
         <div style={{ width: "100%", maxWidth: 880, marginBottom: 28, position: "relative", borderRadius: 26, overflow: "hidden", border: "2px solid rgba(89,34,9,0.25)", boxShadow: "0 0 40px rgba(89,34,9,0.16)" }}>
           <video
             ref={videoRef}
@@ -621,17 +626,17 @@ export default function PalmReading() {
                   animation: "pulse-glow 1.4s ease-in-out infinite",
                 }} />
                 <span style={{ fontSize: 13, color: liveLocked ? "#86efac" : "rgba(89,34,9,0.9)", letterSpacing: "0.2em", fontWeight: 700 }}>
-                  {liveLocked ? "PALM LOCKED" : "SCANNING"}
+                  {liveLocked ? t("palm.live.locked") : t("palm.live.scanning")}
                 </span>
               </div>
               <div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3 }}>{liveMessage}</div>
               {liveLandmarks && (
                 <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
                   <span style={{ background: "#FBF5EC", border: "1px solid rgba(89,34,9,0.4)", borderRadius: 20, padding: "4px 12px", fontSize: 12, color: "#6B4A37" }}>
-                    ✋ {liveLandmarks.handedness} Hand
+                    ✋ {t("palm.live.handChip", { hand: t(`palm.handedness.${liveLandmarks.handedness}`, { defaultValue: liveLandmarks.handedness }) })}
                   </span>
                   <span style={{ background: "#FBF5EC", border: "1px solid rgba(89,34,9,0.4)", borderRadius: 20, padding: "4px 12px", fontSize: 12, color: "#6B4A37" }}>
-                    21/21 Landmarks Tracked
+                    {t("palm.live.landmarks")}
                   </span>
                 </div>
               )}
@@ -640,18 +645,18 @@ export default function PalmReading() {
               style={{ ...goldBtn, background: "rgba(89,34,9,0.08)", color: "#301607", boxShadow: "none" }}
               onClick={() => { cleanupCamera(); resetToLanding(); }}
             >
-              ✕ Cancel Scan
+              ✕ {t("palm.live.cancel")}
             </button>
           </div>
         </div>
         {cameraError ? (
           <div style={{ maxWidth: 640, marginTop: 24, display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
             <div style={{ color: "#6B4A37", fontSize: 15 }}>{cameraError}</div>
-            <button style={goldBtn} onClick={() => { setCameraError(null); setCameraRetryTick(t => t + 1); }}>🔄 Try Again</button>
+            <button style={goldBtn} onClick={() => { setCameraError(null); setCameraRetryTick(n => n + 1); }}>🔄 {t("palm.live.tryAgain")}</button>
           </div>
         ) : (
           <div style={{ maxWidth: 640, marginTop: 24, color: "rgba(48,22,7,0.75)", fontSize: 15, lineHeight: 1.7 }}>
-            Keep your palm centered, fingers slightly spread, and avoid strong reflections. The blueprint scanner locks on and captures automatically once detection is stable.
+            {t("palm.live.hint")}
           </div>
         )}
         {/* Hand type reference while the user waits for a stable lock */}
@@ -659,7 +664,7 @@ export default function PalmReading() {
           {HAND_TYPE_LEGEND.map(h => (
             <div key={h.type} style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(89,34,9,0.2)", border: "1px solid rgba(89,34,9,0.16)", borderRadius: 20, padding: "6px 14px" }}>
               <span style={{ fontSize: 16 }}>{h.emoji}</span>
-              <span style={{ fontSize: 12, color: "rgba(48,22,7,0.72)" }}>{h.label}</span>
+              <span style={{ fontSize: 12, color: "rgba(48,22,7,0.72)" }}>{hl(h.type, "label", h.label)}</span>
             </div>
           ))}
         </div>
@@ -674,13 +679,13 @@ export default function PalmReading() {
       {fileInput}
       <div style={{ minHeight: "80vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px", textAlign: "center", color: "#301607" }}>
         <div style={{ fontSize: 56, marginBottom: 20 }}>🖐️</div>
-        <h2 style={{ color: "#301607", fontSize: 26, fontWeight: 800, marginBottom: 14 }}>Let's Try That Again</h2>
+        <h2 style={{ color: "#301607", fontSize: 26, fontWeight: 800, marginBottom: 14 }}>{t("palm.retake.title")}</h2>
         <p style={{ color: "#592209", fontSize: 16, maxWidth: 440, marginBottom: 32, lineHeight: 1.7 }}>
-          {retakeMessage ?? "We couldn't get a clear reading from this photo."}
+          {retakeMessage ?? t("palm.errors.noClearReading")}
         </p>
         <div style={{ display: "flex", gap: 16, flexWrap: "wrap", justifyContent: "center" }}>
-          <button style={goldBtn} onClick={() => fileRef.current?.click()}>📤 Upload Another Photo</button>
-          <button style={{ ...goldBtn, background: "rgba(89,34,9,0.12)", color: "#592209", boxShadow: "none", border: "1px solid rgba(89,34,9,0.35)" }} onClick={resetToLanding}>← Back</button>
+          <button style={goldBtn} onClick={() => fileRef.current?.click()}>📤 {t("palm.retake.uploadAnother")}</button>
+          <button style={{ ...goldBtn, background: "rgba(89,34,9,0.12)", color: "#592209", boxShadow: "none", border: "1px solid rgba(89,34,9,0.35)" }} onClick={resetToLanding}>← {t("palm.retake.back")}</button>
         </div>
       </div>
     </div>
@@ -692,7 +697,7 @@ export default function PalmReading() {
     return (
       <div>
         <div style={{ minHeight: "80vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px", color: "#301607" }}>
-          <div style={{ fontSize: 14, color: "#592209", letterSpacing: "0.3em", marginBottom: 32, fontWeight: 600 }}>✦ MEASURING YOUR HAND ✦</div>
+          <div style={{ fontSize: 14, color: "#592209", letterSpacing: "0.3em", marginBottom: 32, fontWeight: 600 }}>✦ {t("palm.scanning.eyebrow")} ✦</div>
           <div style={{
             width: "100%", maxWidth: 440, aspectRatio: `${imageDims.width} / ${imageDims.height}`,
             borderRadius: 20, overflow: "hidden", border: "2px solid rgba(89,34,9,0.4)", boxShadow: "0 0 40px rgba(89,34,9,0.25)",
@@ -714,6 +719,9 @@ export default function PalmReading() {
   const shape = HAND_TYPE_LEGEND.find((h) => h.type === g.handType) ?? HAND_TYPE_LEGEND[0];
   const meaning = HAND_MEANINGS[g.handType];
   const hand = analysis.landmarks.handedness;
+  const shapeLabel = hl(shape.type, "label", shape.label);
+  const palmAdj = squarePalm ? t("palm.results.adj.square") : t("palm.results.adj.long");
+  const fingerAdj = longFingers ? t("palm.results.adj.longFingers") : t("palm.results.adj.shortFingers");
 
   return (
     <div>
@@ -727,10 +735,10 @@ export default function PalmReading() {
 
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 40, animation: "fade-in 0.6s ease" }}>
-          <div style={{ fontSize: 13, color: "rgba(188,106,77,0.75)", letterSpacing: "0.3em", marginBottom: 12, fontWeight: 600 }}>✦ {FEATURES.palm.name.toUpperCase()} · YOUR HAND SHAPE READING ✦</div>
-          <h1 style={{ fontSize: "clamp(30px,5vw,44px)", fontWeight: 900, color: "#301607", margin: "0 0 12px" }}>{shape.label}</h1>
+          <div style={{ fontSize: 13, color: "rgba(188,106,77,0.75)", letterSpacing: "0.3em", marginBottom: 12, fontWeight: 600 }}>✦ {t("palm.results.eyebrow", { feature: featureName.toUpperCase() })} ✦</div>
+          <h1 style={{ fontSize: "clamp(30px,5vw,44px)", fontWeight: 900, color: "#301607", margin: "0 0 12px" }}>{hl(shape.type, "label", shape.label)}</h1>
           <p style={{ color: "#4A2E1F", fontSize: 16, maxWidth: 620, margin: "0 auto" }}>
-            Based on measurements of the hand in your photo. {shape.shape}.
+            {t("palm.results.basedOn", { shape: hl(shape.type, "shape", shape.shape) })}
           </p>
         </div>
 
@@ -738,7 +746,7 @@ export default function PalmReading() {
           {/* Photo with the real detected landmarks */}
           <div>
             <div style={{ position: "relative", borderRadius: 20, overflow: "hidden", border: "2px solid rgba(188,106,77,0.4)", aspectRatio: `${imageDims.width} / ${imageDims.height}` }}>
-              <img src={imageUrl} alt="Your palm photo with detected hand landmarks" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+              <img src={imageUrl} alt={t("palm.results.photoAlt")} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
               <svg viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true" style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
                 {analysis.landmarkPoints.map((p, i) => (
                   <circle key={i} cx={p.x} cy={p.y} r={0.007} fill="#fff6df" style={{ filter: "drop-shadow(0 0 3px #ffd98a)" }} />
@@ -746,43 +754,43 @@ export default function PalmReading() {
               </svg>
             </div>
             <p style={{ fontSize: 13, color: "#6B4A37", textAlign: "center", margin: "10px 0 0", lineHeight: 1.6 }}>
-              The dots are the 21 hand landmarks detected in your photo. They are used to measure your hand's proportions.
+              {t("palm.results.dotsNote")}
             </p>
           </div>
 
           <div>
             <div style={{ ...card, marginBottom: 20 }}>
-              <div style={{ fontSize: 13, color: "rgba(188,106,77,0.8)", letterSpacing: "0.15em", marginBottom: 10, textTransform: "uppercase", fontWeight: 700 }}>The traditional meaning of the {shape.label}</div>
-              <p style={{ margin: "0 0 12px", fontSize: 17, lineHeight: 1.75, color: "#301607" }}>{meaning}</p>
-              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "#6B4A37" }}>Traits traditionally linked with this hand shape: {shape.traits.toLowerCase()}.</p>
+              <div style={{ fontSize: 13, color: "rgba(188,106,77,0.8)", letterSpacing: "0.15em", marginBottom: 10, textTransform: "uppercase", fontWeight: 700 }}>{t("palm.results.meaningTitle", { label: shapeLabel })}</div>
+              <p style={{ margin: "0 0 12px", fontSize: 17, lineHeight: 1.75, color: "#301607" }}>{hl(g.handType, "meaning", meaning)}</p>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "#6B4A37" }}>{t("palm.results.traitsLine", { traits: hl(shape.type, "traits", shape.traits).toLowerCase() })}</p>
             </div>
 
             <div style={card}>
-              <div style={{ fontSize: 13, color: "rgba(188,106,77,0.8)", letterSpacing: "0.15em", marginBottom: 14, textTransform: "uppercase", fontWeight: 700 }}>How your hand was classified</div>
+              <div style={{ fontSize: 13, color: "rgba(188,106,77,0.8)", letterSpacing: "0.15em", marginBottom: 14, textTransform: "uppercase", fontWeight: 700 }}>{t("palm.results.classifiedTitle")}</div>
               <div className="pr-measure" data-testid="palm-measures">
                 <div>
-                  <div style={{ fontSize: 12, color: "#6B4A37", marginBottom: 4 }}>Palm width ÷ length</div>
+                  <div style={{ fontSize: 12, color: "#6B4A37", marginBottom: 4 }}>{t("palm.results.palmRatio")}</div>
                   <div style={{ fontSize: 22, fontWeight: 800, color: "#301607" }}>{g.palmWidthToLengthRatio.toFixed(2)}</div>
-                  <div style={{ fontSize: 13, color: "#BC6A4D" }}>{squarePalm ? "Square palm" : "Long palm"} (square at {SQUARE_PALM_MIN} or more)</div>
+                  <div style={{ fontSize: 13, color: "#BC6A4D" }}>{t("palm.results.palmRatioNote", { kind: squarePalm ? t("palm.results.squarePalm") : t("palm.results.longPalm"), min: SQUARE_PALM_MIN })}</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: 12, color: "#6B4A37", marginBottom: 4 }}>Average finger ÷ palm length</div>
+                  <div style={{ fontSize: 12, color: "#6B4A37", marginBottom: 4 }}>{t("palm.results.fingerRatio")}</div>
                   <div style={{ fontSize: 22, fontWeight: 800, color: "#301607" }}>{avgFinger.toFixed(2)}</div>
-                  <div style={{ fontSize: 13, color: "#BC6A4D" }}>{longFingers ? "Long fingers" : "Short fingers"} (long at {LONG_FINGERS_MIN} or more)</div>
+                  <div style={{ fontSize: 13, color: "#BC6A4D" }}>{t("palm.results.fingerRatioNote", { kind: longFingers ? t("palm.results.longFingers") : t("palm.results.shortFingers"), min: LONG_FINGERS_MIN })}</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: 12, color: "#6B4A37", marginBottom: 4 }}>Hand in the photo</div>
-                  <div style={{ fontSize: 22, fontWeight: 800, color: "#301607" }}>{hand} hand</div>
-                  <div style={{ fontSize: 13, color: "#6B4A37" }}>We can't tell which is your dominant hand</div>
+                  <div style={{ fontSize: 12, color: "#6B4A37", marginBottom: 4 }}>{t("palm.results.handInPhoto")}</div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: "#301607" }}>{t("palm.results.handValue", { hand: t(`palm.handedness.${hand}`, { defaultValue: hand }) })}</div>
+                  <div style={{ fontSize: 13, color: "#6B4A37" }}>{t("palm.results.dominantNote")}</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: 12, color: "#6B4A37", marginBottom: 4 }}>Thumb angle</div>
+                  <div style={{ fontSize: 12, color: "#6B4A37", marginBottom: 4 }}>{t("palm.results.thumbAngle")}</div>
                   <div style={{ fontSize: 22, fontWeight: 800, color: "#301607" }}>{Math.round(g.thumbAngleDeg)}°</div>
-                  <div style={{ fontSize: 13, color: "#592209" }}>Measured, not used in the shape</div>
+                  <div style={{ fontSize: 13, color: "#592209" }}>{t("palm.results.thumbNote")}</div>
                 </div>
               </div>
               <p style={{ margin: "16px 0 0", fontSize: 14, lineHeight: 1.65, color: "#4A2E1F" }}>
-                In classical palmistry, a {squarePalm ? "square" : "long"} palm with {longFingers ? "long" : "short"} fingers is classed as the {shape.label}. Camera angle, finger spread and distance can shift these measurements, so a different photo can give a different result.
+                {t("palm.results.classNote", { palm: palmAdj, fingers: fingerAdj, shape: shapeLabel })}
               </p>
             </div>
           </div>
@@ -794,22 +802,22 @@ export default function PalmReading() {
           const lab: React.CSSProperties = { fontSize: 13, color: "#592209", letterSpacing: "0.14em", marginBottom: 8, textTransform: "uppercase", fontWeight: 700 };
           const body: React.CSSProperties = { margin: 0, fontSize: 17, lineHeight: 1.7, color: "#301607" };
           return (
-            <section data-testid="palm-sections" aria-label="What your hand shape traditionally suggests" style={{ marginTop: 28 }}>
-              <h2 style={{ fontSize: "clamp(22px,3.5vw,28px)", fontWeight: 800, color: "#301607", margin: "0 0 6px", textAlign: "center" }}>What a {shape.label} Traditionally Suggests</h2>
+            <section data-testid="palm-sections" aria-label={t("palm.sections.ariaLabel")} style={{ marginTop: 28 }}>
+              <h2 style={{ fontSize: "clamp(22px,3.5vw,28px)", fontWeight: 800, color: "#301607", margin: "0 0 6px", textAlign: "center" }}>{t("palm.sections.title", { label: shapeLabel })}</h2>
               <p style={{ textAlign: "center", color: "#4A2E1F", fontSize: 15, margin: "0 auto 18px", maxWidth: 640 }}>
-                Your photo measured as a {squarePalm ? "square" : "long"} palm with {longFingers ? "long" : "short"} fingers. These notes are the traditional description for that shape, not observations of lines on your palm.
+                {t("palm.sections.intro", { palm: palmAdj, fingers: fingerAdj })}
               </p>
               <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))" }}>
-                <div style={box}><div style={lab}>Personality</div><p style={body}>{sec.personality}</p></div>
-                <div style={box}><div style={lab}>Strengths</div><ul style={{ display: "flex", flexWrap: "wrap", gap: 8, padding: 0, margin: 0, listStyle: "none" }}>{sec.strengths.map((x) => <li key={x} style={{ padding: "4px 12px", borderRadius: 999, border: "1px solid rgba(89,34,9,0.3)", background: "rgba(89,34,9,0.06)", color: "#592209", fontSize: 15 }}>{x}</li>)}</ul></div>
-                <div style={box}><div style={lab}>Tendencies</div><p style={body}>{sec.tendencies}</p></div>
-                <div style={box}><div style={lab}>Career</div><p style={body}>{sec.career}</p></div>
-                <div style={box}><div style={lab}>Relationships</div><p style={body}>{sec.relationships}</p></div>
+                <div style={box}><div style={lab}>{t("palm.sections.personality")}</div><p style={body}>{hl(g.handType, "personality", sec.personality)}</p></div>
+                <div style={box}><div style={lab}>{t("palm.sections.strengths")}</div><ul style={{ display: "flex", flexWrap: "wrap", gap: 8, padding: 0, margin: 0, listStyle: "none" }}>{sec.strengths.map((x, xi) => <li key={x} style={{ padding: "4px 12px", borderRadius: 999, border: "1px solid rgba(89,34,9,0.3)", background: "rgba(89,34,9,0.06)", color: "#592209", fontSize: 15 }}>{hl(g.handType, `strengths.${xi}`, x)}</li>)}</ul></div>
+                <div style={box}><div style={lab}>{t("palm.sections.tendencies")}</div><p style={body}>{hl(g.handType, "tendencies", sec.tendencies)}</p></div>
+                <div style={box}><div style={lab}>{t("palm.sections.career")}</div><p style={body}>{hl(g.handType, "career", sec.career)}</p></div>
+                <div style={box}><div style={lab}>{t("palm.sections.relationships")}</div><p style={body}>{hl(g.handType, "relationships", sec.relationships)}</p></div>
               </div>
               <div style={{ ...card, marginTop: 16 }}>
-                <div style={lab}>Palmistry terms in simple words</div>
+                <div style={lab}>{t("palm.sections.termsTitle")}</div>
                 <dl style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", margin: 0 }}>
-                  {PALM_TERMS.map(([t, d]) => <div key={t}><dt style={{ fontWeight: 700, color: "#301607" }}>{t}</dt><dd style={{ margin: 0, fontSize: 15, lineHeight: 1.6, color: "#4A2E1F" }}>{d}</dd></div>)}
+                  {PALM_TERMS.map(([term, d], ti) => <div key={term}><dt style={{ fontWeight: 700, color: "#301607" }}>{t(`palm.terms.${ti}.term`, { defaultValue: term })}</dt><dd style={{ margin: 0, fontSize: 15, lineHeight: 1.6, color: "#4A2E1F" }}>{t(`palm.terms.${ti}.desc`, { defaultValue: d })}</dd></div>)}
                 </dl>
               </div>
             </section>
@@ -817,17 +825,17 @@ export default function PalmReading() {
         })()}
 
         <div style={{ ...card, marginTop: 28, borderColor: "rgba(188,106,77,0.4)" }}>
-          <div style={{ fontSize: 13, color: "rgba(188,106,77,0.9)", letterSpacing: "0.15em", marginBottom: 10, textTransform: "uppercase", fontWeight: 700 }}>What this reading does not cover</div>
+          <div style={{ fontSize: 13, color: "rgba(188,106,77,0.9)", letterSpacing: "0.15em", marginBottom: 10, textTransform: "uppercase", fontWeight: 700 }}>{t("palm.results.notCoveredTitle")}</div>
           <p style={{ margin: 0, fontSize: 15, lineHeight: 1.75, color: "#4A2E1F" }}>
-            This Seva does not read the lines or marks on your palm, which is the main focus of the Indian Hasta Samudrika tradition. It measures the shape of your hand and gives the traditional description for that shape. There is no generated interpretation, no score, and no prediction of your future, health, career or relationships.
+            {t("palm.results.notCoveredBody")}
           </p>
         </div>
 
         <p style={{ margin: "28px auto 24px", maxWidth: 640, textAlign: "center", fontSize: 14, fontStyle: "italic", lineHeight: 1.7, color: "#592209" }}>
-          This reading is for personal interest and reflection. Palmistry is a traditional practice that is not scientifically proven, and the result is not a prediction or professional advice.
+          {t("palm.results.disclaimer")}
         </p>
         <div style={{ textAlign: "center" }}>
-          <button style={goldBtn} onClick={resetToLanding}>🔄 New Hasta Rekha (Palmistry) Reading</button>
+          <button style={goldBtn} onClick={resetToLanding}>🔄 {t("palm.results.newReading")}</button>
         </div>
       </div>
       <AskDivyaSection feature="palm" context={`Hand shape: ${shape.label}. ${meaning}`} />

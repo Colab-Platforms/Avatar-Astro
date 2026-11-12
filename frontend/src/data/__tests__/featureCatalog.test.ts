@@ -31,7 +31,7 @@ describe("feature catalog", () => {
 
   it("navigation groups match the approved lists and order", () => {
     expect(ASTROLOGY_SEVA_NAV.map((f) => f.name)).toEqual([
-      "Tarot Prediction", "Daily Horoscope", "Janma Kundali", "Love Compatibility", "Hasta Rekha (Palmistry)", "Ratna Jyotish (Lucky Gemstone)", "Namank Jyotish (Lucky Name)",
+      "Tarot Prediction", "Daily Horoscope", "Janma Kundali", "Love Compatibility", "Hasta Rekha (Palmistry)", "Ratna Jyotish (Lucky Gemstone)", "Namank Jyotish (Lucky Name)", "Baby Name Jyotish", "Lucky Vehicle Number", "Muhurat Finder",
     ]);
     expect(INNER_VOICE_NAV.map((f) => f.name)).toEqual([
       "Know Your Karma", "Divya Margdarshak", "Karma Sankhya", "Bhavishya Marg", "Divya Shloka",

@@ -1,10 +1,13 @@
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 interface HeroWelcomeProps {
   name: string;
 }
 
-const HeroWelcome = ({ name }: HeroWelcomeProps) => (
+const HeroWelcome = ({ name }: HeroWelcomeProps) => {
+  const { t } = useTranslation();
+  return (
   <div className="relative flex flex-col items-center px-4 py-10 text-center">
     <motion.div
       initial={{ opacity: 0, scale: 0.85 }}
@@ -47,7 +50,7 @@ const HeroWelcome = ({ name }: HeroWelcomeProps) => (
       transition={{ duration: 0.6, delay: 0.15 }}
       className="font-home-serif text-4xl font-semibold text-foreground md:text-5xl"
     >
-      Namaste, {name}
+      {t("guru.welcome.greeting", { name })}
     </motion.h1>
 
     <motion.p
@@ -56,11 +59,12 @@ const HeroWelcome = ({ name }: HeroWelcomeProps) => (
       transition={{ duration: 0.6, delay: 0.28 }}
       className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted-foreground"
     >
-      Whatever trouble weighs on your soul – speak openly.
+      {t("innerVoice.hero.line1")}
       <br className="hidden sm:block" />
-      Divya Margdarshak will understand your situation before suggesting a path forward.
+      {t("innerVoice.hero.line2")}
     </motion.p>
   </div>
-);
+  );
+};
 
 export default HeroWelcome;

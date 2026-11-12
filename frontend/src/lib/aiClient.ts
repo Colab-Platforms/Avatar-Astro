@@ -9,6 +9,12 @@ export interface AiChatBody {
   json?: boolean;
   /** Labels the result for the user's library (My Readings / My Conversations). A label only: the saved content is the provider's reply. */
   library?: { feature: "karma" | "shloka" | "ai-guru" | "guru-report"; conversationId?: string };
+  /**
+   * Ask the model to write its reply in this language (one of the ten supported codes; the server checks it). Pass
+   * `chosenLanguage()` from "@/i18n/aiLanguage" to follow the visitor's choice. Leave it out for a feature that manages its own reply
+   * language (Know Your Karma, AI Guru): the server then adds nothing.
+   */
+  language?: string;
 }
 
 /**

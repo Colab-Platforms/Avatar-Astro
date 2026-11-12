@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import EducationSection, { EducationBlock } from "@/components/EducationSection";
 import { FEATURES } from "@/data/featureCatalog";
 import { FEATURE_FAQS } from "@/data/featureFaqs";
@@ -60,5 +61,14 @@ const DISCLAIMER =
   "This profile is offered for personal interest, cultural exploration and reflection. Astrology and numerology are traditional belief systems that are not scientifically proven, and the profile is not a prediction or professional advice.";
 
 export default function BirthChartEducation() {
-  return <EducationSection audioToolSlug={FEATURES.birthChart.id} idPrefix="birthchart" title="About Janma Kundali" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
+  const { t } = useTranslation();
+  const tx = (key: string, english: string) => t(key, { defaultValue: english });
+  const translated: EducationBlock[] = blocks.map((b, i) => ({
+    ...b,
+    heading: tx(`birthChart.education.b${i}.heading`, b.heading),
+    paragraphs: b.paragraphs?.map((p, j) => tx(`birthChart.education.b${i}.paragraphs.${j}`, p)),
+    list: b.list?.map((p, j) => tx(`birthChart.education.b${i}.list.${j}`, p as string)),
+    after: b.after?.map((p, j) => tx(`birthChart.education.b${i}.after.${j}`, p)),
+  }));
+  return <EducationSection audioToolSlug={FEATURES.birthChart.id} idPrefix="birthchart" title={tx("birthChart.education.title", "About Janma Kundali")} blocks={translated} faqs={faqs} disclaimer={tx("birthChart.education.disclaimer", DISCLAIMER)} />;
 }

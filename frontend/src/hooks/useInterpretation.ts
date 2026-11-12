@@ -2,6 +2,16 @@ import { useState, useCallback } from 'react';
 import { apiService, API_BASE_URL } from '@/lib/api';
 import { authedFetch, SignInRequiredError } from '@/lib/authedFetch';
 import { useAuthStore } from '@/store/authStore';
+import i18n from '@/i18n';
+
+// Failed reply -> translated message. A 502 with code "wrong_language" means the AI answered in the wrong language twice.
+async function failure(response: Response, fallbackKey: string): Promise<Error> {
+  if (response.status === 502) {
+    const body = await response.json().catch(() => null);
+    if (body?.code === 'wrong_language') return new Error(i18n.t('guru.errors.wrongLanguage'));
+  }
+  return new Error(i18n.t(fallbackKey));
+}
 
 interface HumanReadableInterpretation {
   summary: string;
@@ -39,14 +49,14 @@ export function useInterpretBirthChart() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to interpret birth chart');
+        throw await failure(response, 'chartAi.errors.interpret');
       }
 
       const result = await response.json();
       setState({ data: result.data, loading: false, error: null });
       return result.data;
     } catch (err: any) {
-      const error = err.message || 'Failed to interpret birth chart';
+      const error = err.message || i18n.t('chartAi.errors.interpret');
       setState({ data: null, loading: false, error });
       throw err;
     }
@@ -73,14 +83,14 @@ export function useAIDailyHoroscope(sign: string) {
       const response = await window.fetch(`${API_BASE_URL}/interpretation/horoscope/${sign}`, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined);
 
       if (!response.ok) {
-        throw new Error('Failed to generate horoscope');
+        throw await failure(response, 'chartAi.errors.horoscope');
       }
 
       const result = await response.json();
       setState({ data: result.data, loading: false, error: null });
       return result.data;
     } catch (err: any) {
-      const error = err.message || 'Failed to generate horoscope';
+      const error = err.message || i18n.t('chartAi.errors.horoscope');
       setState({ data: null, loading: false, error });
       throw err;
     }
@@ -106,14 +116,14 @@ export function useAICompatibility(sign1: string, sign2: string) {
       );
 
       if (!response.ok) {
-        throw new Error('Failed to generate compatibility analysis');
+        throw await failure(response, 'chartAi.errors.compatibility');
       }
 
       const result = await response.json();
       setState({ data: result.data, loading: false, error: null });
       return result.data;
     } catch (err: any) {
-      const error = err.message || 'Failed to generate compatibility analysis';
+      const error = err.message || i18n.t('chartAi.errors.compatibility');
       setState({ data: null, loading: false, error });
       throw err;
     }

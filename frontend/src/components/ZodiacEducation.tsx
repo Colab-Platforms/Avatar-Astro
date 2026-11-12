@@ -1,8 +1,10 @@
+import { useTranslation } from "react-i18next";
 import EducationSection, { EducationBlock } from "@/components/EducationSection";
 import { FEATURES } from "@/data/featureCatalog";
 import { FEATURE_FAQS } from "@/data/featureFaqs";
-import { zodiacSigns } from "@/data/zodiacData";
+import { zodiacSigns, useZodiacText } from "@/data/zodiacData";
 
+// English source text. Each piece is looked up by key (zodiac.education.b<block>.<part>) with this English as the default.
 const blocks: EducationBlock[] = [
   {
     heading: "What Are Zodiac Signs?",
@@ -20,7 +22,7 @@ const blocks: EducationBlock[] = [
     ],
     ordered: true,
     after: [
-      "This Seva does not ask for your name or birth details, and it uses no generated text. Every description is fixed text written for MyBhagya Astro, so the same sign always shows the same profile.",
+      "This Seva does not ask for your name or birth details, and it uses no generated text. Every description is fixed text written for Bhagya Astro, so the same sign always shows the same profile.",
     ],
   },
   {
@@ -31,12 +33,8 @@ const blocks: EducationBlock[] = [
     table: {
       caption: "Commonly used Western (tropical) Sun-sign date ranges",
       head: ["Sign", "Dates", "Element", "Ruler"],
-      rows: zodiacSigns.map((z) => [
-        z.name,
-        z.dates,
-        z.element,
-        z.traditionalRuling ? `${z.ruling} / ${z.traditionalRuling}` : z.ruling,
-      ]),
+      // Rebuilt in the component so sign, element and planet names follow the chosen language.
+      rows: [],
     },
     after: [
       "These are approximate. The Sun changes sign on a slightly different date and time from year to year, and the clock time depends on your time zone, so if you were born within a day or so of a boundary your Sun sign may differ from the table. A calculation from your exact birth time and place, by a qualified astrologer or chart software, can settle it.",
@@ -64,5 +62,25 @@ const DISCLAIMER =
   "Zodiac sign profiles are offered for personal interest, cultural exploration and reflection. They describe traditional symbolism, are not scientifically proven, and are not predictions or professional advice.";
 
 export default function ZodiacEducation() {
-  return <EducationSection audioToolSlug={FEATURES.zodiac.id} idPrefix="zodiac" title="About Daily Horoscope" blocks={blocks} faqs={faqs} disclaimer={DISCLAIMER} />;
+  const { t } = useTranslation();
+  const z = useZodiacText();
+  const text = (b: number, part: string, def: string) => t(`zodiac.education.b${b}.${part}`, { defaultValue: def });
+  const localized: EducationBlock[] = blocks.map((block, b) => ({
+    ...block,
+    heading: text(b, "heading", block.heading),
+    paragraphs: block.paragraphs?.map((p, i) => text(b, `p.${i}`, p)),
+    list: block.list?.map((item, i) => text(b, `list.${i}`, item as string)),
+    after: block.after?.map((p, i) => text(b, `after.${i}`, p)),
+    table: block.table && {
+      caption: block.table.caption && text(b, "table.caption", block.table.caption),
+      head: block.table.head.map((h, i) => text(b, `table.head.${i}`, h)),
+      rows: zodiacSigns.map((s) => [
+        z.sign(s.name),
+        z.dates(s),
+        z.element(s.element),
+        s.traditionalRuling ? `${z.planet(s.ruling)} / ${z.planet(s.traditionalRuling)}` : z.planet(s.ruling),
+      ]),
+    },
+  }));
+  return <EducationSection audioToolSlug={FEATURES.zodiac.id} idPrefix="zodiac" title={t("zodiac.education.title", { defaultValue: "About Daily Horoscope" })} blocks={localized} faqs={faqs} disclaimer={t("zodiac.education.disclaimer", { defaultValue: DISCLAIMER })} />;
 }

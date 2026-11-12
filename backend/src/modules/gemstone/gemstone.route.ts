@@ -9,6 +9,9 @@ import { getGemstone } from "./gemstone.catalogue.js";
 import { calculateRatna, parseInput, ValidationError } from "./gemstone.service.js";
 import { matchShop } from "./shop.match.js";
 import { buildKundali, parseKundaliInput } from "./kundali.js";
+import { buildBabyName, parseBabyNameInput } from "./babyName.js";
+import { buildVehicleProfile, parseVehicleProfileInput } from "./vehicleNumber.js";
+import { MuhuratInputError, parseMuhuratRequest, searchMuhurat } from "../muhurat/search.js";
 import { auth } from "../../middleware/authMiddleware.js";
 import { getExecutionId, reserveToolExecution, settleToolExecution, releaseToolExecution } from "../payment/toolBilling.service.js";
 import { TOOL_KEYS } from "../payment/toolKeys.js";
@@ -127,6 +130,48 @@ router.post("/kundali", auth("USER"), limiter(20), (req, res) => {
       return;
     }
     console.error("Kundali calculation failed:", e);
+    sendResponse(res, false, null, "We could not complete the calculation. Please try again.", STATUS_CODES.SERVER_ERROR);
+  }
+});
+
+/** Baby Name Jyotish: the birth Nakshatra, pada and Panchang (same engine as /kundali) for the traditional naming syllable. */
+router.post("/baby-name", auth("USER"), limiter(20), (req, res) => {
+  try {
+    sendResponse(res, true, buildBabyName(parseBabyNameInput(req.body)), "Calculated");
+  } catch (e) {
+    if (e instanceof ValidationError || e instanceof BirthTimeError || (e instanceof Error && /coordinates|latitude/i.test(e.message))) {
+      sendResponse(res, false, null, (e as Error).message, STATUS_CODES.BAD_REQUEST);
+      return;
+    }
+    console.error("Baby name calculation failed:", e);
+    sendResponse(res, false, null, "We could not complete the calculation. Please try again.", STATUS_CODES.SERVER_ERROR);
+  }
+});
+
+/** Lucky Vehicle Number: the birth Panchang for the birth profile (same engine as /kundali). The number evaluation is front-end arithmetic. */
+router.post("/vehicle-number", auth("USER"), limiter(20), (req, res) => {
+  try {
+    sendResponse(res, true, buildVehicleProfile(parseVehicleProfileInput(req.body)), "Calculated");
+  } catch (e) {
+    if (e instanceof ValidationError || e instanceof BirthTimeError || (e instanceof Error && /coordinates|latitude/i.test(e.message))) {
+      sendResponse(res, false, null, (e as Error).message, STATUS_CODES.BAD_REQUEST);
+      return;
+    }
+    console.error("Vehicle number profile failed:", e);
+    sendResponse(res, false, null, "We could not complete the calculation. Please try again.", STATUS_CODES.SERVER_ERROR);
+  }
+});
+
+/** Muhurat Finder: suitable dates and exact local time windows for an event at a place. Stateless. */
+router.post("/muhurat/search", auth("USER"), limiter(10), (req, res) => {
+  try {
+    sendResponse(res, true, searchMuhurat(parseMuhuratRequest(req.body)), "Calculated");
+  } catch (e) {
+    if (e instanceof MuhuratInputError || e instanceof BirthTimeError) {
+      sendResponse(res, false, null, (e as Error).message, STATUS_CODES.BAD_REQUEST);
+      return;
+    }
+    console.error("Muhurat search failed:", e);
     sendResponse(res, false, null, "We could not complete the calculation. Please try again.", STATUS_CODES.SERVER_ERROR);
   }
 });

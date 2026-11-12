@@ -1,8 +1,11 @@
 import { useState } from "react";
+import Tx from "@/i18n/Tx";
 import { ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react";
 import { devotionSlides } from "@/data/features";
 import { useFeatureFlags } from "@/lib/featureFlags";
 import FeatureButton from "./FeatureButton";
+
+const slideKey = (title: string): string => title.toLowerCase().replace(/[^a-z]+/g, "-").replace(/^-|-$/g, "");
 
 const arrowCls =
   "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-home-gerua bg-home-gerua text-home-ivory transition-colors duration-300 hover:border-home-gold hover:bg-home-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-home-ink motion-reduce:transition-none";
@@ -46,15 +49,15 @@ const FeaturedCarousel = () => {
                 >
                   <div className="text-center md:text-left">
                     <span className="mb-1 inline-block font-home-sans text-[0.75rem] font-bold uppercase tracking-[0.2em] text-home-gerua">
-                      {slide.badge}
+                      <Tx k="home.slides.badge" def={slide.badge} />
                     </span>
                     <h3 className="hl-serif mb-1.5 text-[1.625rem] font-semibold normal-case leading-tight tracking-[0.03em] text-home-ink">
-                      {slide.title}
+                      <Tx k={`home.slides.${slideKey(slide.title)}.title`} def={slide.title} />
                     </h3>
                     <p className="mx-auto mb-3 max-w-sm font-home-sans text-[0.9rem] leading-[1.45] text-home-muted md:mx-0">
-                      {slide.description}
+                      <Tx k={`home.slides.${slideKey(slide.title)}.description`} def={slide.description} />
                     </p>
-                    <FeatureButton to={slide.buttonPath} label={slide.buttonLabel} />
+                    <FeatureButton to={slide.buttonPath} label={<Tx k={`home.slides.${slideKey(slide.title)}.button`} def={slide.buttonLabel} />} />
                   </div>
 
                   <div className="mx-auto w-full max-w-[240px] overflow-hidden rounded-xl border border-home-line shadow-[0_8px_22px_rgba(89,34,9,0.16)]">
@@ -92,7 +95,7 @@ const FeaturedCarousel = () => {
         <div className="order-3 flex items-center justify-center lg:order-4 lg:col-span-3" role="group" aria-label="Choose slide">
           {slides.map((slide, i) => (
             <button
-              key={slide.title}
+              key={slide.title}  
               type="button"
               aria-label={`Show ${slide.title}`}
               aria-current={i === index ? "true" : undefined}

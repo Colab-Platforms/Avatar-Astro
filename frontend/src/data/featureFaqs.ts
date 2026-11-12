@@ -7,7 +7,12 @@ import type { FeatureKey } from "./featureCatalog";
 export interface Faq {
   question: string;
   answer: string;
+  /** Dictionary key prefix: the shown text is looked up as <id>.question / <id>.answer, with the English below as the fallback. */
+  id?: string;
 }
+
+/** Adds the dictionary key prefix gunaText.faq.<page>.<n> to each entry. The English text is unchanged. */
+const withIds = (page: string, list: Faq[]): Faq[] => list.map((f, i) => ({ ...f, id: `gunaText.faq.${page}.${i}` }));
 
 export type FaqKey = Exclude<FeatureKey, "guru"> | "astrologers"; // Divya Margdarshak has no FAQ block
 
@@ -39,7 +44,7 @@ export const FEATURE_FAQS: Record<FaqKey, Faq[]> = {
         "Yes. Use the \"Need More Guidance?\" box under your reading to ask Divya Margdarshak a follow-up question. Your cards and question are carried over, so you do not need to explain them again.",
     },
   ],
-  zodiac: [
+  zodiac: withIds("zodiac", [
     {
       question: "How can I discover my Rashi?",
       answer:
@@ -64,8 +69,8 @@ export const FEATURE_FAQS: Record<FaqKey, Faq[]> = {
       question: "Where can I find daily guidance for my sign?",
       answer: "Visit the Daily Horoscope page and choose your sign to read the guidance for today.",
     },
-  ],
-  birthChart: [
+  ]),
+  birthChart: withIds("birthChart", [
     {
       question: "What can I discover from my Janma Kundali?",
       answer:
@@ -96,8 +101,8 @@ export const FEATURE_FAQS: Record<FaqKey, Faq[]> = {
       answer:
         "Yes. Ask Divya Margdarshak from the \"Need More Guidance?\" box under your chart. Your result is shared with the question so the answer can refer to it.",
     },
-  ],
-  compatibility: [
+  ]),
+  compatibility: withIds("compatibility", [
     {
       question: "How does Love Compatibility compare two people?",
       answer:
@@ -123,7 +128,7 @@ export const FEATURE_FAQS: Record<FaqKey, Faq[]> = {
       answer:
         "Each of you can open Janma Kundali for your own Rashi and Nakshatra, and you can ask Divya Margdarshak about the result from the \"Need More Guidance?\" box.",
     },
-  ],
+  ]),
   palm: [
     {
       question: "Which hand should I use for my reading?",
@@ -147,7 +152,7 @@ export const FEATURE_FAQS: Record<FaqKey, Faq[]> = {
     },
     {
       question: "Is my photo kept private?",
-      answer: "Your photo is processed on your device for the hand measurements. It is not stored by MyBhagya Astro.",
+      answer: "Your photo is processed on your device for the hand measurements. It is not stored by Bhagya Astro.",
     },
     {
       question: "Can I ask for more guidance about my reading?",

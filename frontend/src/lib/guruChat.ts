@@ -1,6 +1,9 @@
 import { aiChat } from "@/lib/aiClient";
 import { SignInRequiredError } from "@/lib/authedFetch";
 import { findUnverifiedReferences } from "@/lib/guruScripture";
+import i18n from "@/i18n";
+import { isInLanguage, replyLanguage } from "@/i18n/aiLanguage";
+import { localeInfo, type LocaleCode } from "@/i18n/languages";
 
 export const MAX_GURU_INPUT_CHARS = 1000;
 /** Only the most recent turns are sent, so a long chat never exceeds the backend's request limits. */
@@ -22,9 +25,9 @@ export const GURU_CONSULTATION_SYSTEM = `You are "AI Guru", an AI guide that off
 How to answer:
 - ALWAYS respond to what the user actually asked or said in your first sentences. If they ask a question, answer it directly and usefully first. Only then, if it would genuinely help, ask ONE short follow-up question.
 - Warm, calm and specific to their words. No generic motivational slogans, no corporate coaching language, no repeating the same phrases between turns.
-- Reply in the user's language (English, Hindi or Hinglish). Write Hindi in Roman script, not Devanagari.
+- Write your reply in the language given in the language instruction that follows, whatever language the user types in. Earlier messages in this conversation may be in another language: still answer in the instructed language.
 - Use very simple words and short sentences, as if talking to a child. Warm, kind and respectful. No long philosophy, no hard Sanskrit words unless you explain them in a few simple words, no repeating yourself.
-- Keep it short. A simple question gets a direct answer in 2 to 4 sentences. A bigger question may use a few of these short sections, only the ones that really help, each with a short bold heading: **What this means** (1 or 2 sentences), **What our scriptures teach** (only when verified scripture is provided to you below), **What you can do** (one small action), **Remember** (one kind sentence). Put a blank line between parts.
+- Keep it short. A simple question gets a direct answer in 2 to 4 sentences. A bigger question may use a few of these short sections, only the ones that really help, each with a short bold heading, and write the headings in the language of your reply too (translate them; never leave them in English unless English is the instructed language): **What this means** (1 or 2 sentences), **What our scriptures teach** (only when verified scripture is provided to you below), **What you can do** (one small action), **Remember** (one kind sentence). Put a blank line between parts.
 - Scripture and calendar: you may use ONLY the verse, story and calendar facts that are handed to you in a separate message. Never invent or guess a verse, chapter number, story, tithi, nakshatra, festival or auspicious time. If nothing was handed to you, say general ideas in simple words without any reference number, and do not claim "the Gita says". Keep what scripture teaches separate from your own suggestions.
 - Spiritual ideas (karma, dharma, mantras, planets, remedies) are offered as one perspective for reflection, never as fact or certainty. Do not name planets, doshas or dashas unless the user gives their own chart details or asks about them, and then say you cannot see their chart.
 - Never predict guaranteed outcomes, diagnose illness, or use fear or guilt. Never suggest that a paid ritual or remedy is required.
@@ -78,35 +81,62 @@ export async function askGuru(
   extraSystem = "",
   /** "chapter.verse" references the reply may cite: only the verified verses handed to the model. */
   allowedRefs: string[] = [],
+  /** The language the reply must be written in: the language chosen in the Bhagya selector (English if none was chosen). */
+  language: LocaleCode = replyLanguage(),
 ): Promise<GuruTurn> {
+  const first = await askOnce(history, userMessage, languageDirective, conversationId, extraSystem, allowedRefs, language, "");
+  if (isInLanguage(first.turn.message, language)) return finish(first);
+  // The model answered in another language. It is asked once more, firmly; if it still does not comply the reply is not shown.
+  const name = localeInfo(language).english;
+  const second = await askOnce(history, userMessage, languageDirective, conversationId, extraSystem, allowedRefs, language,
+    `Your previous reply was not written in ${name}. Write the whole reply again, entirely in ${name} (${localeInfo(language).native}), in its own script.`);
+  if (isInLanguage(second.turn.message, language)) return finish(second);
+  throw new GuruChatError(i18n.t("guru.errors.wrongLanguage", { lng: language }));
+}
+
+function finish(r: { turn: GuruTurn; savedId: string | null | undefined }): GuruTurn {
+  return r.savedId ? { ...r.turn, conversationId: r.savedId } : r.turn;
+}
+
+async function askOnce(
+  history: { role: "user" | "assistant"; content: string }[],
+  userMessage: string,
+  languageDirective: string,
+  conversationId: string | undefined,
+  extraSystem: string,
+  allowedRefs: string[],
+  language: LocaleCode,
+  retryNote: string,
+): Promise<{ turn: GuruTurn; savedId: string | null | undefined }> {
   let res: Response;
   try {
     res = await aiChat({
+      language, // the server turns this into the instruction to write directly in that language
       temperature: 0.7,
-      max_tokens: 900,
+      max_tokens: 900, // the server enlarges this for Indian scripts
       json: true,
       library: { feature: "ai-guru", ...(conversationId ? { conversationId } : {}) },
       messages: [
         { role: "system", content: GURU_CONSULTATION_SYSTEM },
-        { role: "system", content: languageDirective },
+        ...(languageDirective ? [{ role: "system" as const, content: languageDirective }] : []),
+        ...(retryNote ? [{ role: "system" as const, content: retryNote }] : []),
         ...(extraSystem ? [{ role: "system" as const, content: extraSystem }] : []),
         ...trimHistory(history),
         { role: "user", content: userMessage.slice(0, MAX_GURU_INPUT_CHARS) },
       ],
     });
   } catch (e) {
-    if (e instanceof SignInRequiredError) throw new GuruChatError("Please sign in to continue.");
-    throw new GuruChatError("We couldn't reach Divya Margdarshak. Check your connection and try again.");
+    if (e instanceof SignInRequiredError) throw new GuruChatError(i18n.t("common.signInToContinue"));
+    throw new GuruChatError(i18n.t("guru.errors.network"));
   }
-  if (res.status === 429) throw new GuruChatError("Too many messages. Please wait a minute and try again.");
+  if (res.status === 429) throw new GuruChatError(i18n.t("guru.errors.tooMany"));
   const data = await res.json().catch(() => null);
-  if (!res.ok || data?.error) throw new GuruChatError("Divya Margdarshak is unavailable right now. Please try again in a moment.");
+  if (!res.ok || data?.error) throw new GuruChatError(i18n.t("guru.errors.unavailable"));
   const turn = parseGuruReply(data?.choices?.[0]?.message?.content ?? "");
-  if (!turn) throw new GuruChatError("Divya Margdarshak's reply came back incomplete. Please try again.");
+  if (!turn) throw new GuruChatError(i18n.t("guru.errors.incomplete"));
   // A reply that cites a chapter or verse we did not hand over is not shown: it could be wrong.
   if (findUnverifiedReferences(turn.message, allowedRefs).length > 0) {
-    throw new GuruChatError("That reply could not be checked against our verified sources. Please ask again.");
+    throw new GuruChatError(i18n.t("guru.errors.unverified"));
   }
-  const savedId = res.headers?.get?.("X-Conversation-Id");
-  return savedId ? { ...turn, conversationId: savedId } : turn;
+  return { turn, savedId: res.headers?.get?.("X-Conversation-Id") };
 }

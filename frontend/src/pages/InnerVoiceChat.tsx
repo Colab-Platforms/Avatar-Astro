@@ -11,8 +11,12 @@ import GuruTopHeader from "@/components/ai-guru/GuruTopHeader";
 import GuruProgressBar from "@/components/ai-guru/GuruProgressBar";
 import GuruConversation from "@/components/ai-guru/GuruConversation";
 import GuruChatInput from "@/components/ai-guru/GuruChatInput";
-import LanguageControls from "@/components/ai-guru/LanguageControls";
-import { detectLanguage, buildLanguageDirective, type InputLanguageChoice, type ReplyLanguageChoice } from "@/components/ai-guru/languages";
+import { useTranslation } from "react-i18next";
+import { chosenLanguage, detectInputLanguage, replyLanguage } from "@/i18n/aiLanguage";
+import { isLocale, localeInfo } from "@/i18n/languages";
+import { detectLanguageRequest } from "@/i18n/languageRequest";
+import { setLanguage } from "@/i18n";
+import { intlTag } from "@/features/muhurat/format";
 import { aiChat } from "@/lib/aiClient";
 import { screenChatMessage } from "@/lib/chatScreen";
 import { SignInRequiredError } from "@/lib/authedFetch";
@@ -148,6 +152,7 @@ async function callDiagnosis(conversationHistory) {
   const res = await aiChat({
       temperature: 0.6, max_tokens: 4000,
       json: true,
+      language: chosenLanguage(), // the report is written in the language the visitor chose (nothing is sent if they never chose one)
       library: { feature: "guru-report" },
       messages: [
         { role: "system", content: PANDIT_DIAGNOSIS_SYSTEM },
@@ -756,6 +761,7 @@ function StarCanvas() {
 }
 
 function MantraCard({m,onSave}){
+  const {t}=useTranslation();
   const [playing,setPlaying]=useState(false);
   const [expanded,setExpanded]=useState(false);
   const [chantCount,setChantCount]=useState(0);
@@ -793,46 +799,46 @@ function MantraCard({m,onSave}){
       </div>
       <div className="ivc-audio-row">
         <span className="ivc-audio-lbl">🔊</span>
-        <button className={`ivc-abtn${playing?" on":""}`} onClick={()=>speak(0.6)}>🐢 Slow</button>
-        <button className={`ivc-abtn${playing?" on":""}`} onClick={()=>speak(1)}>▶ Normal</button>
-        <button className="ivc-abtn" onClick={()=>speak(1.25)}>⏩ Fast</button>
-        {playing&&<button className="ivc-astop" onClick={stop}>⏹ Stop</button>}
+        <button className={`ivc-abtn${playing?" on":""}`} onClick={()=>speak(0.6)}>🐢 {t("innerVoice.chat.mantra.slow")}</button>
+        <button className={`ivc-abtn${playing?" on":""}`} onClick={()=>speak(1)}>▶ {t("innerVoice.chat.mantra.normal")}</button>
+        <button className="ivc-abtn" onClick={()=>speak(1.25)}>⏩ {t("innerVoice.chat.mantra.fast")}</button>
+        {playing&&<button className="ivc-astop" onClick={stop}>⏹ {t("innerVoice.chat.mantra.stop")}</button>}
       </div>
       <div className="ivc-chant-row">
-        <span style={{fontSize:13,color:"rgba(48,22,7,0.72)",fontFamily:"'DM Sans', system-ui, sans-serif"}}>📿 Chant Counter</span>
+        <span style={{fontSize:13,color:"rgba(48,22,7,0.72)",fontFamily:"'DM Sans', system-ui, sans-serif"}}>📿 {t("innerVoice.chat.mantra.counter")}</span>
         <button className="ivc-chant-btn" onClick={()=>setChantCount(c=>Math.min(c+1,target))}>+1</button>
         <span className="ivc-chant-count" style={{color:chantCount>=target?"#592209":"#592209"}}>{chantCount}</span>
         <span className="ivc-chant-target">/ {target}</span>
         <div style={{flex:1,height:6,background:"rgba(89,34,9,0.2)",borderRadius:3,overflow:"hidden"}}>
           <div style={{height:"100%",width:`${pct}%`,background:chantCount>=target?"#592209":"linear-gradient(90deg,#592209,#592209)",borderRadius:3,transition:"width .3s"}}/>
         </div>
-        {chantCount>=target&&<span style={{fontSize:12,color:"#592209"}}>✓ Done!</span>}
-        <button className="ivc-chant-reset" onClick={()=>setChantCount(0)}>Reset</button>
+        {chantCount>=target&&<span style={{fontSize:12,color:"#592209"}}>✓ {t("innerVoice.chat.mantra.done")}</span>}
+        <button className="ivc-chant-reset" onClick={()=>setChantCount(0)}>{t("innerVoice.chat.mantra.reset")}</button>
       </div>
       <div className="ivc-chips">
         {m.count&&<span className="ivc-chip c-count">📿 {m.count}×</span>}
-        {m.duration&&<span className="ivc-chip c-dur">📅 {m.duration} days</span>}
+        {m.duration&&<span className="ivc-chip c-dur">📅 {t("innerVoice.chat.mantra.days", { count: m.duration })}</span>}
         {m.bestTime&&<span className="ivc-chip c-time">⏰ {m.bestTime}</span>}
         {m.purpose&&<span className="ivc-chip c-purp">🎯 {m.purpose}</span>}
       </div>
       <div className="ivc-mc-body">
-        {m.translation&&<div className="ivc-dl"><div className="ivc-dl-lbl">Translation</div><div className="ivc-dl-val gold">{m.translation}</div></div>}
-        {m.meaning&&<div className="ivc-dl"><div className="ivc-dl-lbl">Meaning & Significance</div><div className="ivc-dl-val">{m.meaning}</div></div>}
+        {m.translation&&<div className="ivc-dl"><div className="ivc-dl-lbl">{t("innerVoice.chat.mantra.translation")}</div><div className="ivc-dl-val gold">{m.translation}</div></div>}
+        {m.meaning&&<div className="ivc-dl"><div className="ivc-dl-lbl">{t("innerVoice.chat.mantra.meaning")}</div><div className="ivc-dl-val">{m.meaning}</div></div>}
       </div>
       <button className="ivc-expand-btn" onClick={()=>setExpanded(!expanded)}>
-        {expanded?"▲ Hide details":"▼ Deity · Source · Symbolism · Precautions"}
+        {expanded?"▲ "+t("innerVoice.chat.mantra.hide"):"▼ "+t("innerVoice.chat.mantra.show")}
       </button>
       {expanded&&(
         <div className="ivc-expandable">
-          {m.deity&&<div className="ivc-dl"><div className="ivc-dl-lbl">Deity</div><div className="ivc-dl-val" style={{color:"#592209"}}>{m.deity}</div></div>}
-          {m.source&&<div className="ivc-dl"><div className="ivc-dl-lbl">Source</div><div className="ivc-dl-val">{m.source}</div></div>}
-          {m.repetitionSymbolism&&<div className="ivc-dl ivc-exp-full"><div className="ivc-dl-lbl">Why this count?</div><div className="ivc-dl-val">{m.repetitionSymbolism}</div></div>}
-          {m.precautions&&m.precautions!=="None"&&<div className="ivc-dl ivc-exp-full"><div className="ivc-dl-lbl">Precautions</div><div className="ivc-dl-val" style={{color:"#6B4A37"}}>{m.precautions}</div></div>}
+          {m.deity&&<div className="ivc-dl"><div className="ivc-dl-lbl">{t("innerVoice.chat.mantra.deity")}</div><div className="ivc-dl-val" style={{color:"#592209"}}>{m.deity}</div></div>}
+          {m.source&&<div className="ivc-dl"><div className="ivc-dl-lbl">{t("innerVoice.chat.mantra.source")}</div><div className="ivc-dl-val">{m.source}</div></div>}
+          {m.repetitionSymbolism&&<div className="ivc-dl ivc-exp-full"><div className="ivc-dl-lbl">{t("innerVoice.chat.mantra.whyCount")}</div><div className="ivc-dl-val">{m.repetitionSymbolism}</div></div>}
+          {m.precautions&&m.precautions!=="None"&&<div className="ivc-dl ivc-exp-full"><div className="ivc-dl-lbl">{t("innerVoice.chat.mantra.precautions")}</div><div className="ivc-dl-val" style={{color:"#6B4A37"}}>{m.precautions}</div></div>}
         </div>
       )}
       <div className="ivc-mantra-save-row">
-        <button className="ivc-msave-btn" onClick={()=>onSave&&onSave(m)}>🔖 Save Mantra</button>
-        <button className="ivc-mcopy-btn" onClick={copyMantra}>📋 Copy</button>
+        <button className="ivc-msave-btn" onClick={()=>onSave&&onSave(m)}>🔖 {t("innerVoice.chat.mantra.save")}</button>
+        <button className="ivc-mcopy-btn" onClick={copyMantra}>📋 {t("innerVoice.chat.mantra.copy")}</button>
       </div>
     </div>
   );
@@ -857,18 +863,20 @@ function ProgressBar({value,max=100,color="#592209",height=8}){
 }
 
 function ProgressCalendar(){
+  const {t,i18n}=useTranslation();
   const [checked,setChecked]=useState(()=>{try{return JSON.parse(localStorage.getItem("iv_cal_checked")||"{}");}catch{return{};}});
   const now=new Date(),year=now.getFullYear(),month=now.getMonth();
-  const monthName=now.toLocaleString("default",{month:"long",year:"numeric"});
+  const english=(i18n.language||"en")==="en";
+  const monthName=now.toLocaleString(english?"default":intlTag(),{month:"long",year:"numeric"});
   const firstDay=new Date(year,month,1).getDay();
   const daysInMonth=new Date(year,month+1,0).getDate();
   const today=now.getDate();
   const streak=(()=>{let s=0;for(let d=today;d>=1;d--){if(checked[`${year}-${month}-${d}`])s++;else break;}return s;})();
   const toggle=(d)=>{const key=`${year}-${month}-${d}`;const updated={...checked,[key]:!checked[key]};setChecked(updated);localStorage.setItem("iv_cal_checked",JSON.stringify(updated));};
-  const DOWS=["M","T","W","T","F","S","S"];
+  const DOWS=english?["M","T","W","T","F","S","S"]:Array.from({length:7},(_,i)=>new Date(2024,0,1+i).toLocaleDateString(intlTag(),{weekday:"narrow"}));
   return(
     <div className="ivc-calendar">
-      <div className="ivc-cal-header"><div className="ivc-cal-title">{monthName}</div><div className="ivc-cal-streak">🔥 {streak} day streak</div></div>
+      <div className="ivc-cal-header"><div className="ivc-cal-title">{monthName}</div><div className="ivc-cal-streak">🔥 {t("innerVoice.chat.calendar.streak", { count: streak })}</div></div>
       <div className="ivc-cal-grid">
         {DOWS.map((d,i)=><div key={i} className="ivc-cal-dow">{d}</div>)}
         {Array.from({length:(firstDay+6)%7},(_,i)=><div key={`e${i}`} className="ivc-cal-day empty"/>)}
@@ -882,6 +890,7 @@ function ProgressCalendar(){
 }
 
 function DiagnosisReport({report,onSaveMantra,userName,onAskFollowUp,onDownload,downloading}){
+  const {t,i18n}=useTranslation();
   const [actions,setActions]=useState({});
   const [habits,setHabits]=useState({});
   if(!report) return null;
@@ -890,47 +899,47 @@ function DiagnosisReport({report,onSaveMantra,userName,onAskFollowUp,onDownload,
   const planetColor=(s)=>s>=70?"#22c55e":s>=50?"#592209":"#ef4444";
   const areaColor=(s)=>s>=7?"#ef4444":s>=5?"#592209":"#22c55e";
   const severityPct=(report.diagnosis?.severityScore||0)*10;
-  const generatedDate=new Date().toLocaleDateString("en-IN",{day:"numeric",month:"long",year:"numeric"});
+  const generatedDate=new Date().toLocaleDateString((i18n.language||"en")==="en"?"en-IN":intlTag(),{day:"numeric",month:"long",year:"numeric"});
   return(
     <div style={{maxWidth:860,margin:"0 auto"}}>
       <div className="ivc-report-topbar">
-        <div><div className="ivc-report-topbar-title">Diagnosis & Remedy Report</div><div className="ivc-report-topbar-date">Generated: {generatedDate} · Divya Margdarshak</div></div>
-        <button className="ivc-dl-pdf-btn" onClick={onDownload} disabled={downloading}>{downloading?"⏳ Preparing PDF...":"⬇ Download PDF Report"}</button>
+        <div><div className="ivc-report-topbar-title">{t("innerVoice.chat.report.title")}</div><div className="ivc-report-topbar-date">{t("innerVoice.chat.report.generated", { date: generatedDate })}</div></div>
+        <button className="ivc-dl-pdf-btn" onClick={onDownload} disabled={downloading}>{downloading?"⏳ "+t("innerVoice.chat.report.preparingPdf"):"⬇ "+t("innerVoice.chat.report.downloadPdf")}</button>
       </div>
 
       {report.diagnosis&&(
-        <ReportCard color="c-astro" icon="🔭" label="Astrological Diagnosis">
+        <ReportCard color="c-astro" icon="🔭" label={t("innerVoice.chat.report.sections.diagnosis")}>
           <p className="ivc-diag-summary">{report.diagnosis.summary}</p>
           {report.diagnosis.saturnScore!==undefined&&(
             <div className="ivc-saturn-row">
-              <div><div className="ivc-saturn-score">{report.diagnosis.saturnScore}<span style={{fontSize:14,color:"rgba(48,22,7,0.72)"}}>/100</span></div><div className="ivc-saturn-label">Saturn Influence Score</div></div>
+              <div><div className="ivc-saturn-score">{report.diagnosis.saturnScore}<span style={{fontSize:14,color:"rgba(48,22,7,0.72)"}}>/100</span></div><div className="ivc-saturn-label">{t("innerVoice.chat.report.saturnScore")}</div></div>
               <div className="ivc-saturn-bar-wrap"><ProgressBar value={report.diagnosis.saturnScore} color={report.diagnosis.saturnScore>=70?"#ef4444":"#592209"} height={10}/></div>
             </div>
           )}
           {report.diagnosis.areaScores&&(
             <div style={{marginBottom:18}}>
-              <div style={{fontSize:10,letterSpacing:2,textTransform:"uppercase",fontFamily:"'DM Sans', system-ui, sans-serif",color:"#592209",marginBottom:12}}>Severity by Life Area</div>
+              <div style={{fontSize:10,letterSpacing:2,textTransform:"uppercase",fontFamily:"'DM Sans', system-ui, sans-serif",color:"#592209",marginBottom:12}}>{t("innerVoice.chat.report.severityByArea")}</div>
               <div className="ivc-area-scores">{Object.entries(report.diagnosis.areaScores).map(([area,rawScore])=>{ const score=Number(rawScore); return (
                 <div key={area} className="ivc-area-row"><span className="ivc-area-name">{area}</span><div className="ivc-area-track"><div className="ivc-area-fill" style={{width:`${(score/10)*100}%`,background:areaColor(score)}}/></div><span className="ivc-area-score">{score}/10</span></div>
               );})}</div>
             </div>
           )}
           <div className="ivc-diag-grid">
-            {report.diagnosis.rootCause&&<div className="ivc-diag-item"><div className="ivc-diag-item-lbl">Root Cause</div><div className="ivc-diag-item-val">{report.diagnosis.rootCause}</div></div>}
-            {report.diagnosis.planetaryInfluence&&<div className="ivc-diag-item"><div className="ivc-diag-item-lbl">Planetary Influence</div><div className="ivc-diag-item-val">{report.diagnosis.planetaryInfluence}</div></div>}
-            {report.diagnosis.karmicPattern&&<div className="ivc-diag-item" style={{gridColumn:"1/-1"}}><div className="ivc-diag-item-lbl">Karmic Pattern</div><div className="ivc-diag-item-val">{report.diagnosis.karmicPattern}</div></div>}
+            {report.diagnosis.rootCause&&<div className="ivc-diag-item"><div className="ivc-diag-item-lbl">{t("innerVoice.chat.report.rootCause")}</div><div className="ivc-diag-item-val">{report.diagnosis.rootCause}</div></div>}
+            {report.diagnosis.planetaryInfluence&&<div className="ivc-diag-item"><div className="ivc-diag-item-lbl">{t("innerVoice.chat.report.planetaryInfluence")}</div><div className="ivc-diag-item-val">{report.diagnosis.planetaryInfluence}</div></div>}
+            {report.diagnosis.karmicPattern&&<div className="ivc-diag-item" style={{gridColumn:"1/-1"}}><div className="ivc-diag-item-lbl">{t("innerVoice.chat.report.karmicPattern")}</div><div className="ivc-diag-item-val">{report.diagnosis.karmicPattern}</div></div>}
           </div>
           {report.diagnosis.lifeAreaAffected?.length>0&&<div className="ivc-affected-tags">{report.diagnosis.lifeAreaAffected.map((a,i)=><span key={i} className="ivc-affected-tag">{a}</span>)}</div>}
-          <div className="ivc-severity-row"><span className="ivc-severity-lbl">Severity</span><div className="ivc-severity-track"><div className="ivc-severity-fill" style={{width:`${severityPct}%`}}/></div><span className="ivc-severity-score">{report.diagnosis.severityScore}/10</span></div>
+          <div className="ivc-severity-row"><span className="ivc-severity-lbl">{t("innerVoice.chat.report.severity")}</span><div className="ivc-severity-track"><div className="ivc-severity-fill" style={{width:`${severityPct}%`}}/></div><span className="ivc-severity-score">{report.diagnosis.severityScore}/10</span></div>
           {report.diagnosis.whyThisDiagnosis?.length>0&&(
             <div style={{marginTop:16}}>
-              <div style={{fontSize:10,letterSpacing:2,textTransform:"uppercase",fontFamily:"'DM Sans', system-ui, sans-serif",color:"rgba(47,107,58,.7)",marginBottom:10}}>Why This Diagnosis?</div>
+              <div style={{fontSize:10,letterSpacing:2,textTransform:"uppercase",fontFamily:"'DM Sans', system-ui, sans-serif",color:"rgba(47,107,58,.7)",marginBottom:10}}>{t("innerVoice.chat.report.whyDiagnosis")}</div>
               <div className="ivc-why-list">{report.diagnosis.whyThisDiagnosis.map((r,i)=><div key={i} className="ivc-why-item"><span className="ivc-why-check">✓</span><span className="ivc-why-txt">{r}</span></div>)}</div>
             </div>
           )}
           {report.diagnosis.confidenceLevels&&(
             <div style={{marginTop:16}}>
-              <div style={{fontSize:10,letterSpacing:2,textTransform:"uppercase",fontFamily:"'DM Sans', system-ui, sans-serif",color:"#592209",marginBottom:10}}>Prediction Confidence</div>
+              <div style={{fontSize:10,letterSpacing:2,textTransform:"uppercase",fontFamily:"'DM Sans', system-ui, sans-serif",color:"#592209",marginBottom:10}}>{t("innerVoice.chat.report.confidence")}</div>
               <div className="ivc-confidence-row">{Object.entries(report.diagnosis.confidenceLevels).map(([area,level])=><span key={area} className={`ivc-conf-badge conf-${String(level)}`}>{area}: {String(level)}</span>)}</div>
             </div>
           )}
@@ -938,23 +947,23 @@ function DiagnosisReport({report,onSaveMantra,userName,onAskFollowUp,onDownload,
       )}
 
       {report.forecast&&(
-        <ReportCard color="c-forecast" icon="🗓️" label="Forecast & Auspicious Dates">
+        <ReportCard color="c-forecast" icon="🗓️" label={t("innerVoice.chat.report.sections.forecast")}>
           <div className="ivc-forecast-grid">
-            {report.forecast.currentPhase&&<div className="ivc-forecast-item fi-red"><div className="ivc-fi-lbl">Current Phase</div><div className="ivc-fi-val" style={{color:"#9B2C1D",fontWeight:600}}>{report.forecast.currentPhase}</div>{report.forecast.currentPeriod&&<div className="ivc-fi-val" style={{marginTop:4,fontSize:13}}>{report.forecast.currentPeriod}</div>}</div>}
-            {report.forecast.reliefFrom&&<div className="ivc-forecast-item fi-green"><div className="ivc-fi-lbl">Relief Expected</div><div className="ivc-fi-val" style={{color:"#301607",fontWeight:600}}>{report.forecast.reliefFrom}</div></div>}
-            {report.forecast.bestMonths?.length>0&&<div className="ivc-forecast-item fi-gold" style={{gridColumn:"1/-1"}}><div className="ivc-fi-lbl">Best Months Ahead</div><div style={{display:"flex",flexWrap:"wrap",gap:8,marginTop:6}}>{report.forecast.bestMonths.map((m,i)=><span key={i} className="ivc-fav-date">✓ {m}</span>)}</div></div>}
+            {report.forecast.currentPhase&&<div className="ivc-forecast-item fi-red"><div className="ivc-fi-lbl">{t("innerVoice.chat.report.currentPhase")}</div><div className="ivc-fi-val" style={{color:"#9B2C1D",fontWeight:600}}>{report.forecast.currentPhase}</div>{report.forecast.currentPeriod&&<div className="ivc-fi-val" style={{marginTop:4,fontSize:13}}>{report.forecast.currentPeriod}</div>}</div>}
+            {report.forecast.reliefFrom&&<div className="ivc-forecast-item fi-green"><div className="ivc-fi-lbl">{t("innerVoice.chat.report.reliefExpected")}</div><div className="ivc-fi-val" style={{color:"#301607",fontWeight:600}}>{report.forecast.reliefFrom}</div></div>}
+            {report.forecast.bestMonths?.length>0&&<div className="ivc-forecast-item fi-gold" style={{gridColumn:"1/-1"}}><div className="ivc-fi-lbl">{t("innerVoice.chat.report.bestMonths")}</div><div style={{display:"flex",flexWrap:"wrap",gap:8,marginTop:6}}>{report.forecast.bestMonths.map((m,i)=><span key={i} className="ivc-fav-date">✓ {m}</span>)}</div></div>}
           </div>
           {(report.forecast.favorableDates?.length>0||report.forecast.avoidDates?.length>0)&&(
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
-              {report.forecast.favorableDates?.length>0&&<div><div style={{fontSize:10,letterSpacing:2,textTransform:"uppercase",fontFamily:"'DM Sans', system-ui, sans-serif",color:"rgba(47,107,58,.6)",marginBottom:8}}>✓ Favorable Days</div><div className="ivc-date-tags">{report.forecast.favorableDates.map((d,i)=><span key={i} className="ivc-fav-date">{d}</span>)}</div></div>}
-              {report.forecast.avoidDates?.length>0&&<div><div style={{fontSize:10,letterSpacing:2,textTransform:"uppercase",fontFamily:"'DM Sans', system-ui, sans-serif",color:"rgba(155,44,29,.6)",marginBottom:8}}>⚠ Avoid Decisions</div><div className="ivc-date-tags">{report.forecast.avoidDates.map((d,i)=><span key={i} className="ivc-avoid-date">{d}</span>)}</div></div>}
+              {report.forecast.favorableDates?.length>0&&<div><div style={{fontSize:10,letterSpacing:2,textTransform:"uppercase",fontFamily:"'DM Sans', system-ui, sans-serif",color:"rgba(47,107,58,.6)",marginBottom:8}}>✓ {t("innerVoice.chat.report.favorableDays")}</div><div className="ivc-date-tags">{report.forecast.favorableDates.map((d,i)=><span key={i} className="ivc-fav-date">{d}</span>)}</div></div>}
+              {report.forecast.avoidDates?.length>0&&<div><div style={{fontSize:10,letterSpacing:2,textTransform:"uppercase",fontFamily:"'DM Sans', system-ui, sans-serif",color:"rgba(155,44,29,.6)",marginBottom:8}}>⚠ {t("innerVoice.chat.report.avoidDecisions")}</div><div className="ivc-date-tags">{report.forecast.avoidDates.map((d,i)=><span key={i} className="ivc-avoid-date">{d}</span>)}</div></div>}
             </div>
           )}
         </ReportCard>
       )}
 
       {report.planetDashboard?.length>0&&(
-        <ReportCard color="c-planet" icon="🪐" label="Planet Health Dashboard">
+        <ReportCard color="c-planet" icon="🪐" label={t("innerVoice.chat.report.sections.planets")}>
           <div className="ivc-planet-grid">{report.planetDashboard.map((p,i)=>(
             <div key={i} className="ivc-planet-row"><span className="ivc-planet-icon">{p.icon}</span><span className="ivc-planet-name">{p.planet}</span><div className="ivc-planet-bar"><div className="ivc-planet-fill" style={{width:`${p.score}%`,background:planetColor(p.score)}}/></div><span className="ivc-planet-score" style={{color:planetColor(p.score)}}>{p.score}%</span></div>
           ))}</div>
@@ -962,18 +971,18 @@ function DiagnosisReport({report,onSaveMantra,userName,onAskFollowUp,onDownload,
       )}
 
       {report.spiritualInsight&&(
-        <ReportCard color="c-spirit" icon="✨" label="Spiritual Insight">
+        <ReportCard color="c-spirit" icon="✨" label={t("innerVoice.chat.report.sections.insight")}>
           {report.spiritualInsight.currentPhase&&<div className="ivc-insight-phase">{report.spiritualInsight.currentPhase}</div>}
           {report.spiritualInsight.phaseDescription&&<p className="ivc-insight-desc">{report.spiritualInsight.phaseDescription}</p>}
           <div className="ivc-insight-items">
-            {report.spiritualInsight.soulLesson&&<div className="ivc-insight-item"><div className="ivc-insight-item-lbl">Soul Lesson</div><div className="ivc-insight-item-val">{report.spiritualInsight.soulLesson}</div></div>}
-            {report.spiritualInsight.growthOpportunity&&<div className="ivc-insight-item"><div className="ivc-insight-item-lbl">Growth Opportunity</div><div className="ivc-insight-item-val">{report.spiritualInsight.growthOpportunity}</div></div>}
+            {report.spiritualInsight.soulLesson&&<div className="ivc-insight-item"><div className="ivc-insight-item-lbl">{t("innerVoice.chat.report.soulLesson")}</div><div className="ivc-insight-item-val">{report.spiritualInsight.soulLesson}</div></div>}
+            {report.spiritualInsight.growthOpportunity&&<div className="ivc-insight-item"><div className="ivc-insight-item-lbl">{t("innerVoice.chat.report.growthOpportunity")}</div><div className="ivc-insight-item-val">{report.spiritualInsight.growthOpportunity}</div></div>}
           </div>
         </ReportCard>
       )}
 
       {report.remedies?.length>0&&(
-        <ReportCard color="c-remedy" icon="🌿" label="Prescribed Remedies">
+        <ReportCard color="c-remedy" icon="🌿" label={t("innerVoice.chat.report.sections.remedies")}>
           <div className="ivc-remedy-grid">{report.remedies.map((r,i)=>(
             <div key={i} className="ivc-remedy-card">
               <div className="ivc-remedy-icon">{r.icon||"🪔"}</div>
@@ -982,34 +991,34 @@ function DiagnosisReport({report,onSaveMantra,userName,onAskFollowUp,onDownload,
               <div className="ivc-remedy-chips">
                 {r.duration&&<span className="ivc-remedy-chip rc-dur">📅 {r.duration}</span>}
                 {r.cost!==undefined&&<span className="ivc-remedy-chip rc-cost">💰 {r.cost}</span>}
-                {r.effort&&<span className="ivc-remedy-chip rc-effort">⚡ {r.effort} effort</span>}
+                {r.effort&&<span className="ivc-remedy-chip rc-effort">⚡ {t("innerVoice.chat.report.effort", { value: r.effort })}</span>}
               </div>
-              {r.effectiveness!==undefined&&<div className="ivc-eff-bar-wrap"><div className="ivc-eff-label">Effectiveness · {r.effectiveness}%</div><div className="ivc-eff-track"><div className="ivc-eff-fill" style={{width:`${r.effectiveness}%`}}/></div></div>}
+              {r.effectiveness!==undefined&&<div className="ivc-eff-bar-wrap"><div className="ivc-eff-label">{t("innerVoice.chat.report.effectiveness", { value: r.effectiveness })}</div><div className="ivc-eff-track"><div className="ivc-eff-fill" style={{width:`${r.effectiveness}%`}}/></div></div>}
             </div>
           ))}</div>
         </ReportCard>
       )}
 
       {report.dailyActions?.length>0&&(
-        <ReportCard color="c-daily" icon="✅" label="Today's Action Plan">
+        <ReportCard color="c-daily" icon="✅" label={t("innerVoice.chat.report.sections.actions")}>
           <div className="ivc-action-list">{report.dailyActions.map((a,i)=>(
             <div key={i} className={`ivc-action-item${actions[i]?" done":""}`} onClick={()=>toggleAction(i)}>
               <div className="ivc-action-check">{actions[i]?"✓":""}</div>
               <span className="ivc-action-txt">{a.task}</span>
             </div>
           ))}</div>
-          <div style={{marginTop:14,fontSize:12,color:"rgba(48,22,7,0.72)",fontFamily:"'DM Sans', system-ui, sans-serif"}}>{Object.values(actions).filter(Boolean).length}/{report.dailyActions.length} completed today</div>
+          <div style={{marginTop:14,fontSize:12,color:"rgba(48,22,7,0.72)",fontFamily:"'DM Sans', system-ui, sans-serif"}}>{t("innerVoice.chat.report.completedToday", { done: Object.values(actions).filter(Boolean).length, total: report.dailyActions.length })}</div>
         </ReportCard>
       )}
 
-      {report.mantra&&(<ReportCard color="c-mantra" icon="📿" label="Mantra Recommendation"><MantraCard m={report.mantra} onSave={onSaveMantra}/></ReportCard>)}
+      {report.mantra&&(<ReportCard color="c-mantra" icon="📿" label={t("innerVoice.chat.report.sections.mantra")}><MantraCard m={report.mantra} onSave={onSaveMantra}/></ReportCard>)}
 
       {report.puja&&(
-        <ReportCard color="c-puja" icon="🪔" label="Puja Recommendation">
+        <ReportCard color="c-puja" icon="🪔" label={t("innerVoice.chat.report.sections.puja")}>
           <div className="ivc-puja-name">{report.puja.name}</div>
           <div className="ivc-puja-grid">
-            {report.puja.estimatedCost&&<div className="ivc-puja-item"><div className="ivc-puja-item-lbl">Estimated Cost</div><div className="ivc-puja-item-val">{report.puja.estimatedCost}</div></div>}
-            {report.puja.duration&&<div className="ivc-puja-item"><div className="ivc-puja-item-lbl">Duration</div><div className="ivc-puja-item-val">{report.puja.duration}</div></div>}
+            {report.puja.estimatedCost&&<div className="ivc-puja-item"><div className="ivc-puja-item-lbl">{t("innerVoice.chat.report.estimatedCost")}</div><div className="ivc-puja-item-val">{report.puja.estimatedCost}</div></div>}
+            {report.puja.duration&&<div className="ivc-puja-item"><div className="ivc-puja-item-lbl">{t("innerVoice.chat.report.duration")}</div><div className="ivc-puja-item-val">{report.puja.duration}</div></div>}
           </div>
           {report.puja.materials?.length>0&&<div className="ivc-puja-materials">{report.puja.materials.map((m,i)=><span key={i} className="ivc-mat-tag">🌸 {m}</span>)}</div>}
           {report.puja.procedure&&<div className="ivc-puja-procedure">{report.puja.procedure}</div>}
@@ -1018,25 +1027,25 @@ function DiagnosisReport({report,onSaveMantra,userName,onAskFollowUp,onDownload,
       )}
 
       {report.gemstone&&(
-        <ReportCard color="c-gem" icon="💎" label="Gemstone Recommendation">
+        <ReportCard color="c-gem" icon="💎" label={t("innerVoice.chat.report.sections.gemstone")}>
           <div className="ivc-gem-name">{report.gemstone.name}</div>
           <div className="ivc-gem-grid">
-            {report.gemstone.benefits&&<div className="ivc-gem-item" style={{gridColumn:"1/-1"}}><div className="ivc-gem-item-lbl">Benefits</div><div className="ivc-gem-item-val">{report.gemstone.benefits}</div></div>}
-            {[["Wearing Finger",report.gemstone.wearingFinger],["Best Day",report.gemstone.wearingDay],["Metal",report.gemstone.metal],["Weight",report.gemstone.weight]].map(([l,v])=>v&&(<div key={l} className="ivc-gem-item"><div className="ivc-gem-item-lbl">{l}</div><div className="ivc-gem-item-val">{v}</div></div>))}
+            {report.gemstone.benefits&&<div className="ivc-gem-item" style={{gridColumn:"1/-1"}}><div className="ivc-gem-item-lbl">{t("innerVoice.chat.report.benefits")}</div><div className="ivc-gem-item-val">{report.gemstone.benefits}</div></div>}
+            {[["wearingFinger",report.gemstone.wearingFinger],["bestDay",report.gemstone.wearingDay],["metal",report.gemstone.metal],["weight",report.gemstone.weight]].map(([l,v])=>v&&(<div key={l} className="ivc-gem-item"><div className="ivc-gem-item-lbl">{t(`innerVoice.chat.report.gem.${l}`)}</div><div className="ivc-gem-item-val">{v}</div></div>))}
           </div>
         </ReportCard>
       )}
 
       {report.donations&&(
-        <ReportCard color="c-donate" icon="🤲" label="Personalized Donation Suggestions">
+        <ReportCard color="c-donate" icon="🤲" label={t("innerVoice.chat.report.sections.donations")}>
           <div className="ivc-donate-list">{report.donations.items?.map((d,i)=><span key={i} className="ivc-donate-item">• {d}</span>)}</div>
-          {report.donations.bestDay&&<div style={{marginBottom:10}}><span style={{fontSize:13,color:"rgba(48,22,7,0.72)",fontFamily:"'DM Sans', system-ui, sans-serif",marginRight:8}}>Best Day:</span><span className="ivc-donate-day">{report.donations.bestDay}</span></div>}
+          {report.donations.bestDay&&<div style={{marginBottom:10}}><span style={{fontSize:13,color:"rgba(48,22,7,0.72)",fontFamily:"'DM Sans', system-ui, sans-serif",marginRight:8}}>{t("innerVoice.chat.report.bestDayColon")}</span><span className="ivc-donate-day">{report.donations.bestDay}</span></div>}
           {report.donations.significance&&<div style={{fontSize:14,color:"rgba(48,22,7,0.85)",lineHeight:1.65}}>{report.donations.significance}</div>}
         </ReportCard>
       )}
 
       {report.dailyPractices?.length>0&&(
-        <ReportCard color="c-habits" icon="🌅" label="Daily Spiritual Practices">
+        <ReportCard color="c-habits" icon="🌅" label={t("innerVoice.chat.report.sections.practices")}>
           <div className="ivc-habits-grid">{report.dailyPractices.map((p,i)=>(
             <div key={i} className={`ivc-habit-card${habits[i]?" done":""}`} onClick={()=>toggleHabit(i)}>
               <span className="ivc-habit-icon">{p.icon||"⭐"}</span>
@@ -1048,59 +1057,59 @@ function DiagnosisReport({report,onSaveMantra,userName,onAskFollowUp,onDownload,
       )}
 
       {report.karmaScore&&(
-        <ReportCard color="c-karma" icon="⚡" label="Karma & Spiritual Progress">
+        <ReportCard color="c-karma" icon="⚡" label={t("innerVoice.chat.report.sections.karma")}>
           <div className="ivc-karma-score-big">{report.karmaScore.current>0?`+${report.karmaScore.current}`:report.karmaScore.current}</div>
-          <div className="ivc-karma-sub">Current Karma Sankhya</div>
+          <div className="ivc-karma-sub">{t("innerVoice.chat.report.currentKarma")}</div>
           {report.karmaScore.progressToNeutral!==undefined&&(
             <div className="ivc-karma-progress-wrap">
-              <div className="ivc-karma-progress-label"><span className="ivc-karma-progress-lbl">Progress to Neutral Karma</span><span className="ivc-karma-progress-pct">{report.karmaScore.progressToNeutral}%</span></div>
+              <div className="ivc-karma-progress-label"><span className="ivc-karma-progress-lbl">{t("innerVoice.chat.report.progressNeutral")}</span><span className="ivc-karma-progress-pct">{report.karmaScore.progressToNeutral}%</span></div>
               <div className="ivc-karma-meter"><div className="ivc-karma-fill" style={{width:`${report.karmaScore.progressToNeutral}%`}}/></div>
             </div>
           )}
           {(report.karmaScore.completedDays!==undefined||report.karmaScore.completedPujas!==undefined)&&(
             <div className="ivc-karma-completed">
-              {report.karmaScore.completedDays!==undefined&&<div className="ivc-karma-done"><span className="ivc-karma-done-check">✓</span>{report.karmaScore.completedDays} days of mantra completed</div>}
-              {report.karmaScore.completedPujas!==undefined&&<div className="ivc-karma-done"><span className="ivc-karma-done-check">✓</span>{report.karmaScore.completedPujas} Hanuman puja completed</div>}
+              {report.karmaScore.completedDays!==undefined&&<div className="ivc-karma-done"><span className="ivc-karma-done-check">✓</span>{t("innerVoice.chat.report.daysCompleted", { count: report.karmaScore.completedDays })}</div>}
+              {report.karmaScore.completedPujas!==undefined&&<div className="ivc-karma-done"><span className="ivc-karma-done-check">✓</span>{t("innerVoice.chat.report.pujasCompleted", { count: report.karmaScore.completedPujas })}</div>}
             </div>
           )}
           <div className="ivc-karma-cols">
-            <div><div className="ivc-karma-col-title pos">✅ Positive Influences</div>{report.karmaScore.positive?.map((p,i)=><div key={i} className="ivc-karma-item"><span className="ivc-karma-dot dot-pos"/>{p}</div>)}</div>
-            <div><div className="ivc-karma-col-title neg">⚠️ Areas to Improve</div>{report.karmaScore.negative?.map((n,i)=><div key={i} className="ivc-karma-item"><span className="ivc-karma-dot dot-neg"/>{n}</div>)}</div>
+            <div><div className="ivc-karma-col-title pos">✅ {t("innerVoice.chat.report.positive")}</div>{report.karmaScore.positive?.map((p,i)=><div key={i} className="ivc-karma-item"><span className="ivc-karma-dot dot-pos"/>{p}</div>)}</div>
+            <div><div className="ivc-karma-col-title neg">⚠️ {t("innerVoice.chat.report.improve")}</div>{report.karmaScore.negative?.map((n,i)=><div key={i} className="ivc-karma-item"><span className="ivc-karma-dot dot-neg"/>{n}</div>)}</div>
           </div>
         </ReportCard>
       )}
 
-      <ReportCard color="c-karma" icon="📅" label="Progress Calendar" defaultOpen={true}><ProgressCalendar/></ReportCard>
+      <ReportCard color="c-karma" icon="📅" label={t("innerVoice.chat.report.sections.calendar")} defaultOpen={true}><ProgressCalendar/></ReportCard>
 
       {report.timeline?.length>0&&(
-        <ReportCard color="c-timeline" icon="🗺️" label="Spiritual Progress Timeline">
-          <div className="ivc-timeline">{report.timeline.map((t,i)=>(
-            <div key={i} className="ivc-tl-item"><div className="ivc-tl-dot"/><div className="ivc-tl-week">Week {t.week}</div><div className="ivc-tl-title">{t.title}</div><div className="ivc-tl-desc">{t.description}</div></div>
+        <ReportCard color="c-timeline" icon="🗺️" label={t("innerVoice.chat.report.sections.timeline")}>
+          <div className="ivc-timeline">{report.timeline.map((w,i)=>(
+            <div key={i} className="ivc-tl-item"><div className="ivc-tl-dot"/><div className="ivc-tl-week">{t("innerVoice.chat.report.week", { week: w.week })}</div><div className="ivc-tl-title">{w.title}</div><div className="ivc-tl-desc">{w.description}</div></div>
           ))}</div>
         </ReportCard>
       )}
 
       {report.practicalGuidance?.length>0&&(
-        <ReportCard color="c-practical" icon="💡" label="Practical Guidance">
+        <ReportCard color="c-practical" icon="💡" label={t("innerVoice.chat.report.sections.practical")}>
           <div className="ivc-practical-list">{report.practicalGuidance.map((g,i)=><div key={i} className="ivc-practical-item"><span className="ivc-practical-dot"/><span className="ivc-practical-txt">{g}</span></div>)}</div>
         </ReportCard>
       )}
 
       {report.guidance&&(
-        <ReportCard color="c-guidance" icon="🧘" label="Personal Guidance from Divya Margdarshak">
-          <div className="ivc-guidance-box"><div className="ivc-guidance-txt">{report.guidance}</div><div className="ivc-guidance-sig">— Divya Margdarshak</div></div>
+        <ReportCard color="c-guidance" icon="🧘" label={t("innerVoice.chat.report.sections.guidance")}>
+          <div className="ivc-guidance-box"><div className="ivc-guidance-txt">{report.guidance}</div><div className="ivc-guidance-sig">{t("innerVoice.chat.report.signature")}</div></div>
         </ReportCard>
       )}
 
       {report.followUpPrompts?.length>0&&(
-        <ReportCard color="c-followup" icon="💬" label="Ask About This Diagnosis">
-          <div style={{fontSize:14,color:"rgba(48,22,7,0.72)",marginBottom:14}}>One-tap questions about your report:</div>
+        <ReportCard color="c-followup" icon="💬" label={t("innerVoice.chat.report.sections.followUp")}>
+          <div style={{fontSize:14,color:"rgba(48,22,7,0.72)",marginBottom:14}}>{t("innerVoice.chat.report.oneTap")}</div>
           <div className="ivc-followup-grid">{report.followUpPrompts.map((p,i)=><button key={i} className="ivc-followup-btn" onClick={()=>onAskFollowUp&&onAskFollowUp(p)}>💬 {p}</button>)}</div>
         </ReportCard>
       )}
 
       <div style={{textAlign:"center",padding:"20px 0 40px"}}>
-        <button className="ivc-dl-pdf-btn" style={{margin:"0 auto"}} onClick={onDownload} disabled={downloading}>{downloading?"⏳ Preparing PDF...":"⬇ Download Full PDF Report"}</button>
+        <button className="ivc-dl-pdf-btn" style={{margin:"0 auto"}} onClick={onDownload} disabled={downloading}>{downloading?"⏳ "+t("innerVoice.chat.report.preparingPdf"):"⬇ "+t("innerVoice.chat.report.downloadFullPdf")}</button>
       </div>
     </div>
   );
@@ -1108,6 +1117,8 @@ function DiagnosisReport({report,onSaveMantra,userName,onAskFollowUp,onDownload,
 
 export default function InnerVoiceChat(){
   useFeatureTitle(FEATURES.guru);
+  // Every visible word and every Guru reply follows the language chosen in the Bhagya selector (there is no separate chat language).
+  const {t,i18n}=useTranslation();
   const [activeTab,setActiveTab]=useState("consultation");
   // Guidance profile for this conversation (from the astrologer data) and the result the user came from, if any.
   const [persona,setPersona]=useState<PersonaChoice|null>(null);
@@ -1145,7 +1156,7 @@ export default function InnerVoiceChat(){
   };
   const [topic,setTopic]=useState<GuruTopic|null>(null);
   const authUser=useAuthStore(s=>s.user) as {firstName?:string;lastName?:string;email?:string}|null;
-  const displayName=[authUser?.firstName,authUser?.lastName].filter(Boolean).join(" ")||authUser?.email?.split("@")[0]||"Seeker";
+  const displayName=[authUser?.firstName,authUser?.lastName].filter(Boolean).join(" ")||authUser?.email?.split("@")[0]||t("guru.sidebar.seeker");
   const [messages,setMessages]=useState([]);
   const [input,setInput]=useState("");
   const [loading,setLoading]=useState(false);
@@ -1158,8 +1169,6 @@ export default function InnerVoiceChat(){
   const [activePanel,setActivePanel]=useState(null);
   const [sidebarOpen,setSidebarOpen]=useState(false);
   const [suggestionPulse,setSuggestionPulse]=useState(false);
-  const [inputLanguage,setInputLanguage]=useState<InputLanguageChoice>("auto");
-  const [replyLanguage,setReplyLanguage]=useState<ReplyLanguageChoice>("hinglish"); // Hinglish by default; the user can change it
   const [savedMantras,setSavedMantras]=useState(()=>{try{return JSON.parse(localStorage.getItem("iv_saved_mantras")||"[]");}catch{return [];}});
   const [chatSessions,setChatSessions]=useState(()=>{try{return JSON.parse(localStorage.getItem("iv_chat_sessions")||"[]");}catch{return [];}});
   const conversationIdRef=useRef(null); // the saved conversation this chat belongs to (set by the server)
@@ -1250,7 +1259,7 @@ export default function InnerVoiceChat(){
 
   useEffect(()=>{
     if(messages.length>0){
-      const firstUserMsg=messages.find(m=>m.role==="user");
+      const firstUserMsg=messages.find(m=>m.role==="user"&&!m.local);
       if(firstUserMsg){
         const session={id:Date.now(),text:firstUserMsg.content.slice(0,40)+"...",date:new Date().toLocaleDateString("en-IN")};
         const updated=[session,...chatSessions.filter(s=>s.text!==session.text)].slice(0,10);
@@ -1271,6 +1280,21 @@ export default function InnerVoiceChat(){
 
   const send=async(text,{retry=false}={})=>{
     const msg=text.trim().slice(0,MAX_GURU_INPUT_CHARS);if(!msg||loading||searchRef.current||limitReached||restoring)return;
+    // An explicit request to change the language ("talk in Hindi", "हिंदी में जवाब दो") is a preference change, not a chat topic. It is handled
+    // before sign-in, profile assignment, topic screening and the daily timer, it updates the one central language (so the selector follows),
+    // and it is confirmed in the new language. Earlier messages are left exactly as they were.
+    if(!retry){
+      const asked=detectLanguageRequest(msg);
+      if(asked){
+        const current=isLocale(i18n.language)?i18n.language:"en";
+        if(asked!==current&&!(await setLanguage(asked))){alert(i18n.t("language.loadFailed",{lng:current}));return;}
+        setInput("");if(textareaRef.current)textareaRef.current.style.height="24px";
+        setMessages(prev=>[...prev.filter(m=>!m.error),
+          {role:"user",content:msg,local:true},
+          {role:"guru",local:true,content:{type:"gathering",message:i18n.t("voice.languageChanged",{lng:asked,language:localeInfo(asked).native})}}]);
+        return;
+      }
+    }
     if(!requireSignIn(()=>{void send(text,{retry});}))return; // signed out: ask first, the typed message stays in the box
     // No chat opens without an available profile: find one first; if there is none the message stays in the box.
     if(!personaRef.current&&!(await findGuru(msg))){setInput(msg);return;}
@@ -1284,13 +1308,13 @@ export default function InnerVoiceChat(){
           setInput("");if(textareaRef.current)textareaRef.current.style.height="24px";
           setMessages(prev=>[...prev.filter(m=>!m.error),
             {role:"user",content:msg,local:true},
-            {role:"guru",local:true,escalated:outcome.action==="ESCALATED",content:{type:"gathering",message:outcome.reply||"Thank you. We will contact you shortly."}}]);
+            {role:"guru",local:true,escalated:outcome.action==="ESCALATED",content:{type:"gathering",message:screenReply(outcome)}}]);
           setLoading(false);
           return;
         }
       }catch(e){
         setLoading(false);
-        if(!(e instanceof SignInRequiredError))alert(e instanceof Error?e.message:"Could not process your message. Please try again.");
+        if(!(e instanceof SignInRequiredError))alert(e instanceof Error?e.message:t("guru.errors.screenFailed"));
         return;
       }
     }
@@ -1302,7 +1326,7 @@ export default function InnerVoiceChat(){
     }catch(e){
       setLoading(false);
       if(e instanceof DailyChatLimitError&&e.session)useDailyChatLimitStore.getState().setSession(e.session);
-      else alert(e instanceof Error?e.message:"Could not start the chat session. Please try again.");
+      else alert(e instanceof Error?e.message:t("guru.limit.startFailed"));
       return;
     }
     setInput("");if(textareaRef.current)textareaRef.current.style.height="24px";
@@ -1328,17 +1352,20 @@ export default function InnerVoiceChat(){
       // History excludes the failed-reply bubbles and the message being sent now.
       const history=buildHistory().filter(h=>h.content);
       const baseHistory=retry?history.slice(0,-1):history;
-      const detected=detectLanguage(msg);
-      const languageDirective=buildLanguageDirective(inputLanguage,replyLanguage,detected);
+      // Typing language is detected automatically and is only a hint: the reply is always in the language chosen in the selector.
+      const detected=detectInputLanguage(msg);
+      const replyIn=replyLanguage();
+      const detectedName=detected==="hinglish"?"Hinglish (Hindi in Roman letters)":localeInfo(detected).english;
+      const inputHint=`The user's latest message appears to be written in ${detectedName}. Understand it in whatever language it is written, but write your reply only in ${localeInfo(replyIn).english}.`;
       // The reply is shown only after the typing moment; a reply that arrives early waits for it, a late one is shown at once.
-      const [data]=await Promise.all([askGuru(baseHistory,msg,languageDirective,conversationIdRef.current||undefined,extraSystem,allowedReferences(grounding)),typingDone]);
+      const [data]=await Promise.all([askGuru(baseHistory,msg,inputHint,conversationIdRef.current||undefined,extraSystem,allowedReferences(grounding),replyIn),typingDone]);
       if(data.conversationId){conversationIdRef.current=data.conversationId;syncUrl(data.conversationId);}
       setMessages(prev=>[...prev.filter(m=>!m.error),{role:"guru",content:data}]);
       if(data.progress)setProgress(data.progress);
       if(data.readyForDiagnosis)setReadyForDiagnosis(true);
     }catch(e){
       console.error("[AI Guru] Consultation request failed:",e);
-      const errMsg=e instanceof GuruChatError?e.message:"Something went wrong. Please try again.";
+      const errMsg=e instanceof GuruChatError?e.message:t("common.genericError");
       setMessages(prev=>[...prev.filter(m=>!m.error),{role:"guru",error:true,retryText:msg,content:{type:"gathering",message:errMsg}}]);
     }finally{setLoading(false);setSearching(false);setPersona(personaRef.current);}
   };
@@ -1372,8 +1399,14 @@ export default function InnerVoiceChat(){
     if(!report)return;
     setDownloading(true);
     try{await downloadReportPDF(report,profile?.name||"Seeker");}
-    catch(e){console.error("PDF error:",e);alert("PDF download failed. Please try again.");}
+    catch(e){console.error("PDF error:",e);alert(t("innerVoice.chat.report.pdfFailed"));}
     finally{setDownloading(false);}
+  };
+
+  // The fixed replies for a screened message (contact request / off-topic) are shown in the chosen language; English keeps the server's own wording.
+  const screenReply=(o:{action:string;reply?:string})=>{
+    const key=o.action==="ESCALATED"?"guru.screen.escalated":o.action==="OFF_TOPIC"?"guru.screen.offTopic":"guru.screen.thanks";
+    return i18n.language==="en"?(o.reply||t(key)):t(key);
   };
 
   const handleFollowUp=(prompt)=>{setActiveTab("consultation");setTimeout(()=>send(prompt),100);};
@@ -1399,10 +1432,10 @@ export default function InnerVoiceChat(){
   const toggleVoice=()=>{
     const speechWindow=window as unknown as {SpeechRecognition?:unknown;webkitSpeechRecognition?:unknown};
     const SR=(speechWindow.SpeechRecognition||speechWindow.webkitSpeechRecognition) as (new()=>any)|undefined; // eslint-disable-line @typescript-eslint/no-explicit-any
-    if(!SR){alert("Voice input requires Chrome or Edge browser.");return;}
+    if(!SR){alert(t("guru.composer.voiceUnsupported"));return;}
     if(listening){recognitionRef.current?.stop();setListening(false);return;}
     const rec=new SR();
-    rec.continuous=true;rec.interimResults=true;rec.lang="hi-IN";
+    rec.continuous=true;rec.interimResults=true;rec.lang=localeInfo(i18n.language).tag; // speech recognition follows the chosen language
     rec.onresult=(e)=>{const transcript=Array.from(e.results).map(r=>r[0].transcript).join(" ");setInput(transcript);setTimeout(autoResize,10);};
     rec.onerror=()=>setListening(false);rec.onend=()=>setListening(false);
     rec.start();recognitionRef.current=rec;setListening(true);
@@ -1431,8 +1464,6 @@ export default function InnerVoiceChat(){
     setReport(null);
     setSuggestionPulse(false);
     setSidebarOpen(false);
-    setInputLanguage("auto");
-    setReplyLanguage("hinglish");
     if(textareaRef.current)textareaRef.current.style.height="24px";
     requestAnimationFrame(()=>{
       mainScrollRef.current?.scrollTo({top:0,behavior:"smooth"});
@@ -1450,21 +1481,15 @@ export default function InnerVoiceChat(){
 
   const composer=(
     <>
-      <LanguageControls
-        inputLanguage={inputLanguage}
-        onInputLanguageChange={setInputLanguage}
-        replyLanguage={replyLanguage}
-        onReplyLanguageChange={setReplyLanguage}
-      />
       {chatLimit.status==="ACTIVE"&&(
         <div className="mb-2 text-right text-xs font-medium text-[#592209]" aria-live="off">
-          Free session time left: {formatRemaining(chatLimit.remainingSeconds)}
+          {t("guru.limit.timeLeft",{time:formatRemaining(chatLimit.remainingSeconds)})}
         </div>
       )}
       {limitReached&&(
         <div className="mb-2 rounded-xl border border-[#592209]/20 bg-[#592209]/5 px-4 py-2.5 text-sm text-[#592209]" role="status">
-          Your free 5-minute chat for today has ended.
-          {chatLimit.nextAvailableAt&&<> You can chat again after {new Date(chatLimit.nextAvailableAt).toLocaleString("en-IN",{timeZone:"Asia/Kolkata",dateStyle:"medium",timeStyle:"short"})} IST.</>}
+          {t("guru.limit.ended")}
+          {chatLimit.nextAvailableAt&&<> {t("guru.limit.again",{when:new Date(chatLimit.nextAvailableAt).toLocaleString(intlTag(),{timeZone:"Asia/Kolkata",dateStyle:"medium",timeStyle:"short"})})}</>}
         </div>
       )}
       <GuruChatInput
@@ -1522,11 +1547,11 @@ export default function InnerVoiceChat(){
                       <motion.div key="restoring" className="flex flex-col items-center gap-4 py-24 text-center" data-testid="guru-restoring" role="status" aria-live="polite">
                         {restore==="error"?(
                           <>
-                            <p className="text-sm text-[#592209]">We couldn't load your previous conversation. Your messages are safe.</p>
-                            <button type="button" className="rounded-xl border border-[#592209]/30 bg-[#592209]/10 px-4 py-2 text-sm font-medium text-[#592209]" onClick={()=>setRestoreTick(t=>t+1)}>Try again</button>
+                            <p className="text-sm text-[#592209]">{t("guru.chat.restoreFailed")}</p>
+                            <button type="button" className="rounded-xl border border-[#592209]/30 bg-[#592209]/10 px-4 py-2 text-sm font-medium text-[#592209]" onClick={()=>setRestoreTick(n=>n+1)}>{t("common.retry")}</button>
                           </>
                         ):(
-                          <p className="text-sm text-[#592209]/80">Restoring your conversation…</p>
+                          <p className="text-sm text-[#592209]/80">{t("guru.chat.restoring")}</p>
                         )}
                       </motion.div>
                     ) : messages.length===0&&searching ? (
@@ -1547,7 +1572,7 @@ export default function InnerVoiceChat(){
                         exit={{opacity:0}}
                         transition={{duration:0.3,ease:"easeInOut"}}
                       >
-                        {resultName&&<p className="mb-3 text-center text-xs text-muted-foreground" data-testid="result-context-note">Using your {resultName} result for this conversation.</p>}
+                        {resultName&&<p className="mb-3 text-center text-xs text-muted-foreground" data-testid="result-context-note">{t("guru.chat.resultNote",{name:resultName})}</p>}
                         <GuruConversation ref={bottomRef} messages={messages} guruName={persona?.profile.name} loading={loading&&!searching} onRetry={(t)=>send(t,{retry:true})} />
                         {searching&&<div className="mt-4"><SearchingGuru/></div>}
                       </motion.div>
@@ -1573,17 +1598,17 @@ export default function InnerVoiceChat(){
         {activeTab==="report"&&(
           <div className="ivc-report">
             {generatingReport?(
-              <FullScreenLoader title="Preparing Your Diagnosis" description="Reviewing your conversation and preparing remedies…" steps={["Reviewing your conversation", "Finding the karmic pattern", "Preparing your report"]} testId="guru-loader" />
+              <FullScreenLoader title={t("innerVoice.chat.report.loader.title")} description={t("innerVoice.chat.report.loader.description")} steps={[t("innerVoice.chat.report.loader.step1"), t("innerVoice.chat.report.loader.step2"), t("innerVoice.chat.report.loader.step3")]} testId="guru-loader" />
             ):report?(
               <DiagnosisReport report={report} onSaveMantra={saveMantra} userName={profile?.name} onAskFollowUp={handleFollowUp} onDownload={handleDownloadPDF} downloading={downloading}/>
             ):(
               <div className="ivc-report-empty">
                 <div className="ivc-report-empty-icon" style={{fontSize:72,marginBottom:20,filter:"drop-shadow(0 0 30px rgba(89,34,9,.4))"}}>🕉</div>
-                <div className="ivc-report-empty-title">Begin Your Consultation</div>
-                <div className="ivc-report-empty-sub">Share your life challenge with Divya Margdarshak in the Consultation tab. After a few exchanges, your complete Vedic Diagnosis Report — with remedies, mantras, planetary analysis, and a PDF — will be generated automatically.</div>
+                <div className="ivc-report-empty-title">{t("innerVoice.chat.report.emptyTitle")}</div>
+                <div className="ivc-report-empty-sub">{t("innerVoice.chat.report.emptyBody")}</div>
                 <div style={{display:"flex",gap:12,flexWrap:"wrap",justifyContent:"center",marginTop:8}}>
-                  <button className="ivc-report-start-btn" onClick={()=>setActiveTab("consultation")}>💬 Start Consultation</button>
-                  {readyForDiagnosis&&<button className="ivc-report-start-btn" style={{background:"linear-gradient(135deg,rgba(89,34,9,.25),rgba(89,34,9,.18))",borderColor:"rgba(89,34,9,.5)"}} onClick={generateReport}>✨ Generate Report Now</button>}
+                  <button className="ivc-report-start-btn" onClick={()=>setActiveTab("consultation")}>💬 {t("innerVoice.chat.report.startConsultation")}</button>
+                  {readyForDiagnosis&&<button className="ivc-report-start-btn" style={{background:"linear-gradient(135deg,rgba(89,34,9,.25),rgba(89,34,9,.18))",borderColor:"rgba(89,34,9,.5)"}} onClick={generateReport}>✨ {t("innerVoice.chat.report.generateNow")}</button>}
                 </div>
               </div>
             )}

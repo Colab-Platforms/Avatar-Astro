@@ -67,13 +67,12 @@ describe("Kundali guide", () => {
     expect(g.notes.join(" ")).toMatch(/Dhanu or Makara/);
   });
 
-  it("renders sections in order, each point with a calculated part and a traditional part", () => {
+  it("shows personality then important insights, each point with a calculated part and a traditional part; the rest moves to the growth guide", () => {
     render(<KundaliGuide k={chart()} />);
-    const ids = ["kundali-personality", "kundali-career", "kundali-relationships", "kundali-strengths", "kundali-challenges", "kundali-important"];
-    const els = ids.map((i) => screen.getByTestId(i));
-    els.forEach((e, i) => { if (i) expect(els[i - 1].compareDocumentPosition(e) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy(); });
-    expect(within(screen.getByTestId("kundali-career")).getAllByText("In your chart").length).toBe(3);
-    expect(within(screen.getByTestId("kundali-career")).getAllByText("Traditionally").length).toBe(3);
-    expect(screen.getByTestId("kundali-terms")).toHaveTextContent("Chandra Rashi");
+    const els = ["kundali-personality", "kundali-important"].map((i) => screen.getByTestId(i));
+    expect(els[0].compareDocumentPosition(els[1]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(within(els[0]).getAllByText("In your chart").length).toBe(3);
+    expect(within(els[0]).getAllByText("Traditionally").length).toBe(3);
+    for (const id of ["kundali-career", "kundali-relationships", "kundali-strengths", "kundali-challenges", "kundali-terms"]) expect(screen.queryByTestId(id)).toBeNull();
   });
 });

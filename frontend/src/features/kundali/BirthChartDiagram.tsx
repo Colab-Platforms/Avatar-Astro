@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+import { useGlossary } from "@/i18n/glossary";
 import type { KundaliResult } from "./types";
 
 // North Indian style chart (diamond layout) drawn from the CALCULATED chart. The 1st house is always the top centre diamond and
@@ -27,13 +29,16 @@ interface Props {
 }
 
 export const BirthChartDiagram = ({ title, lagnaSign, grahas, testId }: Props) => {
+  const { t } = useTranslation();
+  const { g } = useGlossary();
+  const grahaName = (planet: string) => t(`birthChart.graha.${planet}`, { defaultValue: GRAHA_NAME[planet] ?? planet });
   const lagnaIdx = SIGNS.indexOf(lagnaSign);
   const byHouse = new Map<number, string[]>();
-  for (const g of grahas) byHouse.set(g.house, [...(byHouse.get(g.house) ?? []), GRAHA_NAME[g.planet] ?? g.planet]);
-  const label = grahas.map((g) => `${GRAHA_NAME[g.planet] ?? g.planet} (${g.planet}) in house ${g.house}`).join(", ");
+  for (const gr of grahas) byHouse.set(gr.house, [...(byHouse.get(gr.house) ?? []), grahaName(gr.planet)]);
+  const label = grahas.map((gr) => t("birthChart.diagram.grahaInHouse", { name: grahaName(gr.planet), planet: g("planet", gr.planet), house: gr.house })).join(", ");
   return (
     <figure className="m-0 min-w-0" data-testid={testId}>
-      <svg viewBox="0 0 400 400" role="img" aria-label={`${title}. Lagna ${lagnaSign}. ${label}`} className="h-auto w-full max-w-[420px]">
+      <svg viewBox="0 0 400 400" role="img" aria-label={t("birthChart.diagram.aria", { title, lagna: g("rashi", lagnaSign), label })} className="h-auto w-full max-w-[420px]">
         <rect x="2" y="2" width="396" height="396" fill="#FBF5EC" stroke="#592209" strokeWidth="2" />
         <path d="M2 2 L398 398 M398 2 L2 398 M200 2 L398 200 L200 398 L2 200 Z" fill="none" stroke="#592209" strokeWidth="1.5" />
         {CENTRES.map(([x, y], i) => {
@@ -56,14 +61,18 @@ export const BirthChartDiagram = ({ title, lagnaSign, grahas, testId }: Props) =
   );
 };
 
-export const D1Chart = ({ k }: { k: KundaliResult }) =>
-  k.lagna && k.planets ? (
-    <BirthChartDiagram testId="chart-d1" title="Rashi chart (D1)" lagnaSign={k.lagna.rashi.sign} grahas={k.planets.map((p) => ({ planet: p.planet, sign: p.rashi.sign, house: p.house }))} />
+export const D1Chart = ({ k }: { k: KundaliResult }) => {
+  const { t } = useTranslation();
+  return k.lagna && k.planets ? (
+    <BirthChartDiagram testId="chart-d1" title={t("birthChart.diagram.d1")} lagnaSign={k.lagna.rashi.sign} grahas={k.planets.map((p) => ({ planet: p.planet, sign: p.rashi.sign, house: p.house }))} />
   ) : null;
+};
 
-export const D9Chart = ({ k }: { k: KundaliResult }) =>
-  k.navamsa ? (
-    <BirthChartDiagram testId="chart-d9" title="Navamsa chart (D9)" lagnaSign={k.navamsa.lagna.sign} grahas={k.navamsa.planets.map((p) => ({ planet: p.planet, sign: p.rashi.sign, house: p.house }))} />
+export const D9Chart = ({ k }: { k: KundaliResult }) => {
+  const { t } = useTranslation();
+  return k.navamsa ? (
+    <BirthChartDiagram testId="chart-d9" title={t("birthChart.diagram.d9")} lagnaSign={k.navamsa.lagna.sign} grahas={k.navamsa.planets.map((p) => ({ planet: p.planet, sign: p.rashi.sign, house: p.house }))} />
   ) : null;
+};
 
 export default BirthChartDiagram;

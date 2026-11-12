@@ -1,5 +1,6 @@
 import { forwardRef, type KeyboardEvent } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { Sparkles, Mic, Send, CircleDot } from "lucide-react";
 
 interface GuruChatInputProps {
@@ -30,7 +31,9 @@ const GuruChatInput = forwardRef<HTMLTextAreaElement, GuruChatInputProps>(
       disabled,
     },
     ref,
-  ) => (
+  ) => {
+    const { t } = useTranslation();
+    return (
     <>
       <motion.div
         animate={
@@ -58,19 +61,19 @@ const GuruChatInput = forwardRef<HTMLTextAreaElement, GuruChatInputProps>(
           disabled={disabled}
           placeholder={
             disabled
-              ? "Your daily session has ended"
+              ? t("guru.composer.sessionEnded")
               : listening
-                ? "Listening… speak now"
-                : "Ask Divya Margdarshak anything..."
+                ? t("guru.composer.listening")
+                : t("guru.composer.placeholder")
           }
-          aria-label="Message Divya Margdarshak"
+          aria-label={t("guru.composer.inputLabel")}
           className="min-h-[24px] max-h-[140px] flex-1 resize-none bg-transparent p-0 text-[15px] leading-6 text-foreground placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed"
         />
         <div className="flex shrink-0 items-center gap-1.5">
           <button
             type="button"
             onClick={onToggleVoice}
-            aria-label={listening ? "Stop voice input" : "Start voice input"}
+            aria-label={listening ? t("guru.composer.voiceStop") : t("guru.composer.voiceStart")}
             className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
               listening
                 ? "bg-[#592209]/20 text-[#FF9D4D]"
@@ -102,7 +105,7 @@ const GuruChatInput = forwardRef<HTMLTextAreaElement, GuruChatInputProps>(
                 ? { scale: 0.94 }
                 : undefined
             }
-            aria-label="Send message"
+            aria-label={t("guru.composer.send")}
             className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#592209] to-[#592209] text-[#F5E9D6] shadow-[0_0_16px_rgba(255,157,77,0.4)] transition-opacity disabled:opacity-30 disabled:shadow-none"
           >
             <Send className="h-4 w-4" />
@@ -110,10 +113,11 @@ const GuruChatInput = forwardRef<HTMLTextAreaElement, GuruChatInputProps>(
         </div>
       </motion.div>
       <p className="mt-2.5 text-center text-[11px] text-muted-foreground">
-        Press Enter to send · Shift + Enter for a new line · use the microphone to speak
+        {t("guru.composer.hint")}
       </p>
     </>
-  ),
+    );
+  },
 );
 
 GuruChatInput.displayName = "GuruChatInput";

@@ -69,7 +69,7 @@ const ShopSections = ({
   return (
     <section className="ratna-reveal space-y-5" style={{ ["--i" as string]: 5 }} aria-labelledby="ratna-shop-h">
       <h2 id="ratna-shop-h" className="font-home-serif text-xl font-semibold text-[#592209] sm:text-2xl">
-        Matching Gemstone in MyBhagya Shop
+        Matching Gemstone in Bhagya Shop
       </h2>
 
       {isLoading && (
@@ -121,7 +121,7 @@ const ShopSections = ({
       )}
 
       <p className="text-xs text-muted-foreground">
-        Buying is optional. Listings come from the My Bhagya catalogue; descriptions are provided by the seller.
+        Buying is optional. Listings come from the Bhagya catalogue; descriptions are provided by the seller.
       </p>
     </section>
   );

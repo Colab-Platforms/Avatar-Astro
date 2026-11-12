@@ -2,6 +2,8 @@ import { motion } from 'framer-motion';
 import { X, Star, Zap, AlertTriangle, Briefcase, Heart, Activity, Sparkles } from 'lucide-react';
 import { Planet, PlanetaryInfluence, ZodiacSign, PLANET_DETAILS } from '@/data/planetaryData';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useTranslation } from 'react-i18next';
+import { useGlossary } from '@/i18n/glossary';
 
 interface PlanetInfoPanelProps {
   planet: Planet | null;
@@ -19,10 +21,17 @@ const NATURE_COLORS: Record<string, string> = {
 
 export const PlanetInfoPanel = ({ planet, influence, isOpen, onClose, zodiacSign }: PlanetInfoPanelProps) => {
   const isMobile = useIsMobile();
+  const { t } = useTranslation();
+  const { g } = useGlossary();
 
   if (!planet || !influence) return null;
 
   const detail = PLANET_DETAILS[planet.id];
+  // The planet data (planetaryData.ts) keeps its English text and ids; the text shown is looked up by planet id (English is the fallback).
+  const pt = (path: string, english: string) => t(`kundali.planetInfo.planet.${planet.id}.${path}`, { defaultValue: english });
+  const ptList = (path: string, items: string[]) => items.map((e, i) => pt(`${path}.${i}`, e));
+  const signKey = String(influence.zodiacSign);
+  const signShown = zodiacSign.charAt(0).toUpperCase() + zodiacSign.slice(1);
 
   const mobileVariants = {
     initial: { opacity: 0, y: 120 },
@@ -74,6 +83,7 @@ export const PlanetInfoPanel = ({ planet, influence, isOpen, onClose, zodiacSign
         {/* Close button */}
         <button
           onClick={onClose}
+          aria-label={t("kundali.planetInfo.close")}
           className="absolute top-4 right-5 p-2 hover:bg-white/10 rounded-full transition-colors"
         >
           <X className="w-4 h-4 text-white/60" />
@@ -95,9 +105,9 @@ export const PlanetInfoPanel = ({ planet, influence, isOpen, onClose, zodiacSign
               }}
             />
             <div>
-              <h2 className="text-2xl font-display tracking-widest leading-none">{planet.name.toUpperCase()}</h2>
+              <h2 className="text-2xl font-display tracking-widest leading-none">{g("planet", planet.name).toUpperCase()}</h2>
               <p className="text-[10px] text-white/45 uppercase tracking-[0.22em] mt-0.5">
-                {zodiacSign.charAt(0).toUpperCase() + zodiacSign.slice(1)}'s Cosmic Guide
+                {t("kundali.planetInfo.cosmicGuide", { sign: g("rashi", signShown) })}
               </p>
             </div>
           </div>
@@ -113,9 +123,9 @@ export const PlanetInfoPanel = ({ planet, influence, isOpen, onClose, zodiacSign
                   background: `${NATURE_COLORS[detail.nature]}12`,
                 }}
               >
-                {detail.nature}
+                {t(`kundali.planetInfo.nature.${detail.nature}`, { defaultValue: detail.nature })}
               </span>
-              <span className="text-[10px] text-white/45 uppercase tracking-widest">Strength</span>
+              <span className="text-[10px] text-white/45 uppercase tracking-widest">{t("kundali.planetInfo.strength")}</span>
               <div className="flex gap-0.5">
                 {Array.from({ length: 10 }).map((_, i) => (
                   <div
@@ -137,19 +147,19 @@ export const PlanetInfoPanel = ({ planet, influence, isOpen, onClose, zodiacSign
         {detail && (
           <FadeRow delay={0.1}>
             <div className="grid grid-cols-2 gap-2 mb-4">
-              <InfoChip label="Zodiac" value={detail.zodiacPlacement} color={planet.color} />
-              <InfoChip label="House" value={detail.housePlacement.split('(')[0].trim()} color={planet.color} />
+              <InfoChip label={t("kundali.planetInfo.zodiac")} value={pt("zodiacPlacement", detail.zodiacPlacement)} color={planet.color} />
+              <InfoChip label={t("kundali.planetInfo.house")} value={pt("housePlacement", detail.housePlacement.split('(')[0].trim())} color={planet.color} />
             </div>
           </FadeRow>
         )}
 
         {/* ── Key Traits ─────────────────────────────────────────── */}
         {detail && (
-          <Section delay={0.16} label="Key Traits" accent={planet.color}>
+          <Section delay={0.16} label={t("kundali.planetInfo.keyTraits")} accent={planet.color}>
             <div className="flex flex-wrap gap-1.5">
-              {detail.keyTraits.map(t => (
+              {detail.keyTraits.map((trait, i) => (
                 <span
-                  key={t}
+                  key={trait}
                   className="text-[10px] px-2.5 py-1 rounded-full border"
                   style={{
                     color: planet.color,
@@ -157,7 +167,7 @@ export const PlanetInfoPanel = ({ planet, influence, isOpen, onClose, zodiacSign
                     background: `${planet.color}10`,
                   }}
                 >
-                  {t}
+                  {pt(`keyTraits.${i}`, trait)}
                 </span>
               ))}
             </div>
@@ -165,20 +175,20 @@ export const PlanetInfoPanel = ({ planet, influence, isOpen, onClose, zodiacSign
         )}
 
         {/* ── Today's Influence ──────────────────────────────────── */}
-        <Section delay={0.22} label="Today's Influence" accent={planet.color}>
-          <p className="text-sm leading-relaxed italic text-white/75">"{influence.influence}"</p>
+        <Section delay={0.22} label={t("kundali.planetInfo.todaysInfluence")} accent={planet.color}>
+          <p className="text-sm leading-relaxed italic text-white/75">"{t(`kundali.planetInfo.influence.${planet.id}.${signKey}`, { defaultValue: influence.influence })}"</p>
         </Section>
 
         {/* ── Positive & Challenging Effects ─────────────────────── */}
         {detail && (
-          <Section delay={0.28} label="Effects" accent={planet.color}>
+          <Section delay={0.28} label={t("kundali.planetInfo.effects")} accent={planet.color}>
             <div className="space-y-3">
               <div>
                 <p className="text-[9px] uppercase tracking-widest text-green-400/60 mb-1.5 font-bold flex items-center gap-1">
-                  <Zap className="w-2.5 h-2.5" /> Positive
+                  <Zap className="w-2.5 h-2.5" /> {t("kundali.planetInfo.positive")}
                 </p>
                 <ul className="space-y-1">
-                  {detail.positiveEffects.map((e, i) => (
+                  {ptList("positiveEffects", detail.positiveEffects).map((e, i) => (
                     <li key={i} className="flex gap-2 text-xs text-white/70">
                       <span className="text-green-400/70 flex-shrink-0 mt-0.5">+</span>
                       <span>{e}</span>
@@ -188,10 +198,10 @@ export const PlanetInfoPanel = ({ planet, influence, isOpen, onClose, zodiacSign
               </div>
               <div>
                 <p className="text-[9px] uppercase tracking-widest text-red-400/60 mb-1.5 font-bold flex items-center gap-1">
-                  <AlertTriangle className="w-2.5 h-2.5" /> Challenging
+                  <AlertTriangle className="w-2.5 h-2.5" /> {t("kundali.planetInfo.challenging")}
                 </p>
                 <ul className="space-y-1">
-                  {detail.challengingEffects.map((e, i) => (
+                  {ptList("challengingEffects", detail.challengingEffects).map((e, i) => (
                     <li key={i} className="flex gap-2 text-xs text-white/60">
                       <span className="text-red-400/70 flex-shrink-0 mt-0.5">−</span>
                       <span>{e}</span>
@@ -205,11 +215,11 @@ export const PlanetInfoPanel = ({ planet, influence, isOpen, onClose, zodiacSign
 
         {/* ── Life Domain Influences ─────────────────────────────── */}
         {detail && (
-          <Section delay={0.34} label="Life Domains" accent={planet.color}>
+          <Section delay={0.34} label={t("kundali.planetInfo.lifeDomains")} accent={planet.color}>
             <div className="space-y-2.5">
-              <DomainRow icon={<Briefcase className="w-3 h-3" />} label="Career" text={detail.careerInfluence} color={planet.color} />
-              <DomainRow icon={<Heart className="w-3 h-3" />} label="Relationships" text={detail.relationshipInfluence} color={planet.color} />
-              <DomainRow icon={<Activity className="w-3 h-3" />} label="Health" text={detail.healthInfluence} color={planet.color} />
+              <DomainRow icon={<Briefcase className="w-3 h-3" />} label={t("kundali.planetInfo.career")} text={pt("careerInfluence", detail.careerInfluence)} color={planet.color} />
+              <DomainRow icon={<Heart className="w-3 h-3" />} label={t("kundali.planetInfo.relationships")} text={pt("relationshipInfluence", detail.relationshipInfluence)} color={planet.color} />
+              <DomainRow icon={<Activity className="w-3 h-3" />} label={t("kundali.planetInfo.health")} text={pt("healthInfluence", detail.healthInfluence)} color={planet.color} />
             </div>
           </Section>
         )}
@@ -217,10 +227,10 @@ export const PlanetInfoPanel = ({ planet, influence, isOpen, onClose, zodiacSign
         {/* ── Stats grid ─────────────────────────────────────────── */}
         <FadeRow delay={0.4}>
           <div className="grid grid-cols-3 gap-2 mb-4">
-            <Stat label="Energy" value={`${influence.energyLevel}/10`} />
-            <Stat label="Lucky No." value={String(influence.luckyNumber)} />
+            <Stat label={t("kundali.planetInfo.energy")} value={`${influence.energyLevel}/10`} />
+            <Stat label={t("kundali.planetInfo.luckyNo")} value={String(influence.luckyNumber)} />
             <div className="bg-white/5 rounded-xl p-3 border border-white/8 flex flex-col gap-2">
-              <p className="text-[9px] uppercase tracking-widest text-white/40">Color</p>
+              <p className="text-[9px] uppercase tracking-widest text-white/40">{t("kundali.planetInfo.color")}</p>
               <div
                 className="w-5 h-5 rounded-full border border-white/20"
                 style={{ backgroundColor: influence.luckyColor, boxShadow: `0 0 8px ${influence.luckyColor}` }}
@@ -230,14 +240,14 @@ export const PlanetInfoPanel = ({ planet, influence, isOpen, onClose, zodiacSign
         </FadeRow>
 
         {/* ── Chakra ─────────────────────────────────────────────── */}
-        <Section delay={0.44} label="Chakra" accent={planet.color}>
-          <p className="text-sm font-semibold" style={{ color: influence.luckyColor }}>{influence.chakra}</p>
+        <Section delay={0.44} label={t("kundali.planetInfo.chakra")} accent={planet.color}>
+          <p className="text-sm font-semibold" style={{ color: influence.luckyColor }}>{t(`kundali.planetInfo.chakraName.${signKey}`, { defaultValue: influence.chakra })}</p>
         </Section>
 
         {/* ── Best activities ────────────────────────────────────── */}
-        <Section delay={0.5} label="✨ Best Activities" accent={planet.color}>
+        <Section delay={0.5} label={t("kundali.planetInfo.bestActivities")} accent={planet.color}>
           <ul className="space-y-1.5">
-            {influence.bestActivities.map((a, i) => (
+            {influence.bestActivities.map((a0, i) => t(`kundali.planetInfo.activities.${planet.id}.${i}`, { defaultValue: a0 })).map((a, i) => (
               <li key={i} className="flex gap-2 text-xs text-white/75">
                 <span style={{ color: planet.color }} className="flex-shrink-0 mt-0.5">•</span>
                 <span>{a}</span>
@@ -247,9 +257,9 @@ export const PlanetInfoPanel = ({ planet, influence, isOpen, onClose, zodiacSign
         </Section>
 
         {/* ── Things to avoid ────────────────────────────────────── */}
-        <Section delay={0.56} label="⚠️ Avoid Today" accent={planet.color}>
+        <Section delay={0.56} label={t("kundali.planetInfo.avoidToday")} accent={planet.color}>
           <ul className="space-y-1.5">
-            {influence.thingsToAvoid.map((a, i) => (
+            {influence.thingsToAvoid.map((a0, i) => t(`kundali.planetInfo.avoid.${planet.id}.${i}`, { defaultValue: a0 })).map((a, i) => (
               <li key={i} className="flex gap-2 text-xs text-white/65">
                 <span className="text-red-400/70 flex-shrink-0 mt-0.5">•</span>
                 <span>{a}</span>
@@ -259,14 +269,14 @@ export const PlanetInfoPanel = ({ planet, influence, isOpen, onClose, zodiacSign
         </Section>
 
         {/* ── Spiritual essence ──────────────────────────────────── */}
-        <Section delay={0.62} label="Spiritual Essence" accent={planet.color}>
-          <p className="text-xs leading-relaxed text-white/70">{planet.spiritualMeaning}</p>
+        <Section delay={0.62} label={t("kundali.planetInfo.spiritualEssence")} accent={planet.color}>
+          <p className="text-xs leading-relaxed text-white/70">{pt("spiritualMeaning", planet.spiritualMeaning)}</p>
         </Section>
 
         {/* ── Karmic lessons ─────────────────────────────────────── */}
         {detail && (
-          <Section delay={0.68} label="Karmic Lessons" accent={planet.color}>
-            <p className="text-xs leading-relaxed text-white/70 italic">{detail.karmicLessons}</p>
+          <Section delay={0.68} label={t("kundali.planetInfo.karmicLessons")} accent={planet.color}>
+            <p className="text-xs leading-relaxed text-white/70 italic">{pt("karmicLessons", detail.karmicLessons)}</p>
           </Section>
         )}
 
@@ -284,9 +294,9 @@ export const PlanetInfoPanel = ({ planet, influence, isOpen, onClose, zodiacSign
           >
             <p className="text-[9px] uppercase tracking-widest text-white/45 mb-2 flex items-center gap-1.5">
               <Sparkles className="w-2.5 h-2.5" style={{ color: planet.color }} />
-              Cosmic Reading
+              {t("kundali.planetInfo.cosmicReading")}
             </p>
-            <p className="text-xs leading-relaxed text-white/80">{detail.aiInterpretation}</p>
+            <p className="text-xs leading-relaxed text-white/80">{pt("aiInterpretation", detail.aiInterpretation)}</p>
           </motion.div>
         )}
 
@@ -301,9 +311,9 @@ export const PlanetInfoPanel = ({ planet, influence, isOpen, onClose, zodiacSign
             borderColor: 'rgba(255,215,0,0.25)',
           }}
         >
-          <p className="text-[9px] uppercase tracking-widest text-white/40 mb-2">Today's Affirmation</p>
+          <p className="text-[9px] uppercase tracking-widest text-white/40 mb-2">{t("kundali.planetInfo.todaysAffirmation")}</p>
           <p className="text-xs leading-relaxed font-semibold italic" style={{ color: planet.color }}>
-            "{influence.affirmation}"
+            "{t(`kundali.planetInfo.affirmation.${signKey}`, { defaultValue: influence.affirmation })}"
           </p>
         </motion.div>
 

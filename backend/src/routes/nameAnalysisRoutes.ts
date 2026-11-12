@@ -4,6 +4,9 @@ import { auth } from "../middleware/authMiddleware.js";
 import { getExecutionId, reserveToolExecution, settleToolExecution, releaseToolExecution } from "../modules/payment/toolBilling.service.js";
 import { TOOL_KEYS } from "../modules/payment/toolKeys.js";
 import { ApiError } from "../utils/ApiError.js";
+import { WrongLanguageError, generateInLanguage, languageRule, requestLanguage, tokenBudget } from "../utils/responseLanguage.js";
+
+class ProviderDown extends Error {}
 
 const router = Router();
 router.use(auth("USER"));
@@ -121,29 +124,40 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
   "topVariantExplanation": "1-2 sentence explanation of why the recommended spelling may score higher, non-definitive phrasing"
 }`;
 
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
-        "HTTP-Referer": "https://spiritual-ai.app",
-        "X-Title": "Spiritual AI Name Destiny Report",
-      },
-      body: JSON.stringify({
-        model: "google/gemma-4-31b-it:free",
-        max_tokens: 900,
-        messages: [{ role: "user", content: prompt }],
-      }),
-    });
+    const lang = requestLanguage(req); // the visitor's chosen language, if any; otherwise English as before
+    let raw: string;
+    try {
+      raw = await generateInLanguage(lang, async (retryNote) => {
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey}`,
+            "HTTP-Referer": "https://spiritual-ai.app",
+            "X-Title": "Spiritual AI Name Destiny Report",
+          },
+          body: JSON.stringify({
+            model: "google/gemma-4-31b-it:free",
+            max_tokens: tokenBudget(900, lang),
+            messages: [{ role: "user", content: prompt + languageRule(lang, "") + retryNote }],
+          }),
+        });
 
-    const data = (await response.json()) as any;
-    if (data.error) {
-      console.warn("Name analysis narrative: OpenRouter error, using fallback.", data.error?.message);
-      if (userId && billed && !billed.skip) await releaseToolExecution(executionId, "RELEASED");
-      return res.json(mockNarrative(body));
+        const data = (await response.json()) as any;
+        if (data.error) {
+          console.warn("Name analysis narrative: OpenRouter error, using fallback.", data.error?.message);
+          throw new ProviderDown();
+        }
+        return data.choices?.[0]?.message?.content || "";
+      });
+    } catch (e) {
+      if (e instanceof WrongLanguageError) return res.status(502).json({ error: e.message, code: e.code, language: e.language });
+      if (e instanceof ProviderDown) {
+        if (userId && billed && !billed.skip) await releaseToolExecution(executionId, "RELEASED");
+        return res.json(mockNarrative(body));
+      }
+      throw e;
     }
-
-    const raw = data.choices?.[0]?.message?.content || "";
     const clean = raw.replace(/```json|```/g, "").trim();
 
     try {

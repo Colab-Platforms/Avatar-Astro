@@ -14,7 +14,7 @@
  * unchanged across that local day, and the local sunrise of that date.
  */
 import * as Astronomy from "astronomy-engine";
-import { resolveBirthInstant, type LocalDateTime } from "./birth.time.js";
+import { resolveBirthInstant, resolveLocalInstant, type LocalDateTime } from "./birth.time.js";
 import { stableSignsForDate, type StableSign } from "./limited.chart.js";
 import {
   STONE_FOR_PLANET,
@@ -77,9 +77,11 @@ export const sunriseOnLocalDate = (
   latitude: number,
   longitude: number,
   timeZone: string,
+  /** Planning use (Muhurat Finder): accept any real date, not only birth dates. */
+  allowFuture = false,
 ): Date | null => {
   const target = `${date.year}-${pad(date.month)}-${pad(date.day)}`;
-  const noon = resolveBirthInstant({ ...date, hour: 12, minute: 0 }, timeZone).utc;
+  const noon = (allowFuture ? resolveLocalInstant : resolveBirthInstant)({ ...date, hour: 12, minute: 0 }, timeZone).utc;
   const observer = new Astronomy.Observer(latitude, longitude, 0);
   let cursor = new Date(noon.getTime() - 36 * 3_600_000);
   for (let i = 0; i < 4; i++) {

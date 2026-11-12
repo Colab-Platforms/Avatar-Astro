@@ -17,7 +17,7 @@ const RatnaJyotishResult = () => {
   }, [location.state]);
 
   useEffect(() => {
-    document.title = "Your Ratna Jyotish Reading | My Bhagya";
+    document.title = "Your Ratna Jyotish Reading | Bhagya";
     window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
   }, []);
 

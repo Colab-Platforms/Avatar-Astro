@@ -3,6 +3,7 @@ import {
   generateHumanReadableInterpretation,
   generateCompatibilityAnalysis
 } from '../services/chatgptService.js';
+import { WrongLanguageError, requestLanguage } from '../utils/responseLanguage.js';
 import { getDailyHoroscope, parseSign, toPlainText, HoroscopeUnavailableError } from '../services/dailyHoroscopeService.js';
 import { getExecutionId, reserveToolExecution, settleToolExecution, releaseToolExecution } from '../modules/payment/toolBilling.service.js';
 import { TOOL_KEYS } from '../modules/payment/toolKeys.js';
@@ -37,7 +38,7 @@ export const interpretBirthChart = async (req: Request, res: Response) => {
     // its source explicitly, a 402-triggered mock reading is settled as if it were real AI output.
     // Low risk today since this toolKey has no active price yet; flagged for a fast-follow once
     // pricing for this operation is actually approved and activated.
-    const interpretation = await generateHumanReadableInterpretation(birthData);
+    const interpretation = await generateHumanReadableInterpretation(birthData, requestLanguage(req));
 
     if (userId && billed && !billed.skip) await settleToolExecution(executionId, interpretation);
     res.json({
@@ -47,6 +48,7 @@ export const interpretBirthChart = async (req: Request, res: Response) => {
   } catch (error: any) {
     if (userId && billed && !billed.skip) await releaseToolExecution(executionId, "FAILED").catch(() => {});
     if (error instanceof ApiError) return res.status(error.statusCode).json({ success: false, error: error.message });
+    if (error instanceof WrongLanguageError) return res.status(502).json({ success: false, error: error.message, code: error.code, language: error.language });
     console.error('Interpretation Error:', error);
     res.status(500).json({
       success: false,
@@ -100,7 +102,8 @@ export const generateAICompatibility = async (req: Request, res: Response) => {
 
     const analysis = await generateCompatibilityAnalysis(
       sign1 as string,
-      sign2 as string
+      sign2 as string,
+      requestLanguage(req)
     );
     const data = { sign1, sign2, analysis };
 
@@ -109,6 +112,7 @@ export const generateAICompatibility = async (req: Request, res: Response) => {
   } catch (error: any) {
     if (userId && billed && !billed.skip) await releaseToolExecution(executionId, "FAILED").catch(() => {});
     if (error instanceof ApiError) return res.status(error.statusCode).json({ success: false, error: error.message });
+    if (error instanceof WrongLanguageError) return res.status(502).json({ success: false, error: error.message, code: error.code, language: error.language });
     console.error('Compatibility Analysis Error:', error);
     res.status(500).json({
       success: false,

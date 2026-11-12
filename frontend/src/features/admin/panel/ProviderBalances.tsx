@@ -109,7 +109,7 @@ export function ProviderBalances() {
               );
             })}
           </Table>
-          <p className="mt-3 text-xs text-[#6B6259]">Balances are never calculated from MyBhagya's own cost records. "Remaining on this API key" is a limit set on the key, not your whole account balance.</p>
+          <p className="mt-3 text-xs text-[#6B6259]">Balances are never calculated from Bhagya's own cost records. "Remaining on this API key" is a limit set on the key, not your whole account balance.</p>
         </>
       )}
     </Card>

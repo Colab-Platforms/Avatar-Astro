@@ -336,7 +336,7 @@ describe("shop products for the date-based gemstone", () => {
     expect(screen.getByText("₹3,499")).toBeInTheDocument();
     // the short result shows only the matching gemstone and its jewellery; unrelated accessories are not offered
     for (const t of ["Your Matching Ratna", "Matching Ratna Jewellery"]) expect(screen.getByRole("heading", { name: t })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Matching Gemstone in MyBhagya Shop" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Matching Gemstone in Bhagya Shop" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Planet-Linked Accessories" })).toBeNull();
     expect(screen.queryByRole("heading", { name: "Complementary Spiritual Accessories" })).toBeNull();
     expect(screen.getAllByRole("link", { name: "View Product" })).toHaveLength(2);
