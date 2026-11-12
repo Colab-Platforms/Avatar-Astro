@@ -1,0 +1,48 @@
+/// One row per user per Asia/Kolkata calendar day on which the Daily Horoscope activity was completed.
+/// The unique key is what makes a completion (and its reward) idempotent. The date is computed on the server, never sent by the client.
+model HoroscopeCompletion {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  /// Calendar date in Asia/Kolkata (no time component).
+  localDate DateTime @map("local_date") @db.Date
+  /// Lower-case Sun sign the user completed with (informational; switching signs never earns a second reward).
+  sign      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, localDate])
+  @@map("horoscope_completions")
+}
+
+/// Streak summary per user, updated in the same transaction as the completion and its ledger rows.
+model HoroscopeStreak {
+  userId        String    @id @map("user_id")
+  currentStreak Int       @default(0) @map("current_streak")
+  bestStreak    Int       @default(0) @map("best_streak")
+  totalDays     Int       @default(0) @map("total_days")
+  lastDate      DateTime? @map("last_date") @db.Date
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("horoscope_streaks")
+}
+
+/// Append-only, shared points ledger for every MyBhagya feature. The balance is always SUM(points); there is no editable balance.
+/// `source` is a free identifier ("horoscope_daily", "horoscope_milestone", "karma_practice", ...), so a new feature needs no new table.
+/// `refKey` identifies the thing rewarded ("2026-11-12", "streak-7", "2026-11-12:mantra"); with the unique key it makes every award once-only.
+model PointsLedger {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  source    String
+  refKey    String   @map("ref_key")
+  points    Int
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, source, refKey])
+  @@index([userId, createdAt])
+  @@map("points_ledger")
+}

@@ -5902,5 +5902,83 @@
       "Dasha": "Dasha",
       "Abhijit": "Abhijit"
     }
+  },
+  "points": {
+    "common": {
+      "signInPrompt": "Sign in to track your streak and earn points.",
+      "signIn": "Sign in",
+      "loading": "Loading…",
+      "loadError": "We couldn't load your points. Please try again.",
+      "retry": "Try again",
+      "pointsValue": "{{n}} points",
+      "timezoneNote": "Days and rewards follow India Standard Time (IST): a new day starts at midnight IST."
+    },
+    "horoscope": {
+      "dailyStreak": "Daily Streak",
+      "currentStreak": "Current Streak",
+      "bestStreak": "Best Streak",
+      "totalDays": "Total Completed Days",
+      "pointsToday": "Points Earned Today",
+      "totalPoints": "Total Horoscope Points",
+      "weeklyProgress": "Weekly Progress",
+      "stateDone": "completed",
+      "stateToday": "today",
+      "stateMissed": "not completed",
+      "nextMilestone": "Next Milestone",
+      "progress": "{{progress}} / {{days}} days",
+      "daysRemaining": "Days Remaining: {{n}}",
+      "bonusPoints": "Bonus Points: {{n}}",
+      "allDone": "You've reached every streak milestone. Wonderful consistency!",
+      "complete": "Complete Today's Horoscope",
+      "completing": "Completing…",
+      "stepRead": "Read your horoscope",
+      "stepShuffle": "Shuffle the cards",
+      "stepReveal": "Reveal a card",
+      "completedTitle": "Today's Horoscope Completed",
+      "comeBack": "You've completed today's horoscope. Come back tomorrow to continue your streak.",
+      "earnedDaily": "Daily points: +{{n}}",
+      "earnedBonus": "{{days}}-day streak bonus: +{{n}}",
+      "completeFailed": "We couldn't record your completion, so no points were added. Please try again.",
+      "dateChanged": "The date has changed. Please reload today's horoscope.",
+      "encourage0": "Complete today's horoscope to start your streak.",
+      "encourage1": "Nice rhythm. Keep it going, one day at a time.",
+      "encourage2": "Steady practice adds up. Come back tomorrow.",
+      "attestNote": "Reading, shuffling and revealing a card are reported by this page and are not independently verified.",
+      "stepsNeeded": "Complete the steps above to unlock this button.",
+      "viewRewards": "View my Reward Points"
+    },
+    "karma": {
+      "scoreNote": "Practice Score is your daily progress out of 100. Reward Points are what you earn for practising.",
+      "pointsToday": "Points Earned Today",
+      "totalPoints": "Total Karma Points",
+      "currentStreak": "Current Karma Streak",
+      "bestStreak": "Best Karma Streak",
+      "nextMilestone": "Next Milestone",
+      "earnedNow": "+{{n}} Reward Points",
+      "milestoneNow": "{{days}}-day streak bonus: +{{n}}",
+      "signInToEarn": "Sign in to earn Reward Points for your practices.",
+      "daysUnit": "{{n}} days",
+      "rewardsHeading": "Reward Points"
+    },
+    "rewards": {
+      "title": "My Reward Points",
+      "totalPoints": "Total Reward Points",
+      "horoscopePoints": "Horoscope Rewards",
+      "karmaPoints": "Karma Rewards",
+      "recent": "Reward Points History",
+      "colSource": "Source",
+      "colDate": "Date",
+      "colPoints": "Points Earned",
+      "empty": "No Reward Points yet. Complete today's horoscope or log a Karma practice to start earning.",
+      "more": "Show more",
+      "note": "Reward Points are earned, not bought. They can't be redeemed or spent yet.",
+      "sources": {
+        "horoscope_daily": "Daily Horoscope",
+        "horoscope_milestone": "Horoscope streak bonus",
+        "karma_practice": "Karma practice",
+        "karma_milestone": "Karma streak bonus",
+        "other": "Other"
+      }
+    }
   }
 }

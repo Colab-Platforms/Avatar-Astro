@@ -58,6 +58,11 @@ model User {
   passwordResets   PasswordResetToken[]
   dailyChatUsages  DailyChatUsage[]
 
+  // Shared points wallet and Daily Horoscope streak (additive)
+  horoscopeCompletions HoroscopeCompletion[]
+  horoscopeStreak      HoroscopeStreak?
+  pointsLedger         PointsLedger[]
+
   @@index([email])
   @@index([isActive])
   @@map("users")

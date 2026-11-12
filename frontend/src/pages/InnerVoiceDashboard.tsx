@@ -8,6 +8,8 @@ import { FEATURES } from "@/data/featureCatalog";
 import { useFeatureTitle } from "@/hooks/useFeatureTitle";
 import { Link } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
+import { useKarmaRewards } from "@/features/points/hooks";
+import KarmaRewardsSummary from "@/features/points/KarmaRewardsSummary";
 import { requireSignIn } from "@/lib/authedFetch";
 import LocationPicker from "@/features/ratna/LocationPicker";
 import type { PlaceResult } from "@/features/ratna/types";
@@ -383,6 +385,7 @@ export default function InnerVoiceDashboard() {
   };
   const scoreMsg = (score: number, completed: number): string => { const en = scoreMessage(score, completed); return t(`innerVoice.dashboard.message.${MSG_KEYS[en] ?? "unknown"}`, { defaultValue: en }); };
   const signedIn = useAuthStore((s) => s.isAuthenticated);
+  const rewards = useKarmaRewards(); // Reward Points are separate from the practice score; the 0-100 score below is unchanged
   const [profile, setProfile] = useState(()=>{ try{return JSON.parse(localStorage.getItem("iv_profile")||"null")}catch{return null} });
   // `place` is the real place chosen from the searchable list; `pob` keeps its name (and any older typed text).
   const [form, setForm] = useState<{name:string;dob:string;pob:string;place:PlaceResult|null;reason:string;sign:string;nakshatra:string;dasha:string}>({name:"",dob:"",pob:"",place:null,reason:"",sign:"",nakshatra:"",dasha:""});
@@ -405,7 +408,7 @@ export default function InnerVoiceDashboard() {
   const saveProfile=()=>{ if(!form.name.trim()) return; const p={...form,name:form.name.trim(),pob:(form.place?form.place.label:form.pob).trim(),reason:form.reason.trim()}; try{localStorage.setItem("iv_profile",JSON.stringify(p));}catch{/* storage unavailable */} setProfile(p); setEditing(false); };
   const openEditor=()=>{ setForm({name:"",dob:"",pob:"",place:null,reason:"",sign:"",nakshatra:"",dasha:"",...(profile||{})}); setEditing(true); };
 
-  const toggleAction=(id:string)=>{ if(!requireSignIn()) return; const key=localDateKey(); const next=done.includes(id)?done.filter(d=>d!==id):[...done,id]; setDone(next); setSaved(false); try{localStorage.setItem(`iv_done_${key}`,JSON.stringify(next));}catch{/* storage unavailable */} };
+  const toggleAction=(id:string)=>{ if(!requireSignIn()) return; const key=localDateKey(); const next=done.includes(id)?done.filter(d=>d!==id):[...done,id]; setDone(next); setSaved(false); try{localStorage.setItem(`iv_done_${key}`,JSON.stringify(next));}catch{/* storage unavailable */} if(!done.includes(id)) void rewards.award(id); };
 
   const behaviorPts=pointsFor(done);
   const composite=computeDailyScore(done);
@@ -509,6 +512,8 @@ export default function InnerVoiceDashboard() {
             </div>
           </div>
         </div>
+
+        <KarmaRewardsSummary summary={rewards.summary} signedIn={rewards.signedIn} isError={rewards.isError} last={rewards.last} onRetry={() => void rewards.refetch()} />
 
         <div className="ivd-stats">
           <div className="ivd-stat"><span className="ivd-stat-ico"><Target size={18} aria-hidden="true" /></span><div className="ivd-stat-val">{behaviorPts}</div><div className="ivd-stat-lbl">{t("innerVoice.dashboard.stats.pointsToday")}</div></div>

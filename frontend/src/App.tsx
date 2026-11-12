@@ -83,6 +83,7 @@ const MyActivity = lazy(() => import("./features/dashboard/library/pages").then(
 const SavedItems = lazy(() => import("./features/dashboard/library/pages").then((m) => ({ default: m.Saved })));
 const MyConversations = lazy(() => import("./features/dashboard/library/pages").then((m) => ({ default: m.Conversations })));
 const ConversationDetail = lazy(() => import("./features/dashboard/library/pages").then((m) => ({ default: m.ConversationDetail })));
+const RewardPoints = lazy(() => import("./features/points/RewardsPage"));
 const MyBookings = lazy(() => import("./features/dashboard/library/pages").then((m) => ({ default: m.MyBookings })));
 const MyOrders = lazy(() => import("./features/dashboard/library/pages").then((m) => ({ default: m.MyOrders })));
 const ProfileSettings = lazy(() => import("./features/dashboard/DashboardPages").then((m) => ({ default: m.ProfileSettings })));
@@ -857,6 +858,7 @@ const App = () => {
               <Route path="readings/:id" element={<Suspense fallback={<LazyFallback />}><ReadingDetail /></Suspense>} />
               <Route path="activity" element={<Suspense fallback={<LazyFallback />}><MyActivity /></Suspense>} />
               <Route path="saved" element={<Suspense fallback={<LazyFallback />}><SavedItems /></Suspense>} />
+              <Route path="rewards" element={<Suspense fallback={<LazyFallback />}><RewardPoints /></Suspense>} />
               <Route path="conversations" element={<Suspense fallback={<LazyFallback />}><MyConversations /></Suspense>} />
               <Route path="conversations/:id" element={<Suspense fallback={<LazyFallback />}><ConversationDetail /></Suspense>} />
               <Route path="bookings" element={<Suspense fallback={<LazyFallback />}><MyBookings /></Suspense>} />

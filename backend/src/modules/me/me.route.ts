@@ -9,6 +9,7 @@ import { EVENT_TYPES, EVENT_LABELS, PROFILE_FEATURE } from "@/config/events.js";
 import { recordEvent } from "@/utils/usage.js";
 import { noStore } from "@/middleware/noStore.js";
 import { createRateLimiter } from "@/utils/rateLimit.js";
+import { createPointsRouter } from "@/modules/points/points.route.js";
 import { createLibraryRouter, clearPersonalActivity } from "@/modules/library/library.route.js";
 import { logActivity } from "@/modules/library/library.service.js";
 import { uploadSingleImage } from "@/middleware/upload.js";
@@ -183,6 +184,7 @@ export function createMeRouter(): Router {
     }),
   );
 
+  router.use(createPointsRouter());
   router.use(createLibraryRouter());
 
   return router;
