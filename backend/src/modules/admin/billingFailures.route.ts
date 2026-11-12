@@ -6,6 +6,7 @@ import { sendResponse } from "@/utils/responseUtils.js";
 import { writeAudit } from "./audit.js";
 import { releaseReservation } from "@/modules/payment/wallet.service.js";
 import { releaseToolExecution } from "@/modules/payment/toolBilling.service.js";
+import { findStaleReservations, reconcileLedger } from "@/modules/payment/reconciliation.js";
 
 const wrap =
   (fn: (req: Request, res: Response) => Promise<unknown>) =>
@@ -49,12 +50,9 @@ export function createBillingFailuresRouter(): Router {
       });
       const emailByUserId = new Map(executionUsers.map((u) => [u.id, u.email]));
 
-      const stuckReservations = await prisma.walletReservation.findMany({
-        where: { status: { in: ["HELD", "RECONCILIATION_REQUIRED"] as const }, createdAt: { lt: cutoff } },
-        orderBy: { createdAt: "asc" },
-        include: { wallet: { select: { userId: true } } },
-        take: 200,
-      });
+      // A live chat's rolling hold is NEVER listed (it legitimately stays HELD for the whole chat); only holds
+      // whose owner is gone or finished are. See reconciliation.ts.
+      const stuckReservations = (await findStaleReservations({ olderThanMs: STUCK_AFTER_MS })).reservations.slice(0, 200);
 
       sendResponse(res, true, {
         stuckAfterMinutes: STUCK_AFTER_MS / 60_000,
@@ -71,12 +69,22 @@ export function createBillingFailuresRouter(): Router {
           id: r.id,
           purpose: r.purpose,
           referenceId: r.referenceId,
-          userId: r.wallet.userId,
+          userId: r.userId,
           status: r.status,
           amountPaise: r.amountPaise,
           createdAt: r.createdAt,
+          reason: r.reason,
         })),
       });
+    }),
+  );
+
+  /** Read-only books check: wallet vs ledger vs buckets vs reservations, chat charges vs formula, free allowance, tool debits. */
+  router.get(
+    "/reconciliation",
+    wrap(async (_req, res) => {
+      const report = await reconcileLedger();
+      sendResponse(res, true, { ...report, issues: report.issues.slice(0, 500), truncated: report.issues.length > 500 });
     }),
   );
 
@@ -101,6 +109,13 @@ export function createBillingFailuresRouter(): Router {
     wrap(async (req, res) => {
       const reservation = await prisma.walletReservation.findUnique({ where: { id: req.params.id } });
       if (!reservation) throw new ApiError("Reservation not found.", STATUS_CODES.NOT_FOUND);
+      if (reservation.purpose === "CHAT_LOOKAHEAD") {
+        // Releasing the hold of a chat that is still running would let its user spend coins the chat is relying on.
+        const session = await prisma.chatSession.findUnique({ where: { id: reservation.referenceId }, select: { status: true } });
+        if (session && (session.status === "ACTIVE" || session.status === "PAUSED")) {
+          throw new ApiError("This hold belongs to a chat that is still live. End the chat instead.", STATUS_CODES.CONFLICT);
+        }
+      }
       await releaseReservation(reservation.id);
       await writeAudit(req, {
         action: "billing_failure.reservation_released",

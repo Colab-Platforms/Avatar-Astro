@@ -1,9 +1,9 @@
 import prisma from "@root/prisma.js";
-import type { ChatSenderRole } from "@prisma/client";
+import type { ChatSenderRole, Prisma } from "@prisma/client";
 import { ApiError } from "@/utils/ApiError.js";
 import STATUS_CODES from "@/utils/statusCodes.js";
-import { getOrCreateWallet, createReservation } from "@/modules/payment/wallet.service.js";
-import { getRemainingFreeSeconds } from "./freeAllowance.service.js";
+import { getOrCreateWallet, createReservation, lockWallet } from "@/modules/payment/wallet.service.js";
+import { getOrCreateFreeAllowance, getRemainingFreeSeconds } from "./freeAllowance.service.js";
 import * as billing from "./billing.js";
 import {
   MIN_BILLABLE_SECONDS,
@@ -25,8 +25,8 @@ async function resolveComplimentaryMaxSeconds(profile: { complimentaryMaxSeconds
 /** How much wallet balance a PAID session actually needs up front, after crediting whatever
  * free seconds the user still has globally — a user with a full 60s remaining needs nothing at
  * all to start a short chat; Rule C (free before purchased) applies the same way at billing time. */
-async function minimumPaidBalanceRequired(userId: string, ratePerMinutePaise: number): Promise<number> {
-  const remainingFree = await getRemainingFreeSeconds(userId);
+async function minimumPaidBalanceRequired(userId: string, ratePerMinutePaise: number, db: Prisma.TransactionClient | typeof prisma = prisma): Promise<number> {
+  const remainingFree = await getRemainingFreeSeconds(userId, db);
   const billableFloorSeconds = Math.max(0, MIN_BILLABLE_SECONDS - remainingFree);
   return Math.ceil((ratePerMinutePaise * billableFloorSeconds) / 60);
 }
@@ -184,61 +184,94 @@ export async function startSession(userId: string, astrologerProfileId: string) 
   }
 }
 
-async function requireRequestedSessionForAstrologer(sessionId: string, astrologerUserId: string) {
+/** Ownership never changes once a session exists, so it is safe to check before (and outside) a transaction.
+ * The session's STATE is never trusted from here — it is re-checked under a row lock. */
+async function requireOwnedSession(sessionId: string, astrologerUserId: string) {
   const session = await prisma.chatSession.findUnique({
     where: { id: sessionId },
     include: { astrologerProfile: { select: { userId: true } } },
   });
   if (!session) throw new ApiError("Chat request not found", STATUS_CODES.NOT_FOUND);
   if (session.astrologerProfile.userId !== astrologerUserId) throw new ApiError("You do not have access to this chat", STATUS_CODES.FORBIDDEN);
+  return session;
+}
+
+function assertStillPending(session: { status: string; requestExpiresAt: Date | null }): void {
   if (session.status !== "REQUESTED") throw new ApiError("This request is no longer pending", STATUS_CODES.CONFLICT);
   if (session.requestExpiresAt && session.requestExpiresAt.getTime() < Date.now()) {
     throw new ApiError("This request has expired", STATUS_CODES.CONFLICT);
   }
-  return session;
 }
 
 /**
- * The astrologer accepts a REQUESTED session. This is the ONLY place a free-trial slot is
- * claimed or a wallet reservation is created — a rejected/expired request never consumes either.
+ * The astrologer accepts a REQUESTED session. This is the ONLY place a wallet reservation is created —
+ * a rejected/expired request never consumes either.
+ *
+ * Atomic: the session row is locked, its state re-checked, the hold created and the REQUESTED -> ACTIVE flip made
+ * in ONE transaction, and the flip is guarded by `status = REQUESTED`. So of any number of concurrent accepts,
+ * rejects, cancels and timeouts exactly one wins; the losers get a clean 409 and leave NO hold behind.
+ * A user with free-allowance seconds left but no coins is accepted WITHOUT a hold — that session runs on the
+ * free allowance alone and ends the moment it is spent (see settlement.ts).
  */
 export async function acceptSession(sessionId: string, astrologerUserId: string) {
-  const accepted = await prisma.$transaction(async (tx) => {
-    const session = await requireRequestedSessionForAstrologer(sessionId, astrologerUserId);
+  const owned = await requireOwnedSession(sessionId, astrologerUserId);
+  if (owned.type === "PAID") {
+    // First-time rows whose concurrent creation can race are created before the transaction opens.
+    await getOrCreateWallet(owned.userId);
+    await getOrCreateFreeAllowance(owned.userId);
+  }
 
-    if (session.type === "COMPLIMENTARY") {
-      // Nothing to claim or reserve — fully free, unmetered up to freeLimitSeconds.
-    } else {
-      const wallet = await tx.wallet.upsert({ where: { userId: session.userId }, update: {}, create: { userId: session.userId } });
-      const minimumRequiredPaise = await minimumPaidBalanceRequired(session.userId, session.ratePerMinutePaise);
-      if (wallet.balancePaise - wallet.reservedBalancePaise < minimumRequiredPaise) {
-        throw new ApiError("The user's wallet balance is no longer sufficient for this chat.", STATUS_CODES.FORBIDDEN);
+  const accepted = await prisma.$transaction(
+    async (tx) => {
+      await tx.$queryRaw`SELECT id FROM chat_sessions WHERE id = ${sessionId} FOR UPDATE`;
+      const session = await tx.chatSession.findUniqueOrThrow({ where: { id: sessionId } });
+      assertStillPending(session);
+
+      if (session.type === "PAID") {
+        // Lock order everywhere in billing: session -> free allowance -> wallet.
+        const minimumRequiredPaise = await minimumPaidBalanceRequired(session.userId, session.ratePerMinutePaise, tx);
+        const walletId = (await tx.wallet.findUniqueOrThrow({ where: { userId: session.userId }, select: { id: true } })).id;
+        const wallet = await lockWallet(tx, walletId);
+        if (wallet.balancePaise - wallet.reservedBalancePaise < minimumRequiredPaise) {
+          throw new ApiError("The user's wallet balance is no longer sufficient for this chat.", STATUS_CODES.FORBIDDEN);
+        }
+        const lookaheadAmount = Math.ceil((session.ratePerMinutePaise * CHAT_RESERVATION_LOOKAHEAD_SECONDS) / 60);
+        await createReservation(walletId, lookaheadAmount, "CHAT_LOOKAHEAD", session.id, tx); // null when only free seconds cover the chat
       }
-      const lookaheadAmount = Math.ceil((session.ratePerMinutePaise * CHAT_RESERVATION_LOOKAHEAD_SECONDS) / 60);
-      await createReservation(wallet.id, lookaheadAmount, "CHAT_LOOKAHEAD", session.id, tx);
-    }
 
-    const now = new Date();
-    return tx.chatSession.update({
-      where: { id: sessionId },
-      data: { status: "ACTIVE", acceptedAt: now, startedAt: now, lastBilledAt: now },
-    });
-  });
+      const now = new Date();
+      const flipped = await tx.chatSession.updateMany({
+        where: { id: sessionId, status: "REQUESTED" },
+        data: { status: "ACTIVE", acceptedAt: now, startedAt: now, lastBilledAt: now },
+      });
+      if (flipped.count !== 1) throw new ApiError("This request is no longer pending", STATUS_CODES.CONFLICT);
+      return tx.chatSession.findUniqueOrThrow({ where: { id: sessionId } });
+    },
+    { timeout: 15_000, maxWait: 10_000 },
+  );
 
   billing.registerSession(accepted.id);
   billing.emitToRoom(billing.roomForSession(accepted.id), "chat:accepted", { sessionId: accepted.id });
   return accepted;
 }
 
-/** The astrologer declines a REQUESTED session — nothing was ever claimed or reserved, so there is nothing to release. */
+/** The astrologer declines a REQUESTED session — nothing was ever claimed or reserved, so there is nothing to release.
+ * Guarded by `status = REQUESTED`: it can never overwrite a session that was accepted, cancelled or timed out meanwhile. */
 export async function rejectSession(sessionId: string, astrologerUserId: string) {
-  const session = await requireRequestedSessionForAstrologer(sessionId, astrologerUserId);
-  const updated = await prisma.chatSession.update({
-    where: { id: sessionId },
-    data: { status: "ENDED", endedAt: new Date(), endedReason: "REJECTED" },
+  await requireOwnedSession(sessionId, astrologerUserId);
+  const now = new Date();
+  const result = await prisma.chatSession.updateMany({
+    where: { id: sessionId, status: "REQUESTED", OR: [{ requestExpiresAt: null }, { requestExpiresAt: { gte: now } }] },
+    data: { status: "ENDED", endedAt: now, endedReason: "REJECTED" },
   });
-  billing.emitToRoom(billing.roomForSession(session.id), "chat:ended", { sessionId: session.id, reason: "REJECTED" });
-  return updated;
+  if (result.count !== 1) {
+    const current = await prisma.chatSession.findUnique({ where: { id: sessionId }, select: { status: true, requestExpiresAt: true } });
+    if (!current) throw new ApiError("Chat request not found", STATUS_CODES.NOT_FOUND);
+    assertStillPending(current);
+    throw new ApiError("This request is no longer pending", STATUS_CODES.CONFLICT);
+  }
+  billing.emitToRoom(billing.roomForSession(sessionId), "chat:ended", { sessionId, reason: "REJECTED" });
+  return prisma.chatSession.findUniqueOrThrow({ where: { id: sessionId } });
 }
 
 export async function getActorRole(sessionId: string, userId: string): Promise<ChatSenderRole> {

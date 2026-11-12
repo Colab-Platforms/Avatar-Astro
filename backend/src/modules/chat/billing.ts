@@ -1,40 +1,29 @@
-// Server-authoritative per-session billing. Timestamps in ChatSession (lastBilledAt,
-// billedSeconds) are the only source of truth — the in-memory `timers` map is just a
-// scheduler for re-checking them every BILLING_TICK_MS; losing it (a restart) only means
-// billing resumes late, never that a session double-charges or forgets elapsed time,
-// because every tick recomputes elapsed = now - lastBilledAt from the database.
+// Server-authoritative per-session billing orchestration. The DATABASE (ChatSession.lastBilledAt,
+// billedSeconds, amountPaise, freeSecondsUsed) is the only source of truth — the in-memory `timers` map is
+// just a scheduler for re-checking it every BILLING_TICK_MS; losing it (a restart) only means billing resumes
+// late, never that a session double-charges or forgets elapsed time.
 //
-// Presence (who's actually connected right now) is tracked in memory only — it is a liveness
-// signal, not a source of truth. The moment either side's presence lapses, the session is
-// PAUSED and that transition (pausedAt, presenceGraceEndsAt) IS persisted, so a second restart
-// during a pause still knows exactly when the grace window ends. Billing never advances while
-// paused, and resuming never retroactively bills the paused interval.
+// ALL money movement lives in ./settlement.ts (settleSession): this file decides WHEN to settle and THROUGH
+// WHICH INSTANT, then publishes the result over Socket.IO. It contains no billing arithmetic of its own.
+//
+// Presence (who's actually connected right now) is tracked in memory only — it is a liveness signal, not a
+// source of truth. The moment either side's presence lapses, the session is PAUSED and that transition
+// (pausedAt, presenceGraceEndsAt) IS persisted, so a second restart during a pause still knows exactly when
+// the grace window ends. Billing never advances while paused, never bills the detection grace, and resuming
+// never retroactively bills the paused interval.
 import type { Server as SocketIOServer } from "socket.io";
 import type { ChatEndReason, ChatSenderRole } from "@prisma/client";
 import prisma from "@root/prisma.js";
-import { getOrCreateWallet, settleFromReservation, topUpReservation, releaseReservation } from "@/modules/payment/wallet.service.js";
-import { claimFreeSeconds, getRemainingFreeSeconds } from "./freeAllowance.service.js";
-import {
-  FREE_TRIAL_SECONDS,
-  LOW_BALANCE_WARNING_SECONDS,
-  BILLING_TICK_MS,
-  CHAT_RESERVATION_LOOKAHEAD_SECONDS,
-  PRESENCE_TIMEOUT_MS,
-  RECONNECT_GRACE_MS,
-  SWEEP_INTERVAL_MS,
-} from "./chat.constants.js";
+import { cumulativeChargeDue, affordablePaidSeconds } from "./billingFormula.js";
+import { settleSession, type SettleOutcome } from "./settlement.js";
+import { BILLING_TICK_MS, CONFIRMED_PRESENCE_WINDOW_MS, PRESENCE_TIMEOUT_MS, RECONNECT_GRACE_MS, SWEEP_INTERVAL_MS } from "./chat.constants.js";
 
-/** Rule E, corrected (Checkpoint 4): ceil applied to the CUMULATIVE billable total, never to an
- * individual tick in isolation — this is what makes "never re-round a past interval" true.
- * Verified against the finalized worked examples at 7 coins/minute (700 paise/min):
- * 1s->12, 13s->152, 30s->350, 43s->502, 60s->700 (subunits). Exported as a pure function so it's
- * directly unit-testable without needing to wait on real timers. */
-export function cumulativeChargeDue(billableSecondsCumulative: number, ratePerMinutePaise: number): number {
-  if (billableSecondsCumulative <= 0) return 0;
-  return Math.ceil((billableSecondsCumulative * ratePerMinutePaise) / 60);
-}
+// The one billing formula lives in ./billingFormula.ts; re-exported here so existing imports keep working.
+export { cumulativeChargeDue, affordablePaidSeconds };
 
 const timers = new Map<string, NodeJS.Timeout>();
+/** One-shot timers that end a session at the exact second its funds (or free cap) run out. */
+const exhaustionGuards = new Map<string, NodeJS.Timeout>();
 let io: SocketIOServer | null = null;
 let sweepTimer: NodeJS.Timeout | null = null;
 
@@ -64,6 +53,11 @@ export function unregisterSession(sessionId: string): void {
     clearInterval(timer);
     timers.delete(sessionId);
   }
+  const guard = exhaustionGuards.get(sessionId);
+  if (guard) {
+    clearTimeout(guard);
+    exhaustionGuards.delete(sessionId);
+  }
 }
 
 /**
@@ -74,6 +68,8 @@ export function unregisterSession(sessionId: string): void {
 export function stopBillingTimers(): void {
   for (const timer of timers.values()) clearInterval(timer);
   timers.clear();
+  for (const guard of exhaustionGuards.values()) clearTimeout(guard);
+  exhaustionGuards.clear();
   if (sweepTimer) {
     clearInterval(sweepTimer);
     sweepTimer = null;
@@ -86,35 +82,144 @@ export function stopBillingTimers(): void {
 // PRESENCE_TIMEOUT_MS." Tied to the chat window being mounted and socket-connected, never to
 // document/tab focus — an unfocused tab keeps heartbeating, a dropped socket does not.
 // ============================================================================
-const presence = new Map<string, { user?: number; astrologer?: number }>();
+type PresenceEntry = {
+  /** Last heartbeat per side (ms). */
+  user?: number;
+  astrologer?: number;
+  /** Set when the server SAW that side leave (socket disconnect / chat:leave); cleared by its next heartbeat. */
+  userLeftAt?: number;
+  astrologerLeftAt?: number;
+};
+const presence = new Map<string, PresenceEntry>();
 
-export function recordHeartbeat(sessionId: string, role: ChatSenderRole): void {
+/** `atMs` defaults to the wall clock; tests pass a simulated time. A heartbeat also cancels a recorded departure. */
+export function recordHeartbeat(sessionId: string, role: ChatSenderRole, atMs: number = Date.now()): void {
   const entry = presence.get(sessionId) ?? {};
-  if (role === "USER") entry.user = Date.now();
-  else entry.astrologer = Date.now();
+  if (role === "USER") {
+    entry.user = atMs;
+    delete entry.userLeftAt;
+  } else {
+    entry.astrologer = atMs;
+    delete entry.astrologerLeftAt;
+  }
   presence.set(sessionId, entry);
   maybeResumeFromPause(sessionId).catch((err) => console.error(`[chat.billing] resume check failed for ${sessionId}:`, err));
 }
 
-function isPresent(sessionId: string, role: ChatSenderRole): boolean {
-  const entry = presence.get(sessionId);
-  const last = role === "USER" ? entry?.user : entry?.astrologer;
-  return last !== undefined && Date.now() - last <= PRESENCE_TIMEOUT_MS;
+/**
+ * The server reliably observed a participant leave — their last socket for this chat disconnected, or they sent
+ * chat:leave. Unlike a silent network loss there is nothing to wait for: billing stops at THIS timestamp and the
+ * session is paused immediately (settled through the event instant, in the usual single transaction). The side is
+ * treated as absent until its next heartbeat, which also resumes the chat.
+ */
+export async function recordDeparture(sessionId: string, role: ChatSenderRole, atMs: number = Date.now()): Promise<void> {
+  const entry = presence.get(sessionId) ?? {};
+  if (role === "USER") entry.userLeftAt = atMs;
+  else entry.astrologerLeftAt = atMs;
+  presence.set(sessionId, entry);
+
+  const session = await prisma.chatSession.findUnique({ where: { id: sessionId }, select: { status: true } });
+  if (session?.status === "ACTIVE") await pauseSession(sessionId, new Date(atMs));
 }
 
-function bothPresent(sessionId: string): boolean {
-  return isPresent(sessionId, "USER") && isPresent(sessionId, "ASTROLOGER");
+function isPresent(sessionId: string, role: ChatSenderRole, nowMs: number = Date.now()): boolean {
+  const entry = presence.get(sessionId);
+  const last = role === "USER" ? entry?.user : entry?.astrologer;
+  const leftAt = role === "USER" ? entry?.userLeftAt : entry?.astrologerLeftAt;
+  return leftAt === undefined && last !== undefined && nowMs - last <= PRESENCE_TIMEOUT_MS;
+}
+
+function bothPresent(sessionId: string, nowMs: number = Date.now()): boolean {
+  return isPresent(sessionId, "USER", nowMs) && isPresent(sessionId, "ASTROLOGER", nowMs);
+}
+
+/**
+ * The latest instant through which the chat may be billed. Per side, presence is confirmed through:
+ *  - an EXPLICIT departure the server observed (disconnect / leave): that event's timestamp — billing stops there;
+ *  - otherwise (silent loss cannot be seen immediately): its last heartbeat + CONFIRMED_PRESENCE_WINDOW_MS, the one
+ *    interval that heartbeat vouches for. The further wait until the lapse is DETECTED (PRESENCE_TIMEOUT_MS) is
+ *    never billed;
+ *  - never heard from (e.g. just after a restart): 0 — nothing is billed for time nobody confirmed.
+ * The chat is billable through min(now, user's confirmed instant, astrologer's confirmed instant). In a healthy chat
+ * that is simply `now`, which is what lets it stop at the exact second funds run out (the affordability cap itself is
+ * enforced inside settleSession, whatever instant is passed in).
+ * `presentRole` marks the side performing the action (an end click is itself proof that side is present).
+ */
+function confirmedThroughMs(sessionId: string, nowMs: number, presentRole?: ChatSenderRole): number {
+  const entry = presence.get(sessionId) ?? {};
+  const sideThrough = (role: ChatSenderRole, last: number | undefined, leftAt: number | undefined): number => {
+    if (presentRole === role) return nowMs;
+    if (last === undefined) return 0;
+    const vouched = last + CONFIRMED_PRESENCE_WINDOW_MS;
+    return leftAt === undefined ? vouched : Math.min(leftAt, vouched);
+  };
+  return Math.max(0, Math.min(nowMs, sideThrough("USER", entry.user, entry.userLeftAt), sideThrough("ASTROLOGER", entry.astrologer, entry.astrologerLeftAt)));
+}
+
+// ============================================================================
+// Publishing a settlement outcome to the participants.
+// ============================================================================
+function publish(sessionId: string, outcome: SettleOutcome): void {
+  const session = outcome.session;
+  if (!session || outcome.kind === "NOOP") return;
+
+  if (outcome.kind === "ENDED") {
+    unregisterSession(sessionId);
+    presence.delete(sessionId);
+    const reason = outcome.endedReason;
+    emitToRoom(roomForSession(sessionId), "chat:ended", { sessionId, reason });
+    emitToRoom(roomForAstrologer(session.astrologerProfileId), "chat:session-ended", { sessionId, reason });
+    return;
+  }
+
+  if (outcome.kind === "PAUSED") {
+    emitToRoom(roomForSession(sessionId), "chat:paused", { sessionId, graceEndsAt: session.presenceGraceEndsAt });
+    return;
+  }
+
+  if (outcome.warningIssuedNow) {
+    emitToRoom(roomForSession(sessionId), "chat:low-balance-warning", { sessionId, remainingSeconds: outcome.remainingSeconds });
+  }
+  if (session.type !== "PAID") {
+    emitToRoom(roomForSession(sessionId), "chat:timer", { sessionId, remainingSeconds: outcome.remainingSeconds, balancePaise: null });
+  } else if ((outcome.freeSecondsRemaining ?? 0) > 0 && session.amountPaise === 0) {
+    // Still inside the free allowance: nothing paid yet.
+    emitToRoom(roomForSession(sessionId), "chat:timer", { sessionId, remainingSeconds: null, balancePaise: null, freeSecondsRemaining: outcome.freeSecondsRemaining });
+  } else {
+    emitToRoom(roomForSession(sessionId), "chat:timer", { sessionId, remainingSeconds: outcome.remainingSeconds, balancePaise: outcome.balancePaise });
+  }
+  armExhaustionGuard(sessionId, outcome);
+}
+
+/**
+ * Between 5-second ticks a user could outrun their funds. This arms a one-shot timer for the exact instant the
+ * remaining runway ends, so the chat stops at the boundary second instead of up to one tick late — there is no
+ * unpaid grace period. It re-arms on every settlement and is cleared with the session's other timers.
+ */
+function armExhaustionGuard(sessionId: string, outcome: SettleOutcome): void {
+  const existing = exhaustionGuards.get(sessionId);
+  if (existing) clearTimeout(existing);
+  exhaustionGuards.delete(sessionId);
+  if (!timers.has(sessionId) || !outcome.session || outcome.remainingSeconds === null) return; // not a live, scheduled session
+  const boundaryMs = outcome.session.lastBilledAt.getTime() + outcome.remainingSeconds * 1000;
+  const delay = Math.min(2_147_000_000, Math.max(0, boundaryMs - Date.now()));
+  const guard = setTimeout(() => {
+    exhaustionGuards.delete(sessionId);
+    tick(sessionId, new Date(boundaryMs)).catch((err) => console.error(`[chat.billing] exhaustion guard failed for ${sessionId}:`, err));
+  }, delay);
+  exhaustionGuards.set(sessionId, guard);
 }
 
 async function pauseSession(sessionId: string, now: Date): Promise<void> {
   unregisterSession(sessionId); // fully stopped — no tick fires at all while paused, not merely a tick that computes zero
-  const presenceGraceEndsAt = new Date(now.getTime() + RECONNECT_GRACE_MS);
-  const updated = await prisma.chatSession.updateMany({
-    where: { id: sessionId, status: "ACTIVE" }, // no-op if it already moved on (e.g. ended by another path concurrently)
-    data: { status: "PAUSED", pausedAt: now, presenceGraceEndsAt },
+  // Settle everything that was confirmed (both present) up to the lapse, THEN freeze — in one transaction.
+  const outcome = await settleSession({
+    sessionId,
+    asOf: new Date(confirmedThroughMs(sessionId, now.getTime())),
+    now,
+    pause: { graceEndsAt: new Date(now.getTime() + RECONNECT_GRACE_MS) },
   });
-  if (updated.count === 0) return;
-  emitToRoom(roomForSession(sessionId), "chat:paused", { sessionId, graceEndsAt: presenceGraceEndsAt });
+  publish(sessionId, outcome);
 }
 
 /** Called whenever a heartbeat arrives for a PAUSED session — resumes only once BOTH sides are present again. */
@@ -135,146 +240,44 @@ async function maybeResumeFromPause(sessionId: string): Promise<void> {
   emitToRoom(roomForSession(sessionId), "chat:resumed", { sessionId });
 }
 
-/** Exported for direct testing — the full per-tick logic without needing to wait on real BILLING_TICK_MS timers. */
-export async function tick(sessionId: string): Promise<void> {
-  const session = await prisma.chatSession.findUnique({ where: { id: sessionId } });
+/**
+ * Exported for direct testing — the full per-tick logic without waiting on real BILLING_TICK_MS timers.
+ * `now` is the instant being billed through (the wall clock in production; simulated in tests).
+ */
+export async function tick(sessionId: string, now: Date = new Date()): Promise<void> {
+  const session = await prisma.chatSession.findUnique({ where: { id: sessionId }, select: { status: true } });
   if (!session || session.status !== "ACTIVE") {
     unregisterSession(sessionId);
     return;
   }
-
-  const now = new Date();
-  if (!bothPresent(sessionId)) {
+  if (!bothPresent(sessionId, now.getTime())) {
     await pauseSession(sessionId, now);
     return;
   }
-
-  const elapsedSeconds = Math.floor((now.getTime() - session.lastBilledAt.getTime()) / 1000);
-  if (elapsedSeconds <= 0) return;
-
-  if (session.type !== "PAID") {
-    // FREE_TRIAL (legacy, no new rows created) or COMPLIMENTARY — capped, unmetered time. Never
-    // touches the wallet or the global free allowance.
-    const limit = session.freeLimitSeconds ?? FREE_TRIAL_SECONDS;
-    const billedSeconds = Math.min(limit, session.billedSeconds + elapsedSeconds);
-    const remainingSeconds = Math.max(0, limit - billedSeconds);
-
-    if (remainingSeconds <= 0) {
-      await prisma.chatSession.update({ where: { id: sessionId }, data: { billedSeconds, lastBilledAt: now } });
-      await endSession(sessionId, "FREE_LIMIT_REACHED");
-      return;
-    }
-
-    const warningIssued = session.warningIssued || remainingSeconds <= LOW_BALANCE_WARNING_SECONDS;
-    if (warningIssued && !session.warningIssued) {
-      emitToRoom(roomForSession(sessionId), "chat:low-balance-warning", { sessionId, remainingSeconds });
-    }
-    await prisma.chatSession.update({ where: { id: sessionId }, data: { billedSeconds, lastBilledAt: now, warningIssued } });
-    emitToRoom(roomForSession(sessionId), "chat:timer", { sessionId, remainingSeconds, balancePaise: null });
-    return;
-  }
-
-  // PAID — settled against the session's own rolling reservation (created at acceptance, topped
-  // back up every tick), never a direct wallet debit. This is what makes a concurrent premium-tool
-  // reservation on the same wallet see accurate "available" funds instead of being blind to this
-  // session's in-flight draw.
-  const reservation = await prisma.walletReservation.findFirst({
-    where: { referenceId: sessionId, purpose: "CHAT_LOOKAHEAD", status: "HELD" },
-  });
-  if (!reservation) {
-    // Should never happen — acceptSession() always creates one for a PAID session. Logged and
-    // skipped rather than crashing the tick loop; the next tick will retry.
-    console.error(`[chat.billing] no HELD CHAT_LOOKAHEAD reservation for session ${sessionId}; skipping tick`);
-    return;
-  }
-
-  // Rule C: the global free allowance is drawn down BEFORE any paid amount is computed. Only the
-  // portion of this tick's elapsed time that ISN'T covered by free seconds is billable.
-  const freeClaimed = await claimFreeSeconds(session.userId, elapsedSeconds);
-  const billedSeconds = session.billedSeconds + elapsedSeconds;
-  const freeSecondsUsed = session.freeSecondsUsed + freeClaimed;
-
-  // Rule E, corrected: ceil applied to the CUMULATIVE billable total, never to this tick alone —
-  // newCharge is always exactly "what the cumulative formula now says is due, minus what was
-  // already settled," so a past interval is never re-rounded.
-  const chargeDue = cumulativeChargeDue(billedSeconds - freeSecondsUsed, session.ratePerMinutePaise);
-  const newCharge = chargeDue - session.amountPaise;
-
-  if (newCharge <= 0) {
-    // Entirely covered by free seconds (or rounding landed on the same cumulative cents) —
-    // nothing to settle against the reservation this tick.
-    await prisma.chatSession.update({ where: { id: sessionId }, data: { billedSeconds, freeSecondsUsed, lastBilledAt: now } });
-    const freeSecondsRemaining = await getRemainingFreeSeconds(session.userId);
-    emitToRoom(roomForSession(sessionId), "chat:timer", { sessionId, remainingSeconds: null, balancePaise: null, freeSecondsRemaining });
-    return;
-  }
-
-  // Cumulative billedSeconds-after-this-tick is a stable, unique key per tick (lastBilledAt only
-  // ever advances), so a re-processed tick after a transient error is a safe no-op, not a double charge.
-  const idempotencyKey = `chat-tick:${sessionId}:${billedSeconds}`;
-  const { charged, exhausted } = await settleFromReservation(reservation.id, newCharge, "CHAT_CONSUMPTION", {
-    referenceId: sessionId,
-    idempotencyKey,
-  });
-
-  const amountPaise = session.amountPaise + charged;
-
-  if (exhausted) {
-    // Exact affordable boundary (per the corrected reservation design): how many whole paid
-    // seconds does the total now-settled amount actually cover, using floor so duration is never
-    // reported beyond what was strictly paid for. The free portion is always counted in full —
-    // it was already atomically claimed from the global allowance regardless of wallet funds.
-    const rate = session.ratePerMinutePaise;
-    const affordablePaidSeconds = rate > 0 ? Math.floor((amountPaise * 60) / rate) : 0;
-    const billedSecondsCapped = Math.min(billedSeconds, affordablePaidSeconds + freeSecondsUsed);
-    await prisma.chatSession.update({
-      where: { id: sessionId },
-      data: { billedSeconds: billedSecondsCapped, freeSecondsUsed, amountPaise, lastBilledAt: now },
-    });
-    await endSession(sessionId, "BALANCE_EXHAUSTED");
-    return;
-  }
-
-  const lookaheadTargetPaise = Math.ceil((CHAT_RESERVATION_LOOKAHEAD_SECONDS * session.ratePerMinutePaise) / 60);
-  const toppedUp = await topUpReservation(reservation.id, lookaheadTargetPaise);
-  const freshWallet = await getOrCreateWallet(session.userId);
-  const rate = session.ratePerMinutePaise > 0 ? session.ratePerMinutePaise : 1;
-  // Everything this reservation already holds, plus whatever's truly free beyond every OTHER
-  // reservation on this wallet — i.e. the most this session could still bill before running out.
-  const otherReservedPaise = Math.max(0, freshWallet.reservedBalancePaise - toppedUp.amountPaise);
-  const availableForThisSession = freshWallet.balancePaise - otherReservedPaise;
-  const remainingSeconds = Math.floor((availableForThisSession / rate) * 60);
-
-  const warningIssued = session.warningIssued || remainingSeconds <= LOW_BALANCE_WARNING_SECONDS;
-  if (warningIssued && !session.warningIssued) {
-    emitToRoom(roomForSession(sessionId), "chat:low-balance-warning", { sessionId, remainingSeconds });
-  }
-  await prisma.chatSession.update({ where: { id: sessionId }, data: { billedSeconds, freeSecondsUsed, amountPaise, lastBilledAt: now, warningIssued } });
-  emitToRoom(roomForSession(sessionId), "chat:timer", { sessionId, remainingSeconds, balancePaise: freshWallet.balancePaise });
+  publish(sessionId, await settleSession({ sessionId, asOf: new Date(confirmedThroughMs(sessionId, now.getTime())), now }));
 }
 
-export async function endSession(sessionId: string, reason: ChatEndReason) {
+/**
+ * Ends a session through the SAME settlement function a tick uses: whatever time has accrued since the last
+ * settlement (through the last instant both sides were confirmed present) is billed, the reservation is
+ * released and the status flips to ENDED — atomically. Idempotent: ending an already-ended session is a no-op.
+ */
+export async function endSession(sessionId: string, reason: ChatEndReason, now: Date = new Date()) {
   unregisterSession(sessionId);
-  presence.delete(sessionId);
-  const session = await prisma.chatSession.findUnique({ where: { id: sessionId } });
-  if (!session || session.status === "ENDED") return session;
-
-  if (session.type === "PAID") {
-    // Release whatever's left of the rolling reservation — makes those coins immediately
-    // available to any other concurrent operation on the same wallet, not after a delayed cleanup.
-    const reservation = await prisma.walletReservation.findFirst({
-      where: { referenceId: sessionId, purpose: "CHAT_LOOKAHEAD", status: "HELD" },
-    });
-    if (reservation) await releaseReservation(reservation.id);
+  const presentRole: ChatSenderRole | undefined = reason === "USER_ENDED" ? "USER" : reason === "ASTROLOGER_ENDED" ? "ASTROLOGER" : undefined;
+  const asOf = new Date(confirmedThroughMs(sessionId, now.getTime(), presentRole));
+  try {
+    const outcome = await settleSession({ sessionId, asOf, now, endReason: reason });
+    publish(sessionId, outcome);
+    if (outcome.kind === "NOOP") presence.delete(sessionId);
+    return outcome.session ?? (await prisma.chatSession.findUnique({ where: { id: sessionId } }));
+  } catch (err) {
+    // The settlement rolled back, so the session is still live in the database: put its timer back rather
+    // than leaving it ACTIVE with nothing billing it.
+    const still = await prisma.chatSession.findUnique({ where: { id: sessionId }, select: { status: true } }).catch(() => null);
+    if (still?.status === "ACTIVE") registerSession(sessionId);
+    throw err;
   }
-
-  const updated = await prisma.chatSession.update({
-    where: { id: sessionId },
-    data: { status: "ENDED", endedAt: new Date(), endedReason: reason },
-  });
-  emitToRoom(roomForSession(sessionId), "chat:ended", { sessionId, reason });
-  emitToRoom(roomForAstrologer(session.astrologerProfileId), "chat:session-ended", { sessionId, reason });
-  return updated;
 }
 
 export function notifyNewSession(astrologerProfileId: string, session: { id: string; userId: string; requestedAt: Date; type: string }): void {
@@ -326,7 +329,8 @@ function ensureSweepRunning(): void {
  * because there is no way to know whether anyone was actually present during the outage.
  * Billing never resumes from `lastBilledAt` blindly; it resumes only once fresh presence
  * (post-restart heartbeats) re-establishes both sides, via the same `maybeResumeFromPause` path
- * a normal reconnect uses.
+ * a normal reconnect uses. Time between the last settlement and the crash is deliberately NOT billed:
+ * it cannot be known to have been delivered.
  */
 export async function resumeAllActiveSessions(): Promise<void> {
   const now = new Date();
@@ -334,8 +338,8 @@ export async function resumeAllActiveSessions(): Promise<void> {
   const activeSessions = await prisma.chatSession.findMany({ where: { status: "ACTIVE" } });
   for (const s of activeSessions) {
     const presenceGraceEndsAt = new Date(now.getTime() + RECONNECT_GRACE_MS);
-    await prisma.chatSession.update({
-      where: { id: s.id },
+    await prisma.chatSession.updateMany({
+      where: { id: s.id, status: "ACTIVE" },
       data: { status: "PAUSED", pausedAt: now, presenceGraceEndsAt },
     });
   }

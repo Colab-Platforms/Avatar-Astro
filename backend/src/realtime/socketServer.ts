@@ -9,7 +9,8 @@ import { isOriginAllowed } from "@/utils/corsOrigins.js";
 import { ApiError } from "@/utils/ApiError.js";
 import { logError } from "@/utils/safeError.js";
 import * as chatService from "@/modules/chat/chat.service.js";
-import { attachIo, roomForSession, roomForAstrologer, emitToRoom, recordHeartbeat } from "@/modules/chat/billing.js";
+import type { ChatSenderRole } from "@prisma/client";
+import { attachIo, roomForSession, roomForAstrologer, emitToRoom, recordHeartbeat, recordDeparture } from "@/modules/chat/billing.js";
 import { MAX_MESSAGE_LENGTH } from "@/modules/chat/chat.constants.js";
 import {
   GENERIC_ERROR_MESSAGE,
@@ -79,6 +80,37 @@ function handle(
   });
 }
 
+// Which chat sessions each socket has joined, and as which side — so that when the socket leaves or disconnects
+// the server knows exactly which participant of which chat just went away.
+const joinedSessions = new WeakMap<Socket, Map<string, ChatSenderRole>>();
+
+function trackJoin(socket: Socket, sessionId: string, role: ChatSenderRole): void {
+  let joined = joinedSessions.get(socket);
+  if (!joined) joinedSessions.set(socket, (joined = new Map()));
+  joined.set(sessionId, role);
+}
+
+/**
+ * Tells billing that a participant has left — but only if this was their LAST connection to that chat. A second
+ * tab or device of the same person still in the room keeps them present (multi-tab must not pause a chat).
+ */
+function reportDepartureIfLast(socket: Socket, sessionId: string, role: ChatSenderRole): void {
+  try {
+    const me = (socket.data as Partial<SocketData> | undefined)?.userId;
+    const room = socket.nsp.adapter.rooms.get(roomForSession(sessionId));
+    if (room) {
+      for (const id of room) {
+        if (id === socket.id) continue;
+        const other = socket.nsp.sockets.get(id);
+        if (other && (other.data as Partial<SocketData> | undefined)?.userId === me) return; // still here on another socket
+      }
+    }
+    recordDeparture(sessionId, role).catch((err) => logError("[socket] failed to record departure:", err));
+  } catch (err) {
+    logError("[socket] departure check failed:", err);
+  }
+}
+
 /** The chat event handlers for one authenticated socket (socket.data must already hold the user). */
 export function registerChatHandlers(socket: Socket): void {
   // Role is resolved per session inside chat.service (is this userId the session's
@@ -94,19 +126,28 @@ export function registerChatHandlers(socket: Socket): void {
     // "absent" for up to PRESENCE_TIMEOUT_MS right after joining, before the client's own
     // first periodic heartbeat arrives.
     const role = await chatService.getActorRole(sessionId, userId);
+    trackJoin(socket, sessionId, role);
     recordHeartbeat(sessionId, role);
     ack();
   });
 
   handle(socket, "chat:heartbeat", async (payload, _ack, userId) => {
     const { sessionId } = parseSessionPayload(payload);
-    const role = await chatService.getActorRole(sessionId, userId);
+    const role = await chatService.getActorRole(sessionId, userId); // throws unless this user is a participant
+    // After an automatic reconnect the client resumes heartbeating on a NEW socket without re-sending chat:join.
+    // Re-establish room membership and tracking here, so that socket's later disconnect is still observed.
+    socket.join(roomForSession(sessionId));
+    trackJoin(socket, sessionId, role);
     recordHeartbeat(sessionId, role);
   });
 
+  // An explicit leave is something the server SEES: billing stops at this moment (not a heartbeat window later).
   handle(socket, "chat:leave", (payload) => {
     const { sessionId } = parseSessionPayload(payload);
+    const role = joinedSessions.get(socket)?.get(sessionId);
+    joinedSessions.get(socket)?.delete(sessionId);
     socket.leave(roomForSession(sessionId));
+    if (role) reportDepartureIfLast(socket, sessionId, role); // only for a chat this socket had actually joined
   });
 
   handle(socket, "chat:message", async (payload, ack, userId) => {
@@ -127,6 +168,15 @@ export function registerChatHandlers(socket: Socket): void {
     const { sessionId } = parseSessionPayload(payload);
     await chatService.endSessionByActor(sessionId, userId);
     ack();
+  });
+
+  // "disconnecting" fires while the socket is still in its rooms — a closed tab, a logout or a dropped connection
+  // the transport noticed. Same rule as an explicit leave: stop billing now, for every chat this socket was in.
+  socket.on("disconnecting", () => {
+    const joined = joinedSessions.get(socket);
+    if (!joined) return;
+    for (const [sessionId, role] of joined) reportDepartureIfLast(socket, sessionId, role);
+    joined.clear();
   });
 
   socket.on("error", (err) => logError("[socket] socket error:", err));
