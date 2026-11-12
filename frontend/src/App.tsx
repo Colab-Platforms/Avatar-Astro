@@ -61,6 +61,8 @@ const AdminCustomerDetailPage = lazy(() => import("./features/admin/panel/pages/
 const AdminAdminsPage = lazy(() => import("./features/admin/panel/pages/AdminsPage"));
 const AdminCustomerLibraryPage = lazy(() => import("./features/admin/panel/pages/CustomerLibraryPage"));
 const AdminToolsPage = lazy(() => import("./features/admin/panel/pages/ToolsPage"));
+const AdminToolPricingPage = lazy(() => import("./features/admin/panel/pages/ToolPricingPage"));
+const AdminBillingFailuresPage = lazy(() => import("./features/admin/panel/pages/BillingFailuresPage"));
 const AdminAstrologyAudioPage = lazy(() => import("./features/admin/panel/pages/AstrologyAudioPage"));
 const AdminActivityPage = lazy(() => import("./features/admin/panel/pages/ActivityPage"));
 const AdminChatEscalationsPage = lazy(() => import("./features/admin/panel/pages/ChatEscalationsPage"));
@@ -653,6 +655,22 @@ const App = () => {
                 element={
                   <Suspense fallback={<AdminLazyFallback />}>
                     <MainOnly><AdminToolsPage /></MainOnly>
+                  </Suspense>
+                }
+              />
+              <Route
+                path="tool-pricing"
+                element={
+                  <Suspense fallback={<AdminLazyFallback />}>
+                    <MainOnly><AdminToolPricingPage /></MainOnly>
+                  </Suspense>
+                }
+              />
+              <Route
+                path="billing-failures"
+                element={
+                  <Suspense fallback={<AdminLazyFallback />}>
+                    <MainOnly><AdminBillingFailuresPage /></MainOnly>
                   </Suspense>
                 }
               />

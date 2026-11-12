@@ -36,8 +36,9 @@ export const METERED: Record<string, MeteredRoute[]> = {
     { method: "GET", path: /^\/api\/interpretation\/compatibility$/, label: "GET /api/interpretation/compatibility" },
     { method: "POST", path: /^\/api\/interpretation\/chart-chat$/, label: "POST /api/interpretation/chart-chat" },
   ],
+  // The AI-vision POST /api/palm-reading route was removed (never called by the live page, which
+  // analyses the photo in-browser) — only the free-feature usage-limit check remains.
   "palm-reading": [
-    { method: "POST", path: /^\/api\/palm-reading$/, label: "POST /api/palm-reading" },
     { method: "POST", path: /^\/api\/palm-reading\/check$/, label: "POST /api/palm-reading/check" },
   ],
   // kundali moved to "birth-chart" above: it is the Birth Chart feature, not the gemstone calculator.

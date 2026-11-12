@@ -93,15 +93,20 @@ test("verified free model is Free model with $0, with or without any usage", () 
 });
 
 test("missing pricing is Unknown with null cost, never $0, and says why", () => {
-  const rep = buildReport([], {}, fx);
-  const palm = find(rep, "palm.reading"); // anthropic/claude-3.5-sonnet is not in any verified price list
-  assert.equal(palm.classification, "unknown");
-  assert.equal(palm.costPerGenerationUsd, null);
-  assert.equal(palm.cost100Usd, null);
-  assert.match(palm.reason, /No verified price/);
-  const gem = find(rep, "gemstone.explain"); // Groq lists llama-3.3-70b-versatile as "contact sales"
-  assert.equal(gem.classification, "unknown");
-  assert.equal(gem.costPerGenerationUsd, null);
+  // Built directly via buildRow with a model that is deliberately absent from REFERENCE_RATES,
+  // rather than relying on some real OPERATIONS entry happening to still be unpriced today —
+  // every real operation in the catalogue now has a verified price (gemstone.explain switched to
+  // the priced openai/gpt-oss-20b; the unpriced palm.reading operation was removed entirely).
+  const row = buildRow(
+    { id: "test.unpriced", feature: "test", label: "Test", operation: "Test op", route: "/api/test", provider: "groq" },
+    { id: "some-enterprise-only-model", from: "code" },
+    null,
+    fx,
+  );
+  assert.equal(row.classification, "unknown");
+  assert.equal(row.costPerGenerationUsd, null);
+  assert.equal(row.cost100Usd, null);
+  assert.match(row.reason, /No verified price/);
 });
 
 test("a priced model with no recorded requests is Unknown, not guessed", () => {
@@ -173,7 +178,7 @@ test("the model comes from the environment when the code reads it from the envir
   assert.equal(r.rate?.inputPerM, 0.15); // now a priced model, still Unknown until a request is recorded
   assert.equal(r.classification, "unknown");
   delete process.env.GROQ_MODEL;
-  assert.equal(gem.model().id, "llama-3.3-70b-versatile");
+  assert.equal(gem.model().id, "openai/gpt-oss-20b");
 });
 
 test("every reference price names its source and verification date", () => {

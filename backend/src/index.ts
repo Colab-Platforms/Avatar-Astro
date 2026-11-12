@@ -2,7 +2,6 @@ import express, { Request, Response, NextFunction } from "express";
 import { createServer } from "http";
 import cors from "cors";
 import dotenv from "dotenv";
-import axios from "axios";
 import interpretationRoutes from "./routes/interpretationRoutes.js";
 import compatibilityRoutes from "./routes/compatibilityRoutes.js";
 import birthChartRoutes from "./routes/birthChartRoutes.js";
@@ -13,7 +12,6 @@ import tarotRoutes from "./routes/tarotRoutes.js";
 import inquiryRoutes from "./routes/inquiryRoutes.js";
 import { auth, optionalAuth } from "./middleware/authMiddleware.js";
 import { captureReadings } from "./modules/library/readingCapture.js";
-import { createRateLimiter } from "./utils/rateLimit.js";
 import { feature } from "./utils/usage.js";
 import { installAiUsageCapture } from "./utils/aiUsageCapture.js";
 import { createMeRouter } from "./modules/me/me.route.js";
@@ -384,127 +382,15 @@ app.post("/api/tts", ...feature("tts"), auth("USER"), async (req: Request, res: 
 });
 
 // ── Palm Reading ────────────────────────────────────────────────────────────
-// Note: the current Palm Reading page analyses the photo in the browser and does not call this endpoint.
-// It is kept (and locked down) because it forwards an image to a paid vision model.
-// /check carries no image and does no analysis: the page calls it first purely to consume one use of the
-// admin's per-24h "palm-reading" limit before running the (free, client-side) analysis.
+// The live page analyses the photo in the browser (real MediaPipe hand-landmark detection,
+// fixed narrative text per hand shape) and never calls a server AI route — it's fully free.
+// A paid-vision-model endpoint used to exist here (forwarding the photo to Claude 3.5 Sonnet for
+// a fabricated-precision "reading") but was never called by the frontend and has been removed;
+// see git history if it's ever worth rebuilding properly on top of the real landmark data instead.
+// /check carries no image and does no analysis: the page calls it first purely to consume one use
+// of the admin's per-24h "palm-reading" limit before running the free, client-side analysis.
 app.post("/api/palm-reading/check", ...feature("palm-reading"), auth("USER"), (_req: Request, res: Response) => {
   res.json({ success: true });
-});
-const PALM_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
-const PALM_MAX_BASE64_CHARS = 8_000_000; // ~6 MB of image data
-app.post("/api/palm-reading", ...feature("palm-reading"), auth("USER"), createRateLimiter({ windowMs: 60_000, max: 5 }), async (req: Request, res: Response) => {
-  const { imageBase64, imageType, fingerprint } = req.body;
-  if (!imageBase64 || !imageType) {
-    return res.status(400).json({
-      success: false,
-      error: "imageBase64 and imageType are required",
-    });
-  }
-  if (typeof imageType !== "string" || !PALM_IMAGE_TYPES.has(imageType)) {
-    return res.status(400).json({ success: false, error: "Unsupported image type" });
-  }
-  if (typeof imageBase64 !== "string" || imageBase64.length > PALM_MAX_BASE64_CHARS || !/^[A-Za-z0-9+/]+={0,2}$/.test(imageBase64)) {
-    return res.status(400).json({ success: false, error: "Invalid or too large image" });
-  }
-
-  const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-  if (!OPENROUTER_API_KEY) {
-    return res
-      .status(500)
-      .json({ success: false, error: "The reading service is not configured" });
-  }
-
-  const seedNum = fingerprint
-    ? parseInt(fingerprint) % 1000
-    : Math.floor(Math.random() * 1000);
-  const prompt = `You are a master Vedic palmistry expert with 40+ years of experience. Carefully analyze this palm image.
-
-Look at the actual lines, mounts, and hand shape visible in the image. Use seed number ${seedNum} to ensure this user always gets the same consistent reading.
-
-Return ONLY valid JSON, no markdown fences, no extra text. Use this exact structure:
-{
-  "handType": "Earth Hand",
-  "element": "Earth 🌍",
-  "palmScore": 8.4,
-  "confidence": 93,
-  "dominance": "Right (Active)",
-  "lines": {
-    "heart": { "quality": "Long & deeply curved", "depth": "Deep", "headline": "Your Heart — Emotions & Love", "reading": "3-4 detailed sentences about emotional nature, love life, relationships.", "strengths": ["Deep emotional loyalty","Strong empathy","Passionate connections","Intuitive heart"], "challenges": ["Tendency to over-give","Difficulty letting go","Emotional sensitivity"], "advice": "One sentence of personalized practical advice." },
-    "head":  { "quality": "Long, sweeping across palm", "depth": "Moderate", "headline": "Your Mind — Intelligence & Clarity", "reading": "3-4 detailed sentences about intellect, decision-making, mental strengths.", "strengths": ["Strategic thinking","Creative problem solving","Strong focus","Intellectual curiosity"], "challenges": ["Overthinking","Analysis paralysis","Difficulty with quick decisions"], "advice": "One sentence of personalized practical advice." },
-    "life":  { "quality": "Strong sweeping arc", "depth": "Deep", "headline": "Your Life — Vitality & Path", "reading": "3-4 detailed sentences about vitality, energy, life transitions.", "strengths": ["High vitality","Resilience","Strong adaptability","Personal growth"], "challenges": ["Taking on too much","Need for rest","Restless energy"], "advice": "One sentence of personalized practical advice." },
-    "fate":  { "quality": "Clear vertical line", "depth": "Strong", "headline": "Your Destiny — Career & Purpose", "reading": "3-4 detailed sentences about career path, life purpose, destiny markers.", "strengths": ["Clear life direction","Career focus","Natural leadership","Purpose-driven"], "challenges": ["Rigidity in plans","Difficulty pivoting","External pressure sensitivity"], "advice": "One sentence of personalized practical advice." }
-  },
-  "mounts": [
-    {"name":"Mount of Jupiter","planet":"Jupiter","strength":82,"symbol":"♃","reading":"Two sentences about ambition and leadership."},
-    {"name":"Mount of Saturn","planet":"Saturn","strength":71,"symbol":"♄","reading":"Two sentences about discipline and karma."},
-    {"name":"Mount of Sun (Apollo)","planet":"Sun","strength":88,"symbol":"☉","reading":"Two sentences about creative power and charisma."},
-    {"name":"Mount of Mercury","planet":"Mercury","strength":75,"symbol":"☿","reading":"Two sentences about communication and business acumen."},
-    {"name":"Mount of Venus","planet":"Venus","strength":79,"symbol":"♀","reading":"Two sentences about love and sensuality."},
-    {"name":"Mount of Moon (Luna)","planet":"Moon","strength":69,"symbol":"☽","reading":"Two sentences about intuition and imagination."}
-  ],
-  "personality": [
-    {"trait":"Leadership","score":81,"description":"One sentence insight."},
-    {"trait":"Emotional Depth","score":88,"description":"One sentence insight."},
-    {"trait":"Creative Power","score":76,"description":"One sentence insight."},
-    {"trait":"Intellectual Force","score":83,"description":"One sentence insight."},
-    {"trait":"Spiritual Sensitivity","score":72,"description":"One sentence insight."},
-    {"trait":"Willpower","score":79,"description":"One sentence insight."}
-  ],
-  "love": { "style": "Devoted & Passionate", "summary": "2-3 sentence love life overview.", "soulmate": "Describe ideal partner qualities.", "warning": "One sentence about the main relationship pitfall." },
-  "career": { "path": "The Visionary Creator", "summary": "2-3 sentence career overview.", "bestRoles": ["Role 1","Role 2","Role 3","Role 4"], "wealthLine": "One sentence about wealth potential." },
-  "timeline": [
-    {"phase":"Foundation Years","years":"Age 0–20","theme":"Learning & Self-Discovery","insight":"Two sentences for this phase."},
-    {"phase":"Rise & Ambition","years":"Age 21–35","theme":"Growth & Bold Choices","insight":"Two sentences for this phase."},
-    {"phase":"Mastery Period","years":"Age 36–55","theme":"Achievement & Impact","insight":"Two sentences for this phase."},
-    {"phase":"Legacy Years","years":"Age 56+","theme":"Wisdom & Fulfillment","insight":"Two sentences for this phase."}
-  ],
-  "hiddenGifts": ["Hidden gift 1","Hidden gift 2","Hidden gift 3","Hidden gift 4","Hidden gift 5"],
-  "luckyElements": {"number":"7","color":"Deep Indigo","day":"Thursday","gem":"Amethyst","direction":"Northeast"},
-  "summary": "A powerful 3-4 sentence master summary of the entire palm reading."
-}`;
-
-  try {
-    const response = await axios.post(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        model: "anthropic/claude-3.5-sonnet",
-        max_tokens: 3000,
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "image_url",
-                image_url: { url: `data:${imageType};base64,${imageBase64}` },
-              },
-              { type: "text", text: prompt },
-            ],
-          },
-        ],
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": "http://localhost:8081",
-          "X-Title": "Spiritual AI Palm Reading",
-        },
-      },
-    );
-
-    const text = response.data.choices[0].message.content || "";
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("Could not parse JSON from AI response");
-    const result = JSON.parse(jsonMatch[0]);
-    res.json({ success: true, data: result });
-  } catch (err: any) {
-    console.error("Palm reading error:", err.message);
-    res.status(502).json({
-      success: false,
-      error: "The reading service is unavailable right now",
-    });
-  }
 });
 
 // Error handling middleware (must be last).

@@ -105,6 +105,20 @@ export function createAstrologerAdminRouter(): Router {
     }),
   );
 
+  router.patch(
+    "/applications/:id/complimentary",
+    wrap(async (req, res) => {
+      const isComplimentary = Boolean(req.body?.isComplimentary);
+      const raw = req.body?.complimentaryMaxSeconds;
+      const complimentaryMaxSeconds = raw === null || raw === undefined || raw === "" ? null : Number(raw);
+      if (complimentaryMaxSeconds !== null && (!Number.isInteger(complimentaryMaxSeconds) || complimentaryMaxSeconds <= 0)) {
+        throw new ApiError("complimentaryMaxSeconds must be a positive whole number of seconds, or null for the platform default.", STATUS_CODES.BAD_REQUEST);
+      }
+      const result = await svc.setComplimentary(req.params.id, isComplimentary, complimentaryMaxSeconds, req);
+      sendResponse(res, true, result, isComplimentary ? "Complimentary chat granted" : "Complimentary chat revoked");
+    }),
+  );
+
   router.post(
     "/applications/:id/notes",
     wrap(async (req, res) => {

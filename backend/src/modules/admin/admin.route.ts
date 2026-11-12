@@ -10,6 +10,8 @@ import { noStore } from "@/middleware/noStore.js";
 import { createAdminPanelRouter } from "./adminPanel.route.js";
 import { createAstrologyAudioAdminRouter } from "@/modules/astrologyAudio/astrologyAudio.route.js";
 import { createAstrologerAdminRouter } from "@/modules/admin/astrologers/astrologerAdmin.route.js";
+import { createToolPricingRouter } from "./toolPricing.route.js";
+import { createBillingFailuresRouter } from "./billingFailures.route.js";
 
 const router = Router();
 
@@ -38,6 +40,10 @@ router.use("/astrology/audio", createAstrologyAudioAdminRouter());
 
 // Astrologer onboarding: application review, document verification, approval.
 router.use("/astrologers", createAstrologerAdminRouter());
+
+// Coin-wallet: premium AI tool pricing activation, and stuck-billing-hold reconciliation.
+router.use("/tool-pricing", createToolPricingRouter());
+router.use("/billing-failures", createBillingFailuresRouter());
 
 // Admin panel modules (overview, users, tools, content, reports, audit...).
 router.use(createAdminPanelRouter());

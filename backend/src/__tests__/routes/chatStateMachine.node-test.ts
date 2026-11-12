@@ -55,7 +55,7 @@ before(async () => {
   await prisma.user.deleteMany({ where: { email: { endsWith: DOM } } });
 
   const role = await prisma.role.upsert({ where: { name: "USER" }, update: {}, create: { name: "USER" } });
-  for (const key of ["ivan", "judy", "karl", "liam", "mallory", "nancy"]) {
+  for (const key of ["ivan", "judy", "karl", "liam", "mallory", "nancy", "oscar"]) {
     const u = await prisma.user.create({ data: { email: `${key}${DOM}`, isActive: true, userRoleMappings: { create: { roleId: role.id } } } });
     ids[key] = u.id;
   }
@@ -240,3 +240,38 @@ test("sweepExpiredState: a PAUSED session past its grace deadline auto-ends with
   assert.equal(finalWallet.balancePaise, 2000, "nothing was ever charged for a session that only ever sat paused");
   assert.equal(finalWallet.reservedBalancePaise, 0, "the reservation must be released, not left dangling");
 });
+
+test(
+  "a new session with the same astrologer after a prior one ended is one conversation, not two — full history survives across sessions",
+  { skip },
+  async () => {
+    const w = await wallet.getOrCreateWallet(ids.oscar);
+    await prisma.wallet.update({ where: { id: w.id }, data: { balancePaise: 5000, purchasedBalancePaise: 5000 } });
+    await prisma.chatSession.deleteMany({ where: { userId: ids.oscar } });
+
+    // First session: request, accept, exchange a message, then end it.
+    const first = await chatService.startSession(ids.oscar, ids.astroA);
+    await chatService.acceptSession(first.id, ids.astroAUser);
+    await chatService.postMessage(first.id, ids.oscar, "hello from the first session");
+    await billing.endSession(first.id, "USER_ENDED");
+
+    // Second session with the SAME astrologer, started after the first fully ended.
+    const second = await chatService.startSession(ids.oscar, ids.astroA);
+    assert.notEqual(second.id, first.id, "a new session after one ended is a new row, not a resumed one");
+
+    const userConversations = await chatService.listUserConversations(ids.oscar);
+    const withAstroA = userConversations.filter((c: any) => c.astrologer.id === ids.astroA);
+    assert.equal(withAstroA.length, 1, "the same astrologer must appear as exactly one conversation, not one row per session");
+    assert.equal(withAstroA[0].sessionId, second.id, "the single row must point at the most recent session");
+
+    const astrologerConversations = await chatService.listAstrologerConversations(ids.astroA);
+    const withOscar = astrologerConversations.filter((c: any) => c.user.id === ids.oscar);
+    assert.equal(withOscar.length, 1, "the astrologer side must also collapse to one conversation per user");
+
+    const history = await chatService.getMessages(second.id, ids.oscar);
+    assert.ok(
+      history.some((m: any) => m.content === "hello from the first session"),
+      "opening the new session must still show the previous session's messages — ending a chat and starting a new one with the same astrologer must never hide prior history",
+    );
+  },
+);
