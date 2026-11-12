@@ -66,6 +66,20 @@ export function unregisterSession(sessionId: string): void {
   }
 }
 
+/**
+ * Stops every per-session billing timer and the expiry sweep — used only during process shutdown so no
+ * tick fires against a closing database. Nothing is settled or ended here: session state lives in the
+ * database, and the next startup's resumeAllActiveSessions() pauses whatever was ACTIVE.
+ */
+export function stopBillingTimers(): void {
+  for (const timer of timers.values()) clearInterval(timer);
+  timers.clear();
+  if (sweepTimer) {
+    clearInterval(sweepTimer);
+    sweepTimer = null;
+  }
+}
+
 // ============================================================================
 // Presence — in-memory only, intentionally. The persisted PAUSED/presenceGraceEndsAt state is
 // what survives a restart; this map is just "has anyone heard from this side in the last

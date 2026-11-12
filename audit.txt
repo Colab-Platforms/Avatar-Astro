@@ -1,0 +1,2606 @@
+ ▐▛███▛█   Claude Code v2.1.316
+▝▜██████▀  Sonnet 5.5 · Claude Pro
+ ▝▝   ▝▝   ~\Desktop\Coding\avatar-astro
+
+
+❯ # MyBhagya — Production-Ready Astrologer Chat: Full Audit, Gap Analysis &     
+  Implementation                                                                
+                                                                                
+  ## Your role                                                                  
+                                                                                
+  Act as a senior full-stack architect, real-time systems engineer, financial   
+  ledger engineer, security reviewer, and production QA lead.                   
+                                                                                
+  We have already implemented basic real-time chat functionality between users  
+  and astrologers on MyBhagya.                                                  
+                                                                                
+  Your task is to thoroughly inspect the EXISTING implementation, identify      
+  missing or incorrectly implemented production requirements, and then improve  
+  the current system incrementally.                                             
+                                                                                
+  **Do not rebuild the chat system from scratch. Do not create parallel         
+  implementations. Preserve everything that already works.**                    
+                                                                                
+  ## Project architecture                                                       
+                                                                                
+  - Frontend: React + Vite + TypeScript/JavaScript as currently implemented     
+  - Backend: Node.js + Express + TypeScript                                     
+  - Database: Neon PostgreSQL + Prisma                                          
+  - Real-time: Socket.IO                                                        
+  - Deployment: Vercel frontend, Render backend                                 
+  - Existing roles: USER, ADMIN, SUPERADMIN, ASTROLOGER                         
+  - Existing wallet, coin billing, astrologer onboarding and dashboards must be 
+  preserved.                                                                    
+                                                                                
+  Inspect the actual repository to confirm all implementation details rather    
+  than relying on this description.                                             
+                                                                                
+  ## Installed skills and agents                                                
+                                                                                
+  Discover and use the relevant installed project skills:                       
+                                                                                
+  - using-superpowers                                                           
+  - vercel-react-best-practices                                                 
+  - impeccable                                                                  
+  - frontend-design                                                             
+  - grill-me, only when genuine business decisions require clarification        
+  - handoff, when documenting implementation checkpoints                        
+                                                                                
+  Use built-in Explore subagents for independent, read-only codebase            
+  investigations.                                                               
+                                                                                
+  Read the actual skill instructions before using them. Do not assume a skill's 
+  behavior from its name.                                                       
+                                                                                
+  Use Impeccable specifically for frontend UI/UX evaluation, not for backend    
+  billing or financial logic.                                                   
+                                                                                
+  Avoid invoking unrelated Three.js skills.                                     
+                                                                                
+  ---                                                                           
+                                                                                
+  # PHASE 1 — COMPLETE EXISTING IMPLEMENTATION AUDIT                            
+                                                                                
+  This phase is STRICTLY READ-ONLY.                                             
+                                                                                
+  Do not edit source files, run database migrations, modify database records,   
+  install dependencies, or change infrastructure.                               
+                                                                                
+  Inspect the complete relevant implementation:                                 
+                                                                                
+  - React routes, pages, components, hooks and API clients                      
+  - Express routes, controllers, services and middleware                        
+  - Socket.IO server, handlers, rooms, presence and reconnection logic          
+  - Prisma schema, migrations, constraints and indexes                          
+  - Wallet balances, reservations and ledger                                    
+  - Chat session billing scheduler                                              
+  - Astrologer profile, verification and availability                           
+  - User and astrologer dashboards                                              
+  - Superadmin management interfaces                                            
+  - Existing                                                                    
+  ──── (314 lines hidden) ───────────────────────────────────────────────────── 
+  nt by checkpoint.                                                             
+                                                                                
+  Requirements:                                                                 
+                                                                                
+  1. Extend existing services and components instead of creating parallel       
+  systems.                                                                      
+  2. Preserve existing functionality and historical data.                       
+  3. Maintain existing authentication and role architecture.                    
+  4. Keep Socket.IO as the real-time transport.                                 
+  5. Use database transactions for all financial mutations.                     
+  6. Ensure financial operations are idempotent and concurrency-safe.           
+  7. Follow existing coding conventions and repository structure.               
+  8. Use installed skills only where relevant.                                  
+  9. Add automated tests alongside implementation.                              
+  10. Never silently change finalized billing business rules.                   
+  11. Never run production database migrations without my explicit approval.    
+  12. Never perform destructive database operations without approval.           
+  13. Never deploy to production without approval.                              
+                                                                                
+  If a checkpoint requires schema changes, prepare and review the migration     
+  first.                                                                        
+                                                                                
+  Do not assume a successful build proves the functionality works.              
+                                                                                
+  ---                                                                           
+                                                                                
+  # PHASE 5 — END-TO-END VERIFICATION                                           
+                                                                                
+  Use Playwright MCP if available for real browser testing.                     
+                                                                                
+  Test customer and astrologer flows at desktop, tablet and mobile widths.      
+                                                                                
+  Test real Socket.IO behavior using authenticated test accounts.               
+                                                                                
+  Test billing and financial operations against an isolated test database.      
+                                                                                
+  Include tests for:                                                            
+  - Simultaneous consultation requests.                                         
+  - Duplicate accept/reject/end events.                                         
+  - Network disconnection.                                                      
+  - Backend restart.                                                            
+  - Reconnection within and after grace.                                        
+  - Wallet exhaustion.                                                          
+  - Promotional/purchased balance crossover.                                    
+  - Free allowance exhaustion.                                                  
+  - Complimentary consultations.                                                
+  - Concurrent premium tool reservations.                                       
+  - Duplicate billing events.                                                   
+  - Refunds and reconciliation.                                                 
+  - Unauthorized room access.                                                   
+  - Browser refresh during active consultation.                                 
+  - Multiple tabs/devices.                                                      
+  - Mobile network interruptions.                                               
+                                                                                
+  Never perform chargeable tests against real customer accounts.                
+                                                                                
+  For every checkpoint, report:                                                 
+  - What was already implemented.                                               
+  - What was missing or broken.                                                 
+  - What changed.                                                               
+  - Exact files modified.                                                       
+  - Tests executed and results.                                                 
+  - Tests not executed and why.                                                 
+  - Remaining risks.                                                            
+  - Whether the checkpoint is ready for review.                                 
+                                                                                
+  ## Final instruction                                                          
+                                                                                
+  Start with Phase 1 and Phase 2 ONLY.                                          
+                                                                                
+  Do not implement changes yet.                                                 
+                                                                                
+  I want a complete, evidence-backed audit and production gap report first.     
+  After reviewing it, I will approve the implementation roadmap and authorize   
+  checkpoint-by-checkpoint changes.                                             
+                                                                                
+  The objective is to make our EXISTING MyBhagya chat system production-ready,  
+  not to replace it.                                                            
+
+● I'll start by mapping the repository, then split the read-only investigations
+  across Explore subagents.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Skill(using-superpowers)
+  ⎿  Successfully loaded skill
+
+● Using using-superpowers to route this work. No brainstorming skill is
+  installed, and Phase 1 is read-only, so I'm dispatching parallel Explore
+  agents for the independent investigations.
+
+● 4 background agents launched (↓ to manage)
+   ├ Audit wallet and billing
+   ├ Audit chat lifecycle and sockets
+   ├ Audit frontend chat UX
+   └ Audit security and infra
+
+● I've started four read-only audits, covering billing, chat and sockets,
+  frontend UX, and security and infrastructure. They're running in the
+  background. I'll merge their findings, check the critical ones against the
+  code myself, and then write the Phase 2 gap report.
+
+✻ Worked for 44s · done 10:35 PM
+
+› Message from Explore
+  # Audit: astrologer<->user consultation chat (backend), read-only
+
+  Paths below are relative to
+  `C:\Users\dell\Desktop\Coding\avatar-astro\backend\` unless noted. Status key:
+  IMPL = implemented, PART = partial, MISS = missing, BROKEN = defect or race,
+  UNK = unknown. I did not run any tests or check any database.
+
+  ## 0. Layout and parallel implementations
+  - **One socket server.** `src/realtime/socketServer.ts` (160 lines) is the
+  only Socket.IO server. It is attached at `src/index.ts:416-419`
+  (`createServer(app)` then `initSocketServer`), on the same port as Express.
+  - **Chat modules.** `src/modules/chat/` holds `chat.service.ts` (state machine
+  and messages), `billing.ts` (timers, presence, sweep, restart recovery),
+  `chat.route.ts` (user REST), `chat.astrologer.route.ts` (astrologer REST),
+  `chat.constants.ts` and `freeAllowance.service.ts`.
+  - **Frontend consumer.** `frontend/src/features/chat/lib/socket.ts` and
+  `hooks/useChatSession.ts`.
+  - **Not a duplicate.** The AI chat ("Inner Voice") is separate:
+  `src/routes/innerVoiceRoutes.ts`, `src/utils/dailyChatSession.ts`,
+  `src/utils/chatScreening.ts`, and `/api/ai/chat` via `aiProxyRoutes`. It is
+  HTTP only, has no sockets and a different table. It shares only the name
+  "chat".
+  - **Leftover legacy.** `FREE_TRIAL_SECONDS` in
+  `src/modules/chat/chat.constants.ts:2` and the `ChatFreeTrialUsage` model are
+  legacy; `billing.ts:141-146` still handles non-PAID sessions via `??
+  FREE_TRIAL_SECONDS`.
+  - **Obsolete docs.** `prisma/sql/astrologer_partial_indexes.sql` covers only
+  astrologer applications and documents, not chat. It still says migrations are
+  not used, which conflicts with the existence of `prisma/migrations/`.
+  - **Duplicate routes.** `chat.route.ts` and `chat.astrologer.route.ts` each
+  repeat `getSession` and `getMessages`. This is not harmful.
+  - **Spelling.** I found no CANCELLED end reason anywhere.
+
+  ## 1. Lifecycle (`src/modules/chat/chat.service.ts` unless noted)
+
+  | Item | Status | Evidence |
+  |---|---|---|
+  | Request creation | IMPL | `startSession` L135-185 creates a REQUESTED row
+  with `requestExpiresAt = now + 60s` (`chat.constants.ts:23`
+  `REQUEST_ACCEPT_TIMEOUT_MS = 60_000`). Wallet check at L157-161 covers the
+  minimum balance after free seconds. |
+  | Create idempotency | PART | An existing live session for the same (user,
+  astrologer) pair is returned (L136-139). A concurrent double-click is caught
+  by the DB unique violation (P2002 to 409, L180). |
+  | Astrologer notification | PART | `billing.notifyNewSession`
+  (`billing.ts:266`) emits `chat:new-session` to room `astrologer:<profileId>`.
+  It is only delivered if the astrologer has a socket open. There is no push or
+  offline fallback. Nothing checks `isOnline`, so a request can go to an offline
+  astrologer and just time out. |
+  | 60s deadline | IMPL | `sweepExpiredState` (`billing.ts:282`) runs every 10s
+  (`SWEEP_INTERVAL_MS`) and ends expired REQUESTED rows with TIMEOUT.
+  `requireRequestedSessionForAstrologer` (L195) rejects an expired accept. The
+  deadline is read from the DB, not from memory. Worst-case lag is about 10s
+  past 60s. |
+  | Accept (REQUESTED to ACTIVE) | IMPL, race | `acceptSession` L205-231 runs in
+  a transaction: checks the wallet, creates a CHAT_LOOKAHEAD reservation, sets
+  ACTIVE, then calls `registerSession`. See B1 below. |
+  | Reject | IMPL, race | `rejectSession` L234-242. The update has no `status`
+  guard (B1). |
+  | Cancel by user | PART | There is no dedicated cancel. The frontend "Cancel"
+  button (`frontend/src/features/chat/components/ChatWindow.tsx:285-290`) calls
+  the generic end, so `chat:end` or POST `/end` records USER_ENDED.
+  `ChatEndReason` (`prisma/schema/chat.prisma:26-34`) has no CANCELLED value, so
+  history cannot distinguish a cancelled request from an ended chat. |
+  | Idempotency of accept, reject and cancel | PART | A second accept or reject
+  returns 409 ("no longer pending", L194), not an idempotent 200.
+  `billing.endSession` is idempotent (L246 returns early if already ENDED), but
+  see B2. |
+  | No billing before ACTIVE | IMPL | The reservation and `registerSession`
+  happen only in `acceptSession`. `lastBilledAt` is set at accept (L224). The
+  test at `chatStateMachine.node-test.ts:82` asserts this. |
+  | PAUSED and reconnect grace | IMPL | `tick` (`billing.ts:125-136`) pauses the
+  session when either side is not present. `pauseSession` L95 persists
+  `pausedAt` and `presenceGraceEndsAt` (60s) and stops the timer.
+  `maybeResumeFromPause` L107 resumes when both sides are present again, with
+  `lastBilledAt` reset to the resume time, so the pause is never billed. |
+  | Auto-end on disconnect | IMPL | The sweep ends PAUSED sessions past their
+  grace with DISCONNECTED (`billing.ts:292-299`). |
+  | End by either side | IMPL | `endSessionByActor` (L249) resolves the role
+  from the session (L44-59, so a dual-role account is handled correctly). The
+  reason is USER_ENDED or ASTROLOGER_ENDED. Available over REST
+  (`chat.route.ts:56`, `chat.astrologer.route.ts:61`) and socket `chat:end`. |
+  | Auto-end on insufficient balance | IMPL | `settleFromReservation` returns
+  `exhausted`, then `endSession(BALANCE_EXHAUSTED)` (`billing.ts:208-222`). Free
+  and complimentary sessions end with FREE_LIMIT_REACHED (L148). |
+  | Release of unused reservation | IMPL | `billing.ts:248-255`. Test at
+  `chatStateMachine.node-test.ts:240` asserts it. |
+  | Restart recovery | IMPL | `resumeAllActiveSessions` (`billing.ts:317`,
+  called from `src/index.ts:424`) pauses every ACTIVE row with a fresh grace,
+  then sweeps. After that, heartbeats resume them. Gap: `PAUSED` rows from
+  before the restart keep their old `presenceGraceEndsAt`, which is fine.
+  Running it fire-and-forget while the server already accepts connections is
+  acceptable. |
+  | Billing idempotency | IMPL | Key `chat-tick:<sessionId>:<billedSeconds>` at
+  `billing.ts:200`. |
+  | History preserved | IMPL | Sessions are never deleted. `getMessages` and
+  `markRead` span all sessions between the same (user, astrologer) pair
+  (L259-266, L290-299). Conversation lists are deduped per pair. Test at
+  `chatStateMachine.node-test.ts:244`. |
+
+  ### Defects in the lifecycle
+  - **B1 (BROKEN, race): accept, reject and end can overwrite each other.**
+    - `requireRequestedSessionForAstrologer` (L187-199) reads with the global
+  `prisma`, not `tx`, and sits outside any lock.
+    - The later `tx.chatSession.update` at L222-225 has `where: { id }` only,
+  with no `status: "REQUESTED"` guard. The same applies to `rejectSession` at
+  L236-239.
+    - A sweep TIMEOUT or a user cancel landing between the check and the update
+  can be silently overwritten. An ENDED session can be turned back into ACTIVE,
+  which fails only if the unique index happens to be violated. A reject racing
+  an accept can mark an ACTIVE session ENDED while the reservation stays HELD, a
+  leak. Because `registerSession` is also called, billing would then run on a
+  dead state.
+    - Fix: use `updateMany({ where: { id, status: "REQUESTED" } })` and check
+  `count`.
+  - **B2 (BROKEN, race): `billing.endSession` (L242-264) is not atomic.** It
+  does a `findUnique`, then `releaseReservation`, then an unguarded `update`.
+  Two concurrent ends, or a tick racing an end, can both pass the ENDED check,
+  so `chat:ended` can be emitted twice and the final update can overwrite
+  `endedReason`. `tick` also reads the session before settling, so a tick that
+  started just before an end can still settle a charge after the reservation is
+  released (`reservation` is re-fetched with status HELD, which narrows this but
+  does not close it).
+  - **B3 (PART): the "busy" error is misleading.** If the user is busy, or the
+  astrologer already has any REQUESTED, ACTIVE or PAUSED session from anyone,
+  the second `startSession` fails with the generic "You already have a pending
+  or active chat." (L181). There is no distinct "astrologer busy" error or
+  presence value. `isOnline` is a manual toggle
+  (`chat.astrologer.route.ts:70-82`) plus socket-connection presence; there is
+  no "busy" status.
+  - **B4 (MISS): no guard against a user starting a chat with their own
+  astrologer profile.** `startSession` never compares `profile.userId` with
+  `userId`.
+  - **B5 (PART): the startSession wallet check is advisory.** `startSession`
+  checks the balance but `acceptSession` re-checks it inside the transaction
+  (L212-216). That is fine, but the wallet read at L212 is not locked against
+  concurrent reservations unless `createReservation` handles it; I did not
+  verify that in `wallet.service.ts`.
+
+  ## 2. DB partial unique indexes
+  - **IMPL.** `prisma/migrations/20261111100100_add_chat_session_uniqueness/migr
+  ation.sql:36-42` defines:
+    - `chat_sessions_one_active_per_user` on `(user_id)` WHERE status IN
+  ('REQUESTED','ACTIVE','PAUSED').
+    - `chat_sessions_one_active_per_astrologer` on `(astrologer_profile_id)`
+  with the same WHERE.
+  - The enum labels are added in a separate prior migration,
+  `20261111100000_add_chat_state_machine`, which is correct because Postgres
+  cannot use a new label in the same transaction.
+  - The migration is hand-written, and its header says "NOT APPLIED to any
+  database without explicit approval". **UNK:** I cannot tell whether it is
+  applied to any real DB.
+  - **Schema drift risk.** `prisma/schema/chat.prisma` declares the columns and
+  `@@index`es (lines 41-106) but cannot express the partial indexes. A future
+  `prisma db push` or a migrate diff may drop or ignore them, and nothing in the
+  schema warns about it.
+  - **Data hazard.** The index fails to build if existing rows violate it. The
+  migration contains a verification query but no pre-clean step.
+  - **Service layer.** The service turns P2002 into a 409 (L124-127, L180), but
+  only on `create`. An accept racing a new request is not covered (see B1).
+
+  ## 3. Socket.IO (`src/realtime/socketServer.ts`)
+
+  | Item | Status | Evidence |
+  |---|---|---|
+  | Auth middleware | IMPL | L42-60. Reads `handshake.auth.token`, runs
+  `jwt.verify` with the secret (no `algorithms` option set), then checks
+  `isActive` and `isDeleted` in the DB. An empty or missing secret is refused.
+  The token is a bearer token passed in the handshake, not a cookie. |
+  | Re-validation after connect | MISS | Token expiry and account deactivation
+  are checked only at handshake. A long-lived socket outlives both. The REST
+  cache of 5s (`authMiddleware.ts`) has no socket equivalent. The
+  suspended-astrologer flag is also fixed at connect (L54). |
+  | Room authorization | IMPL | `chat:join` calls `chatService.getSession`
+  (L84), which throws 403 for non-participants via `resolveActor`. Rooms are
+  `chat:<id>` and `astrologer:<profileId>`. The astrologer room is joined only
+  from the server-resolved `astrologerProfileId`, so it cannot be spoofed. |
+  | Unauthorized join | IMPL | Rejected through the ack error. `chat:leave`
+  needs no auth, which is harmless. |
+  | Send and persist | IMPL | `chat:message` (L112-123): `postMessage` persists
+  first, then broadcasts to the room, then acks `(undefined, message)`. |
+  | Status check on send | IMPL | `postMessage` L270 rejects unless the session
+  is ACTIVE. Messages are therefore refused while PAUSED, so a user typing
+  during a reconnect gets an error; the frontend does not queue them. |
+  | Max size and sanitization | PART | Content is cut to `MAX_MESSAGE_LENGTH =
+  2000` (socket L115 and service L272), trimmed, and empty is rejected. There is
+  no HTML or control-character sanitization; content is stored raw, so the
+  frontend must escape it. `maxHttpBufferSize` is not set (default 1 MB). |
+  | Dedupe by client message id | MISS | There is no `clientMessageId` or
+  idempotency key. A retry after a lost ack stores a duplicate. The
+  `ChatMessage` model (`chat.prisma:108-126`) has no such column. |
+  | Ordering | PART | Order is `createdAt` with no tiebreaker (`getMessages`
+  L290-298); same-millisecond messages could reorder. The cursor `{id}` with
+  `skip: 1` is applied on an unstable ordering. |
+  | Pagination | PART | Cursor-based, default 50, reversed (L290-298). `take`
+  has no upper bound on the REST side, but only the default is exposed. The
+  frontend sends `cursor`. |
+  | Missed-message recovery | PART | After a reconnect the client can refetch
+  history over REST. There is no server-side "since last seen" and no
+  auto-rejoin of rooms on reconnect handled by the server. |
+  | Typing | IMPL | `chat:typing` (L125-133) requires a participant and relays
+  with `socket.to(room)`. It is not rate limited and not limited to ACTIVE
+  sessions. |
+  | Read receipts | PART | Messages are marked read only on `chat:join` (L86).
+  There is no `chat:read` event, and no `chat:read` broadcast to the sender, so
+  the other side never sees the receipt live. |
+  | Ack | IMPL | Present on join, message and end. |
+  | Disconnect handling | PART | Only the astrologer side is handled (L145-156):
+  a connection count and a 10s offline grace timer. A participant socket drop
+  does not touch the session; it is detected only when heartbeats lapse (15s
+  `PRESENCE_TIMEOUT_MS` plus up to a 5s tick). |
+  | Heartbeat | IMPL | Client every 10s (`useChatSession.ts:131`), server
+  `recordHeartbeat`, presence timeout 15s. The Socket.IO engine ping settings
+  are left at their defaults (`pingInterval` 25s, `pingTimeout` 20s) and are not
+  configured. |
+  | Multi-tab and device | PART | Any tab's heartbeat counts. Events go to the
+  whole room, so every tab and device sees messages. `astrologerConnections`
+  counts sockets, which is correct. There is no cross-tab dedupe, and a closed
+  tab with a second tab still open will not pause. |
+  | Presence online, offline, busy | PART | The online/offline flag in
+  `AstrologerProfile` is written by the socket (`setAstrologerOnline`, 10s
+  grace) and by manual PATCH `/online`. Busy is not exposed. A server crash
+  leaves `isOnline = true` with no reset on startup, since I found no reset in
+  `resumeAllActiveSessions`. |
+  | Rate limiting on sockets | MISS | REST has `createRateLimiter` at 120/min
+  (`chat.route.ts:19`, `chat.astrologer.route.ts:23`). The socket has none for
+  message, typing, join or heartbeat. A client can flood `chat:message` and
+  create unbounded rows. |
+  | Payload validation | BROKEN | Handlers destructure the first argument in the
+  signature (e.g. L81, L98, L112), before the `try`. A client emitting
+  `chat:join` with no payload or `null` throws inside the async function and
+  rejects the promise. Socket.IO does not catch async handler rejections, and
+  `src/` has no `unhandledRejection` handler (I grepped). On Node 15+ that can
+  crash the whole server process. This is a remote denial-of-service from any
+  authenticated user. |
+  | Multi-instance | BROKEN if scaled | The state is in memory: `timers`,
+  `presence`, `astrologerConnections`, `offlineTimers`. There is no Socket.IO
+  Redis adapter. With more than one instance, room events, presence and billing
+  ticks diverge. Fine for a single Render instance. |
+
+  ### Transport, CORS, cookie and token
+  - **CORS.** Both Express (`src/index.ts:63-77`) and Socket.IO
+  (`socketServer.ts:30-38`) use the shared `isOriginAllowed` in
+  `src/utils/corsOrigins.ts`. IMPL.
+    - A missing `Origin` is allowed (`corsOrigins.ts` returns true when there is
+  no origin). That is normal for non-browser clients, but it means CORS gives
+  no protection against them.
+    - The allow-list contains a hard-coded LAN address,
+  `http://192.168.1.126:8081`, plus regexes that allow any `192.168.*`, `10.*`
+  and `172.16-31.*` origin in production too. That is broader than needed.
+  - **Transports.** Not configured, so the defaults apply (polling then
+  websocket upgrade). Polling with a token in the handshake `auth` works. There
+  is no `allowRequest` or `connectionStateRecovery`.
+  - **Cookies.** Not used for sockets. `credentials: true` is set but the token
+  travels in `handshake.auth`, so the cookie config does not matter here. The
+  frontend uses `withCredentials: true` and takes the token from the auth store
+  each connect (`socket.ts:19`).
+  - **Token lifetime.** The socket has no refresh path beyond reconnecting. A
+  reconnect re-reads the access token, so once it expires a reconnect fails with
+  "Invalid or expired session"; the client has no visible logic to refresh and
+  retry (I did not read the full hook).
+  - **Log leakage.** Logging is minimal, with no message content or tokens:
+    - `[chat.billing]` logs only session ids and errors.
+    - `[socket]` logs only the presence-update error.
+    - The only noisy one is `src/index.ts:68`, `console.warn("✗ CORS rejected
+  origin: ...")`, which logs the origin string.
+    - The unexpected-error handlers (`chat.route.ts:15`,
+  `chat.astrologer.route.ts:17`) log the raw error object, which could include
+  Prisma query details. I found no PII leak.
+
+  ## 4. Other findings
+  - **Free-seconds claim.** In `tick`, `claimFreeSeconds` (`billing.ts:179`)
+  happens before `settleFromReservation`. If settle throws, the free seconds are
+  already consumed and the next tick recomputes from the unchanged
+  `lastBilledAt`, so free seconds could be double-claimed. I did not read
+  `claimFreeSeconds` to see whether it is idempotent, so UNK.
+  - **Silent ack errors.** Socket errors are returned as `err.message` strings
+  in the ack, which can expose internal text such as Prisma errors, because the
+  catch passes any `Error` message.
+  - **Heartbeat load.** Every `chat:heartbeat` and `chat:typing` runs a
+  `resolveActor` DB query with two includes, per event per 10s per participant.
+  - **Resume cost.** `recordHeartbeat` triggers `maybeResumeFromPause` (a DB
+  read) on every heartbeat, even for ACTIVE sessions.
+
+  ## 5. Existing tests
+  - `src/__tests__/routes/chatStateMachine.node-test.ts` (277 lines; DB-backed,
+  auto-skipped without a DB). Covers:
+    - L82 startSession creates REQUESTED with no billing.
+    - L101 accept makes ACTIVE with a reservation, reject claims nothing.
+    - L125 and L148 concurrent-request uniqueness (user and astrologer).
+    - L168 sweep TIMEOUT.
+    - L183 presence pause with zero accrual.
+    - L216 sweep DISCONNECTED.
+    - L244 history across sessions and the one-row-per-conversation list.
+  - `src/modules/chat/__tests__/billingFormula.test.ts`: pure
+  `cumulativeChargeDue` only.
+  - `src/__tests__/routes/freeAllowance.node-test.ts` and
+  `walletReservations.node-test.ts`: adjacent billing and reservation behavior.
+  - `src/__tests__/routes/dailyChatSession.node-test.ts`: the AI Inner Voice
+  timer, unrelated.
+  - **Not covered by any test:**
+    - socket auth and room authorization;
+    - `chat:message` ack and persistence over a real socket;
+    - the accept/reject/end races (B1, B2);
+    - restart recovery (`resumeAllActiveSessions`);
+    - BALANCE_EXHAUSTED auto-end;
+    - heartbeat-driven resume;
+    - rate limiting, payload validation, dedupe, typing and read receipts;
+    - the REST routes themselves.
+    Scripts: `test:chat-state-machine`, `test:billing-formula`
+  (`package.json:47-48`).
+
+  ## 6. Priority list
+  1. The unguarded status updates in accept, reject and end (B1, B2).
+  2. The socket handler crash on a missing payload, because there is no
+  `unhandledRejection` handler.
+  3. Socket rate limiting and client message ids for dedupe.
+  4. Deployment: confirm the partial-index migration is applied and the schema
+  is protected against drift.
+  5. Token expiry and account deactivation are not rechecked after connect.
+  6. A busy/offline check and a distinct error on request, and an explicit
+  CANCELLED reason.
+
+● The chat and socket report is in. Its most serious claims are the socket crash
+  on a missing payload and the unguarded status updates, so I'll check those in
+  the code while the other three audits finish.
+
+  Searched for 1 pattern, read 2 files (ctrl+o to expand)
+
+● Agent "Audit chat lifecycle and sockets" finished · 1m 51s
+
+● Two of the chat audit's main findings hold up in the code:
+
+  - Accept and reject can overwrite a concurrent end or timeout.
+    requireRequestedSessionForAstrologer reads through the global prisma client,
+    not tx, at chat.service.ts:188. The updates at chat.service.ts:222 and :236
+    filter on id only, with no status: "REQUESTED" guard.
+  - A malformed socket event can crash the server. The chat:join,
+    chat:heartbeat, chat:message, chat:typing and chat:end handlers destructure
+    their payload in the async function signature (socketServer.ts:81, :98,
+    :112, :125, :135), outside the try. A client sending no payload causes an
+    unhandled rejection. A grep for unhandledRejection and uncaughtException in
+    backend/src finds nothing. I haven't run it, but on current Node that should
+    take the process down, so any authenticated user could do it.
+
+  Still running: the billing and wallet audit, the frontend UX audit, and the
+  security and infrastructure audit. I'll write the full Phase 2 gap report once
+  they return.
+
+✻ Cooked for 13s · done 10:37 PM
+
+› Message from Explore
+  READ-ONLY audit of the frontend in
+  C:\Users\dell\Desktop\Coding\avatar-astro\frontend\src. Nothing was edited.
+  All paths below are relative to that `src` folder.
+
+  Scope limits:
+  - I read the chat, wallet, astrologer-workspace, public astrologer pages and
+  admin panel code in full.
+  - I did not read the backend. Server-side behaviour (billing ticks, presence,
+  room rejoin) is marked UNKNOWN where the frontend can't show it.
+  - I did not run the app or the tests.
+
+  Shorthand: CW = features/chat/components/ChatWindow.tsx. UCS =
+  features/chat/hooks/useChatSession.ts. ADL =
+  features/astrologer/workspace/AstrologerDashboardLayout.tsx.
+
+  ## Top findings (severity order)
+  1. **BROKEN: the astrologer online toggle does not refresh.**
+  `useSetAstrologerOnline`
+  (features/chat/hooks/useAstrologerConversations.ts:41-46) has only `onError`
+  and no `onSuccess`. It never invalidates `ASTROLOGER_PROFILE_QUERY_KEY` or
+  updates the cache. ADL:248, 288 and 379 read `profile.isOnline` from a query
+  with `staleTime` 30s (hooks/useAstrologerWorkspace.ts:24). The switch can look
+  unchanged after a click.
+  2. **MISSING: incoming-request popup, sound and browser notification.**
+     - Grep found no `Notification`, `new Audio` or `.play` in features/chat or
+  the astrologer workspace.
+     - Only `AstrologerChatPage` (via `useAstrologerConversations`) listens for
+  `chat:new-session`, and it only invalidates a list query. If the astrologer is
+  on the Profile page, or any other tab, they get no signal.
+     - ADL does not mount that hook.
+  3. **MISSING: socket connection-state handling.**
+     - features/chat/lib/socket.ts and UCS register no `connect`, `disconnect`,
+  `connect_error` or `reconnect` handler (grep confirms none in features/chat).
+     - `chat:join` is emitted once per mount (UCS:75). After a socket.io
+  reconnect the client does not re-join the room and does not refetch messages
+  or session state. Whether the server auto-rejoins is UNKNOWN.
+     - The "Reconnecting…" UI (CW:188-192, 271-275) is driven only by a server
+  `chat:paused` event, never by the client's own socket state. If the client's
+  own link drops, the UI can still show ACTIVE.
+  4. **MISSING: no end-chat confirmation and no price confirmation before
+  chat.**
+     - CW:203-209 `onClick={endChat}` ends the chat immediately.
+     - StartChatButton.tsx:425-450 goes from `getEligibility` straight to
+  `startSession` with no dialog.
+  5. **MISSING: no session summary or receipt.**
+     - The ENDED panel (CW:314-334) shows only the end-reason text and a "Chat
+  again" or recharge button.
+     - Duration and amount charged are not shown, though `ChatSession` has
+  `billedSeconds` and `amountPaise` (api/chatApi.ts:229-231).
+  6. **PARTIAL (security-relevant): recharge is a mock.**
+     - features/wallet/hooks/useWallet.ts:21-24 has the client call
+  `createRechargeOrder` and then `confirmRechargeOrder` itself.
+     - RechargeModal.tsx:108-110 says "Payments are simulated". The server must
+  reject client-driven confirms before production.
+  7. **Admin: no refund, dispute, wallet-adjustment, commission/payout,
+  per-astrologer rate or consultation-ledger UI exists.** Details are in the
+  Superadmin section.
+
+  ## Customer side
+
+  | Item | Status | Evidence |
+  |---|---|---|
+  | Astrologer listing | IMPLEMENTED | pages/Astrologers.tsx:61 (search,
+  aria-label), :111 online filter, :129 loader, :133 aria-live count, :144 empty
+  state. Data comes from `publicAstrologerApi.list`
+  (features/astrologer/public/api.ts:14). |
+  | Astrologer profile | IMPLEMENTED | pages/AstrologerProfile.tsx:25-144.
+  Sidebar at :124 shows `PriceLine` and `ConsultButtons`. Loader at :32. |
+  | Pre-chat price confirmation | MISSING | The price is only displayed
+  passively (components/astrologers/AstrologerCard.tsx:36-45). There is no
+  confirm step before `startSession` (StartChatButton.tsx:443). |
+  | Free allowance display, pre-chat | MISSING |
+  `ChatEligibility.freeAllowanceRemainingSeconds`, `freeLimitSeconds` and
+  `walletBalancePaise` are fetched (api/chatApi.ts:249-257) but never shown
+  before starting. Only `canStart` and `minimumRequiredPaise` are used
+  (StartChatButton.tsx:437-439). The only user-facing "7-minute free" text is on
+  the astrologer's own pricing card (AstrologerDashboardPage.tsx:315). |
+  | Free allowance, in session | PARTIAL | CW:197-199 shows "{n}s free left" in
+  seconds only, from `chat:timer`. |
+  | Wallet balance in chat | IMPLEMENTED | CW:196 shows `balancePaise` from the
+  timer event, only when `isPaid`. |
+  | Wallet page | IMPLEMENTED | features/wallet/pages/WalletPage.tsx:137-198.
+  Stat cards for total, purchased, promotional and reserved; ledger with
+  allocations; loading, error and empty states. |
+  | Wallet sync | PARTIAL | `useWallet` has `staleTime` 10s (useWallet.ts:11).
+  Recharge invalidates `WALLET_QUERY_KEY` (:25). `chat:timer` balance is held
+  only in local state (UCS:87). Nothing invalidates the wallet query when a chat
+  ends, so WalletPage can be stale until it refetches. The Navbar has no
+  balance display (grep of Navbar.tsx for "wallet" or "balance" found nothing).
+  |
+  | Affordable duration estimate | PARTIAL | Only the live `remainingSeconds`
+  from the server (CW:195). There is no pre-chat estimate such as "balance ÷
+  rate = N minutes". |
+  | Waiting-for-acceptance UI | PARTIAL | CW:279-290 has a spinner, "Waiting for
+  {peer}…" and Cancel. Cancel calls `endChat` over the socket (CW:285). |
+  | Request countdown | MISSING | `requestExpiresAt` exists in the type
+  (api/chatApi.ts:228) but is never rendered. The TIMEOUT end reason has a label
+  only (CW:15). |
+  | Active timer | IMPLEMENTED | UCS:39-59 smooths the 5s server ticks into a 1s
+  local countdown. Rendered at CW:193-201. |
+  | Free → paid transition | MISSING/UNKNOWN | No UI event or message when the
+  free allowance ends and billing starts. `FREE_LIMIT_REACHED` just ends the
+  chat (CW:14). The `FREE_TRIAL` and `COMPLIMENTARY` session types are never
+  used in the UI. |
+  | Low-balance warning | PARTIAL | UCS:90-93 shows a toast only ("Less than a
+  minute left"). There is no inline banner, no recharge CTA in the toast, and no
+  way to top up mid-chat. |
+  | Recharge CTA | PARTIAL | RechargeModal is opened from the pre-chat 403 path
+  (StartChatButton.tsx:437-440) and from the ENDED state after
+  `BALANCE_EXHAUSTED` (CW:320, 331). It is not available during an active chat.
+  |
+  | Reconnecting/paused state | PARTIAL | See top finding 3. `pauseGraceEndsAt`
+  is stored (UCS:44, 102) and returned (UCS:196) but never rendered, so there is
+  no grace countdown. |
+  | Connection-interrupted state | MISSING | No client-side offline or
+  `navigator.onLine` handling. Grep found nothing. |
+  | Send failure/pending | PARTIAL | `sendMessage` only toasts on an ack error
+  (UCS:152-154). There is no optimistic or pending state and no retry. The draft
+  is cleared immediately (CW:94). |
+  | Message dedupe | IMPLEMENTED | UCS:81 dedupes by `id`. |
+  | Resync/pagination | PARTIAL | `getMessages` accepts a cursor
+  (api/chatApi.ts:290) but is never called with one. Only the first page loads,
+  so long histories are truncated. There is no refetch on reconnect. |
+  | Token handling | PARTIAL | The `auth` callback reads `accessToken` from the
+  store on each (re)connect (socket.ts:22). There is no `connect_error` handler
+  for an expired token, so a failed handshake is silent. The socket is
+  disconnected on logout (store/authStore.ts:66). |
+  | End confirmation | MISSING | See top finding 4. |
+  | Session summary/receipt | MISSING | See top finding 5. |
+  | Chat history/list | IMPLEMENTED |
+  features/chat/pages/UserConversationsPage.tsx:12-112. Search, split pane,
+  empty state ("No chats yet" plus a browse link, :56-70), loader. The route is
+  /dashboard/chats (App.tsx:880-881). |
+  | Message rendering safety | IMPLEMENTED | CW:259 renders `{m.content}` as a
+  React text node. No `dangerouslySetInnerHTML` in the chat code. The only use
+  in the repo is components/ui/chart.tsx:70 (shadcn theme CSS). |
+  | Error state in chat | PARTIAL | CW:120-126 handles loading only. UCS returns
+  `error` (:189) but CW never destructures or renders it, so a failed
+  `getSession` (404/403) shows an empty window with the default REQUESTED state.
+  |
+  | Mobile responsiveness | IMPLEMENTED | List/chat swap below `lg`
+  (UserConversationsPage.tsx:32, 98), a Back button with `md:hidden` (CW:160),
+  bubbles `max-w-[75%]`. Gap: the Back button is hidden at md (768px) while the
+  list is still hidden below lg (1024px), so there is no back control between
+  768 and 1023px. |
+  | Accessibility | PARTIAL | Good: icon `aria-hidden`, `aria-label`s on Send
+  and Back, `aria-live` on the timer and Reconnecting badge. Gaps: the message
+  list has no `role="log"` or live region, so incoming messages are not
+  announced. The compose input has no label (placeholder only, CW:337-352). The
+  End button has no confirm dialog. The `aria-live` timer re-announces every
+  second. |
+  | Keyboard | PARTIAL | Enter sends. Shift+Enter is blocked (`preventDefault`,
+  CW:345-348), so multiline is impossible. |
+  | Typing indicator | IMPLEMENTED | CW:182. The typing emit is not debounced
+  and `setTyping(true)` fires on every keystroke (CW:341). |
+
+  ## Astrologer side
+
+  | Item | Status | Evidence |
+  |---|---|---|
+  | Dashboard layout | IMPLEMENTED | ADL:126-462. Loading (:154), denied
+  (:162-175) and error/retry (:177) states. It mirrors the customer
+  DashboardLayout. |
+  | Gating for unapproved/suspended | PARTIAL | A 403 from `requireAstrologer`
+  shows "Astrologer access required" (useAstrologerWorkspace.ts:26, ADL:162). A
+  suspended astrologer sees a banner on the profile page
+  (AstrologerDashboardPage.tsx:224-229), and publishing is disabled while
+  suspended (:258). Whether the backend 403s for suspended users is UNKNOWN. The
+  chat page itself shows no suspension warning and the online toggle is not
+  disabled when suspended. |
+  | Nested routes / Outlet context | IMPLEMENTED | App.tsx:900-905 declares
+  /astrologer-dashboard (index), chat and chat/:sessionId. ADL:453/456 passes `{
+  profile }` and exports `AstrologerOutletContext`. Consumed at
+  AstrologerChatPage.tsx:15 (never used) and AstrologerDashboardPage.tsx:214. |
+  | Online toggle vs effective presence | PARTIAL/BROKEN | ADL:74-112 shows only
+  the stored `isOnline`. There is no concept of effective presence (socket
+  connected, busy, in-session). The public side uses `a.online`
+  (AstrologerCard.tsx:29-33). See top finding 1 for the stale-cache bug. |
+  | Busy state | MISSING | No "busy / in chat" indicator on the astrologer or
+  public side. The only statuses are Online and Offline. |
+  | Incoming request popup, sound, browser notification | MISSING | See top
+  finding 2. The only signal is a list row "New request — tap to respond"
+  (AstrologerChatPage.tsx:58-59) and a refetch. |
+  | Accept / reject | IMPLEMENTED | CW:292-313. `acceptRequest` and
+  `rejectRequest` use REST (UCS:173-184). `handleAccept` swallows errors
+  silently (CW:130-133). `handleReject` has no catch, so an error becomes an
+  unhandled rejection. |
+  | Request countdown | MISSING | Same as the customer side. |
+  | Chat UI / timer | IMPLEMENTED | The same `ChatWindow` with
+  `role="ASTROLOGER"` (AstrologerChatPage.tsx:77). The timer pill shows `isPaid
+  && balancePaise`, which is the customer's wallet balance. Whether the server
+  sends the user's balance to the astrologer is UNKNOWN, and it may be a privacy
+  leak. |
+  | Reconnect states | PARTIAL | Same as the customer side. |
+  | Consultation history | PARTIAL | The conversation list gives per-chat
+  history (AstrologerChatPage.tsx:46-70). There is no history of billed duration
+  or amount per consultation. |
+  | Earnings summary | MISSING | No earnings UI. NAV is only Profile and Chats
+  (ADL:30-33). |
+  | Report/block customer | MISSING | No report or block UI anywhere in
+  features/chat or the workspace. |
+  | Multi-tab | MISSING | No BroadcastChannel or tab-coordination (grep). Two
+  tabs would each open `useChatSession` for the same session and both heartbeat.
+  |
+  | Responsive sidebar/drawer | PARTIAL | A collapsible desktop sidebar
+  persisted in localStorage (ADL:45-59, 193) and a mobile drawer (:324-398). The
+  closed drawer only has `pointer-events-none` and `-translate-x-full`. It is
+  not `inert` or `aria-hidden`, so its links remain keyboard-focusable. It has
+  no focus trap, no Escape handler, and no `role="dialog"`. |
+  | Pricing editor | IMPLEMENTED | AstrologerDashboardPage.tsx:269-330. A null
+  price means a free chat with a 7-minute allowance (comment at :271-273). |
+  | Logout | IMPLEMENTED | The desktop version has a confirm dialog
+  (ADL:258-284, 292-317). The mobile drawer logout (:388-395) has no confirm,
+  which is inconsistent. |
+
+  ## Superadmin (features/admin)
+
+  Admin nav is in features/admin/components/AdminSidebar.tsx:17-59. Routes are
+  in App.tsx:629-860.
+
+  | Item | Status | Evidence |
+  |---|---|---|
+  | Consultations / chat sessions list | MISSING | No admin page lists
+  `ChatSession`s. `chat-escalations` (pages/ChatEscalationsPage.tsx) is for the
+  AI "Inner Voice" bot's personal-contact and identity-probe flags, not
+  astrologer consultations. |
+  | Billing / reconciliation | PARTIAL | pages/BillingFailuresPage.tsx:65
+  "Billing Failures & Reconciliation". It lists stuck AI-tool executions and
+  stuck wallet reservations (including chat lookahead holds) and offers Release
+  (:59, 85, 106). It has no ledger-vs-gateway reconciliation and no
+  session-level view. |
+  | Wallet adjustments | MISSING | The `ADJUSTMENT` and `REFUND` reasons exist
+  only as labels in the customer wallet UI (WalletPage.tsx:125-126). No admin
+  credit/debit UI. CustomerDetailPage.tsx has no wallet section (grep found
+  none). |
+  | Refunds, disputes | MISSING | No matches for refund or dispute in
+  features/admin except BillingFailures "release". |
+  | Astrologer suspension | IMPLEMENTED |
+  AstrologerApplicationDetailPage.tsx:93-94, 170-180 (Suspend with reason,
+  Reinstate); the overview filter "SUSPENDED" is at
+  AstrologersOverviewPage.tsx:15. |
+  | Complimentary config | IMPLEMENTED | Per astrologer: grant with a
+  max-seconds cap or revoke (AstrologerApplicationDetailPage.tsx:47-60, 110,
+  153-166; api/astrologerAdminApi.ts:70-75). There is no global free-allowance
+  (the "7-minute") config. The 7 minutes is hard-coded in the UI text at
+  AstrologerDashboardPage.tsx:315, so its source of truth is UNKNOWN. |
+  | Rates | PARTIAL | The astrologer sets their own price
+  (AstrologerDashboardPage.tsx:269). No admin override, min/max, or rate
+  approval UI. |
+  | Commission / payout | MISSING | No matches in features/admin. |
+  | Audit logs | PARTIAL | pages/SettingsAuditPage.tsx (routed at
+  admin/settings) and the sidebar link "Admin activity / audit"
+  (AdminSidebar.tsx:29). I did not verify whether chat, billing or astrologer
+  actions are covered. |
+  | Tool pricing | IMPLEMENTED (AI tools, not astrologer) |
+  pages/ToolPricingPage.tsx. Payments/plans are in CatalogPages.tsx
+  (`PaymentsAdminPage`). |
+  | Astrologer admin | IMPLEMENTED | Overview, Applications, Application detail,
+  Settings (document scanning, specialties, document requirements) at
+  App.tsx:792-820. |
+
+  ## Duplicate / obsolete / questionable
+  - **Two chat entry routes.**
+    - /chat/:sessionId (App.tsx:908, `UserChatPage`) is a standalone page.
+    - /dashboard/chats/:sessionId (`UserConversationsPage`) is the split pane
+  and the one `StartChatButton` navigates to (StartChatButton.tsx:444, 457).
+    - `ChatWindow`'s default `basePath="/chat"` is only used by the standalone
+  route. `UserChatPage` looks obsolete; it is probably only reachable by old
+  links.
+  - **Duplicated list item UI.** `UserConversationsPage` and
+  `AstrologerChatPage` repeat the same split-pane list, empty and loading
+  markup. Both use the shared `ConversationListItem`, but the shell is
+  copy-pasted.
+  - **Duplicated logout dialog** in ADL (desktop expanded at :258 and collapsed
+  at :292).
+  - **Duplicated hooks.** `useConversations.ts` and
+  `useAstrologerConversations.ts` are near-duplicates. Their socket event lists
+  also differ: the user hook listens to `chat:ended` while the astrologer hook
+  listens to `chat:session-ended`.
+  - **Dead exports/state.** `pauseGraceEndsAt` (UCS:44, 196) is never consumed.
+  `useOutletContext` in AstrologerChatPage.tsx:15 is called and ignored.
+  `AstrologerOutletContext` is unused in chat.
+  - **Obsolete public flags.** `CONSULTATION_ENABLED = false` in
+  data/astrologers.ts:81 gates `VoiceConsultation`/Call; the Call button is
+  never shown. `components/VoiceConsultation.tsx` and
+  `hooks/useConsultationGuard.ts` are an AI voice feature and unrelated to
+  astrologer consultations despite the name.
+  - **Legacy admin pages.** `LegacyShell`-wrapped pages (Puja, Chadhawa,
+  ShopCategories, ShopProducts, DevotionLibrary at App.tsx:826-860) alongside
+  newer panel equivalents (`ShopAdminPage`, `DevotionAdminPage`). Possible
+  duplicates; I did not verify.
+  - **Data mismatch.** data/astrologers.ts keeps a static demo `Astrologer`
+  array with a `demo` flag (StartChatButton.tsx:412 handles it). The public API
+  returns the same type.
+
+  ## Bottom line
+  The core chat data path works: eligibility check, session create, socket join,
+  deduped messages, a smoothed timer, and a paused/ended UI. The gaps are
+  around it: no client socket-state handling, no resync, no notification layer
+  for astrologers, no confirm/estimate/receipt UX, and an online-toggle cache
+  bug. The admin side has no money-operations tooling (refund, adjustment,
+  payout, dispute) and no consultation view.
+
+● The frontend audit is in. Two audits are still running, billing and wallet
+  plus security and infrastructure. I'll write the Phase 2 report once they
+  finish.
+
+✻ Churned for 2s · done 10:37 PM
+
+● Agent "Audit frontend chat UX" finished · 2m 2s
+
+› Message from Explore
+  AUDIT: wallet and chat billing (read-only, static analysis only; I executed no
+  code and ran no tests)
+
+  Paths are relative to C:\Users\dell\Desktop\Coding\avatar-astro\backend.
+  Status values: IMPLEMENTED, PARTIAL, MISSING, BROKEN, UNKNOWN.
+
+  ## Top defects (highest severity first)
+
+  1. **BROKEN: no final settlement on any terminal path.** `endSession`
+  (src/modules/chat/billing.ts:242-264) only releases the reservation and sets
+  ENDED. It never bills the time since the last tick (`lastBilledAt`).
+     - It runs for USER_ENDED, ASTROLOGER_ENDED, DISCONNECTED, TIMEOUT, and the
+  exhausted and free-limit paths.
+     - Up to `BILLING_TICK_MS` = 5s (chat.constants.ts:12) of service is
+  unbilled on every user or astrologer end.
+     - A chat of 1s is billed 0, not 12 paise.
+     - Tests don't catch this because they call `tick` directly after
+  back-dating `lastBilledAt` (freeAllowance.node-test.ts:138-165).
+
+  2. **BROKEN (by inspection; real-timer behaviour UNKNOWN): systematic
+  under-billing from tick drift.**
+     - The tick sets `lastBilledAt: now` after its DB work (billing.ts:192, 218,
+  238).
+     - The next `setInterval` fire is 5000ms after the previous fire, not after
+  the previous tick finished.
+     - So `elapsedSeconds = Math.floor(...)` (billing.ts:138) will often be 4
+  rather than 5, depending on DB latency.
+     - The lost fraction is never recovered because `lastBilledAt` is set to
+  `now`, not advanced by whole seconds.
+     - Drift is likely on a remote DB such as Neon. The same applies to the
+  free-trial and complimentary branch (billing.ts:149, 158).
+
+  3. **BROKEN: unlimited free chat for a zero-balance user with a fresh 60s
+  allowance.**
+     - `minimumPaidBalanceRequired` returns 0 when 60 free seconds remain
+  (chat.service.ts:28-32).
+     - `acceptSession` then calls `createReservation(...)` and ignores the
+  result (chat.service.ts:218).
+     - With 0 available balance, `createReservation` returns null
+  (wallet.service.ts:316).
+     - Every `tick` then hits "no HELD CHAT_LOOKAHEAD reservation ... skipping
+  tick" and returns (billing.ts:170-175). This is before `claimFreeSeconds`.
+     - The session is never billed, the allowance is never consumed, and the
+  session is never ended.
+
+  4. **BROKEN: the tick is not atomic.**
+     - `claimFreeSeconds` (billing.ts:179) and `settleFromReservation`
+  (billing.ts:201) commit in their own transactions.
+     - `chatSession.update` (billing.ts:238) is separate.
+     - If anything throws between them (for example `topUpReservation` or
+  `getOrCreateWallet`), `session.amountPaise` and `freeSecondsUsed` stay stale.
+     - The next tick uses a different idempotency key
+  (`chat-tick:${sessionId}:${billedSeconds}`, billing.ts:200), so it
+  double-charges the previously settled amount.
+     - The free seconds claimed in the failed tick are also lost.
+
+  5. **BROKEN: mock recharge confirm can double-credit.**
+     - `confirmRechargeOrder` (payment.service.ts:203-223) reads the status,
+  then updates the order, then calls `credit()` as three separate
+  non-transactional steps.
+     - `credit()` is called without an idempotency key
+  (wallet.service.ts:454-458).
+     - Two concurrent confirms can both see CREATED and both credit.
+     - A crash between the order update and the credit leaves the order SUCCESS
+  with no coins.
+
+  6. **PARTIAL: mock payments are reachable outside production.**
+     - The only guard is `NODE_ENV === "production"`
+  (payment.service.ts:180-184), with no other flag.
+     - The mounted `/api/wallet/recharge/order` and `/recharge/confirm` routes
+  (wallet.route.ts:278-295; index.ts:321) let any logged-in user mint up to
+  ₹10,000 per order with no payment proof.
+     - This is exposed on any staging deploy where `NODE_ENV` is unset or not
+  "production".
+     - There is no real gateway, no webhook, no signature verification and no
+  Razorpay code. `PaymentProvider.RAZORPAY` exists only as an enum value
+  (payment.prisma:22-25).
+
+  7. **BROKEN: settled reservations stay HELD.**
+     - `settleFromReservation` only zeroes `amountPaise`
+  (wallet.service.ts:406). It never sets SETTLED or `resolvedAt`.
+     - Every successful tool execution leaves a HELD, 0-amount reservation row.
+     - Each of these then appears as "stuck" in the admin billing-failures list
+  after 5 minutes (billingFailures.route.ts:52-57).
+     - Only `releaseReservation` sets a final status.
+
+  ## Computed charges at 7 coins/min (700 paise/min = 100 paise per coin)
+
+  Formula, at billing.ts:32-35:
+  ```
+  if (billableSecondsCumulative <= 0) return 0;
+  return Math.ceil((billableSecondsCumulative * ratePerMinutePaise) / 60);
+  ```
+  The tick applies it as `chargeDue = cumulativeChargeDue(billedSeconds -
+  freeSecondsUsed, rate); newCharge = chargeDue - session.amountPaise`
+  (billing.ts:186-187).
+
+  **Formula only, fully paid (free allowance already used):**
+
+  | Seconds | Math | Paise | Coins |
+  |---|---|---|---|
+  | 1 | ceil(700/60) = ceil(11.67) | 12 | 0.12 |
+  | 13 | ceil(9100/60) = ceil(151.67) | 152 | 1.52 |
+  | 30 | ceil(21000/60) | 350 | 3.50 |
+  | 43 | ceil(30100/60) = ceil(501.67) | 502 | 5.02 |
+  | 60 | ceil(42000/60) | 700 | 7.00 |
+
+  These match the unit test (billingFormula.test.ts:11-16) and the back-dated
+  tick test (freeAllowance.node-test.ts:138-165).
+
+  **Actually charged by the live scheduler (by inspection):** billing only
+  happens on 5s ticks, and `endSession` bills no residual. Assuming ticks land
+  exactly at 5s multiples (no drift, see defect 2) and the chat ends at the
+  stated moment:
+  - **1s:** 0 paise. No tick has fired.
+  - **13s:** the last tick was at 10s, so 117 paise (ceil(116.67)). The
+  remaining 3s is unbilled.
+  - **30s:** 350 paise if the 30s tick has fired, otherwise the value for the
+  25s tick (292).
+  - **43s:** the 40s tick gives 467 paise (ceil(466.67)).
+  - **60s:** 700 paise if the 60s tick has fired.
+  - With drift, each of these is lower.
+
+  **Free-allowance effect (fresh user, 60s global allowance):**
+  - `claimFreeSeconds(userId, elapsedSeconds)` runs before the charge
+  (billing.ts:179).
+  - `billableSeconds = billedSeconds - freeSecondsUsed` is 0 until total elapsed
+  exceeds 60s.
+  - So at 1, 13, 30, 43 and 60s the charge is 0 paise.
+  - Each second after 60 is charged as above, counting from 0.
+
+  ## Findings by topic
+
+  **Wallet creation and signup bonus**
+  - IMPLEMENTED: `getOrCreateWallet` is a lazy upsert that catches P2002
+  (wallet.service.ts:41-54).
+  - IMPLEMENTED: the bonus is granted once. `INSERT ... ON CONFLICT (user_id) DO
+  NOTHING RETURNING id` (signupBonus.service.ts:134-141) sits on a unique index
+  (migration 20261110140000, line 77).
+    - The credit is 5000 paise PROMOTIONAL with idempotency key
+  `signup-bonus:${userId}` (signupBonus.service.ts:152-164).
+    - It runs inside the activation transaction at auth.service.ts:321 (email
+  OTP), :389 (phone verify) and :543 (Google new user).
+  - PARTIAL: the bonus function reads the wallet via `upsert` and does not lock
+  it (signupBonus.service.ts:143-145). This is low risk for a new account.
+  - UNKNOWN: whether farming via multiple accounts is mitigated. I saw no device
+  or phone dedupe beyond the existing phone-uniqueness conflict.
+
+  **Integer subunits**
+  - IMPLEMENTED: all money columns are `Int` paise (payment.prisma:52-60), and
+  rate is `pricePerMinute * 100` (chat.service.ts:109, 156).
+  - IMPLEMENTED: the formula uses `Math.ceil` on integers.
+
+  **Promo-before-purchased spend order**
+  - IMPLEMENTED: `planDebitAllocations` spends `Math.min(promo, amount)` first
+  (wallet.service.ts:106-113). It is used by both `debitWithAllocations` and
+  `settleFromReservation`.
+  - Test: walletLedger.node-test.ts:79.
+
+  **Ledger allocation**
+  - IMPLEMENTED: `WalletLedgerAllocation` rows are written on every credit,
+  debit and refund (wallet.service.ts:164, 218, 278). There is a DB check
+  `amount_paise > 0` (migration 20261110140000, line 67).
+  - PARTIAL: the equality "sum of allocations = transaction amount" is enforced
+  only in the service layer, not by the DB (payment.prisma:73-75).
+
+  **Row locking**
+  - IMPLEMENTED: `lockWallet` uses `SELECT ... FOR UPDATE`
+  (wallet.service.ts:81-101). It is used in credit, debit, refund, create,
+  top-up, settle and release.
+  - IMPLEMENTED: `claimFreeSeconds` also uses `FOR UPDATE`
+  (freeAllowance.service.ts:86-98).
+  - Mutations use raw `UPDATE` with values computed from the locked row.
+  - Test: walletLedger.node-test.ts:133 (concurrent debits).
+
+  **Reservations**
+  - Create: IMPLEMENTED, degrades to the available amount
+  (wallet.service.ts:303-325).
+  - Top-up: IMPLEMENTED (wallet.service.ts:333-352). The target is
+  `ceil(30*rate/60)` each tick (billing.ts:224-225).
+  - Consume: IMPLEMENTED (wallet.service.ts:362-424). It draws from the hold
+  first, then from unreserved balance, and returns `exhausted`.
+  - Release: IMPLEMENTED and idempotent (wallet.service.ts:432-447).
+  `endSession` calls it (billing.ts:251-254).
+  - Stale cleanup: MISSING as automation. The only mechanism is the superadmin
+  manual release (billingFailures.route.ts:99-113).
+    - A crash after `reserveToolExecution` and before settle or release leaves
+  the hold indefinitely.
+    - `reserveToolExecution` has a race for the same `executionId`. Both calls
+  reserve, and the second `toolExecution.create` throws on the unique key,
+  leaking a HELD reservation (toolBilling.service.ts:66-72).
+  - BROKEN: double accept can leak a reservation (see "Chat flow" below).
+
+  **Double-spend between chat and premium tools**
+  - IMPLEMENTED: tool `createReservation` uses `balance - reserved`, which
+  includes the chat hold (wallet.service.ts:314; toolBilling.service.ts:67). The
+  chat top-up uses the same availability.
+  - PARTIAL: tool reservations are all-or-nothing (toolBilling.service.ts:55,
+  68).
+  - Tools wired: index.ts:347 (TTS), gemstone.route.ts:79,
+  interpretationController.ts:29, 97, and chartChatController.ts:35.
+  - Test: toolBilling.node-test.ts covers reserve, settle, release and retry. It
+  has no concurrent chat-plus-tool test.
+
+  **Global 60s free allowance**
+  - IMPLEMENTED: `chat_free_allowances` has a default of 60 and CHECK
+  constraints for non-negative and `consumed <= total` (migration
+  20261112090000, lines 44-57).
+  - IMPLEMENTED: `claimFreeSeconds` is atomic and clamps
+  (freeAllowance.service.ts:78-100).
+  - PARTIAL: the claim is not idempotent and sits outside the tick's
+  transaction. Overlapping ticks or the failure in defect 4 can double-claim or
+  lose free seconds.
+  - Test: freeAllowance.node-test.ts:102.
+
+  **Complimentary astrologers**
+  - IMPLEMENTED: the max duration comes from `profile.complimentaryMaxSeconds`,
+  then the PlatformSetting `chat.complimentaryMaxSeconds`, then 15 minutes
+  (chat.service.ts:18-23; chat.constants.ts:46).
+  - It is snapshotted into `freeLimitSeconds` (chat.service.ts:149).
+  - The tick caps at the limit and ends with FREE_LIMIT_REACHED
+  (billing.ts:141-152).
+  - It never touches the wallet or the allowance.
+  - Test: freeAllowance.node-test.ts:197.
+
+  **Rate snapshot**
+  - IMPLEMENTED at session request creation (chat.service.ts:156, 171;
+  chat.prisma:53-55).
+  - It is taken at request time, not at activation. A price change between
+  request and accept (up to 60s) is not picked up, and `acceptSession` does not
+  refresh it. If "at activation" is required, this is PARTIAL.
+
+  **Billing tick scheduler**
+  - Duplicate-tick protection: PARTIAL / MISSING.
+    - `registerSession` guards against duplicate timers within one process
+  (billing.ts:54).
+    - There is no per-session lock, CAS on `lastBilledAt`, or in-flight flag.
+    - `setInterval` can overlap if a tick takes longer than 5s. The wallet
+  charge is protected by the idempotency key, but free-claim and session updates
+  are not.
+  - Ownership: MISSING.
+    - There is no lease and no instance ownership.
+    - Presence and timers are per-process (`presence` Map at billing.ts:75,
+  `timers` Map at billing.ts:37).
+    - Multi-instance deployment would give wrong pauses and duplicate timers.
+  Instance count is UNKNOWN.
+  - Crash recovery: PARTIAL.
+    - On startup, `resumeAllActiveSessions` pauses every ACTIVE session and
+  sweeps (billing.ts:317-339; called at index.ts:424).
+    - It resumes only after both sides send fresh heartbeats
+  (billing.ts:107-122).
+    - Time since the last tick before the crash is never billed.
+  - Paused intervals: IMPLEMENTED.
+    - `pauseSession` unregisters the timer and persists `pausedAt` and
+  `presenceGraceEndsAt` (billing.ts:95-104).
+    - Resume resets `lastBilledAt` to now (billing.ts:117).
+    - The sweep ends expired pauses with DISCONNECTED and expired requests with
+  TIMEOUT (billing.ts:282-300, interval 10s).
+    - The sweep is only started by `resumeAllActiveSessions` (billing.ts:334).
+  - Cumulative ceil and delta-only debit: IMPLEMENTED (billing.ts:186-187).
+
+  **Chat flow**
+  - PARTIAL: `acceptSession` has a check-then-act race.
+  `requireRequestedSessionForAstrologer` reads via `prisma`, not the transaction
+  (chat.service.ts:207), and the update has no status guard
+  (chat.service.ts:222). A double-click or a race with expiry can create two
+  CHAT_LOOKAHEAD reservations. `endSession` releases only one via `findFirst`
+  (billing.ts:251), leaking the other hold.
+  - PARTIAL: `endSession` is read-then-update with no atomic guard
+  (billing.ts:245-257). A tick running concurrently can settle after the
+  release, falling through to a direct wallet draw.
+  - Test: chatStateMachine.node-test.ts:101.
+
+  **Exact cutoff on exhaustion**
+  - PARTIAL.
+    - `settleFromReservation` returns `exhausted`, and the capped duration is
+  `floor(amount*60/rate)` plus free seconds (billing.ts:208-221).
+    - Detection is only at 5s tick granularity, so the user can chat up to about
+  5s past the funds. This is not billed, so it is a platform loss.
+    - Test: freeAllowance.node-test.ts:167 (350 paise gives 30s and
+  BALANCE_EXHAUSTED).
+
+  **Low-balance warnings**
+  - IMPLEMENTED: a one-shot `chat:low-balance-warning` is emitted when
+  `remainingSeconds <= 60` (billing.ts:234-237).
+  - `remainingSeconds` is computed from wallet balance minus other reservations.
+  It ignores remaining free seconds.
+  - It is not computed for a session with no reservation (defect 3).
+
+  **Refunds to original buckets**
+  - IMPLEMENTED: `refundTransaction` copies the original allocations
+  (wallet.service.ts:233-286) with idempotency key `refund:<id>`. Test:
+  walletLedger.node-test.ts:95.
+  - MISSING: nothing in application code calls it (grep found no call sites
+  outside tests). There is no refund route or admin UI.
+
+  **Non-negative DB CHECK constraints**
+  - IMPLEMENTED:
+    - `wallet_purchased_nonneg`, `wallet_promotional_nonneg`,
+  `wallet_reserved_nonneg`.
+    - `wallet_bucket_sum_check`: `balance = purchased + promo`.
+    - `wallet_reserved_within_balance`: `reserved <= balance`.
+    - `wallet_reservations_amount_nonneg`.
+    - `chat_sessions_free_seconds_nonneg`.
+    - All in migration 20261110140000, lines 104-108, and the later migrations.
+  - MISSING: there is no CHECK on `chat_sessions.billed_seconds` or
+  `amount_paise`, and none on `wallet_transactions.amount_paise` (only
+  `wallet_ledger_allocations` is checked).
+
+  **Session and wallet reconciliation**
+  - MISSING: there is no job or query that checks `sum(CHAT_CONSUMPTION debits
+  for session) = chat_sessions.amount_paise`.
+  - Only the manual SQL verification comments in the migrations exist.
+  - The admin billing-failures list covers stuck holds only
+  (billingFailures.route.ts:35-81).
+  - `RECONCILIATION_REQUIRED` status is never set by code.
+
+  **Payment webhook and verification**
+  - MISSING: there is no webhook route, no signature verification and no gateway
+  adapter beyond the mock (payment.provider.ts:243-249).
+
+  **Astrologer earnings, commission, payout, receipts, admin financial
+  reporting**
+  - Astrologer earnings: MISSING. There is no earnings model, no per-session
+  payable to the astrologer, and `ChatSession.amountPaise` is the only user-side
+  charge.
+  - Commission config: MISSING. A grep for commission, payout, earning,
+  settlement, receipt and invoice across src/ and prisma/schema returned only
+  unrelated hits.
+  - Payout tracking: MISSING.
+  - Receipts and invoices: MISSING. `PaymentOrder` exists, but there is no
+  receipt output.
+  - Admin financial reporting: PARTIAL.
+    - Present: admin AI-cost analytics (adminCosts.ts, aiFeatureCost.ts,
+  adminFeatureCosts.ts, providerBalance.ts), tool pricing
+  (toolPricing.route.ts), and stuck-hold review (billingFailures.route.ts).
+    - Absent: no admin view of wallet totals, recharge revenue, chat revenue, or
+  promo vs purchased liability.
+
+  ## Existing tests (backend/src/__tests__ and module tests)
+
+  How to run: the DB-backed tests are skipped unless `TEST_DATABASE_URL` points
+  at a disposable localhost Postgres (freeAllowance.node-test.ts:12). The
+  scripts are in package.json:45-50.
+
+  | Test file | What it covers |
+  |---|---|
+  | src/modules/chat/__tests__/billingFormula.test.ts | Pure formula, no DB.
+  Fixtures 1/13/30/43/60s give 12/152/350/502/700 paise. Also non-decreasing,
+  zero for non-positive input, and no double-charge simulation. |
+  | walletLedger.node-test.ts (7 tests) | Signup bonus once and under
+  concurrency, promo-first debit, refund mirrors buckets, insufficient balance
+  throws, idempotent debit, concurrent debits with different keys. |
+  | walletReservations.node-test.ts (6 tests) | Create (full and degraded),
+  top-up, settle with exhaustion boundary, idempotent release, and
+  `startSession` creates a lookahead hold. |
+  | freeAllowance.node-test.ts (4 tests) | Global 60s carries across
+  astrologers, cumulative-ceil through real `tick` calls with back-dated time,
+  exact exhaustion boundary, complimentary astrologer. |
+  | toolBilling.node-test.ts (6 tests) | Skip when no price, all-or-nothing,
+  reserve-settle-retry, release, in-progress rejection, retry after FAILED. |
+  | chatStateMachine.node-test.ts (8 tests) | REQUESTED has no billing, accept
+  creates reservation, DB uniqueness (user and astrologer), request timeout,
+  pause with no charge, disconnect after grace, conversation continuity. |
+
+  **Not covered:**
+  - Real-timer drift.
+  - `endSession` residual billing (the 1s and 13s cases).
+  - The zero-balance plus fresh-allowance case (defect 3).
+  - Partial tick failure (defect 4).
+  - Overlapping ticks.
+  - Double accept.
+  - Concurrent mock recharge confirms.
+  - Production mock guard.
+  - Chat plus tool concurrent spend.
+  - The admin billing-failures routes.
+  - Crash recovery with a billing session.
+  - Any payment webhook.
+
+  Not verified: the production `NODE_ENV` value on Render, the instance count,
+  the migration state of the production DB (the migration headers say "NOT
+  APPLIED"), and the client heartbeat code.
+
+● The billing audit reports some serious defects, so I'm checking the two
+  biggest against the code: no final settlement on end, and the zero-balance
+  free-chat loophole.
+
+  Read 2 files (ctrl+o to expand)
+
+● Agent "Audit wallet and billing" finished · 2m 34s
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● Both billing defects hold up, so the audit is nearly complete:
+
+  - No final settlement on end. endSession (billing.ts:242-264) releases the
+    reservation and marks the session ENDED without billing the time since the
+    last tick.
+  - Zero-balance free chat. createReservation returns reservation: null when no
+    funds are available (wallet.service.ts:316). acceptSession ignores that
+    result, and every later tick returns early at billing.ts:170-175, before the
+    free-allowance claim. A user with a zero balance and a fresh 60s allowance
+    is never billed, and the session never ends.
+
+  The security and infrastructure audit is the only one still running. I'll
+  write the gap report when it lands.
+
+✻ Brewed for 17s · done 10:37 PM
+
+› Message from Explore
+  AUDIT REPORT (read-only; nothing edited). Repo:
+  C:\Users\dell\Desktop\Coding\avatar-astro. Paths are relative to backend/src
+  unless noted. Line numbers are exact where cited. Items marked "~" are
+  approximate.
+
+  HEADLINE
+  - There is no CI, no error tracking, no helmet, no report/block feature and no
+  `npm test` script.
+  - Money and auth core is solid: wallet row locks, DB CHECK constraints,
+  DB-re-checked admin and astrologer gates, and the audit log.
+  - The biggest real risks are:
+    - the tool-execution idempotency key is not scoped to the user;
+    - recharge confirm can double-credit;
+    - admin "stuck hold" release will mis-flag live chats;
+    - suspension and deactivation do not stop live sockets;
+    - background jobs and presence are per-instance, so more than one Render
+  instance breaks chat.
+
+  ======== SECURITY / PRIVACY ========
+
+  1. Auth middleware, JWT, cookies
+  - authMiddleware.ts:100 jwt.verify with the default algorithm. Status:
+  IMPLEMENTED.
+  - Account active/deleted is re-checked on every request through a 5s
+  per-instance cache (authMiddleware.ts:29, :56-62). It fails closed with 503
+  (:121-125). Status: IMPLEMENTED. Deactivation is visible within 5s per
+  instance.
+  - Access token TTL is "1d" and refresh TTL is 30d
+  (modules/auth/auth.service.ts:38-39, :57). Refresh tokens are SHA-256 hashed
+  and rotated on use (:571-612). Status: IMPLEMENTED. A 1-day access token is
+  long for a wallet app. P2.
+  - The role claim is trusted from the JWT for `auth("USER")`
+  (authMiddleware.ts:100-112). Status: PARTIAL. Admin routes re-check the DB
+  through requireMainAdmin (middleware/mainAdmin.ts), so that is OK.
+  - No cookies are used. The frontend keeps the token in localStorage
+  (frontend/src/hooks/useApi.ts:102, frontend/src/lib/api.ts:44). Status:
+  PARTIAL. This is XSS-exposed, but there is only one dangerouslySetInnerHTML
+  (frontend/src/components/ui/chart.tsx:70, the shadcn chart style tag). P2.
+  - Legacy middleware/auth.ts and config/environment.ts:15 carry a hardcoded
+  fallback JWT secret ('your_jwt_secret_key_here_change_in_production').
+  `validateConfig()` (environment.ts:26) is NEVER called. Status: BROKEN (dead
+  and misleading). Only the old middleware/auth.ts imports it. Delete it. P1.
+  - Real env validation is a non-fatal console report at index.ts:49-56. A
+  missing JWT_SECRET or DATABASE_URL does not abort startup. Status: PARTIAL. It
+  should fail-fast in production. P1.
+  - bcrypt cost is 8 (utils/auth.ts:5). Status: WEAK. Use 10-12. P2.
+
+  2. Login and brute force
+  - /login, /register, /forgot-password, /google and /refresh have NO rate
+  limiter (modules/auth/auth.route.ts:23-47). Only verify-otp and resend-otp are
+  limited (:9-27). Status: MISSING. There is no account lockout either. P0/P1.
+  - User enumeration: login returns 404 "User with this Email doesn't exist"
+  (modules/auth/auth.service.ts ~L417) versus 401 for a bad password. Status:
+  BROKEN. P1.
+  - OTP: HMAC-hashed, atomic attempt counter, expiry, hourly issue cap
+  (auth.service.ts:222-300). Status: IMPLEMENTED.
+
+  3. CORS
+  - utils/corsOrigins.ts:25 allows requests with no Origin. That is fine for
+  CORS, but note it.
+  - utils/corsOrigins.ts:4-10 hardcodes a LAN IP, localhost and the Vercel prod
+  origin. The LOCAL_DEV regex (:19) allows any 192.168.x, 10.x, 172.16-31.x and
+  localhost origin in production too, with credentials:true. Status: PARTIAL.
+  Gate the dev origins on NODE_ENV!=='production'. P1.
+  - The production origin is a single exact CORS_ORIGIN string (:22). Vercel
+  preview URLs are not allowed. This is safe but not flexible.
+  - The same allow-list is used by Socket.IO (realtime/socketServer.ts:30-36).
+  Status: IMPLEMENTED.
+
+  4. helmet, headers, body limits
+  - No helmet and no security headers on the API (index.ts; helmet is absent
+  from package.json). Status: MISSING. P1 (cheap fix).
+  - express.json limit is 20mb globally (index.ts:81-82). Status: BROKEN (DoS
+  surface). Reduce to ~100kb and raise it only on the specific upload routes.
+  P1.
+  - Error handler returns err.message (index.ts:406-414,
+  middleware/errorHandler.ts:7). The stack is not leaked. P2.
+
+  5. Role checks and horizontal escalation (IDOR)
+  - Chat sessions: resolveActor (modules/chat/chat.service.ts:44-59) is used by
+  getSession, getMessages, postMessage, endSession and markRead. It returns 403
+  if the caller is not the user or the session's astrologer. Status:
+  IMPLEMENTED, no IDOR found. This holds over REST (chat.route.ts) and Socket.IO
+  (socketServer.ts:81-143).
+  - Wallet: every route uses req.user.id (payment/wallet.route.ts:24-46) and
+  orders are scoped by {id, userId} (payment.service.ts:40). Status:
+  IMPLEMENTED.
+  - Admin: `auth("ADMIN"), requireMainAdmin` on all of /api/admin
+  (modules/admin/admin.route.ts:22). It checks the SUPERADMIN role in the DB,
+  isActive and optionally the MAIN_ADMIN_EMAIL pin. Status: IMPLEMENTED.
+  - Astrologer: requireAstrologer (middleware/astrologerAuth.ts) re-checks the
+  active account, the role mapping and suspendedAt on every request with no
+  cache. Status: IMPLEMENTED for REST.
+  - BROKEN, IDOR on tool executions: `executionId` is a client-supplied
+  Idempotency-Key, capped at 200 chars (payment/toolBilling.service.ts:20-22).
+  It is looked up with `findUnique({where:{executionId}})` and no userId scope
+  (:53). On an already-SETTLED row, `index.ts:348` returns
+  `execution.resultPayload`, which is another user's reading, including
+  birth-chart output. In the FAILED/RELEASED branch (:58-69) it reuses and
+  mutates another user's row. Exploitation needs a guessed key, but the keys are
+  client-chosen and may be weak. Fix: look up with {executionId, userId} or
+  namespace the key with userId. P1.
+  - Self-chat: startSession does not forbid a user starting a chat with their
+  own astrologer profile (chat.service.ts:135). P2.
+  - Zero-validation inputs: `astrologerProfileId` is only a truthiness check
+  (chat.route.ts:33). `/online` uses Boolean() (chat.astrologer.route.ts:73).
+  Joi appears only in the auth validators and admin code. There is no zod.
+  Status: PARTIAL. P2.
+
+  6. Suspension and deactivation vs live sockets
+  - BROKEN. suspendAstrologer
+  (modules/admin/astrologers/astrologerAdmin.service.ts:344-364) revokes the
+  role, unpublishes the profile and audits. It does NOT end ACTIVE or PAUSED
+  sessions and does NOT disconnect sockets.
+  - The socket authenticates once at handshake (realtime/socketServer.ts:42-60).
+  Later `chat:message` goes through postMessage (chat.service.ts:268-279),
+  which checks only the session status. It does not check suspendedAt or user
+  isActive.
+  - A suspended astrologer or deactivated user can keep chatting, and billing
+  continues, until the chat ends. P1.
+  - Also, a stale socket keeps `astrologerProfileId`, so the presence update
+  (socketServer.ts:74) continues after suspension. P2.
+
+  7. Rate limiting
+  - utils/rateLimit.ts:6 is an in-memory fixed-window limiter, per process.
+  Status: PARTIAL. It resets on every deploy and sleep, and it is not shared
+  across instances.
+  - It is applied to the chat REST routes (120/min), wallet (60/min) and
+  astrologer routes (60/min).
+  - There is no per-socket or per-event limit on chat:message, chat:typing or
+  chat:heartbeat (socketServer.ts:98-133). Status: MISSING. Spam, DB write
+  amplification and a heartbeat-driven resume path are open. P1.
+  - Socket.IO uses default maxHttpBufferSize (1MB), set nowhere. P2.
+
+  8. Mock payments in production
+  - payment.service.ts:15-17 blocks createRechargeOrder and confirmRechargeOrder
+  when `NODE_ENV==="production"`. payment/payment.provider.ts:21 is the MOCK
+  provider, and a real one does not exist. Status: PARTIAL.
+  - It depends entirely on NODE_ENV being set to "production" on Render. There
+  is no render.yaml in the repo to guarantee it. If NODE_ENV is unset, anyone
+  can mint unlimited wallet coins with POST /api/wallet/recharge/order then
+  /confirm. P0 to verify the Render env. Safer: invert the check so it requires
+  an explicit ALLOW_MOCK_PAYMENTS=true.
+  - confirmRechargeOrder is not atomic (payment.service.ts:40-56). Order status
+  is read, then updated, then `credit()` is called WITHOUT an idempotencyKey
+  (wallet.service.ts:454-458; payment.service.ts:56). Two concurrent confirms
+  can both credit. Fix: `creditToBucket(...,
+  {idempotencyKey:`recharge:${order.id}`})` and an updateMany guarded by status.
+  P1 (P0 once a real gateway is wired in).
+
+  9. Wallet integrity (positive findings)
+  - IMPLEMENTED: lockWallet does SELECT ... FOR UPDATE (wallet.service.ts:81) in
+  every mutation. Ledger transactions are idempotent with a unique key. Refunds
+  mirror the original buckets (:233).
+  - IMPLEMENTED: DB CHECK constraints (migration
+  20261110140000_add_wallet_coin_buckets/migration.sql:104-108): non-negative
+  buckets, sum equals balance, reserved <= balance. The signup bonus uses ON
+  CONFLICT DO NOTHING (payment/signupBonus.service.ts).
+  - Wallet adjustment endpoints: MISSING. There is no admin manual
+  credit/debit/refund API (grep found none). Support cannot correct balances
+  except by DB. The admin reservation release is audited. P2/product decision.
+
+  10. Birth data, privacy and abuse
+  - Astrologers cannot read birth details (no birth fields in chat or astrologer
+  modules). Status: IMPLEMENTED by absence. If you add a "share birth chart in
+  chat" feature, build explicit consent and audit for it.
+  - Astrologers see the customer's firstName, lastName, profileImage and userId
+  (chat.service.ts:341). No email or phone. OK.
+  - Report / block / dispute / moderation of astrologer chat: MISSING (no models
+  and no routes). chatScreening.ts exists only for the AI chat. P1 before
+  launch.
+  - Transcript retention and deletion: MISSING. There is no retention job. Admin
+  "anonymise" (modules/admin/adminAccounts.ts:127-150) deletes readings, AI
+  conversations and activity events, but NOT ChatSession/ChatMessage rows or
+  wallet transactions. The FK is only onDelete: Cascade, which triggers only on
+  a hard delete. Astrologers keep messages from deleted users. There is no
+  self-service account deletion (grep). P1 (DPDP/GDPR exposure).
+  - Astrologer ID documents: IMPLEMENTED. They go to Cloudinary "authenticated"
+  delivery with a short-lived signed URL (config/cloudinary.ts ~L259), plus a
+  magic-byte check, ClamAV scanning (services/malwareScan.ts), a 10MB limit, and
+  a purge route (astrologerAdmin.route.ts:139). The scan fails closed
+  (astrologer.route.ts, "SCAN_FAILED" returns 500). An admin can disable the
+  scan via a setting, which is audited. OK.
+  - Profile photos are public Cloudinary URLs, which is expected.
+
+  11. Logging
+  - Good: most catch blocks log only err.message. Metadata is sanitized
+  (utils/usage.ts:11-29). OTP and token values are not logged. Chat messages are
+  not logged.
+  - PARTIAL: routes/birthChartRoutes.ts:133 and :209 `console.error(..., err)`
+  print the full error object. For axios errors that can include the request
+  config (Authorization header with the OpenRouter key and the prompt containing
+  birth data). services/chatgptService.ts:173 and :233 log
+  `error.response?.data` (the provider body). Log only status and message. P1.
+  - Root api/tts.ts:15 (the Vercel function) logs the language and text length
+  only. OK.
+  - 171 raw console.* calls and no structured logging (no pino/winston/morgan,
+  no request ids). Status: MISSING. P2.
+
+  12. Public cost-abuse surface
+  - /api/tts in index.ts:329 is authed and billed. BUT root api/tts.ts and
+  frontend/api/tts.ts (Vercel serverless) are an UNAUTHENTICATED Sarvam proxy
+  with no rate limit, and they fall back to `process.env.VITE_SARVAM_API_KEY`
+  (api/tts.ts:12). A VITE_ prefixed var is bundled into the browser, which would
+  leak the key. Status: BROKEN. P0/P1.
+  - The anonymous AI routes under optionalAuth() (interpretation, compatibility,
+  birthchart, name-analysis) depend on feature()/toolLimitGate to cap use. I
+  did not verify the per-IP limits for anonymous users. UNKNOWN. P1 to check.
+
+  13. Secrets
+  - .gitignore covers .env and dist/. Only backend/.env.example and
+  frontend/.env.example are tracked. I found no committed secrets. Status:
+  IMPLEMENTED.
+  - DARSHAN_WEBSUB_SECRET is optional. When unset, the signature check is
+  skipped (modules/darshan/darshan.controller.ts:103). Status: PARTIAL. Forged
+  "live" notifications are possible. P2, make it required in production.
+
+  14. Admin audit logging
+  - IMPLEMENTED: writeAudit (modules/admin/audit.ts) takes a tx client so the
+  audit row commits with the change. Used across accounts, astrologer approval
+  and suspension, tool pricing, billing releases and escalations. It records
+  actor, IP and the action.
+  - Gaps: no audit when an admin views chat transcripts (no admin transcript
+  viewer exists). The /billing-failures GET and the escalations GET (which
+  expose email and phone) are not audited. P2.
+
+  ======== RELIABILITY ========
+
+  15. Background jobs and multi-instance
+  - All schedulers are in-process setInterval with NO leader election or
+  advisory lock. Advisory locks exist only for per-request use
+  (toolLimits.ts:48, adminAccounts.ts:100, astrologyAudio.service.ts:65).
+  Status: MISSING for jobs.
+    - billing per-session timers: chat/billing.ts:55
+    - the 5s sweep: billing.ts:304
+    - the darshan live check: darshan.refresh.ts:55
+    - the WebSub renewal: darshan.websub.ts:75
+  - `resumeAllActiveSessions()` (index.ts:424; billing.ts:317-327) pauses EVERY
+  ACTIVE session in the DB on every process start. During a Render zero-downtime
+  deploy, or with 2 or more instances, a new process pauses sessions that the
+  old process is actively serving.
+    - Presence is a per-process Map (billing.ts:75). The heartbeat only reaches
+  the instance holding the socket.
+    - Socket.IO has no adapter (no @socket.io/redis-adapter or Postgres adapter;
+  grep found none), so emits and rooms do not cross instances.
+    - Two instances ticking the same session would double-run claimFreeSeconds
+  (billing.ts:179), which is not idempotent. Wallet settle is idempotent per
+  tick (:200).
+    - Status: BROKEN for >1 instance. It is acceptable on a single instance only
+  with a documented "never scale past 1" rule. P1.
+  - Render free tier sleeps. A sleeping instance kills sockets, and the next
+  wake pauses the sessions (OK by design). The WebSub and live-check loops stop.
+  There is no render.yaml or keep-alive. UNKNOWN which Render plan is used.
+  - No graceful shutdown: no SIGTERM or SIGINT handler, no httpServer.close and
+  no timer clearing. Nor are there unhandledRejection / uncaughtException
+  handlers (grep: none). A stray rejection can crash the process (Node 15+).
+  Status: MISSING. P1.
+
+  16. Restart recovery and stale cleanup
+  - Restart recovery: IMPLEMENTED and well designed. DB timestamps are the
+  source of truth, with PAUSED plus presenceGraceEndsAt, and an expiry sweep on
+  boot and every SWEEP_INTERVAL_MS (billing.ts:282-307).
+  - tick() for PAID sessions: if no HELD CHAT_LOOKAHEAD reservation exists, it
+  only logs and skips (billing.ts:170-175). That means FREE CHAT forever if the
+  reservation was ever released. See the next bullet.
+  - BROKEN, admin "stuck hold" list (modules/admin/billingFailures.route.ts:22,
+  :52-57) treats ANY reservation HELD for more than 5 minutes as stuck. A normal
+  ACTIVE paid chat's CHAT_LOOKAHEAD reservation stays HELD for the whole chat,
+  so it will appear in the list. A one-click release (route :99-112) on it frees
+  the hold, and the session then loops "no HELD reservation" and gets billed
+  nothing. Exclude CHAT_LOOKAHEAD rows whose session is ACTIVE or PAUSED. P1.
+  - Stale reservation and tool-execution cleanup is manual only. There is no
+  automated sweeper or reconciliation job for HELD reservations or
+  COINS_RESERVED/EXECUTING tool executions, and no wallet-ledger reconciliation
+  (sum of allocations vs balance). Status: MISSING. P1.
+    - If the process dies after reserveToolExecution and before settle or
+  release, coins stay frozen.
+    - The same applies to ended chats where releaseReservation failed in
+  endSession (billing.ts:251-255).
+  - endSession is not transactional (billing.ts:242-264): the release and the
+  status update are separate calls. A crash between them is covered by neither.
+  P2.
+
+  17. Prisma / DB
+  - prisma.ts uses the @prisma/adapter-pg driver with the default pool (max 10),
+  overridable by DB_POOL_MAX. No timeouts configured (connectionTimeoutMillis,
+  idleTimeoutMillis, statement_timeout). P2.
+  - On Render with Postgres, set DATABASE_URL to the pooled/internal URL.
+  UNKNOWN.
+  - Transactions use the default isolation level (READ COMMITTED) plus explicit
+  row locks. That is sound. There is no retry on serialization or deadlock
+  errors (grep for 40001/P2034 returns nothing). Wallet code takes lock order =
+  single wallet, so deadlocks are unlikely. P2.
+  - Interactive-transaction timeouts are not set (the Prisma default is 5s). The
+  chat accept transaction (chat.service.ts:206-226) does several round trips.
+  P2.
+  - Indexes and constraints are good for chat and wallet. There is a partial
+  unique index of one live session per user and per astrologer (migration
+  20261111100100). The unique index on wallet_transactions.idempotency_key is
+  IMPLEMENTED.
+  - The ChatMessage index is (sessionId, createdAt). The history query uses a
+  cursor on id plus orderBy createdAt (chat.service.ts:292-297), which is fine.
+  - No unique index on WalletReservation(referenceId, purpose) for HELD rows.
+  P2.
+  - Migrations: sequential and mostly additive, with manual notes ("do not run
+  migrations without my approval"). `db:deploy` (prisma migrate deploy) exists,
+  but no automated deploy hook is visible, since render.yaml is missing.
+  Migration dates run to 20261112. Status: PARTIAL.
+  - Backups: MISSING from the repo. Nothing documents Render Postgres PITR or
+  backup retention. UNKNOWN. P0 to confirm the plan and PITR for a wallet
+  database.
+
+  18. Health checks, observability, errors
+  - /api/health (index.ts:85-87) is static and does not touch the DB. Status:
+  PARTIAL. Add a DB check under a separate readiness endpoint. P2.
+  - Sentry or other error tracking: MISSING (not in package.json). P1.
+  - Structured logs and metrics: MISSING. P2.
+  - AI cost and usage tracking exists (admin cost reports). Fine.
+
+  19. Env separation, deployment config
+  - No render.yaml / Dockerfile / .github in the repo. frontend/vercel.json and
+  solar-system-app/vercel.json hold only a SPA rewrite. The Render service
+  config (build command, NODE_ENV, health path, plan) is not version-controlled.
+  Status: MISSING. P1.
+  - backend/dist/ is gitignored, good. `prebuild` runs prisma generate.
+  - `start` is `node dist/src/index.js` and the build is `tsc && tsc-alias`.
+
+  20. Testing and CI
+  - NO CI: there is no .github directory anywhere. Status: MISSING. P1.
+  - NO `test` script in backend/package.json, only ad-hoc scripts
+  (test:wallet-ledger, test:wallet-reservations, test:chat-state-machine,
+  test:otp, test:admin and others) using `tsx --test` on *.node-test.ts. They
+  need a throwaway DB (DB_POOL_MAX=1 note in prisma.ts). There is no aggregate
+  runner.
+  - backend/jest.config.js points at ts-jest, but jest, ts-jest and supertest
+  are NOT in package.json. src/__tests__/middleware/auth.test.ts and
+  birthDataValidation.test.ts therefore cannot run. Status: BROKEN (dead
+  config). P2.
+  - Coverage is good for wallet, chat state machine, OTP, admin panel, tool
+  billing, free allowance and astrologer.
+  - Missing tests: socket auth and IDOR, suspension during a live chat, the
+  recharge double-confirm race, idempotency-key ownership, CORS.
+  - Frontend uses vitest (frontend/package.json test: "vitest run") with about
+  10 component and data tests, mostly unit-level. No Playwright or Cypress, and
+  no e2e for login, chat or wallet. Status: MISSING. P2.
+
+  SUGGESTED PRIORITY LIST
+  P0
+  - Confirm NODE_ENV=production on Render, or invert the mock-payments flag to
+  explicit opt-in (payment.service.ts:15).
+  - Lock down or delete the unauthenticated api/tts.ts and frontend/api/tts.ts,
+  and drop the VITE_SARVAM_API_KEY fallback.
+  - Confirm Postgres backups and PITR.
+
+  P1
+  - Rate-limit and lock out /login, /register, /forgot-password, /google and
+  /refresh. Remove the 404 user enumeration.
+  - Scope tool-execution lookups to userId (toolBilling.service.ts:53 and
+  index.ts:348).
+  - Make recharge confirm atomic with an idempotency key.
+  - On suspension or deactivation: end the sessions and disconnect the sockets.
+  Check suspendedAt and isActive in postMessage.
+  - Add a per-socket event rate limit and a maxHttpBufferSize.
+  - Fix the admin stuck-hold false positive for live chats. Add an automatic
+  sweeper and ledger reconciliation.
+  - Document and enforce a single instance, or add leader election (an advisory
+  lock for the schedulers) plus a Socket.IO adapter. Stop
+  resumeAllActiveSessions from pausing sessions served by another process.
+  - Add graceful shutdown and unhandledRejection handlers.
+  - Add helmet, drop the global 20mb body limit, restrict dev CORS origins in
+  production, and fail fast on missing env in production.
+  - Add Sentry and a CI workflow, and make the sensitive error logs
+  (birthChartRoutes.ts:133 and :209, chatgptService.ts:173 and :233) log only
+  the message.
+  - Report/block and moderation for astrologer chat, a transcript retention
+  policy, and anonymise chat data and wallet PII on deletion. Add self-service
+  delete.
+  - Delete the dead config/environment.ts and middleware/auth.ts.
+
+  P2
+  - Shorten the access token TTL and raise the bcrypt cost.
+  - Add a DB readiness check, structured logging with request ids, pool and
+  statement timeouts, and retries on transaction errors.
+  - Make DARSHAN_WEBSUB_SECRET required in production.
+  - Add an admin wallet adjustment endpoint with an audit trail, and audit
+  sensitive admin reads.
+  - Remove the dead jest config or install jest, add a unified `npm test`, and
+  add Playwright e2e for login, chat and wallet.
+  - Block self-chat.
+
+● All four audits are back. I'll spot-check the P0 items from the security
+  report before writing the gap report.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Agent "Audit security and infra" finished · 3m 49s
+
+● MyBhagya astrologer chat: production gap report (Phases 1 and 2)
+
+  Nothing was edited, migrated, installed or deployed. Four read-only Explore
+  audits covered billing, chat and sockets, frontend, and security and
+  infrastructure. I re-read the highest-severity claims in the code myself, and
+  each one held. I ran no tests and checked no database, so every "BROKEN" below
+  comes from reading the code, not from reproducing it.
+
+  Paths are relative to backend/src unless prefixed frontend/src.
+
+  Skills: I read using-superpowers. No brainstorming skill is installed. I
+  haven't used Impeccable or grill-me yet. Impeccable is for the Checkpoint 4 UI
+  work, and grill-me is for the business decisions in section 4.
+
+  1. Executive summary
+
+  What works and should be preserved:
+  - Wallet: row locking, non-negative database constraints,
+    promo-before-purchased spending, signup-bonus idempotency, and refund logic
+    that mirrors the original buckets.
+  - Chat state machine:
+    - DB-enforced one live session per user and per astrologer.
+    - The 60s request deadline.
+    - Pause with a presence grace period.
+    - No billing before ACTIVE.
+    - Restart recovery that pauses every ACTIVE session.
+  - Chat access control: resolveActor guards the REST routes and sockets, and no
+    IDOR turned up.
+  - Admin: audit logging is transactional.
+  - Message rendering: messages render as React text nodes, so there is no XSS
+    in chat.
+
+  Launch blockers:
+
+  #: 1
+  Blocker: One malformed socket event can crash the whole server.
+  Evidence: realtime/socketServer.ts:81,98,112,125,135
+  ────────────────────────────────────────
+  #: 2
+  Blocker: No final settlement when a chat ends.
+  Evidence: modules/chat/billing.ts:242-264
+  ────────────────────────────────────────
+  #: 3
+  Blocker: A zero-balance user with a fresh 60s allowance chats free forever.
+  Evidence: chat.service.ts:218, wallet.service.ts:316, billing.ts:170-175
+  ────────────────────────────────────────
+  #: 4
+  Blocker: Accept, reject and end can overwrite each other.
+  Evidence: chat.service.ts:187-199,222,236, billing.ts:245-257
+  ────────────────────────────────────────
+  #: 5
+  Blocker: Mock recharge can mint coins if NODE_ENV isn't exactly production. It
+
+  can also double-credit.
+  Evidence: payment.service.ts:15-17,203-223
+  ────────────────────────────────────────
+  #: 6
+  Blocker: An unauthenticated TTS proxy with a possible leaked key.
+  Evidence: api/tts.ts:12
+  ────────────────────────────────────────
+  #: 7
+  Blocker: Suspension doesn't stop live chats or sockets.
+  Evidence: astrologerAdmin.service.ts:344-364
+  ────────────────────────────────────────
+  #: 8
+  Blocker: Nothing prevents a second Render instance from breaking billing.
+  Evidence: index.ts:424, billing.ts:317
+  ────────────────────────────────────────
+  #: 9
+  Blocker: No fatal-error handlers and no error tracking.
+  Evidence: no unhandledRejection handler in src/
+
+  2. Gap matrix
+
+  Priorities are P0 to P2 as you defined them. "Files" are where the fix goes.
+
+  2.1 Financial integrity
+
+  Requirement: Final settlement on every terminal path
+  Status: BROKEN
+  Pri: P0
+  Evidence: billing.ts:242-264: endSession releases the reservation and sets
+  ENDED without billing the time since lastBilledAt.
+  Missing / fix: Settle the residual inside endSession, in one transaction with
+  the ENDED transition. Existing tests back-date lastBilledAt and call tick, so
+   they miss this (freeAllowance.node-test.ts:138-165).
+  ────────────────────────────────────────
+  Requirement: Tick drift under-billing
+  Status: BROKEN (by inspection; real-timer behaviour unverified)
+  Pri: P0
+  Evidence: billing.ts:138,192,218,238: lastBilledAt = now after DB work, and
+  elapsed time is floored.
+  Missing / fix: Advance lastBilledAt by whole billed seconds, or compute
+  cumulative seconds from startedAt minus paused intervals.
+  ────────────────────────────────────────
+  Requirement: Zero-balance free chat
+  Status: BROKEN
+  Pri: P0
+  Evidence: chat.service.ts:28-32 returns a minimum of 0 while free seconds
+  remain. acceptSession ignores the null reservation at :218. Every tick then
+  hits billing.ts:170-175 and returns before claimFreeSeconds.
+  Missing / fix: Handle the free-only phase without a reservation. End the
+  session when the allowance is exhausted and funds are insufficient.
+  ────────────────────────────────────────
+  Requirement: Tick atomicity
+  Status: BROKEN
+  Pri: P0
+  Evidence: billing.ts:179,201,238: free claim, settlement and session update
+  commit separately. A failure between them makes the next tick use a different
+   idempotency key, so it can double-charge. Free seconds are also lost.
+  Missing / fix: One transaction per tick, with the idempotency key derived from
+
+  the persisted cumulative seconds.
+  ────────────────────────────────────────
+  Requirement: Duplicate-tick protection
+  Status: PARTIAL
+  Pri: P0
+  Evidence: billing.ts:54 guards against duplicate timers within one process.
+  setInterval can overlap if a tick runs long.
+  Missing / fix: Add a per-session in-flight guard and a compare-and-swap on
+  lastBilledAt.
+  ────────────────────────────────────────
+  Requirement: Exact cutoff on exhaustion
+  Status: PARTIAL
+  Pri: P1
+  Evidence: Detection happens only on 5s ticks (billing.ts:208-221). A user can
+  chat up to about 5s past their funds, and that time is never billed.
+  Missing / fix: Pair with the final-settlement fix. Consider a shorter tick or
+  a
+  precise end-timer from the affordable seconds.
+  ────────────────────────────────────────
+  Requirement: Rate snapshot at activation
+  Status: PARTIAL
+  Pri: P1
+  Evidence: The rate is snapshotted at request creation
+  (chat.service.ts:156,171). acceptSession doesn't refresh it.
+  Missing / fix: Re-snapshot in acceptSession, or confirm that request time is
+  acceptable.
+  ────────────────────────────────────────
+  Requirement: Recharge confirm atomicity
+  Status: BROKEN
+  Pri: P0 now (mock), P0 forever (real gateway)
+  Evidence: payment.service.ts:203-223: read, update and credit() are separate
+  steps, and credit has no idempotency key (wallet.service.ts:454-458).
+  Missing / fix: Wrap in a transaction. Guard the status update with updateMany,
+
+  and use the key recharge:<orderId>.
+  ────────────────────────────────────────
+  Requirement: Mock payments in production
+  Status: PARTIAL
+  Pri: P0
+  Evidence: Guarded only by NODE_ENV === "production"
+  (payment.service.ts:15-17).
+  No render.yaml confirms the setting.
+  Missing / fix: Invert to an explicit ALLOW_MOCK_PAYMENTS=true opt-in. You must
+   
+  confirm the Render env.
+  ────────────────────────────────────────
+  Requirement: Real payment gateway, webhook, signature check
+  Status: MISSING
+  Pri: P0 before real money
+  Evidence: Only the mock provider exists. PaymentProvider.RAZORPAY is an enum
+  value and nothing more.
+  Missing / fix: Business decision: which gateway.
+  ────────────────────────────────────────
+  Requirement: Settled reservations stay HELD
+  Status: BROKEN
+  Pri: P1
+  Evidence: wallet.service.ts:406 zeroes the amount but never sets SETTLED or
+  resolvedAt.
+  Missing / fix: Mark them SETTLED.
+  ────────────────────────────────────────
+  Requirement: Admin "stuck hold" list flags live chats
+  Status: BROKEN
+  Pri: P1
+  Evidence: billingFailures.route.ts:52-57 flags any hold older than 5 minutes.
+  Releasing a live chat's hold causes the free-chat loop above.
+  Missing / fix: Exclude CHAT_LOOKAHEAD holds whose session is ACTIVE or PAUSED.
+  ────────────────────────────────────────
+  Requirement: Stale reservation sweeper and reconciliation job
+  Status: MISSING
+  Pri: P1
+  Evidence: Cleanup is a manual admin release. Nothing checks that session
+  charges equal the wallet debits (sum(CHAT_CONSUMPTION) = 
+  chat_sessions.amount_paise). RECONCILIATION_REQUIRED is never set.
+  Missing / fix: Add an automated sweeper and a reconciliation query.
+  ────────────────────────────────────────
+  Requirement: Tool-execution key not scoped to user
+  Status: BROKEN
+  Pri: P1
+  Evidence: toolBilling.service.ts:53 looks up by executionId alone.
+  index.ts:348
+  returns resultPayload for a SETTLED row, which can be another user's reading.
+  Missing / fix: Scope by {executionId, userId}.
+  ────────────────────────────────────────
+  Requirement: Reserve race for the same executionId
+  Status: BROKEN
+  Pri: P2
+  Evidence: toolBilling.service.ts:66-72 can leak a HELD reservation.
+  Missing / fix: Reserve inside the unique-key transaction.
+  ────────────────────────────────────────
+  Requirement: Refunds
+  Status: PARTIAL
+  Pri: P1
+  Evidence: The service is correct (wallet.service.ts:233-286). Nothing calls
+  it:
+  no route, no admin UI.
+  Missing / fix: Admin refund endpoint with audit.
+  ────────────────────────────────────────
+  Requirement: Missing CHECKs
+  Status: PARTIAL
+  Pri: P2
+  Evidence: None on chat_sessions.billed_seconds or amount_paise, nor on
+  wallet_transactions.amount_paise.
+  Missing / fix: Additive migration.
+  ────────────────────────────────────────
+  Requirement: Wallet and ledger basics (signup bonus, promo-first, locking,
+  CHECKs)
+  Status: IMPLEMENTED AND TESTED (DB-backed, skipped without TEST_DATABASE_URL)
+  Pri: —
+  Evidence: signupBonus.service.ts:134-164, wallet.service.ts:81-113, migration
+  20261110140000 lines 104-108, walletLedger.node-test.ts.
+  Missing / fix: Preserve.
+  ────────────────────────────────────────
+  Requirement: Global 60s allowance
+  Status: PARTIAL
+  Pri: P1
+  Evidence: Atomic and clamped (freeAllowance.service.ts:78-100), but the claim
+  isn't idempotent and sits outside the tick transaction.
+  Missing / fix: Fix with the tick atomicity item.
+  ────────────────────────────────────────
+  Requirement: Complimentary astrologers
+  Status: IMPLEMENTED AND TESTED
+  Pri: —
+  Evidence: chat.service.ts:18-23,149, billing.ts:141-152.
+  Missing / fix: Preserve.
+  ────────────────────────────────────────
+  Requirement: Low-balance warning
+  Status: PARTIAL
+  Pri: P1
+  Evidence: billing.ts:234-237. It ignores remaining free seconds and doesn't
+  fire in the no-reservation case.
+  Missing / fix:
+  ────────────────────────────────────────
+  Requirement: Signup-bonus farming across accounts
+  Status: UNKNOWN
+  Pri: P1
+  Evidence: No device or phone dedupe seen beyond phone uniqueness.
+  Missing / fix: Business decision.
+
+  Billing at 7 coins/min. The formula is ceil(seconds × 700 / 60) paise
+  (billing.ts:32-35). It matches the unit test (billingFormula.test.ts:11-16).
+
+  ┌─────────┬─────────────────┬───────────────┬─────────────────────────────┐
+  │ Seconds │  Formula, if    │  Fresh user   │  What the scheduler would   │
+  │         │   fully paid    │  (60s free)   │    charge on a user-end*    │
+  ├─────────┼─────────────────┼───────────────┼─────────────────────────────┤
+  │ 1       │ 12 paise (0.12  │ 0             │ 0 (no tick yet)             │
+  │         │ coin)           │               │                             │
+  ├─────────┼─────────────────┼───────────────┼─────────────────────────────┤
+  │ 13      │ 152 paise       │ 0             │ 117 (last tick at 10s)      │
+  │         │ (1.52)          │               │                             │
+  ├─────────┼─────────────────┼───────────────┼─────────────────────────────┤
+  │ 30      │ 350 paise       │ 0             │ 292 or 350, depending on    │
+  │         │ (3.50)          │               │ tick timing                 │
+  ├─────────┼─────────────────┼───────────────┼─────────────────────────────┤
+  │ 43      │ 502 paise       │ 0             │ 467 (tick at 40s)           │
+  │         │ (5.02)          │               │                             │
+  ├─────────┼─────────────────┼───────────────┼─────────────────────────────┤
+  │ 60      │ 700 paise       │ 0             │ 700 only if the 60s tick    │
+  │         │ (7.00)          │               │ has fired                   │
+  └─────────┴─────────────────┴───────────────┴─────────────────────────────┘
+
+  *These come from reading the code with perfect 5s ticks. Drift lowers every
+  figure.
+
+  2.2 Chat lifecycle and Socket.IO
+
+  Requirement: Malformed socket payload crashes the process
+  Status: BROKEN
+  Pri: P0
+  Evidence: The handlers destructure in the async signature, outside the try
+  (socketServer.ts:81,98,112,125,135). There is no unhandledRejection handler.
+  Fix: Validate the payload inside the try, and add global handlers.
+  ────────────────────────────────────────
+  Requirement: Accept, reject and end races
+  Status: BROKEN
+  Pri: P0
+  Evidence: chat.service.ts:187-199 reads via prisma, not tx. The updates at
+  :222
+  and :236 have no status guard. billing.ts:245-257 is read-then-update. A
+  double accept can create two reservations, and endSession releases only one.
+  Fix: Use updateMany({where:{id,status}}) and check count, inside the
+  transaction. Make endSession atomic.
+  ────────────────────────────────────────
+  Requirement: Idempotent accept, reject, cancel
+  Status: PARTIAL
+  Pri: P1
+  Evidence: A second accept or reject returns 409, not 200.
+  Fix: Return the current state on a repeat.
+  ────────────────────────────────────────
+  Requirement: Distinct CANCELLED reason
+  Status: MISSING
+  Pri: P1
+  Evidence: ChatEndReason has no CANCELLED (prisma/schema/chat.prisma:26-34).
+  The
+  cancel button calls the generic end.
+  Fix: Needs an enum migration.
+  ────────────────────────────────────────
+  Requirement: Busy and offline checks
+  Status: PARTIAL
+  Pri: P1
+  Evidence: startSession doesn't check isOnline (chat.service.ts:135-185). The
+  "busy" error is the generic "already have a pending or active chat" message
+  (:181). There is no BUSY presence value.
+  Fix:
+  ────────────────────────────────────────
+  Requirement: Self-chat
+  Status: MISSING
+  Pri: P2
+  Evidence: chat.service.ts:135
+  Fix:
+  ────────────────────────────────────────
+  Requirement: Offline-astrologer notification
+  Status: PARTIAL
+  Pri: P1
+  Evidence: billing.ts:266 emits to the room only. Nothing is queued or pushed.
+  Fix:
+  ────────────────────────────────────────
+  Requirement: Partial unique indexes (user, astrologer)
+  Status: IMPLEMENTED, application state UNKNOWN
+  Pri: P0 to verify
+  Evidence: Migration 20261111100100 lines 36-42. The header says "NOT APPLIED".
+
+  Prisma's schema can't express them, so drift is possible.
+  Fix: Confirm applied. Document the drift risk.
+  ────────────────────────────────────────
+  Requirement: Restart recovery
+  Status: IMPLEMENTED
+  Pri: —
+  Evidence: billing.ts:317-339
+  Fix: It pauses sessions that another process may still serve (see 2.3).
+  ────────────────────────────────────────
+  Requirement: Message dedupe by client id
+  Status: MISSING
+  Pri: P1
+  Evidence: ChatMessage has no clientMessageId (chat.prisma:108-126). A retry
+  after a lost ack stores a duplicate.
+  Fix: Additive column and unique index.
+  ────────────────────────────────────────
+  Requirement: Message ordering and pagination
+  Status: PARTIAL
+  Pri: P1
+  Evidence: Ordered by createdAt with no tiebreaker (chat.service.ts:290-298).
+  The frontend never sends a cursor, so long histories are truncated.
+  Fix: Order by (createdAt, id). Load more on the frontend.
+  ────────────────────────────────────────
+  Requirement: Missed-message recovery after reconnect
+  Status: MISSING
+  Pri: P1
+  Evidence: The client joins once per mount (useChatSession.ts:75) and has no
+  connect handler. After a reconnect it doesn't rejoin or refetch.
+  Fix:
+  ────────────────────────────────────────
+  Requirement: Read receipts
+  Status: PARTIAL
+  Pri: P2
+  Evidence: Read is marked only on join. There is no live event to the sender.
+  Fix:
+  ────────────────────────────────────────
+  Requirement: Typing
+  Status: IMPLEMENTED
+  Pri: P2
+  Evidence: The frontend sends one event per keystroke with no debounce
+  (ChatWindow.tsx:341).
+  Fix:
+  ────────────────────────────────────────
+  Requirement: Socket event rate limit and size cap
+  Status: MISSING
+  Pri: P1
+  Evidence: No limit on chat:message, typing or heartbeat. maxHttpBufferSize is
+  at the 1MB default.
+  Fix:
+  ────────────────────────────────────────
+  Requirement: Re-validate auth after connect
+  Status: MISSING
+  Pri: P1
+  Evidence: The token and isActive are checked only at handshake
+  (socketServer.ts:42-60). postMessage checks only the session status.
+  Fix:
+  ────────────────────────────────────────
+  Requirement: Engine ping settings
+  Status: PARTIAL
+  Pri: P2
+  Evidence: Left at the Socket.IO defaults. A separate 10s app heartbeat does
+  the
+  presence work.
+  Fix: Keep it. Presence needs it.
+  ────────────────────────────────────────
+  Requirement: Multi-instance readiness
+  Status: BROKEN if >1 instance
+  Pri: P1
+  Evidence: Timers, presence and astrologer connection counts are in-process.
+  There is no Socket.IO adapter and no leader election.
+  Fix: Document single-instance, or add an adapter and advisory-lock job
+  ownership.
+  ────────────────────────────────────────
+  Requirement: Duplicate / legacy
+  Status: —
+  Pri: P2
+  Evidence: FREE_TRIAL_SECONDS and ChatFreeTrialUsage are legacy but still
+  referenced (billing.ts:141-146).
+  Fix: Consolidate after Checkpoint 1.
+
+  Messages are stored raw. Rendering is safe today because React escapes text.
+  If you ever render messages anywhere else, they need escaping there.
+
+  2.3 Security and privacy
+
+  Item: Unauthenticated TTS proxy
+  Status: BROKEN
+  Pri: P0
+  Evidence: api/tts.ts and frontend/api/tts.ts have no auth and no rate limit.
+  They fall back to VITE_SARVAM_API_KEY, which Vite bundles into the browser.
+  Fix: Delete or authenticate them, and rotate the key if it was ever set as
+  VITE_.
+  ────────────────────────────────────────
+  Item: Suspension and deactivation vs live chats
+  Status: BROKEN
+  Pri: P1
+  Evidence: astrologerAdmin.service.ts:344-364 doesn't end sessions or
+  disconnect
+  sockets.
+  Fix: End live sessions and disconnect sockets on suspension.
+  ────────────────────────────────────────
+  Item: Login brute force
+  Status: MISSING
+  Pri: P1
+  Evidence: /login, /register, /forgot-password, /google, /refresh have no
+  limiter (auth.route.ts:23-47).
+  Fix:
+  ────────────────────────────────────────
+  Item: User enumeration on login
+  Status: BROKEN
+  Pri: P1
+  Evidence: A 404 for an unknown email versus a 401 for a bad password
+  (auth.service.ts ~L417).
+  Fix:
+  ────────────────────────────────────────
+  Item: Report and block
+  Status: MISSING
+  Pri: P1
+  Evidence: No models and no routes.
+  Fix: Needs a product decision on moderation.
+  ────────────────────────────────────────
+  Item: Transcript retention and deletion
+  Status: MISSING
+  Pri: P1, legal review
+  Evidence: The admin "anonymise" action (adminAccounts.ts:127-150) skips
+  ChatSession and ChatMessage. There is no self-service account deletion.
+  Fix: Legal input before any retention policy.
+  ────────────────────────────────────────
+  Item: helmet and body limit
+  Status: MISSING
+  Pri: P1
+  Evidence: No helmet. express.json limit is 20mb globally (index.ts:81-82).
+  Fix:
+  ────────────────────────────────────────
+  Item: CORS
+  Status: PARTIAL
+  Pri: P1
+  Evidence: LAN and private-network origins are allowed in production, with
+  credentials (utils/corsOrigins.ts:4-19).
+  Fix: Gate on NODE_ENV.
+  ────────────────────────────────────────
+  Item: Env validation
+  Status: PARTIAL
+  Pri: P1
+  Evidence: It only logs (index.ts:49-56). validateConfig() is never called, and
+
+  the dead config/environment.ts carries a hardcoded fallback JWT secret.
+  Fix: Fail fast in production, and remove the dead file.
+  ────────────────────────────────────────
+  Item: Sensitive logs
+  Status: PARTIAL
+  Pri: P1
+  Evidence: routes/birthChartRoutes.ts:133,209 and
+  services/chatgptService.ts:173,233 log full error objects, which can include
+  request config and prompts with birth data.
+  Fix: Log status and message only.
+  ────────────────────────────────────────
+  Item: Astrologer access to birth details
+  Status: IMPLEMENTED by absence
+  Pri: —
+  Evidence: Astrologers see only name, photo and userId. If you add chart
+  sharing
+  in chat, it needs consent and auditing.
+  Fix:
+  ────────────────────────────────────────
+  Item: Astrologer documents
+  Status: IMPLEMENTED
+  Pri: —
+  Evidence: Signed URLs, ClamAV scanning that fails closed, purge route.
+  Fix:
+  ────────────────────────────────────────
+  Item: Access token TTL, bcrypt cost
+  Status: PARTIAL
+  Pri: P2
+  Evidence: 1-day access token, bcrypt cost 8. Token in localStorage.
+  Fix:
+  ────────────────────────────────────────
+  Item: DARSHAN_WEBSUB_SECRET optional
+  Status: PARTIAL
+  Pri: P2
+  Evidence: The signature check is skipped when it's unset
+  (darshan.controller.ts:103).
+  Fix:
+
+  2.4 Customer functionality
+
+  Item: Pre-chat price confirmation
+  Status: MISSING
+  Pri: P1
+  Evidence: StartChatButton.tsx:425-450 goes from eligibility straight to
+  startSession.
+  ────────────────────────────────────────
+  Item: Free allowance, balance and affordable-minutes display
+  Status: MISSING
+  Pri: P1
+  Evidence: ChatEligibility already returns the data (api/chatApi.ts:249-257)
+  but
+  the UI doesn't show it.
+  ────────────────────────────────────────
+  Item: Request countdown
+  Status: MISSING
+  Pri: P1
+  Evidence: requestExpiresAt exists in the type but is never rendered.
+  ────────────────────────────────────────
+  Item: Free-to-paid transition notice
+  Status: MISSING
+  Pri: P1
+  Evidence: FREE_LIMIT_REACHED just ends the chat.
+  ────────────────────────────────────────
+  Item: Low-balance banner and in-chat recharge
+  Status: PARTIAL
+  Pri: P1
+  Evidence: Toast only (useChatSession.ts:90-93).
+  ────────────────────────────────────────
+  Item: Client connection-state handling
+  Status: MISSING
+  Pri: P0/P1
+  Evidence: No connect, disconnect or connect_error handlers. The "Reconnecting"
+
+  UI follows the server's chat:paused event only.
+  ────────────────────────────────────────
+  Item: End confirmation
+  Status: MISSING
+  Pri: P1
+  Evidence: ChatWindow.tsx:203-209 ends immediately.
+  ────────────────────────────────────────
+  Item: Session summary and receipt
+  Status: MISSING
+  Pri: P1
+  Evidence: The ENDED panel shows only the reason. billedSeconds and amountPaise
+
+  are available.
+  ────────────────────────────────────────
+  Item: Error state in chat
+  Status: PARTIAL
+  Pri: P1
+  Evidence: useChatSession returns error, and ChatWindow never renders it.
+  ────────────────────────────────────────
+  Item: Send failure and pending state
+  Status: PARTIAL
+  Pri: P1
+  Evidence: Toast only. The draft is cleared immediately.
+  ────────────────────────────────────────
+  Item: Wallet sync after a chat ends
+  Status: PARTIAL
+  Pri: P1
+  Evidence: Nothing invalidates the wallet query.
+  ────────────────────────────────────────
+  Item: Accessibility
+  Status: PARTIAL
+  Pri: P1
+  Evidence: No role="log" on the message list, no label on the input,
+  Shift+Enter
+  blocked, and the timer announces every second.
+  ────────────────────────────────────────
+  Item: Mobile
+  Status: PARTIAL
+  Pri: P2
+  Evidence: No back control between 768 and 1023px.
+  ────────────────────────────────────────
+  Item: Listing, profile, history, wallet page
+  Status: IMPLEMENTED
+  Pri: —
+  Evidence: pages/Astrologers.tsx, UserConversationsPage.tsx, WalletPage.tsx
+
+  2.5 Astrologer functionality
+
+  Item: Online toggle doesn't refresh
+  Status: BROKEN
+  Pri: P1
+  Evidence: useAstrologerConversations.ts:41-46 has no onSuccess, and staleTime
+  is 30s.
+  ────────────────────────────────────────
+  Item: Incoming-request popup, sound, browser notification
+  Status: MISSING
+  Pri: P1
+  Evidence: Only the chat page listens for chat:new-session. The dashboard
+  layout
+  doesn't.
+  ────────────────────────────────────────
+  Item: Effective presence and busy state
+  Status: MISSING
+  Pri: P1
+  Evidence: The UI shows only the stored isOnline.
+  ────────────────────────────────────────
+  Item: Request countdown
+  Status: MISSING
+  Pri: P1
+  Evidence: Same as customer side.
+  ────────────────────────────────────────
+  Item: Accept and reject errors
+  Status: PARTIAL
+  Pri: P1
+  Evidence: handleAccept swallows errors, and handleReject has no catch
+  (ChatWindow.tsx:130-133).
+  ────────────────────────────────────────
+  Item: Possible privacy leak
+  Status: UNKNOWN
+  Pri: P1
+  Evidence: The timer pill shows the customer's wallet balance to the astrologer
+
+  (ChatWindow.tsx:196). Whether the server sends it to the astrologer isn't
+  confirmed.
+  ────────────────────────────────────────
+  Item: Suspended-astrologer gating
+  Status: PARTIAL
+  Pri: P1
+  Evidence: A profile banner exists. The chat page shows nothing, and the online
+
+  toggle isn't disabled.
+  ────────────────────────────────────────
+  Item: Multi-tab
+  Status: MISSING
+  Pri: P2
+  Evidence: Two tabs both heartbeat and join.
+  ────────────────────────────────────────
+  Item: Consultation history (duration and amount)
+  Status: PARTIAL
+  Pri: P1
+  Evidence: A chat list only.
+  ────────────────────────────────────────
+  Item: Earnings summary
+  Status: MISSING
+  Pri: blocked on business rules
+  Evidence:
+  ────────────────────────────────────────
+  Item: Report and block customer
+  Status: MISSING
+  Pri: P1
+  Evidence:
+  ────────────────────────────────────────
+  Item: Mobile drawer accessibility
+  Status: PARTIAL
+  Pri: P2
+  Evidence: The closed drawer is still focusable, with no Escape handler and no
+  focus trap.
+  ────────────────────────────────────────
+  Item: Layout, nested routes, Outlet context
+  Status: IMPLEMENTED
+  Pri: —
+  Evidence: AstrologerDashboardLayout.tsx:126-462, App.tsx:900-905. Preserve.
+
+  2.6 Superadmin
+
+  Item: Consultation list, search, active monitoring
+  Status: MISSING (chat-escalations covers only the AI bot)
+  Pri: P1
+  ────────────────────────────────────────
+  Item: Wallet adjustments with audit
+  Status: MISSING
+  Pri: P1
+  ────────────────────────────────────────
+  Item: Refund approval, disputes
+  Status: MISSING
+  Pri: P1
+  ────────────────────────────────────────
+  Item: Commission and payout settings
+  Status: MISSING
+  Pri: blocked on business rules
+  ────────────────────────────────────────
+  Item: Suspend and reinstate
+  Status: IMPLEMENTED (AstrologerApplicationDetailPage.tsx:93-94,170-180)
+  Pri: —
+  ────────────────────────────────────────
+  Item: Per-astrologer complimentary grant
+  Status: IMPLEMENTED, with no global allowance config
+  Pri: —
+  ────────────────────────────────────────
+  Item: Astrologer rate management
+  Status: PARTIAL: astrologers set their own price, with no admin override or
+  bounds
+  Pri: P1
+  ────────────────────────────────────────
+  Item: Session timeout and duration config
+  Status: PARTIAL: only complimentary max seconds
+  Pri: P2
+  ────────────────────────────────────────
+  Item: Billing failures and reconciliation
+  Status: PARTIAL: stuck holds only, with the false-positive bug above
+  Pri: P1
+  ────────────────────────────────────────
+  Item: Financial reports (revenue, liability, promo vs purchased)
+  Status: MISSING
+  Pri: P1
+  ────────────────────────────────────────
+  Item: Suspicious activity detection
+  Status: MISSING
+  Pri: P2
+  ────────────────────────────────────────
+  Item: Audit logging
+  Status: IMPLEMENTED, transactional
+  Pri: —
+
+  2.7 Infrastructure and testing
+
+  Item: Graceful shutdown
+  Status: MISSING
+  Pri: P1
+  ────────────────────────────────────────
+  Item: Fatal-error handlers (unhandledRejection, uncaughtException)
+  Status: MISSING
+  Pri: P0 (see 2.2)
+  ────────────────────────────────────────
+  Item: Error tracking
+  Status: MISSING
+  Pri: P1
+  ────────────────────────────────────────
+  Item: CI
+  Status: MISSING (no .github)
+  Pri: P1
+  ────────────────────────────────────────
+  Item: render.yaml or any version-controlled Render config
+  Status: MISSING
+  Pri: P1
+  ────────────────────────────────────────
+  Item: Backups and point-in-time recovery
+  Status: UNKNOWN
+  Pri: P0 to confirm
+  ────────────────────────────────────────
+  Item: Background job ownership
+  Status: MISSING
+  Pri: P1
+  ────────────────────────────────────────
+  Item: /api/health is static and doesn't check the DB
+  Status: PARTIAL
+  Pri: P2
+  ────────────────────────────────────────
+  Item: Structured logs
+  Status: MISSING (171 raw console.* calls)
+  Pri: P2
+  ────────────────────────────────────────
+  Item: DB pool and statement timeouts
+  Status: PARTIAL
+  Pri: P2
+  ────────────────────────────────────────
+  Item: Aggregate npm test
+  Status: MISSING
+  Pri: P1
+  ────────────────────────────────────────
+  Item: Jest config
+  Status: BROKEN: it points at jest and ts-jest, which aren't installed
+  Pri: P2
+  ────────────────────────────────────────
+  Item: End-to-end tests
+  Status: MISSING: no Playwright or Cypress, only about 10 vitest unit tests
+  Pri: P1
+  ────────────────────────────────────────
+  Item: Existing DB-backed tests
+  Status: They skip without TEST_DATABASE_URL. They cover the wallet ledger,
+  reservations, free allowance, tool billing and the chat state machine.
+  Pri: —
+  ────────────────────────────────────────
+  Item: Tests not yet written
+  Status: Socket auth, race conditions, residual billing, the zero-balance case,
+
+  restart recovery, concurrent recharge, suspension mid-chat, idempotency-key
+  ownership
+  Pri: P0/P1
+
+  3. Consolidation candidates
+
+  Nothing here has been deleted or changed.
+
+  - config/environment.ts and middleware/auth.ts: dead, with the hardcoded
+    secret. Remove.
+  - FREE_TRIAL_SECONDS and ChatFreeTrialUsage: legacy, still referenced.
+  - UserChatPage at /chat/:sessionId duplicates the split-pane route
+    /dashboard/chats/:sessionId.
+  - useConversations and useAstrologerConversations are near-duplicates, and
+    their socket event names differ (chat:ended and chat:session-ended).
+  - chat.route.ts and chat.astrologer.route.ts repeat getSession and
+    getMessages.
+  - prisma/sql/astrologer_partial_indexes.sql has a stale header saying
+    migrations aren't used.
+  - Dead jest config.
+  - The duplicated logout dialog in the astrologer layout.
+  - Possible overlap between the legacy admin pages and the newer panels. This
+    one wasn't verified.
+
+  4. Business decisions I need from you
+
+  These affect correctness. I won't guess at them.
+
+  1. Astrologer compensation: commission percentage, whether promotional-coin
+     consumption earns the astrologer money (and who funds that subsidy),
+     whether free-allowance seconds earn anything, the pending-to-payable
+     lifecycle, and the payout policy. Checkpoint 6 stays blocked until these
+     are decided.
+  2. Rate snapshot timing: your rule says "at activation". The code snapshots at
+     request creation. Should I move it to accept?
+  3. Payment gateway: which provider, and whether mock payments are ever allowed
+     on a deployed staging environment.
+  4. Free-seconds semantics: when a zero-balance user with free allowance runs
+     out of free seconds mid-chat, end immediately with a clear message (my
+     recommendation), or give a grace window?
+  5. Moderation and retention: report and block policy, transcript retention
+     period, and deletion behaviour. The last two need legal review.
+  6. Deployment shape: is production Render a single instance? Which plan (sleep
+     behaviour)? Is Postgres point-in-time recovery enabled?
+  7. Cancelled requests: is adding a CANCELLED end reason acceptable? It's an
+     additive enum migration.
+
+  5. Implementation roadmap (for your approval)
+
+  Each checkpoint extends existing code and adds no parallel system. Migrations
+  are prepared and reviewed first and never applied without your approval.
+
+  Checkpoint 1: financial correctness and DB integrity (P0)
+  - Modify: modules/chat/billing.ts, chat.service.ts, payment/wallet.service.ts,
+    payment.service.ts, toolBilling.service.ts, billingFailures.route.ts.
+  - Changes:
+    - Final settlement in endSession.
+    - Drift-free elapsed time.
+    - An atomic tick that combines free-claim, settlement and the session
+      update.
+    - The free-only phase without a reservation.
+    - An in-flight tick guard.
+    - Re-snapshot the rate on accept (pending decision 2).
+    - Atomic, idempotent recharge confirm.
+    - Mark SETTLED reservations.
+    - User-scoped tool-execution keys.
+    - Fix the stuck-hold false positive.
+    - Inverted mock-payment flag.
+  - Database: additive CHECKs on chat_sessions and wallet_transactions, plus a
+    unique index on HELD reservations per (referenceId, purpose). Confirm no
+    existing rows violate them first.
+  - Rollback risk: low for the code. The constraints need a pre-check query.
+  - Tests: the 1/13/30/43/60s end-time table through the real endSession, the
+    zero-balance case, partial tick failure, overlapping ticks, concurrent
+    recharge confirms, chat plus tool concurrent spend.
+  - Acceptance: wallet never negative, every terminal path settles exactly once,
+    no free-forever path.
+
+  Checkpoint 2: chat lifecycle and Socket.IO security (P0)
+  - Modify: socketServer.ts, chat.service.ts, billing.ts, index.ts, the chat
+    message model.
+  - Changes:
+    - Payload validation inside the try.
+    - Global rejection handlers and graceful shutdown.
+    - Status-guarded transitions.
+    - Atomic endSession.
+    - Idempotent accept, reject and end.
+    - Socket rate limits and maxHttpBufferSize.
+    - Auth re-validation on message send.
+    - Disconnect sockets on suspension.
+    - Client message id dedupe.
+    - Message ordering tiebreaker.
+    - A CANCELLED reason.
+    - Offline and busy checks.
+    - A resumeAllActiveSessions that doesn't pause sessions owned by another
+      process.
+    - An advisory-lock leader for the schedulers, or a documented
+      single-instance rule.
+  - Database: nullable clientMessageId with a unique index, and the enum value.
+  - Socket contract changes: chat:message accepts an optional clientMessageId,
+    and ack errors become typed codes.
+  - Dependency: Checkpoint 1.
+  - Tests: a real Socket.IO suite for auth, unauthorized rooms, malformed
+    payloads, flooding, duplicate accept/reject/end, restart recovery, and
+    suspension mid-chat.
+
+  Checkpoint 3: payment safeguards, privacy and reliability (P0/P1)
+  - Changes:
+    - Lock down or delete both TTS proxies.
+    - helmet and a smaller body limit.
+    - Gate dev CORS origins on NODE_ENV.
+    - Auth rate limiting and an enumeration fix.
+    - Fail-fast env validation, and remove the dead files.
+    - Log scrubbing.
+    - Sentry.
+    - CI.
+    - A readiness endpoint.
+    - A reconciliation job and a stale-reservation sweeper.
+    - A version-controlled render.yaml.
+  - Needs from you: decisions 3 and 6.
+
+  Checkpoint 4: customer and astrologer UX (Impeccable and frontend-design)
+  - Price confirmation with free allowance, balance and affordable minutes.
+  - Request countdown on both sides.
+  - Client socket-state handling with rejoin and refetch.
+  - Free-to-paid notice and low-balance banner with a recharge button.
+  - End confirmation and session receipt.
+  - Error and send-failure states.
+  - Astrologer request popup, sound and browser notification.
+  - Effective presence and busy state.
+  - The online-toggle cache fix.
+  - Accessibility and mobile fixes.
+  - Suspended-astrologer gating.
+  - Check the wallet-balance exposure to astrologers.
+  - All of it inside the existing design system and AstrologerDashboardLayout.
+
+  Checkpoint 5: Superadmin
+  - Consultation list and search, wallet adjustments, refund approval and
+    disputes, financial reports, report and block, rate bounds, and
+    session-duration settings.
+  - All of it in the existing admin architecture, with audit logging.
+
+  Checkpoint 6: earnings and payouts. Blocked until decision 1.
+
+  Checkpoint 7: regression and verification. An aggregate npm test, Playwright
+  for the flows listed in your Phase 5, a test database, and a final production
+  verification.
+
+  6. What I need from you
+
+  1. Approve, adjust or reorder the roadmap.
+  2. Answer decisions 1 to 7. I can walk through them with grill-me if you'd
+     like.
+  3. Confirm these three facts about the live environment: NODE_ENV on Render,
+     whether the partial-index migration 20261111100100 has been applied, and
+     whether VITE_SARVAM_API_KEY has ever been set in Vercel.
+
+  I'll start Checkpoint 1 only after you approve.
+
+✻ Baked for 5m 49s · done 10:40 PM

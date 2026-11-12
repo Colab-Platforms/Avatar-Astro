@@ -29,12 +29,15 @@ import publicChadhawaRoutes from "./modules/chadhawa/chadhawa.public.route.js";
 import publicShopRoutes from "./modules/shop/shop.public.route.js";
 import gemstoneRoutes from "./modules/gemstone/gemstone.route.js";
 import { errorHandler } from "./middleware/errorHandler.js";
-import { startDarshanRefreshLoop } from "./modules/darshan/darshan.refresh.js";
+import { startDarshanRefreshLoop, stopDarshanRefreshLoop } from "./modules/darshan/darshan.refresh.js";
 import { createWalletRouter } from "./modules/payment/wallet.route.js";
 import { createChatRouter } from "./modules/chat/chat.route.js";
 import { createAstrologerChatRouter } from "./modules/chat/chat.astrologer.route.js";
-import { resumeAllActiveSessions } from "./modules/chat/billing.js";
-import { initSocketServer } from "./realtime/socketServer.js";
+import { resumeAllActiveSessions, stopBillingTimers } from "./modules/chat/billing.js";
+import { initSocketServer, clearPresenceTimers } from "./realtime/socketServer.js";
+import { createShutdownController, installProcessHandlers } from "./utils/lifecycle.js";
+import { isMockPaymentsMisconfigured } from "./modules/payment/mockPayments.js";
+import prisma from "@root/prisma.js";
 import { isOriginAllowed } from "./utils/corsOrigins.js";
 import { getExecutionId, reserveToolExecution, settleToolExecution, releaseToolExecution } from "./modules/payment/toolBilling.service.js";
 import { TOOL_KEYS } from "./modules/payment/toolKeys.js";
@@ -53,6 +56,9 @@ const app = express();
   if ((process.env.OTP_HMAC_SECRET ?? "").trim().length < 32) console.error("✗ OTP_HMAC_SECRET is missing or shorter than 32 characters — e-mail OTPs cannot be issued or verified (registration / unverified login will fail closed)");
   const optional = ["OPENROUTER_API_KEY", "GROQ_API_KEY", "RESEND_API_KEY", "SMTP_FROM_EMAIL", "SUPPORT_EMAIL", "YOUTUBE_API_KEY", "CORS_ORIGIN", "CLAMAV_HOST", "CLAMAV_PORT"].filter((k) => !process.env[k]);
   if (optional.length) console.warn(`! Optional env not set (related features disabled or degraded): ${optional.join(", ")}`);
+  // The mock payment gateway stays locked outside development/test regardless of this flag; the warning
+  // exists so a flag copied into a deployed environment is noticed and removed.
+  if (isMockPaymentsMisconfigured()) console.error("✗ ALLOW_MOCK_PAYMENTS=true is set but NODE_ENV is not development/test — mock payments remain DISABLED. Remove the variable from this environment.");
 }
 // Render (and most hosts) terminate TLS at one proxy hop. Without this, req.ip is the proxy for every visitor,
 // so the per-IP rate limits would be shared by all users at once.
@@ -416,7 +422,42 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 // Wrapped (rather than a bare app.listen) so Socket.IO can attach to the same HTTP
 // server/port — Render only exposes one port per service.
 const httpServer = createServer(app);
-initSocketServer(httpServer);
+const io = initSocketServer(httpServer);
+
+// Graceful shutdown (SIGTERM/SIGINT) and fatal-error handling (uncaughtException / unhandledRejection).
+// Fatal errors do NOT keep the process serving: it logs, does a short cleanup, and exits non-zero so the
+// host restarts it; in-flight chats are recovered from database state by resumeAllActiveSessions().
+installProcessHandlers(
+  process,
+  createShutdownController({
+    exit: (code) => process.exit(code),
+    steps: [
+      {
+        name: "stop background timers",
+        run: () => {
+          stopBillingTimers();
+          stopDarshanRefreshLoop();
+          clearPresenceTimers();
+        },
+      },
+      {
+        // Disconnects every socket, then stops accepting HTTP and waits for in-flight requests.
+        name: "close socket.io and http server",
+        run: () =>
+          new Promise<void>((resolve) => {
+            httpServer.closeIdleConnections?.();
+            const force = setTimeout(() => httpServer.closeAllConnections?.(), 3_000);
+            force.unref();
+            io.close(() => {
+              clearTimeout(force);
+              resolve(); // an already-closed server reports an error here; either way it is closed
+            });
+          }),
+      },
+      { name: "disconnect database", run: () => prisma.$disconnect() },
+    ],
+  }),
+);
 
 // Start server
 function startServer() {

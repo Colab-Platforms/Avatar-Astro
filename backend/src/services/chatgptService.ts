@@ -1,6 +1,7 @@
 import { OPENROUTER_MODEL } from '../config/aiModels.js';
 import axios from 'axios';
 import { WrongLanguageError, generateInLanguage, languageRule, tokenBudget, type ResponseLanguage } from '../utils/responseLanguage.js';
+import { logError } from '../utils/safeError.js';
 
 interface BirthChartData {
   sign?: string;
@@ -94,7 +95,7 @@ Use simple, conversational language. Avoid complex astrological jargon. Make it 
     return interpretation;
   } catch (error: any) {
     if (error instanceof WrongLanguageError) throw error;
-    console.error('OpenRouter Service Error:', error.response?.status, error.response?.data?.error?.message || error.message);
+    logError('OpenRouter Service Error:', error);
     
     // Fallback: Return mock data for testing UI
     if (error.response?.status === 402) {
@@ -170,7 +171,7 @@ Keep it positive, practical, and easy to understand. Use Hinglish (Hindi-English
 
     return response.data.choices[0].message.content;
   } catch (error: any) {
-    console.error('OpenRouter Horoscope Error:', error.response?.status, error.response?.data || error.message);
+    logError('OpenRouter Horoscope Error:', error);
     throw new Error(`Failed to generate horoscope: ${error.response?.data?.error?.message || error.message}`);
   }
 };
@@ -230,7 +231,7 @@ Use simple, encouraging language. Make it practical and relatable.${languageRule
     });
   } catch (error: any) {
     if (error instanceof WrongLanguageError) throw error;
-    console.error('OpenRouter Compatibility Error:', error.response?.status, error.response?.data || error.message);
+    logError('OpenRouter Compatibility Error:', error);
     throw new Error(`Failed to generate compatibility analysis: ${error.response?.data?.error?.message || error.message}`);
   }
 };
