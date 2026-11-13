@@ -219,7 +219,11 @@
     "openMenu": "ਮੀਨੂ ਖੋਲ੍ਹੋ",
     "closeMenu": "ਮੀਨੂ ਬੰਦ ਕਰੋ",
     "confirmLogoutTitle": "ਸਾਈਨ ਆਊਟ ਦੀ ਪੁਸ਼ਟੀ ਕਰੋ",
-    "confirmLogoutBody": "ਕੀ ਤੁਸੀਂ ਆਪਣੇ ਖਾਤੇ ਤੋਂ ਸਾਈਨ ਆਊਟ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?"
+    "confirmLogoutBody": "ਕੀ ਤੁਸੀਂ ਆਪਣੇ ਖਾਤੇ ਤੋਂ ਸਾਈਨ ਆਊਟ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?",
+    "booksAndMantras": "ਕਿਤਾਬਾਂ ਅਤੇ ਮੰਤਰ",
+    "spiritualBooks": "ਅਧਿਆਤਮਿਕ ਕਿਤਾਬਾਂ",
+    "mantrasChants": "ਮੰਤਰ ਅਤੇ ਜਾਪ",
+    "joinAsAstrologer": "ਜੋਤਸ਼ੀ ਬਣੋ"
   },
   "home": {
     "hero": {

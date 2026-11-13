@@ -219,7 +219,11 @@
     "openMenu": "மெனுவைத் திற",
     "closeMenu": "மெனுவை மூடு",
     "confirmLogoutTitle": "வெளியேறுவதை உறுதிசெய்",
-    "confirmLogoutBody": "உங்கள் கணக்கிலிருந்து வெளியேற விரும்புகிறீர்களா?"
+    "confirmLogoutBody": "உங்கள் கணக்கிலிருந்து வெளியேற விரும்புகிறீர்களா?",
+    "booksAndMantras": "புத்தகங்கள் & மந்திரங்கள்",
+    "spiritualBooks": "ஆன்மிக நூல்கள்",
+    "mantrasChants": "மந்திரங்களும் ஜபங்களும்",
+    "joinAsAstrologer": "ஜோதிடராகுங்கள்"
   },
   "home": {
     "hero": {

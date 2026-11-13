@@ -219,7 +219,11 @@
     "openMenu": "मेनू उघडा",
     "closeMenu": "मेनू बंद करा",
     "confirmLogoutTitle": "लॉगआउटची खात्री करा",
-    "confirmLogoutBody": "तुम्हाला खरोखर तुमच्या खात्यातून साइन आउट करायचे आहे का?"
+    "confirmLogoutBody": "तुम्हाला खरोखर तुमच्या खात्यातून साइन आउट करायचे आहे का?",
+    "booksAndMantras": "पुस्तके आणि मंत्र",
+    "spiritualBooks": "आध्यात्मिक पुस्तके",
+    "mantrasChants": "मंत्र आणि जप",
+    "joinAsAstrologer": "ज्योतिषी व्हा"
   },
   "home": {
     "hero": {

@@ -219,7 +219,11 @@
     "openMenu": "ಮೆನು ತೆರೆಯಿರಿ",
     "closeMenu": "ಮೆನು ಮುಚ್ಚಿ",
     "confirmLogoutTitle": "ಸೈನ್ ಔಟ್ ದೃಢೀಕರಿಸಿ",
-    "confirmLogoutBody": "ನಿಮ್ಮ ಖಾತೆಯಿಂದ ಸೈನ್ ಔಟ್ ಆಗಲು ಬಯಸುವಿರಾ?"
+    "confirmLogoutBody": "ನಿಮ್ಮ ಖಾತೆಯಿಂದ ಸೈನ್ ಔಟ್ ಆಗಲು ಬಯಸುವಿರಾ?",
+    "booksAndMantras": "ಪುಸ್ತಕಗಳು ಮತ್ತು ಮಂತ್ರಗಳು",
+    "spiritualBooks": "ಆಧ್ಯಾತ್ಮಿಕ ಪುಸ್ತಕಗಳು",
+    "mantrasChants": "ಮಂತ್ರಗಳು ಮತ್ತು ಜಪಗಳು",
+    "joinAsAstrologer": "ಜ್ಯೋತಿಷಿಯಾಗಿ"
   },
   "home": {
     "hero": {

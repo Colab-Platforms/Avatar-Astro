@@ -219,7 +219,11 @@
     "openMenu": "মেনু খুলুন",
     "closeMenu": "মেনু বন্ধ করুন",
     "confirmLogoutTitle": "সাইন আউট নিশ্চিত করুন",
-    "confirmLogoutBody": "আপনি কি আপনার অ্যাকাউন্ট থেকে সাইন আউট করতে চান?"
+    "confirmLogoutBody": "আপনি কি আপনার অ্যাকাউন্ট থেকে সাইন আউট করতে চান?",
+    "booksAndMantras": "বই ও মন্ত্র",
+    "spiritualBooks": "আধ্যাত্মিক বই",
+    "mantrasChants": "মন্ত্র ও জপ",
+    "joinAsAstrologer": "জ্যোতিষী হন"
   },
   "home": {
     "hero": {
