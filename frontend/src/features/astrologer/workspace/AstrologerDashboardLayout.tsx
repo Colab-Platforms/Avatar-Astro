@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { ExternalLink, LogOut, Menu, MessageCircle, PanelLeftClose, PanelLeftOpen, ShieldAlert, UserCog, X, type LucideIcon } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useLogoutMutation } from "@/features/auth/hooks/useAuthMutations";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,10 @@ import {
 import { ErrorBox, Loading } from "@/features/dashboard/library/ui";
 import { useAstrologerAccess } from "./hooks/useAstrologerWorkspace";
 import { useSetAstrologerOnline } from "@/features/chat/hooks/useAstrologerConversations";
+import { connectSocket } from "@/features/chat/lib/socket";
+import { astrologerChatApi, type ChatSession } from "@/features/chat/api/chatApi";
+import { playConsultationChime } from "@/features/chat/lib/notificationSound";
+import IncomingRequestModal from "@/features/chat/components/IncomingRequestModal";
 import type { AstrologerProfileSelf } from "./types";
 
 interface Item {
@@ -128,6 +133,8 @@ export default function AstrologerDashboardLayout() {
   const setOnline = useSetAstrologerOnline();
   const [collapsed, setCollapsed] = useState(readCollapsed);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [incomingSession, setIncomingSession] = useState<ChatSession | null>(null);
+  const [incomingModalOpen, setIncomingModalOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const logoutMutation = useLogoutMutation();
@@ -141,6 +148,76 @@ export default function AstrologerDashboardLayout() {
       saveCollapsed(next);
       return next;
     });
+  };
+
+  const handleToggleOnline = (target: boolean) => {
+    if (target && "Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission().catch(() => {});
+    }
+    setOnline.mutate(target);
+  };
+
+  useEffect(() => {
+    const socket = connectSocket();
+
+    const onNewSession = async (payload: { sessionId: string }) => {
+      try {
+        const fullSession = await astrologerChatApi.getSession(payload.sessionId);
+        if (fullSession.status === "REQUESTED") {
+          setIncomingSession(fullSession);
+          setIncomingModalOpen(true);
+          playConsultationChime();
+
+          if ("Notification" in window && Notification.permission === "granted") {
+            const clientName = [fullSession.user?.firstName, fullSession.user?.lastName].filter(Boolean).join(" ") || "Client";
+            new Notification("New Consultation Request", {
+              body: `${clientName} has requested a consultation with you.`,
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Could not fetch incoming session details:", err);
+      }
+    };
+
+    const onSessionEnded = (payload: { sessionId: string }) => {
+      if (incomingSession?.id === payload.sessionId) {
+        setIncomingModalOpen(false);
+        setIncomingSession(null);
+        toast.info("The consultation request was cancelled or expired.");
+      }
+    };
+
+    socket.on("chat:new-session", onNewSession);
+    socket.on("chat:session-ended", onSessionEnded);
+
+    return () => {
+      socket.off("chat:new-session", onNewSession);
+      socket.off("chat:session-ended", onSessionEnded);
+    };
+  }, [incomingSession?.id]);
+
+  const handleAcceptIncoming = async () => {
+    if (!incomingSession) return;
+    try {
+      await astrologerChatApi.acceptSession(incomingSession.id);
+      setIncomingModalOpen(false);
+      navigate(`/astrologer-dashboard/chat/${incomingSession.id}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not accept consultation");
+    }
+  };
+
+  const handleRejectIncoming = async () => {
+    if (!incomingSession) return;
+    try {
+      await astrologerChatApi.rejectSession(incomingSession.id);
+      setIncomingModalOpen(false);
+      setIncomingSession(null);
+      toast.info("Consultation request declined");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not decline consultation");
+    }
   };
 
   const handleLogout = async () => {
@@ -245,7 +322,7 @@ export default function AstrologerDashboardLayout() {
         <div className="border-t border-[#E9DDC9] p-3">
           {!collapsed ? (
             <div className="space-y-3">
-              <OnlineToggle isOnline={profile.isOnline} pending={setOnline.isPending} onToggle={() => setOnline.mutate(!profile.isOnline)} />
+              <OnlineToggle isOnline={profile.isOnline} pending={setOnline.isPending} onToggle={() => handleToggleOnline(!profile.isOnline)} />
 
               <div className="flex items-center gap-3 px-1">
                 <Initials name={name} photo={profile.profilePhotoUrl} />
@@ -285,7 +362,7 @@ export default function AstrologerDashboardLayout() {
             </div>
           ) : (
             <div className="flex flex-col items-center gap-2">
-              <OnlineToggle isOnline={profile.isOnline} pending={setOnline.isPending} onToggle={() => setOnline.mutate(!profile.isOnline)} compact />
+              <OnlineToggle isOnline={profile.isOnline} pending={setOnline.isPending} onToggle={() => handleToggleOnline(!profile.isOnline)} compact />
               <div title={name}>
                 <Initials name={name} photo={profile.profilePhotoUrl} />
               </div>
@@ -376,7 +453,7 @@ export default function AstrologerDashboardLayout() {
 
           <div className="border-t border-[#E9DDC9] p-4">
             <div className="mb-3">
-              <OnlineToggle isOnline={profile.isOnline} pending={setOnline.isPending} onToggle={() => setOnline.mutate(!profile.isOnline)} />
+              <OnlineToggle isOnline={profile.isOnline} pending={setOnline.isPending} onToggle={() => handleToggleOnline(!profile.isOnline)} />
             </div>
             <div className="mb-3 flex items-center gap-3">
               <Initials name={name} photo={profile.profilePhotoUrl} />
@@ -458,6 +535,14 @@ export default function AstrologerDashboardLayout() {
           )}
         </main>
       </div>
+
+      <IncomingRequestModal
+        open={incomingModalOpen}
+        session={incomingSession}
+        onAccept={handleAcceptIncoming}
+        onReject={handleRejectIncoming}
+        onClose={() => setIncomingModalOpen(false)}
+      />
     </div>
   );
 }

@@ -5,8 +5,9 @@ import { toast } from "sonner";
 import { useAuthStore } from "@/store/authStore";
 import { AuthApiError } from "@/lib/authClient";
 import type { Astrologer } from "@/data/astrologers";
-import { chatApi } from "../api/chatApi";
+import { chatApi, type ChatEligibility } from "../api/chatApi";
 import RechargeModal from "@/features/wallet/components/RechargeModal";
+import PriceConfirmationModal from "./PriceConfirmationModal";
 
 interface Props {
   astrologer: Astrologer;
@@ -23,6 +24,8 @@ export default function StartChatButton({ astrologer, compact, className }: Prop
   const location = useLocation();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [loading, setLoading] = useState(false);
+  const [eligibility, setEligibility] = useState<ChatEligibility | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [rechargeOpen, setRechargeOpen] = useState(false);
   const [minimumRupees, setMinimumRupees] = useState<number | undefined>(undefined);
 
@@ -48,24 +51,29 @@ export default function StartChatButton({ astrologer, compact, className }: Prop
     }
     setLoading(true);
     try {
-      const eligibility = await chatApi.getEligibility(astrologer.id);
+      const data = await chatApi.getEligibility(astrologer.id);
+      setEligibility(data);
+      setConfirmOpen(true);
+    } catch (err) {
+      toast.error(err instanceof AuthApiError || err instanceof Error ? err.message : "Could not check astrologer availability.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
-      // `canStart` already accounts for an existing pending/active session being resumable
-      // even when the balance would otherwise block a *new* one — check that, not the raw
-      // balance flag, or a user can never get back into a chat they already started.
-      if (!eligibility.canStart) {
-        setMinimumRupees(eligibility.minimumRequiredPaise ? Math.ceil(eligibility.minimumRequiredPaise / 100) : undefined);
-        setRechargeOpen(true);
-        return;
-      }
-
+  async function handleStartSession() {
+    try {
       const session = await chatApi.startSession(astrologer.id);
       navigate(`/dashboard/chats/${session.id}`);
     } catch (err) {
       toast.error(err instanceof AuthApiError || err instanceof Error ? err.message : "Could not start chat right now.");
-    } finally {
-      setLoading(false);
+      throw err;
     }
+  }
+
+  function handleOpenRecharge(min?: number) {
+    setMinimumRupees(min);
+    setRechargeOpen(true);
   }
 
   async function afterRecharge() {
@@ -87,6 +95,14 @@ export default function StartChatButton({ astrologer, compact, className }: Prop
         {loading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <MessageCircle className="h-4 w-4" aria-hidden="true" />}
         Chat
       </button>
+      <PriceConfirmationModal
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        astrologer={astrologer}
+        eligibility={eligibility}
+        onConfirmStart={handleStartSession}
+        onOpenRecharge={handleOpenRecharge}
+      />
       <RechargeModal open={rechargeOpen} onOpenChange={setRechargeOpen} minimumRupees={minimumRupees} onSuccess={afterRecharge} />
     </>
   );
