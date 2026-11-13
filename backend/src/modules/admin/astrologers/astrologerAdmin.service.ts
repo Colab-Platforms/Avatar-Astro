@@ -492,3 +492,11 @@ export async function upsertDocumentRequirement(
   });
   return saved;
 }
+
+export {
+  RATE_BOUNDS_SETTING_KEY,
+  type AstrologerRateBounds,
+  DEFAULT_RATE_BOUNDS,
+  getRateBoundsSetting,
+  setRateBoundsSetting,
+} from "./rateBounds.js";

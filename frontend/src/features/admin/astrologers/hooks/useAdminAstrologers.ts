@@ -217,3 +217,24 @@ export function useUpsertDocumentRequirement() {
     onError: (e) => toast.error(errorMessage(e, "Could not save document requirement")),
   });
 }
+
+export function useRateBoundsSetting() {
+  return useQuery({
+    queryKey: [...ADMIN_ASTROLOGERS_QUERY_KEY, "settings", "rate-bounds"] as const,
+    queryFn: () => astrologerAdminApi.getRateBounds(),
+    retry: retryUnlessAuthError,
+  });
+}
+
+export function useSetRateBoundsSetting() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { minRatePerMinuteRupees?: number; maxRatePerMinuteRupees?: number; defaultRatePerMinuteRupees?: number }) =>
+      astrologerAdminApi.setRateBounds(input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [...ADMIN_ASTROLOGERS_QUERY_KEY, "settings", "rate-bounds"] });
+      toast.success("Consultation rate bounds updated");
+    },
+    onError: (e) => toast.error(errorMessage(e, "Could not save rate bounds")),
+  });
+}

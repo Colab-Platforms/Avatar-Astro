@@ -6,6 +6,7 @@ import { logActivity } from "@/modules/library/library.service.js";
 import { sendAstrologerStatusEmail, sendAstrologerAdminAlertEmail } from "@/utils/mailer.js";
 import { ASTROLOGER_AGREEMENT_TYPES, ASTROLOGER_AGREEMENT_VERSIONS, type AstrologerAgreementTypeKey } from "@/config/astrologerAgreements.js";
 import { REAPPLIABLE_STATUSES, isTransitionAllowed, type DocumentRequirementSnapshotItem, type ReadinessResult } from "./astrologer.types.js";
+import { getRateBoundsSetting } from "@/modules/admin/astrologers/rateBounds.js";
 
 type Db = Prisma.TransactionClient | typeof prisma;
 
@@ -421,8 +422,12 @@ export async function updateOwnAstrologerProfile(userId: string, patch: Record<s
   if ("displayName" in data && !String(data.displayName ?? "").trim()) throw new ApiError("Display name cannot be empty.", STATUS_CODES.BAD_REQUEST);
   if ("pricePerMinute" in data && data.pricePerMinute !== null) {
     const price = Number(data.pricePerMinute);
-    if (!Number.isInteger(price) || price < MIN_PRICE_PER_MINUTE || price > MAX_PRICE_PER_MINUTE) {
-      throw new ApiError(`Price per minute must be a whole number between ${MIN_PRICE_PER_MINUTE} and ${MAX_PRICE_PER_MINUTE}.`, STATUS_CODES.BAD_REQUEST);
+    const bounds = await getRateBoundsSetting();
+    if (!Number.isInteger(price) || price < bounds.minRatePerMinuteRupees || price > bounds.maxRatePerMinuteRupees) {
+      throw new ApiError(
+        `Price per minute must be a whole number between ₹${bounds.minRatePerMinuteRupees} and ₹${bounds.maxRatePerMinuteRupees}.`,
+        STATUS_CODES.BAD_REQUEST,
+      );
     }
     data.pricePerMinute = price;
   }

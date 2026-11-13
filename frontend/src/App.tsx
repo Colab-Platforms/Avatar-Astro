@@ -86,6 +86,12 @@ const AdminToolPricingPage = lazy(
 const AdminBillingFailuresPage = lazy(
   () => import("./features/admin/panel/pages/BillingFailuresPage"),
 );
+const AdminConsultationsPage = lazy(
+  () => import("./features/admin/panel/pages/ConsultationsAdminPage"),
+);
+const AdminPaymentRefundsPage = lazy(
+  () => import("./features/admin/panel/pages/PaymentRefundsAdminPage"),
+);
 const AdminAstrologyAudioPage = lazy(
   () => import("./features/admin/panel/pages/AstrologyAudioPage"),
 );
@@ -789,6 +795,16 @@ const App = () => {
                     </Suspense>
                   }
                 />
+                <Route
+                  path="consultations"
+                  element={
+                    <Suspense fallback={<AdminLazyFallback />}>
+                      <MainOnly>
+                        <AdminConsultationsPage />
+                      </MainOnly>
+                    </Suspense>
+                  }
+                />
                 <Route path="users" element={<LegacyUsersRedirect />} />
                 <Route
                   path="admins"
@@ -846,6 +862,16 @@ const App = () => {
                     <Suspense fallback={<AdminLazyFallback />}>
                       <MainOnly>
                         <AdminBillingFailuresPage />
+                      </MainOnly>
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="refunds"
+                  element={
+                    <Suspense fallback={<AdminLazyFallback />}>
+                      <MainOnly>
+                        <AdminPaymentRefundsPage />
                       </MainOnly>
                     </Suspense>
                   }

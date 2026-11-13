@@ -525,11 +525,11 @@ export default function AstrologerDashboardLayout() {
           </div>
         </header>
 
-        <main id="astrologer-dashboard-main" className={cn("flex-1 bg-[#FAF8F5]", isFullBleed ? "overflow-hidden" : "overflow-y-auto p-4 sm:p-6 lg:p-8")}>
+        <main id="astrologer-dashboard-main" className={cn("flex-1 bg-[#FAF8F5]", isFullBleed ? "overflow-hidden" : "overflow-y-auto p-4 sm:p-6 lg:px-8 lg:py-6")}>
           {isFullBleed ? (
             <Outlet context={{ profile } satisfies AstrologerOutletContext} />
           ) : (
-            <div className="mx-auto w-full max-w-3xl">
+            <div className="mx-auto w-full max-w-[1400px]">
               <Outlet context={{ profile } satisfies AstrologerOutletContext} />
             </div>
           )}

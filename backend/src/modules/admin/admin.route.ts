@@ -13,6 +13,8 @@ import { createAstrologerAdminRouter } from "@/modules/admin/astrologers/astrolo
 import { createToolPricingRouter } from "./toolPricing.route.js";
 import { createBillingFailuresRouter } from "./billingFailures.route.js";
 import { createPaymentRefundsAdminRouter } from "./paymentRefunds.route.js";
+import { createChatSessionsAdminRouter } from "./chatSessions.route.js";
+import { createWalletAdminRouter } from "./walletAdjust.route.js";
 
 const router = Router();
 
@@ -42,10 +44,12 @@ router.use("/astrology/audio", createAstrologyAudioAdminRouter());
 // Astrologer onboarding: application review, document verification, approval.
 router.use("/astrologers", createAstrologerAdminRouter());
 
-// Coin-wallet: premium AI tool pricing activation, and stuck-billing-hold reconciliation.
+// Coin-wallet: premium AI tool pricing activation, stuck-billing-hold reconciliation, refunds, and manual adjustments.
 router.use("/tool-pricing", createToolPricingRouter());
 router.use("/billing-failures", createBillingFailuresRouter());
 router.use("/refunds", createPaymentRefundsAdminRouter());
+router.use("/chat-sessions", createChatSessionsAdminRouter());
+router.use("/wallet", createWalletAdminRouter());
 
 // Admin panel modules (overview, users, tools, content, reports, audit...).
 router.use(createAdminPanelRouter());

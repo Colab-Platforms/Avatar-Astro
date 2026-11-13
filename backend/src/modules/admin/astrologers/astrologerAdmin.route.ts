@@ -193,6 +193,15 @@ export function createAstrologerAdminRouter(): Router {
     wrap(async (req, res) => sendResponse(res, true, await svc.upsertDocumentRequirement(req.body ?? {}, req), "Document requirement saved", STATUS_CODES.CREATED)),
   );
 
+  router.get(
+    "/settings/rate-bounds",
+    wrap(async (_req, res) => sendResponse(res, true, await svc.getRateBoundsSetting())),
+  );
+  router.patch(
+    "/settings/rate-bounds",
+    wrap(async (req, res) => sendResponse(res, true, await svc.setRateBoundsSetting(req.body ?? {}, req), "Rate bounds updated")),
+  );
+
   return router;
 }
 

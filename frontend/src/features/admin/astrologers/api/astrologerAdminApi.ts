@@ -113,4 +113,12 @@ export const astrologerAdminApi = {
   upsertDocumentRequirement(input: Record<string, unknown>) {
     return authRequest<DocumentRequirementAdmin>(`${BASE}/settings/document-requirements`, { method: "POST", body: input });
   },
+
+  getRateBounds() {
+    return authRequest<{ minRatePerMinuteRupees: number; maxRatePerMinuteRupees: number; defaultRatePerMinuteRupees: number }>(`${BASE}/settings/rate-bounds`);
+  },
+
+  setRateBounds(input: { minRatePerMinuteRupees?: number; maxRatePerMinuteRupees?: number; defaultRatePerMinuteRupees?: number }) {
+    return authRequest<{ minRatePerMinuteRupees: number; maxRatePerMinuteRupees: number; defaultRatePerMinuteRupees: number }>(`${BASE}/settings/rate-bounds`, { method: "PATCH", body: input });
+  },
 };

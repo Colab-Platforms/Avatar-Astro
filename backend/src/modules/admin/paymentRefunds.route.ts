@@ -77,6 +77,36 @@ export function createPaymentRefundsAdminRouter(): Router {
     }),
   );
 
+  router.patch(
+    "/:id",
+    wrap(async (req, res) => {
+      const { id } = req.params;
+      const { handling, notes } = req.body ?? {};
+
+      const existing = await prisma.paymentRefund.findUnique({ where: { id } });
+      if (!existing) {
+        throw new ApiError("Payment refund record not found", STATUS_CODES.NOT_FOUND);
+      }
+
+      const data: Record<string, unknown> = {};
+      if (handling && ["ACTION_REQUIRED", "PROCESSED", "DISMISSED"].includes(handling)) {
+        data.handling = handling;
+        data.handledBy = (req as any).user?.email || (req as any).user?.id || "admin";
+        data.handledAt = new Date();
+      }
+      if (typeof notes === "string") {
+        data.notes = notes.trim();
+      }
+
+      const updated = await prisma.paymentRefund.update({
+        where: { id },
+        data,
+      });
+
+      sendResponse(res, true, updated, "Payment refund updated");
+    }),
+  );
+
   return router;
 }
 

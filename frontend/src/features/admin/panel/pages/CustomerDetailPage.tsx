@@ -4,6 +4,7 @@ import { usePanel } from "../api";
 import { QueryView } from "../QueryView";
 import { Badge, Card, fmtDate, ghostBtn, PageHeader, personName, Stat, Table } from "../ui";
 import { CreateAccountDialog, DeleteDialog, EditAccountDialog, PasswordDialog, StatusDialog } from "../accounts/AccountDialogs";
+import { CustomerWalletCard } from "../accounts/CustomerWalletCard";
 import { ArrowLeft, ExternalLink, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -137,6 +138,9 @@ export default function CustomerDetailPage() {
                   ))}
                 </dl>
               </Card>
+
+              {/* Coin Wallet & Ledger */}
+              <CustomerWalletCard userId={u.id} userName={name} />
 
               {/* Rate Limits */}
               <Card

@@ -2,7 +2,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, Activity, Sparkles, MessageCircleHeart, MessageCircleWarning, Flame, Store, FileText, CreditCard,
   Plug, BarChart3, ScrollText, LogOut, X, Lock, ShieldCheck, Library, History, AudioLines, UserCog, ClipboardList, Settings, BookOpen,
-  Coins, AlertTriangle,
+  Coins, AlertTriangle, MessageSquare, RotateCcw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ const OVERVIEW: NavDef[] = [{ to: "/admin", label: "Overview", icon: LayoutDashb
 
 const CUSTOMER_MGMT: NavDef[] = [
   { to: "/admin/customers", label: "Customers", icon: Users, mainOnly: true },
+  { to: "/admin/consultations", label: "Consultation sessions", icon: MessageSquare, mainOnly: true },
   { to: "/admin/activity", label: "Customer activity", icon: Activity, mainOnly: true },
   { to: "/admin/customer-library", label: "Customer readings / library", icon: Library, mainOnly: true },
 ];
@@ -34,6 +35,7 @@ const NAV: NavDef[] = [
   { to: "/admin/tools", label: "Astrology tools", icon: Sparkles, mainOnly: true },
   { to: "/admin/tool-pricing", label: "Tool Pricing", icon: Coins, mainOnly: true },
   { to: "/admin/billing-failures", label: "Billing Failures", icon: AlertTriangle, mainOnly: true },
+  { to: "/admin/refunds", label: "Refunds & disputes", icon: RotateCcw, mainOnly: true },
   { to: "/admin/astrology-audio", label: "Astrology Audio Manager", icon: AudioLines, mainOnly: true },
   { to: "/admin/inner-voice", label: "Inner Voice", icon: MessageCircleHeart, mainOnly: true },
   { to: "/admin/chat-escalations", label: "Chat escalations", icon: MessageCircleWarning, mainOnly: true },
