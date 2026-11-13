@@ -473,11 +473,13 @@ describe("layout matches the design", () => {
     expect(css).not.toMatch(/\.home-light \.container\s*\{/);
   });
 
-  it("featured, zodiac and blog use the 1440px content width; the trio is 1/2/3 columns", () => {
+  it("featured showcase is slightly wider than zodiac and blog; the trio is 1/2/3 columns", () => {
     renderAt("/");
-    for (const sec of [sectionOf(/Read from our\s+blog\./), screen.getByRole("region", { name: "Devotion & Spirituality" }).closest("section")!]) {
-      expect(sec.querySelector("[class*='max-w-[1440px]']")).not.toBeNull();
-    }
+    const featured = screen.getByRole("region", { name: "Devotion & Spirituality" }).closest("section")!;
+    const featuredContainer = featured.querySelector(":scope > div")!;
+    expect(featuredContainer.className).toContain("max-w-[1520px]");
+    const blog = sectionOf(/Read from our\s+blog\./);
+    expect(blog.querySelector("[class*='max-w-[1440px]']")).not.toBeNull();
     const trio = screen.getByRole("heading", { level: 3, name: "Live Darshan" }).closest(".grid")!;
     expect(trio.className).toContain("md:grid-cols-2");
     const blogGrid = sectionOf(/Read from our\s+blog\./).querySelector(".grid")!;
