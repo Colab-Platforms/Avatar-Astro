@@ -321,9 +321,13 @@ describe("site-wide light theme scoping", () => {
     for (const [name, href] of [["Blog", "/blog"], ["About", "/about"], ["Contact", "/contact"]] as const) {
       expect(nav.getByRole("link", { name })).toHaveAttribute("href", href);
     }
-    for (const label of ["Astrology Seva", "Inner Voice", "Live"]) {
+    for (const label of ["Astrology Seva", "Inner Voice"]) {
       expect(nav.getByRole("button", { name: new RegExp(label) })).toBeInTheDocument();
     }
+    // Live is a plain link straight to Live Darshan, not a dropdown.
+    expect(nav.getByRole("link", { name: "Live" })).toHaveAttribute("href", "/avatar-live/darshan");
+    expect(nav.queryByRole("button", { name: /^Live/ })).toBeNull();
+    expect(nav.queryByText(/Live Hub|Family Functions/)).toBeNull();
     expect(nav.getByRole("link", { name: /Sign in/ })).toBeInTheDocument();
   });
 

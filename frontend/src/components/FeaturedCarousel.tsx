@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+const AUTO_ADVANCE_MS = 3000;
 import Tx from "@/i18n/Tx";
 import { ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react";
 import { devotionSlides } from "@/data/features";
@@ -10,7 +12,7 @@ const slideKey = (title: string): string => title.toLowerCase().replace(/[^a-z]+
 const arrowCls =
   "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-home-gerua bg-home-gerua text-home-ivory transition-colors duration-300 hover:border-home-gold hover:bg-home-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-home-ink motion-reduce:transition-none";
 
-/** Devotion & Spirituality carousel: arrows wrap around, dots jump to a slide, no auto-advance. */
+/** Devotion & Spirituality carousel: arrows wrap around, dots jump to a slide, auto-advances every 3s. */
 const FeaturedCarousel = () => {
   const [index, setIndex] = useState(0);
   const { isPathDisabled } = useFeatureFlags();
@@ -18,6 +20,13 @@ const FeaturedCarousel = () => {
   const slides = devotionSlides.filter((s) => !isPathDisabled(s.buttonPath));
   const count = slides.length;
   const go = (delta: number) => setIndex((i) => (i + delta + count) % count);
+
+  // Advance on its own; any manual move (arrow or dot) restarts the timer.
+  useEffect(() => {
+    if (count < 2) return;
+    const id = setInterval(() => setIndex((i) => (i + 1) % count), AUTO_ADVANCE_MS);
+    return () => clearInterval(id);
+  }, [count, index]);
 
   if (count === 0) return null;
   return (
