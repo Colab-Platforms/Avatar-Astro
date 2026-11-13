@@ -36,6 +36,7 @@ async function makeAstrologer(key: string, pricePerMinuteRupees: number | null) 
       slug: `chat-state-test-${key}-${Date.now()}`,
       pricePerMinute: pricePerMinuteRupees,
       isPublished: true,
+      isOnline: true,
     },
   });
   return { userId: user.id, applicationId: application.id, profileId: profile.id };

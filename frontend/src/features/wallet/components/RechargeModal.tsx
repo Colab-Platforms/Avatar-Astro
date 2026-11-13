@@ -21,6 +21,7 @@ interface Props {
 export default function RechargeModal({ open, onOpenChange, minimumRupees, onSuccess }: Props) {
   const [selected, setSelected] = useState<number | null>(PRESETS_RUPEES[1]);
   const [custom, setCustom] = useState("");
+  const [isCheckoutActive, setIsCheckoutActive] = useState(false);
   const recharge = useRecharge();
 
   const amountRupees = custom.trim() ? Number(custom) : selected;
@@ -28,22 +29,42 @@ export default function RechargeModal({ open, onOpenChange, minimumRupees, onSuc
 
   function pay() {
     if (!valid || !amountRupees) return;
-    recharge.mutate(Math.round(amountRupees * 100), {
-      onSuccess: (result) => {
-        toast.success(`₹${amountRupees} added to your wallet`);
-        onSuccess?.(result.balancePaise);
-        onOpenChange(false);
-        setCustom("");
+    recharge.mutate(
+      {
+        amountPaise: Math.round(amountRupees * 100),
+        onBeforeOpen: () => setIsCheckoutActive(true),
+        onDismiss: () => setIsCheckoutActive(false),
       },
-      onError: (err) => {
-        toast.error(err instanceof AuthApiError || err instanceof Error ? err.message : "Recharge failed. Please try again.");
+      {
+        onSuccess: (result) => {
+          setIsCheckoutActive(false);
+          toast.success(`₹${amountRupees} added to your wallet`);
+          onSuccess?.(result.balancePaise);
+          onOpenChange(false);
+          setCustom("");
+        },
+        onError: (err) => {
+          setIsCheckoutActive(false);
+          const msg =
+            err instanceof AuthApiError || err instanceof Error
+              ? err.message
+              : "Recharge failed. Please try again.";
+          if (msg !== "Payment cancelled by user") {
+            toast.error(msg);
+          }
+        },
       },
-    });
+    );
   }
 
   return (
-    <Dialog open={open} onOpenChange={(next) => !recharge.isPending && onOpenChange(next)}>
-      <DialogContent className="max-w-md border-[#592209]/15 bg-[#FBF5EC] sm:rounded-2xl">
+    <Dialog open={open && !isCheckoutActive} onOpenChange={(next) => !recharge.isPending && onOpenChange(next)}>
+      <DialogContent
+        className="max-w-md border-[#592209]/15 bg-[#FBF5EC] sm:rounded-2xl"
+        onInteractOutside={(e) => {
+          if (isCheckoutActive) e.preventDefault();
+        }}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-home-serif text-xl text-[#301607]">
             <Wallet className="h-5 w-5 text-[#592209]" aria-hidden="true" /> Recharge your wallet
@@ -103,10 +124,12 @@ export default function RechargeModal({ open, onOpenChange, minimumRupees, onSuc
           className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#592209] px-5 py-3 text-base font-semibold text-[#F5E9D6] transition hover:bg-[#431906] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {recharge.isPending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
-          Pay ₹{amountRupees && Number.isFinite(amountRupees) ? amountRupees : "—"}
+          {recharge.isPending
+            ? "Processing..."
+            : `Pay ₹${amountRupees && Number.isFinite(amountRupees) ? amountRupees : "—"}`}
         </button>
         <p className="text-center text-xs text-[#6B4A37]">
-          Payments are simulated for now while a real gateway is integrated — no real money is charged.
+          Secure payments powered by Razorpay (UPI, Cards, NetBanking). 100% encrypted.
         </p>
       </DialogContent>
     </Dialog>

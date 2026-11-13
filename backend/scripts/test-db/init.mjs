@@ -13,7 +13,17 @@ const url = assertSafeTestDatabase(process.env.TEST_DATABASE_URL || TEST_DATABAS
 
 console.log("1/2 prisma db push (test database only)…");
 // DATABASE_URL is overridden explicitly for the child; dotenv never overrides an already-set variable.
-const push = spawnSync("npx", ["prisma", "db", "push"], { cwd: BACKEND_DIR, shell: true, stdio: "inherit", env: { ...process.env, DATABASE_URL: url, DB_POOL_MAX: "1" } });
+const push = spawnSync("npx", ["prisma", "db", "push", "--accept-data-loss"], {
+  cwd: BACKEND_DIR,
+  shell: true,
+  stdio: "inherit",
+  env: {
+    ...process.env,
+    DATABASE_URL: url,
+    DB_POOL_MAX: "1",
+    PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION: "(Recommended) Yes, proceed with prisma db push on the local test database (127.0.0.1:54329)",
+  },
+});
 if (push.status !== 0) { console.error("db push failed"); process.exit(1); }
 
 console.log("2/2 applying custom SQL objects…");

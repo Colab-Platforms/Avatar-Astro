@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, BookOpen, Download, Search, X } from "lucide-react";
+import { ArrowRight, BookOpen, Download, Music, Search, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import DevotionLayout from "@/components/DevotionLayout";
 import Loader from "@/components/Loader/Loader";
@@ -87,6 +87,15 @@ export default function SpiritualBooksPage() {
           <h1 className="hl-serif text-4xl font-semibold leading-tight text-[#592209] sm:text-5xl">{t("spiritualBooks.title")}</h1>
           <div className="mt-2"><LotusDivider label={t("spiritualBooks.dividerAlt")} /></div>
           <p className="mt-3 font-home-sans text-base leading-relaxed text-[#5b3a2a] md:text-lg">{t("spiritualBooks.intro")}</p>
+          {/* Library Switcher */}
+          <div className="mt-5 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#BC6A4D] px-4 py-1.5 text-xs font-semibold text-[#FFF8F2] shadow-sm">
+              <BookOpen size={13} aria-hidden="true" /> {t("nav.spiritualBooks", { defaultValue: "Spiritual Books" })}
+            </span>
+            <Link to="/devotion/mantras-chants" className="inline-flex items-center gap-1.5 rounded-full border border-[#592209]/20 bg-[#592209]/5 px-4 py-1.5 text-xs font-medium text-[#592209] transition-colors hover:bg-[#592209]/10">
+              <Music size={13} aria-hidden="true" /> {t("nav.mantrasChants", { defaultValue: "Mantras & Chants" })}
+            </Link>
+          </div>
         </header>
 
         {isLoading ? (

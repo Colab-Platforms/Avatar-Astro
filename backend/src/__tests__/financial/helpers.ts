@@ -46,7 +46,12 @@ export async function boot(domain: string) {
 export async function cleanup(ctx: Pick<Ctx, "prisma" | "DOM" | "SLUG">) {
   const { prisma } = ctx;
   const ids: string[] = (await prisma.user.findMany({ where: { email: { endsWith: ctx.DOM } }, select: { id: true } })).map((u: any) => u.id);
-  if (ids.length) await prisma.toolExecution.deleteMany({ where: { userId: { in: ids } } });
+  if (ids.length) {
+    await prisma.paymentRefund.deleteMany({ where: { paymentOrder: { userId: { in: ids } } } });
+    await prisma.paymentOrder.deleteMany({ where: { userId: { in: ids } } });
+    await prisma.toolExecution.deleteMany({ where: { userId: { in: ids } } });
+  }
+  await prisma.paymentWebhookEvent.deleteMany({});
   await prisma.chatMessage.deleteMany({ where: { session: { user: { email: { endsWith: ctx.DOM } } } } });
   await prisma.chatSession.deleteMany({ where: { user: { email: { endsWith: ctx.DOM } } } });
   await prisma.astrologerProfile.deleteMany({ where: { slug: { startsWith: ctx.SLUG } } });
@@ -71,7 +76,7 @@ export async function makeAstrologer(ctx: Ctx, key: string, rupeesPerMinute: num
   const userId = await makeUser(ctx, `astro-${key}`);
   const application = await ctx.prisma.astrologerApplication.create({ data: { userId, status: "APPROVED" } });
   const profile = await ctx.prisma.astrologerProfile.create({
-    data: { applicationId: application.id, userId, displayName: `Astro ${key}`, slug: `${ctx.SLUG}${key}-${Date.now()}`, pricePerMinute: rupeesPerMinute, isPublished: true },
+    data: { applicationId: application.id, userId, displayName: `Astro ${key}`, slug: `${ctx.SLUG}${key}-${Date.now()}`, pricePerMinute: rupeesPerMinute, isPublished: true, isOnline: true },
   });
   return { profileId: profile.id, userId };
 }

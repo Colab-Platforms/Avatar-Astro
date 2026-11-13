@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BookOpen, ChevronDown, Download, Flame, Flower2, Moon, Mountain, Music, Pause, Play, Shell, Sparkles, Sun, Sunrise } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import DevotionLayout from "@/components/DevotionLayout";
 import Loader from "@/components/Loader/Loader";
@@ -71,6 +72,15 @@ export default function MantrasChantsPage() {
           <span className="mb-2 inline-block font-home-sans text-[0.75rem] font-bold uppercase tracking-[0.2em] text-home-gerua">{t("mantras.eyebrow")}</span>
           <h1 className="hl-serif mb-3 text-3xl font-semibold text-home-ink sm:text-4xl">{t("mantras.title")}</h1>
           <p className="font-home-sans text-home-muted">{t("mantras.subtitle")}</p>
+          {/* Library Switcher */}
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+            <Link to="/devotion/books" className="inline-flex items-center gap-1.5 rounded-full border border-[#592209]/20 bg-[#592209]/5 px-4 py-1.5 text-xs font-medium text-[#592209] transition-colors hover:bg-[#592209]/10">
+              <BookOpen size={13} aria-hidden="true" /> {t("nav.spiritualBooks", { defaultValue: "Spiritual Books" })}
+            </Link>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#BC6A4D] px-4 py-1.5 text-xs font-semibold text-[#FFF8F2] shadow-sm">
+              <Music size={13} aria-hidden="true" /> {t("nav.mantrasChants", { defaultValue: "Mantras & Chants" })}
+            </span>
+          </div>
         </div>
 
         {/* One shared audio element (hidden): the cards' Play buttons drive it */}

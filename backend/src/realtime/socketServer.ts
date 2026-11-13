@@ -10,7 +10,7 @@ import { ApiError } from "@/utils/ApiError.js";
 import { logError } from "@/utils/safeError.js";
 import * as chatService from "@/modules/chat/chat.service.js";
 import type { ChatSenderRole } from "@prisma/client";
-import { attachIo, roomForSession, roomForAstrologer, emitToRoom, recordHeartbeat, recordDeparture } from "@/modules/chat/billing.js";
+import { attachIo, roomForSession, roomForAstrologer, emitToRoom, recordHeartbeat, recordDeparture, type ConnectionIdentity } from "@/modules/chat/billing.js";
 import { MAX_MESSAGE_LENGTH } from "@/modules/chat/chat.constants.js";
 import {
   GENERIC_ERROR_MESSAGE,
@@ -23,7 +23,19 @@ import {
   type ChatSocketAck,
 } from "./socketValidation.js";
 
-type SocketData = { userId: string; role: "USER" | "ADMIN" | "SUPERADMIN"; astrologerProfileId: string | null };
+type SocketData = { userId: string; role: "USER" | "ADMIN" | "SUPERADMIN"; astrologerProfileId: string | null; connSeq?: number };
+
+/**
+ * Identifies this socket connection for presence staleness checks (see chat/billing.ts): `id` is the
+ * socket's own id, stable and unique for its lifetime; `seq` is a per-socket counter bumped SYNCHRONOUSLY
+ * the instant each raw event is received — before any `await` lets a slower event's async work finish
+ * first. That capture point is what makes `seq` reflect true arrival order, not resolution order.
+ */
+function nextConn(socket: Socket): ConnectionIdentity {
+  const data = socket.data as SocketData;
+  data.connSeq = (data.connSeq ?? 0) + 1;
+  return { id: socket.id, seq: data.connSeq };
+}
 
 // Per-astrologer live connection count — presence is "do they have an open socket right
 // now", not a manual toggle alone. Cleared on disconnect (with a short grace delay so a
@@ -31,6 +43,41 @@ type SocketData = { userId: string; role: "USER" | "ADMIN" | "SUPERADMIN"; astro
 const astrologerConnections = new Map<string, number>();
 const offlineTimers = new Map<string, NodeJS.Timeout>();
 const PRESENCE_GRACE_MS = 10_000;
+
+// The biggest legitimate frame is a chat:message: ~2000 chars of content plus ids and envelope.
+// 64 KiB leaves an order-of-magnitude margin while refusing megabyte-scale garbage outright
+// (Socket.IO closes the offending connection; others are unaffected).
+const MAX_SOCKET_FRAME_BYTES = 64 * 1024;
+
+// ---------------------------------------------------------------------------------------------
+// Per-socket, per-event rate limiting — fixed 10s windows, counted BEFORE any validation or DB
+// work so a flood is rejected at the cheapest possible point. Limits are per socket (per
+// connection), deliberately generous for real clients: the heartbeat fires every 10s, typing
+// updates are throttled client-side, and no human sends 20 messages in 10 seconds.
+// ---------------------------------------------------------------------------------------------
+const RATE_WINDOW_MS = 10_000;
+const RATE_LIMITS: Record<string, number> = {
+  "chat:message": 20,
+  "chat:typing": 40,
+  "chat:heartbeat": 20,
+  "chat:join": 20,
+  "chat:leave": 20,
+  "chat:end": 10,
+};
+const DEFAULT_RATE_LIMIT = 60;
+const rateWindows = new WeakMap<Socket, Map<string, { start: number; count: number }>>();
+
+function overRateLimit(socket: Socket, event: string): boolean {
+  let windows = rateWindows.get(socket);
+  if (!windows) rateWindows.set(socket, (windows = new Map()));
+  const now = Date.now();
+  let w = windows.get(event);
+  if (!w || now - w.start >= RATE_WINDOW_MS) {
+    windows.set(event, (w = { start: now, count: 0 }));
+  }
+  w.count += 1;
+  return w.count > (RATE_LIMITS[event] ?? DEFAULT_RATE_LIMIT);
+}
 
 async function setAstrologerOnline(astrologerProfileId: string, isOnline: boolean) {
   await prisma.astrologerProfile.update({
@@ -67,14 +114,16 @@ function replyWithError(ack: ChatSocketAck, event: string, err: unknown): void {
 function handle(
   socket: Socket,
   event: string,
-  handler: (payload: unknown, ack: ChatSocketAck, userId: string) => void | Promise<void>,
+  handler: (payload: unknown, ack: ChatSocketAck, userId: string, conn: ConnectionIdentity) => void | Promise<void>,
 ): void {
   socket.on(event, (...args: unknown[]) => {
     const { payload, ack } = splitArgs(args);
+    if (overRateLimit(socket, event)) return ack("Too many requests. Please slow down.", { code: "RATE_LIMITED" });
     const userId = (socket.data as Partial<SocketData> | undefined)?.userId;
+    const conn = nextConn(socket); // captured now, synchronously, so later async work can't reorder it
     const run = async () => {
       if (!userId) throw new ApiError("Authentication required", 401);
-      await handler(payload, ack, userId);
+      await handler(payload, ack, userId, conn);
     };
     run().catch((err) => replyWithError(ack, event, err)).catch(() => undefined);
   });
@@ -94,7 +143,7 @@ function trackJoin(socket: Socket, sessionId: string, role: ChatSenderRole): voi
  * Tells billing that a participant has left — but only if this was their LAST connection to that chat. A second
  * tab or device of the same person still in the room keeps them present (multi-tab must not pause a chat).
  */
-function reportDepartureIfLast(socket: Socket, sessionId: string, role: ChatSenderRole): void {
+function reportDepartureIfLast(socket: Socket, sessionId: string, role: ChatSenderRole, conn: ConnectionIdentity): void {
   try {
     const me = (socket.data as Partial<SocketData> | undefined)?.userId;
     const room = socket.nsp.adapter.rooms.get(roomForSession(sessionId));
@@ -105,7 +154,7 @@ function reportDepartureIfLast(socket: Socket, sessionId: string, role: ChatSend
         if (other && (other.data as Partial<SocketData> | undefined)?.userId === me) return; // still here on another socket
       }
     }
-    recordDeparture(sessionId, role).catch((err) => logError("[socket] failed to record departure:", err));
+    recordDeparture(sessionId, role, undefined, conn).catch((err) => logError("[socket] failed to record departure:", err));
   } catch (err) {
     logError("[socket] departure check failed:", err);
   }
@@ -117,7 +166,7 @@ export function registerChatHandlers(socket: Socket): void {
   // `userId`, or the owner of its `astrologerProfile`?) — never assumed from whether
   // this account separately happens to have an astrologer profile of its own, which
   // would wrongly force every chat onto one side for an astrologer acting as a customer.
-  handle(socket, "chat:join", async (payload, ack, userId) => {
+  handle(socket, "chat:join", async (payload, ack, userId, conn) => {
     const { sessionId } = parseSessionPayload(payload);
     await chatService.getSession(sessionId, userId);
     socket.join(roomForSession(sessionId));
@@ -127,33 +176,33 @@ export function registerChatHandlers(socket: Socket): void {
     // first periodic heartbeat arrives.
     const role = await chatService.getActorRole(sessionId, userId);
     trackJoin(socket, sessionId, role);
-    recordHeartbeat(sessionId, role);
+    recordHeartbeat(sessionId, role, undefined, conn);
     ack();
   });
 
-  handle(socket, "chat:heartbeat", async (payload, _ack, userId) => {
+  handle(socket, "chat:heartbeat", async (payload, _ack, userId, conn) => {
     const { sessionId } = parseSessionPayload(payload);
     const role = await chatService.getActorRole(sessionId, userId); // throws unless this user is a participant
     // After an automatic reconnect the client resumes heartbeating on a NEW socket without re-sending chat:join.
     // Re-establish room membership and tracking here, so that socket's later disconnect is still observed.
     socket.join(roomForSession(sessionId));
     trackJoin(socket, sessionId, role);
-    recordHeartbeat(sessionId, role);
+    recordHeartbeat(sessionId, role, undefined, conn);
   });
 
   // An explicit leave is something the server SEES: billing stops at this moment (not a heartbeat window later).
-  handle(socket, "chat:leave", (payload) => {
+  handle(socket, "chat:leave", (payload, _ack, _userId, conn) => {
     const { sessionId } = parseSessionPayload(payload);
     const role = joinedSessions.get(socket)?.get(sessionId);
     joinedSessions.get(socket)?.delete(sessionId);
     socket.leave(roomForSession(sessionId));
-    if (role) reportDepartureIfLast(socket, sessionId, role); // only for a chat this socket had actually joined
+    if (role) reportDepartureIfLast(socket, sessionId, role, conn); // only for a chat this socket had actually joined
   });
 
-  handle(socket, "chat:message", async (payload, ack, userId) => {
-    const { sessionId, content } = parseMessagePayload(payload);
-    const message = await chatService.postMessage(sessionId, userId, content.slice(0, MAX_MESSAGE_LENGTH));
-    recordHeartbeat(sessionId, message.senderRole); // sending a message is itself proof of presence
+  handle(socket, "chat:message", async (payload, ack, userId, conn) => {
+    const { sessionId, content, clientMessageId } = parseMessagePayload(payload);
+    const message = await chatService.postMessage(sessionId, userId, content.slice(0, MAX_MESSAGE_LENGTH), clientMessageId);
+    recordHeartbeat(sessionId, message.senderRole, undefined, conn); // sending a message is itself proof of presence
     emitToRoom(roomForSession(sessionId), "chat:message", message);
     ack(undefined, message);
   });
@@ -175,11 +224,34 @@ export function registerChatHandlers(socket: Socket): void {
   socket.on("disconnecting", () => {
     const joined = joinedSessions.get(socket);
     if (!joined) return;
-    for (const [sessionId, role] of joined) reportDepartureIfLast(socket, sessionId, role);
+    const conn = nextConn(socket); // captured synchronously, before any pending heartbeat's async work resolves
+    for (const [sessionId, role] of joined) reportDepartureIfLast(socket, sessionId, role, conn);
     joined.clear();
   });
 
   socket.on("error", (err) => logError("[socket] socket error:", err));
+}
+
+// Kept for suspension enforcement: disconnectUserSockets needs the live server instance.
+let ioRef: SocketIOServer | null = null;
+
+/** Registers the live Socket.IO server with this module AND with billing. Called by initSocketServer;
+ * exported so socket-level tests that build their own bare Server can wire it up the same way. */
+export function attachSocketServer(io: SocketIOServer): void {
+  ioRef = io;
+  attachIo(io);
+}
+
+/**
+ * Forcibly closes every socket belonging to `userId` — called when an account is deactivated or an
+ * astrologer suspended, so a revoked identity cannot keep an already-authenticated connection alive.
+ * Each socket's normal "disconnecting" path still runs, so chat presence/billing sees a clean departure.
+ */
+export function disconnectUserSockets(userId: string): void {
+  if (!ioRef) return;
+  for (const [, socket] of ioRef.of("/").sockets) {
+    if ((socket.data as Partial<SocketData> | undefined)?.userId === userId) socket.disconnect(true);
+  }
 }
 
 export function initSocketServer(httpServer: HttpServer): SocketIOServer {
@@ -191,9 +263,10 @@ export function initSocketServer(httpServer: HttpServer): SocketIOServer {
       },
       credentials: true,
     },
+    maxHttpBufferSize: MAX_SOCKET_FRAME_BYTES,
   });
 
-  attachIo(io);
+  attachSocketServer(io);
 
   io.use(async (socket: Socket, next) => {
     try {

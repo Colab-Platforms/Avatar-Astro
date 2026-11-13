@@ -79,7 +79,7 @@ before(async () => {
   ids.astroUser = astroUser.id;
   const application = await prisma.astrologerApplication.create({ data: { userId: astroUser.id, status: "APPROVED" } });
   const profile = await prisma.astrologerProfile.create({
-    data: { applicationId: application.id, userId: astroUser.id, displayName: "Socket Flow Astro", slug: `socket-flow-test-${Date.now()}`, pricePerMinute: 6, isPublished: true },
+    data: { applicationId: application.id, userId: astroUser.id, displayName: "Socket Flow Astro", slug: `socket-flow-test-${Date.now()}`, pricePerMinute: 6, isPublished: true, isOnline: true },
   });
   ids.profile = profile.id;
 

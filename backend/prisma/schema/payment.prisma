@@ -25,9 +25,33 @@ enum PaymentProvider {
 }
 
 enum PaymentOrderStatus {
+  /// Internal order exists (and, for Razorpay, the provider order too); awaiting payment.
   CREATED
+  /// Verified + credited. Terminal. The ONLY state in which the wallet was credited, exactly once.
   SUCCESS
+  /// The provider reported the payment failed. Terminal for that attempt's payment, but the order
+  /// stays re-payable on Razorpay until EXPIRED — a later capture webhook can still flip it to SUCCESS.
   FAILED
+  /// Abandoned: never paid within the expiry window; swept by markAbandonedOrdersExpired. A capture
+  /// webhook arriving even after this still credits (money was taken, so money must be honoured).
+  EXPIRED
+}
+
+enum PaymentRefundKind {
+  REFUND
+  DISPUTE
+}
+
+/// Internal handling state of a recorded refund/dispute — NOT the provider's own status (kept
+/// verbatim in providerStatus). Wallet-side handling of refunds is deliberately a HUMAN decision
+/// (the coins may already be spent); nothing automatic ever debits a wallet from these rows.
+enum PaymentRefundHandling {
+  /// Recorded from a verified webhook; awaiting a SUPERADMIN decision.
+  ACTION_REQUIRED
+  /// An admin applied a wallet adjustment for it (via the existing ADJUSTMENT ledger path).
+  WALLET_ADJUSTED
+  /// An admin decided no wallet action is needed (e.g. goodwill refund, coins honoured).
+  RESOLVED_NO_ACTION
 }
 
 /// Which balance a WalletTransaction's money actually moved into/out of. PURCHASED = ever came from a
@@ -193,12 +217,55 @@ model PaymentOrder {
   provider    PaymentProvider    @default(MOCK)
   status      PaymentOrderStatus @default(CREATED)
 
-  providerOrderId   String? @map("provider_order_id")
-  providerPaymentId String? @map("provider_payment_id")
+  providerOrderId   String? @unique @map("provider_order_id")
+  providerPaymentId String? @unique @map("provider_payment_id")
 
   createdAt   DateTime  @default(now()) @map("created_at")
   completedAt DateTime? @map("completed_at")
 
+  refunds PaymentRefund[]
+
   @@index([userId, status])
+  @@index([providerOrderId])
   @@map("payment_orders")
+}
+
+/// Recorded from verified gateway refund/dispute webhooks.
+/// Handled strictly via admin review (ACTION_REQUIRED) — never debits a wallet automatically.
+model PaymentRefund {
+  id String @id @default(cuid())
+
+  paymentOrderId String       @map("payment_order_id")
+  paymentOrder   PaymentOrder @relation(fields: [paymentOrderId], references: [id], onDelete: Restrict)
+
+  kind              PaymentRefundKind
+  providerRefundId  String?                @unique @map("provider_refund_id")
+  providerDisputeId String?                @unique @map("provider_dispute_id")
+  amountPaise       Int                    @map("amount_paise")
+  providerStatus    String                 @map("provider_status")
+  handling          PaymentRefundHandling  @default(ACTION_REQUIRED)
+
+  handledBy String?   @map("handled_by")
+  handledAt DateTime? @map("handled_at")
+  notes     String?
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  @@index([paymentOrderId])
+  @@index([handling])
+  @@map("payment_refunds")
+}
+
+/// Idempotency store for inbound payment webhooks.
+model PaymentWebhookEvent {
+  id        String          @id @default(cuid())
+  provider  PaymentProvider @default(RAZORPAY)
+  eventId   String          @unique @map("event_id")
+  eventType String          @map("event_type")
+  payload   Json?
+  createdAt DateTime        @default(now()) @map("created_at")
+
+  @@index([provider, eventType])
+  @@map("payment_webhook_events")
 }

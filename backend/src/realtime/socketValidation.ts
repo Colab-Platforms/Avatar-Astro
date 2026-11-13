@@ -48,10 +48,21 @@ export function parseSessionPayload(payload: unknown): { sessionId: string } {
   return { sessionId: sessionIdOf(asRecord(payload)) };
 }
 
-export function parseMessagePayload(payload: unknown): { sessionId: string; content: string } {
+// Client-generated message ids share the session-id shape: short, URL-safe, no exotic characters.
+const CLIENT_MESSAGE_ID = /^[A-Za-z0-9_-]{1,64}$/;
+
+export function parseMessagePayload(payload: unknown): { sessionId: string; content: string; clientMessageId?: string } {
   const record = asRecord(payload);
   const sessionId = sessionIdOf(record);
   if (typeof record.content !== "string") throw new SocketPayloadError("Message content must be text");
+  // Optional idempotency key for retries. Absent/undefined is fine (old clients); anything present
+  // but malformed is rejected rather than silently ignored, so a client bug can't disable its own dedupe.
+  if (record.clientMessageId !== undefined && record.clientMessageId !== null) {
+    if (typeof record.clientMessageId !== "string" || !CLIENT_MESSAGE_ID.test(record.clientMessageId)) {
+      throw new SocketPayloadError("Invalid client message id");
+    }
+    return { sessionId, content: record.content, clientMessageId: record.clientMessageId };
+  }
   return { sessionId, content: record.content };
 }
 

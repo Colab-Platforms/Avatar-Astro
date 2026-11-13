@@ -31,6 +31,9 @@ enum ChatEndReason {
   TIMEOUT
   REJECTED
   DISCONNECTED
+  /// The USER withdrew their own still-REQUESTED consultation before the astrologer answered
+  /// (approved additive value, decision 4). Nothing was reserved or billed — see cancelSession.
+  CANCELLED
 }
 
 enum ChatSenderRole {
@@ -118,9 +121,18 @@ model ChatMessage {
 
   content String
 
+  /// Client-generated idempotency key for exactly-once sends over a flaky socket: a retry of the
+  /// same send carries the same id, and the unique index below makes the second insert fail so the
+  /// server returns the FIRST message instead of storing a duplicate. Nullable — clients that don't
+  /// send one (old clients, server-generated messages) are unaffected; Postgres unique indexes
+  /// ignore NULLs, so any number of id-less messages coexist. Scoped to (sessionId, senderId): one
+  /// sender's ids can never collide with the other participant's.
+  clientMessageId String? @map("client_message_id")
+
   createdAt DateTime  @default(now()) @map("created_at")
   readAt    DateTime? @map("read_at")
 
+  @@unique([sessionId, senderId, clientMessageId])
   @@index([sessionId, createdAt])
   @@map("chat_messages")
 }

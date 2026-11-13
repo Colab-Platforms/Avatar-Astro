@@ -12,6 +12,7 @@ import { createAstrologyAudioAdminRouter } from "@/modules/astrologyAudio/astrol
 import { createAstrologerAdminRouter } from "@/modules/admin/astrologers/astrologerAdmin.route.js";
 import { createToolPricingRouter } from "./toolPricing.route.js";
 import { createBillingFailuresRouter } from "./billingFailures.route.js";
+import { createPaymentRefundsAdminRouter } from "./paymentRefunds.route.js";
 
 const router = Router();
 
@@ -44,6 +45,7 @@ router.use("/astrologers", createAstrologerAdminRouter());
 // Coin-wallet: premium AI tool pricing activation, and stuck-billing-hold reconciliation.
 router.use("/tool-pricing", createToolPricingRouter());
 router.use("/billing-failures", createBillingFailuresRouter());
+router.use("/refunds", createPaymentRefundsAdminRouter());
 
 // Admin panel modules (overview, users, tools, content, reports, audit...).
 router.use(createAdminPanelRouter());

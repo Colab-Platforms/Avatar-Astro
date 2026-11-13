@@ -1,0 +1,57 @@
+# Backend CI: typecheck + the full database-backed regression suite on every push/PR that
+# touches backend/. The suite runs against a throwaway postgres:17 service container wired to
+# look exactly like the local disposable test DB (same host/port/credentials), so the
+# assertSafeTestDatabase guard passes and NOTHING here can reach a real database.
+name: backend-ci
+
+on:
+  push:
+    branches: [main, dev-nikhil]
+    paths: ["backend/**", ".github/workflows/backend-ci.yml"]
+  pull_request:
+    paths: ["backend/**", ".github/workflows/backend-ci.yml"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: mybhagya_test
+          POSTGRES_PASSWORD: mybhagya_test_pw
+          POSTGRES_DB: mybhagya_test
+        ports:
+          - 54329:5432
+        options: >-
+          --health-cmd "pg_isready -U mybhagya_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://mybhagya_test:mybhagya_test_pw@127.0.0.1:54329/mybhagya_test
+      JWT_SECRET: ci-only-jwt-secret-0123456789abcdef
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # package-lock.json is currently gitignored in this repo, so `npm ci` (which requires a
+      # lockfile) can't be used. Committing the lockfile and switching this to `npm ci` + the
+      # setup-node npm cache would make builds faster and reproducible — recommended.
+      - run: npm install
+      # tsc needs @prisma/client's generated types to exist — `npm install` alone does not
+      # generate them (only the "prebuild" script does, which typecheck doesn't run through).
+      # Without this step every model/enum import 'has no exported member', cascading into
+      # implicit-any errors across the whole codebase.
+      - name: Generate Prisma client
+        run: npx prisma generate
+      - name: Typecheck
+        run: npx tsc --noEmit -p .
+      - name: Initialise test database (prisma db push + custom SQL)
+        run: node scripts/test-db/init.mjs
+      - name: Run database-backed test suite
+        run: node scripts/test-db/run-tests.mjs

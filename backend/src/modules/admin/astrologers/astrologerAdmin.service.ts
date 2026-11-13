@@ -11,6 +11,8 @@ import { computeApprovalReadiness } from "@/modules/astrologer/astrologer.servic
 import { SCANNING_SETTING_KEY } from "@/services/malwareScan.js";
 import { sendAstrologerStatusEmail, type AstrologerNotificationStatus } from "@/utils/mailer.js";
 import { generateUniqueAstrologerSlug } from "@/utils/slug.js";
+import { endLiveSessionsForAstrologer } from "@/modules/chat/chat.service.js";
+import { disconnectUserSockets } from "@/realtime/socketServer.js";
 
 const ASTROLOGER_ROLE_NAME = "ASTROLOGER";
 
@@ -360,9 +362,20 @@ export async function suspendAstrologer(applicationId: string, reason: string, r
 
     await tx.astrologerApplicationStatusHistory.create({ data: { applicationId, fromStatus: "APPROVED", toStatus: "SUSPENDED", actorUserId: (req as any).user!.id, reason } });
     await writeAudit(req, { action: "astrologer.application.suspended", entityType: "AstrologerApplication", entityId: applicationId, summary: `Astrologer suspended: ${reason}` }, tx);
-    return { alreadySuspended: false as const, userId: app.userId, email: app.email };
+    const profile = await tx.astrologerProfile.findUnique({ where: { applicationId }, select: { id: true } });
+    return { alreadySuspended: false as const, userId: app.userId, email: app.email, profileId: profile?.id ?? null };
   });
-  if (!result.alreadySuspended) notify(result.userId, result.email, "SUSPENDED", reason);
+  if (!result.alreadySuspended) {
+    // Suspension must bite mid-consultation, not just at the next login: any live chats are settled
+    // and ended (the user pays only for time delivered), and the astrologer's open sockets are closed
+    // so the already-authenticated connection cannot keep acting. Both AFTER the commit — ending a
+    // session settles wallet money and must never be rolled back with the suspension transaction.
+    if (result.profileId) {
+      await endLiveSessionsForAstrologer(result.profileId).catch((err) => console.error("[admin] failed to end live sessions on suspension:", err));
+    }
+    disconnectUserSockets(result.userId);
+    notify(result.userId, result.email, "SUSPENDED", reason);
+  }
   return result;
 }
 
