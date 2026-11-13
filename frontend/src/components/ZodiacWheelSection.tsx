@@ -27,7 +27,7 @@ const zodiacImages: Record<string, string> = {
 
 const wrap = (index: number, length: number) => ((index % length) + length) % length;
 
-const AUTO_SLIDE_DELAY = 4500;
+const AUTO_SLIDE_DELAY = 3000;
 const CARD = 256;
 
 // Card position & style for each offset from center (-2 … +2)
@@ -36,9 +36,6 @@ function getSlotAnimate(offset: number) {
   if (Math.abs(offset) === 1)   return { x: offset * 244, scale: 0.72, opacity: 0.9 };
   return                               { x: offset < 0 ? -537 : 537, scale: 0.5, opacity: 0.00 };
 }
-
-const prefersReducedMotion = () =>
-  typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 const arrowCls =
   'flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-home-gerua bg-home-gerua text-home-ivory transition-all duration-300 hover:scale-110 hover:border-home-gold hover:bg-home-gold motion-reduce:transition-none motion-reduce:hover:scale-100';
@@ -57,7 +54,6 @@ export const ZodiacWheelSection = () => {
   // ── Auto-slide (skipped for reduced-motion users) ───────────────────────────
   const startAutoSlide = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
-    if (prefersReducedMotion()) return;
     timerRef.current = setInterval(() => {
       dirRef.current = 1;
       setCurrentIndex(i => wrap(i + 1, zodiacSigns.length));

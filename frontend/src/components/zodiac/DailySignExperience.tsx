@@ -8,6 +8,7 @@ import { intlTag } from "@/features/muhurat/format";
 import { useZodiacText, type ZodiacSign } from "@/data/zodiacData";
 import { MAJOR_ARCANA, shuffleDeck, type TarotCard } from "@/data/tarotData";
 import TarotArt from "@/components/tarot/TarotArt";
+import HoroscopeStreakPanel from "@/features/horoscopeStreak/HoroscopeStreakPanel";
 import { fetchDailyHoroscope, formatDateLabel, HoroscopeError, msUntilNextDay, todayKey, type DailyHoroscope } from "@/lib/dailyHoroscope";
 
 // Daily horoscope experience for one Sun sign, shown at the top of /zodiac/:sign. Order on the page:
@@ -209,13 +210,16 @@ const DailySignExperience = ({ sign }: { sign: ZodiacSign }) => {
   const [picked, setPicked] = useState<number | null>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const reduce = useReducedMotion();
+  // What the visitor has done on this page for this sign; the Complete button unlocks once all three are done.
+  const [steps, setSteps] = useState({ read: false, shuffled: false, revealed: false });
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
-  useEffect(() => { setPicked(null); setDeck(drawDeck()); }, [sign.name]);
+  useEffect(() => { setPicked(null); setDeck(drawDeck()); setSteps({ read: false, shuffled: false, revealed: false }); }, [sign.name]);
 
   const shuffling = phase !== "idle";
   const shuffle = useCallback(() => {
     if (shuffling) return;
     setPicked(null); // every card goes face-down again
+    setSteps((s) => (s.shuffled ? s : { ...s, shuffled: true }));
     setPhase("gather");
     const t = reduce ? 0 : 1;
     timers.current.push(setTimeout(() => { setDeck(drawDeck()); setPhase("spread"); }, 650 * t));
@@ -226,7 +230,11 @@ const DailySignExperience = ({ sign }: { sign: ZodiacSign }) => {
   const pick = (slot: number) => {
     if (shuffling || blocked) return;
     setPicked((cur) => (cur === slot ? null : slot));
+    setSteps((s) => (s.revealed ? s : { ...s, revealed: true }));
   };
+  // The reading counts as read once it is on screen.
+  const readingShown = picked !== null && load.state === "ready";
+  useEffect(() => { if (readingShown) setSteps((s) => (s.read ? s : { ...s, read: true })); }, [readingShown]);
   const date = load.state === "ready" ? load.data.date : today;
 
   return (
@@ -284,6 +292,9 @@ const DailySignExperience = ({ sign }: { sign: ZodiacSign }) => {
           <Trans i18nKey="horoscope.daily.systemNote" values={{ sign: z.sign(sign.name) }} components={{ b: <strong />, i: <em />, l: <Link to="/birth-chart" className="font-semibold text-[#592209] underline" /> }} />
         </p>
       )}
+
+      {/* 14. daily streak (kept in this browser, like Karma Sankhya) */}
+      <HoroscopeStreakPanel steps={steps} />
     </section>
   );
 };

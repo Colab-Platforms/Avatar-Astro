@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, ChevronDown, Radio, LogIn, LogOut, User } from "lucide-react";
+import { Menu, X, ChevronDown, LogIn, LogOut, User } from "lucide-react";
 import gsap from "gsap";
 import { useTranslation } from "react-i18next";
 import LanguageSelector from "@/components/LanguageSelector";
@@ -37,18 +37,7 @@ const innerVoiceLinks = INNER_VOICE_NAV;
 // ];
 
 // Avatar Live sub-pages — used by mobile accordion + isActive check
-const avatarLiveLinks = [
-  {
-    name: "Live Darshan",
-    path: "/avatar-live/darshan",
-    key: "nav.liveDarshan",
-  },
-  {
-    name: "Family Functions",
-    path: "/avatar-live/family",
-    key: "nav.familyFunctions",
-  },
-];
+const liveLink = { name: "Live", path: "/avatar-live/darshan", key: "nav.live" };
 
 const shopLink = { name: "Shop", path: "/shop", key: "nav.shop" };
 
@@ -224,7 +213,7 @@ const NavDropdown = ({
       </button>
 
       <div
-        className={`absolute top-full left-0 pt-3 ${twoColumns ? "w-[34rem] sm:w-[38rem] max-w-[calc(100vw-2rem)]" : "w-56 max-w-[calc(100vw-2rem)]"} whitespace-normal ${open ? "pointer-events-auto" : "pointer-events-none"}`}
+        className={`absolute top-full left-1/2 -translate-x-1/2 pt-3 ${twoColumns ? "w-[36rem] max-w-[calc(100vw-2rem)]" : "w-52"} ${open ? "pointer-events-auto" : "pointer-events-none"}`}
       >
         <div
           id={menuId}
@@ -233,383 +222,20 @@ const NavDropdown = ({
           className={`glass-card rounded-xl border border-border/30 shadow-xl overflow-hidden transition-all duration-200 origin-top-left
             ${open ? "opacity-100 scale-y-100" : "opacity-0 scale-y-95"}`}
         >
-          <div
-            className={twoColumns ? "grid gap-1 p-2.5" : "py-2"}
-            style={
-              twoColumns
-                ? { gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }
-                : undefined
-            }
-          >
+          <div className={twoColumns ? "grid gap-x-3 gap-y-0.5 p-3" : "py-2"} style={twoColumns ? { gridTemplateColumns: "repeat(2, minmax(0, 1fr))" } : undefined}>
             {items.map((item, i) => (
               <Link
-                key={item.path}
-                to={item.path}
-                role="menuitem"
-                tabIndex={open ? 0 : -1}
-                onKeyDown={(e) => onItemKey(e, i)}
-                onClick={() => setOpen(false)}
-                className={`font-body text-sm tracking-wide transition-colors duration-200 whitespace-normal break-words
-                  focus:outline-none focus-visible:bg-[#BC6A4D]/10 rounded-lg
-                  ${twoColumns ? "flex items-center px-3.5 py-2.5 leading-snug" : "block px-4 py-2.5 leading-normal"}
-                  ${currentPath === item.path ? "text-[#BC6A4D] bg-[#BC6A4D]/10 font-medium" : "text-foreground/70 hover:text-[#BC6A4D] hover:bg-[#BC6A4D]/10"}`}
+                key={item.path} to={item.path} role="menuitem"
+                tabIndex={open ? 0 : -1} onKeyDown={(e) => onItemKey(e, i)}
+                className={`block font-body text-sm tracking-wide transition-colors duration-200
+                  focus:outline-none focus-visible:bg-[#BC6A4D]/10
+                  ${twoColumns ? "flex min-w-0 items-center whitespace-normal break-words rounded-lg px-4 py-2.5 leading-snug" : "px-4 py-2.5"}
+                  ${currentPath === item.path ? "text-[#BC6A4D] bg-[#BC6A4D]/10" : "text-foreground/70 hover:text-[#BC6A4D] hover:bg-[#BC6A4D]/10"}`}
               >
                 {item.name}
               </Link>
             ))}
           </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ── Avatar Live premium dropdown ───────────────────────────────────────────────
-interface AvatarLiveDropdownProps {
-  currentPath: string;
-  lightNav?: boolean;
-}
-
-const AvatarLiveDropdown = ({
-  currentPath,
-  lightNav,
-}: AvatarLiveDropdownProps) => {
-  const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isActive = currentPath.startsWith("/avatar-live");
-
-  const openMenu = () => {
-    if (closeTimer.current) {
-      clearTimeout(closeTimer.current);
-      closeTimer.current = null;
-    }
-    setOpen(true);
-  };
-  const scheduleClose = () => {
-    closeTimer.current = setTimeout(() => setOpen(false), 200);
-  };
-
-  useEffect(
-    () => () => {
-      if (closeTimer.current) clearTimeout(closeTimer.current);
-    },
-    [],
-  );
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        if (closeTimer.current) {
-          clearTimeout(closeTimer.current);
-          closeTimer.current = null;
-        }
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  const onTriggerKey = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      setOpen((v) => !v);
-    }
-    if (e.key === "Escape") setOpen(false);
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      if (!open) {
-        setOpen(true);
-        return;
-      }
-      (ref.current?.querySelectorAll("a")[0] as HTMLElement)?.focus();
-    }
-  };
-
-  const onItemKey = (e: React.KeyboardEvent, idx: number) => {
-    const nodes = Array.from(
-      ref.current?.querySelectorAll("a") ?? [],
-    ) as HTMLElement[];
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      nodes[Math.min(idx + 1, nodes.length - 1)]?.focus();
-    }
-    if (e.key === "ArrowUp") {
-      e.preventDefault();
-      if (idx === 0) {
-        triggerRef.current?.focus();
-        setOpen(false);
-      } else nodes[idx - 1]?.focus();
-    }
-    if (e.key === "Escape") {
-      setOpen(false);
-      triggerRef.current?.focus();
-    }
-    if (e.key === "Tab" && idx === nodes.length - 1) setOpen(false);
-  };
-
-  return (
-    <div
-      ref={ref}
-      className="relative"
-      onMouseEnter={openMenu}
-      onMouseLeave={scheduleClose}
-    >
-      {/* Trigger */}
-      <button
-        ref={triggerRef}
-        aria-haspopup="true"
-        aria-expanded={open}
-        aria-controls="avatar-live-menu"
-        onKeyDown={onTriggerKey}
-        onClick={() => setOpen((v) => !v)}
-        className={`relative flex items-center gap-1.5 whitespace-nowrap font-astra text-sm font-semibold tracking-wide transition-colors duration-300
-          focus:outline-none focus-visible:ring-2 focus-visible:ring-[#BC6A4D] focus-visible:ring-offset-2
-          focus-visible:ring-offset-background rounded-sm
-          ${isActive ? "text-[#BC6A4D]" : lightNav ? "text-[#2C1810]/60 hover:text-[#BC6A4D]" : "text-foreground/70 hover:text-[#BC6A4D]"}`}
-      >
-        {t("nav.live")}
-        <ChevronDown
-          size={14}
-          aria-hidden="true"
-          className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-        />
-        {isActive && (
-          <span className="absolute -bottom-1 left-0 right-0 h-[2px] bg-[#BC6A4D] rounded-full" />
-        )}
-      </button>
-
-      {/* Panel — positioned left-aligned, responsive width, white-space normal */}
-      <div
-        className={`absolute top-full left-0 pt-3 w-[22rem] sm:w-[24rem] max-w-[calc(100vw-2rem)] whitespace-normal ${open ? "pointer-events-auto" : "pointer-events-none"}`}
-      >
-        <div
-          id="avatar-live-menu"
-          role="menu"
-          aria-label={t("nav.live")}
-          className={`rounded-2xl overflow-hidden transition-all duration-200 origin-top-left glass-card
-            ${open ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
-          style={{
-            background: "#FFFAF6",
-            border: "1.5px solid rgba(188,106,77,0.18)",
-            boxShadow:
-              "0 24px 64px rgba(120,60,20,0.16), 0 4px 16px rgba(0,0,0,0.04)",
-          }}
-        >
-          {/* Hub row */}
-          <Link
-            to="/avatar-live"
-            role="menuitem"
-            tabIndex={open ? 0 : -1}
-            onKeyDown={(e) => onItemKey(e, 0)}
-            onClick={() => setOpen(false)}
-            style={{
-              textDecoration: "none",
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              padding: "13px 20px 11px",
-              borderBottom: "1px solid rgba(188,106,77,0.10)",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.background =
-                "rgba(188,106,77,0.05)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.background = "transparent";
-            }}
-            className="focus:outline-none focus-visible:bg-[#BC6A4D]/10"
-          >
-            <Radio
-              style={{ width: 13, height: 13, color: "#BC6A4D", flexShrink: 0 }}
-            />
-            <span
-              style={{
-                fontSize: 10,
-                fontWeight: 700,
-                letterSpacing: "0.2em",
-                color: "#BC6A4D",
-                textTransform: "uppercase",
-                fontFamily: "'DM Sans', system-ui, sans-serif",
-              }}
-            >
-              {t("nav.liveHub")}
-            </span>
-            {/* Live pulse dot */}
-            <span
-              style={{
-                marginLeft: "auto",
-                display: "flex",
-                alignItems: "center",
-                gap: 5,
-                fontSize: 10,
-                color: "#E53935",
-                fontWeight: 700,
-                letterSpacing: "0.08em",
-              }}
-            >
-              <span
-                style={{
-                  width: 6,
-                  height: 6,
-                  background: "#E53935",
-                  borderRadius: "50%",
-                  flexShrink: 0,
-                }}
-              />
-              {t("nav.liveBadge")}
-            </span>
-          </Link>
-
-          {/* Live Darshan item */}
-          <Link
-            to="/avatar-live/darshan"
-            role="menuitem"
-            tabIndex={open ? 0 : -1}
-            onKeyDown={(e) => onItemKey(e, 1)}
-            onClick={() => setOpen(false)}
-            style={{
-              textDecoration: "none",
-              display: "flex",
-              alignItems: "flex-start",
-              gap: 14,
-              padding: "16px 18px",
-              borderBottom: "1px solid rgba(188,106,77,0.08)",
-              transition: "background 0.18s",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.background =
-                "rgba(188,106,77,0.05)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.background = "transparent";
-            }}
-            className="focus:outline-none focus-visible:bg-[#BC6A4D]/10"
-          >
-            <div
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 12,
-                flexShrink: 0,
-                background:
-                  "linear-gradient(135deg, rgba(188,106,77,0.15) 0%, rgba(212,133,74,0.10) 100%)",
-                border: "1.5px solid rgba(188,106,77,0.22)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 20,
-              }}
-            >
-              🛕
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p
-                style={{
-                  fontSize: 15,
-                  fontWeight: 800,
-                  color: "#2C1810",
-                  marginBottom: 4,
-                  fontFamily: "'DM Sans', system-ui, sans-serif",
-                  letterSpacing: "0.02em",
-                  lineHeight: 1.2,
-                  whiteSpace: "normal",
-                }}
-              >
-                {t("nav.liveDarshan")}
-              </p>
-              <p
-                style={{
-                  fontSize: 12,
-                  color: "rgba(44,24,16,0.65)",
-                  lineHeight: 1.5,
-                  fontFamily: "'DM Sans', system-ui, sans-serif",
-                  whiteSpace: "normal",
-                  wordBreak: "break-word",
-                  margin: 0,
-                }}
-              >
-                Watch live temple darshans, aartis, and spiritual broadcasts
-                from famous temples across India.
-              </p>
-            </div>
-          </Link>
-
-          {/* Family Functions item */}
-          <Link
-            to="/avatar-live/family"
-            role="menuitem"
-            tabIndex={open ? 0 : -1}
-            onKeyDown={(e) => onItemKey(e, 2)}
-            onClick={() => setOpen(false)}
-            style={{
-              textDecoration: "none",
-              display: "flex",
-              alignItems: "flex-start",
-              gap: 14,
-              padding: "16px 18px",
-              transition: "background 0.18s",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.background =
-                "rgba(188,106,77,0.05)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.background = "transparent";
-            }}
-            className="focus:outline-none focus-visible:bg-[#BC6A4D]/10"
-          >
-            <div
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 12,
-                flexShrink: 0,
-                background:
-                  "linear-gradient(135deg, rgba(212,133,74,0.15) 0%, rgba(188,106,77,0.10) 100%)",
-                border: "1.5px solid rgba(188,106,77,0.22)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 20,
-              }}
-            >
-              💒
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p
-                style={{
-                  fontSize: 15,
-                  fontWeight: 800,
-                  color: "#2C1810",
-                  marginBottom: 4,
-                  fontFamily: "'DM Sans', system-ui, sans-serif",
-                  letterSpacing: "0.02em",
-                  lineHeight: 1.2,
-                  whiteSpace: "normal",
-                }}
-              >
-                Family Functions
-              </p>
-              <p
-                style={{
-                  fontSize: 12,
-                  color: "rgba(44,24,16,0.65)",
-                  lineHeight: 1.5,
-                  fontFamily: "'DM Sans', system-ui, sans-serif",
-                  whiteSpace: "normal",
-                  wordBreak: "break-word",
-                  margin: 0,
-                }}
-              >
-                Attend weddings, pujas, naming ceremonies, birthdays, memorials,
-                and family celebrations online.
-              </p>
-            </div>
-          </Link>
         </div>
       </div>
     </div>
@@ -818,13 +444,13 @@ const Navbar = () => {
               )}
             </Link>
 
-            {/* Avatar Live — dedicated premium dropdown */}
-            <AvatarLiveDropdown
-              currentPath={location.pathname}
-              lightNav={lightNav}
-            />
+            {/* Live — goes straight to Live Darshan */}
+            <Link to={liveLink.path} className={desktopLinkCls(location.pathname.startsWith("/avatar-live"))}>
+              {linkName(liveLink)}
+              {location.pathname.startsWith("/avatar-live") && <span className="absolute -bottom-1 left-0 right-0 h-[2px] bg-[#BC6A4D] rounded-full" />}
+            </Link>
 
-            {/* Books & Mantras dropdown */}
+{/* Books & Mantras dropdown */}
             <NavDropdown
               label={t("nav.booksAndMantras", {
                 defaultValue: "Books & Mantras",
@@ -936,18 +562,18 @@ const Navbar = () => {
                 {linkName(shopLink)}
               </Link>
 
-              {/* Avatar Live accordion — links to hub + sub-pages */}
-              <MobileAccordion
-                label={t("nav.live")}
-                items={[
-                  { name: t("nav.liveHub"), path: "/avatar-live" },
-                  ...avatarLiveLinks.map((l) => ({ ...l, name: linkName(l) })),
-                ]}
-                currentPath={location.pathname}
-                onNavigate={() => setIsOpen(false)}
-              />
+              {/* Live — goes straight to Live Darshan */}
+              <Link
+                to={liveLink.path}
+                onClick={() => setIsOpen(false)}
+                className={`mobile-nav-link font-display text-base font-medium px-2 py-2 rounded-lg transition-colors duration-300 ${
+                  location.pathname.startsWith("/avatar-live") ? "text-[#BC6A4D]" : "text-foreground/70 hover:text-[#BC6A4D]"
+                }`}
+              >
+                {linkName(liveLink)}
+              </Link>
 
-              {/* Books & Mantras accordion */}
+{/* Books & Mantras accordion */}
               <MobileAccordion
                 label={t("nav.booksAndMantras", {
                   defaultValue: "Books & Mantras",
