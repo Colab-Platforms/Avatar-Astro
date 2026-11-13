@@ -81,28 +81,57 @@ export function stopBillingTimers(): void {
 // what survives a restart; this map is just "has anyone heard from this side in the last
 // PRESENCE_TIMEOUT_MS." Tied to the chat window being mounted and socket-connected, never to
 // document/tab focus — an unfocused tab keeps heartbeating, a dropped socket does not.
+//
+// Every heartbeat/departure the socket layer reports carries a ConnectionIdentity: the socket's own id
+// (stable for its lifetime, unique per connection) plus a per-socket sequence number captured SYNCHRONOUSLY
+// the instant the raw event arrives — before any `await` reorders things. That sequence is what lets us
+// tell true arrival order apart from resolution order: a heartbeat sent a moment before a leave/disconnect
+// can still have its (async) role lookup resolve AFTER that departure has already been applied. Comparing
+// sequence numbers for the SAME connection id rejects that stale heartbeat outright, while a heartbeat from a
+// DIFFERENT connection id (a genuine reconnect) always takes over — it is definitionally newer than whatever
+// came before. Callers that don't track connections (direct tests, pre-presence-generation call sites) simply
+// omit `conn`, which skips staleness checks entirely and behaves exactly as before.
 // ============================================================================
-type PresenceEntry = {
-  /** Last heartbeat per side (ms). */
-  user?: number;
-  astrologer?: number;
-  /** Set when the server SAW that side leave (socket disconnect / chat:leave); cleared by its next heartbeat. */
-  userLeftAt?: number;
-  astrologerLeftAt?: number;
+export type ConnectionIdentity = { id: string; seq: number };
+
+type SidePresence = {
+  /** Last heartbeat (ms). */
+  last?: number;
+  /** Set when the server SAW this side leave (socket disconnect / chat:leave); cleared by a newer heartbeat. */
+  leftAt?: number;
+  /** The connection currently trusted for this side's presence, and the sequence number of the last event
+   * applied from it — used only to reject stale, out-of-order events from that SAME connection. */
+  connId?: string;
+  seq?: number;
 };
+type PresenceEntry = { user: SidePresence; astrologer: SidePresence };
 const presence = new Map<string, PresenceEntry>();
 
-/** `atMs` defaults to the wall clock; tests pass a simulated time. A heartbeat also cancels a recorded departure. */
-export function recordHeartbeat(sessionId: string, role: ChatSenderRole, atMs: number = Date.now()): void {
-  const entry = presence.get(sessionId) ?? {};
-  if (role === "USER") {
-    entry.user = atMs;
-    delete entry.userLeftAt;
-  } else {
-    entry.astrologer = atMs;
-    delete entry.astrologerLeftAt;
+function entryFor(sessionId: string): PresenceEntry {
+  let entry = presence.get(sessionId);
+  if (!entry) {
+    entry = { user: {}, astrologer: {} };
+    presence.set(sessionId, entry);
   }
-  presence.set(sessionId, entry);
+  return entry;
+}
+const sideOf = (entry: PresenceEntry, role: ChatSenderRole): SidePresence => (role === "USER" ? entry.user : entry.astrologer);
+
+/**
+ * `atMs` defaults to the wall clock; tests pass a simulated time. A heartbeat also cancels a recorded
+ * departure — UNLESS `conn` shows this is a stale event from a connection that has already been superseded
+ * (see the block comment above): same connection id, but a sequence number no newer than the one already
+ * applied for it (that connection's own later departure, or an even later heartbeat already landed).
+ */
+export function recordHeartbeat(sessionId: string, role: ChatSenderRole, atMs: number = Date.now(), conn?: ConnectionIdentity): void {
+  const side = sideOf(entryFor(sessionId), role);
+  if (conn) {
+    if (side.connId === conn.id && side.seq !== undefined && conn.seq <= side.seq) return; // stale: ignore
+    side.connId = conn.id;
+    side.seq = conn.seq;
+  }
+  side.last = atMs;
+  delete side.leftAt;
   maybeResumeFromPause(sessionId).catch((err) => console.error(`[chat.billing] resume check failed for ${sessionId}:`, err));
 }
 
@@ -111,12 +140,22 @@ export function recordHeartbeat(sessionId: string, role: ChatSenderRole, atMs: n
  * chat:leave. Unlike a silent network loss there is nothing to wait for: billing stops at THIS timestamp and the
  * session is paused immediately (settled through the event instant, in the usual single transaction). The side is
  * treated as absent until its next heartbeat, which also resumes the chat.
+ *
+ * When `conn` is given, a departure is applied only if it comes from the connection currently trusted for this
+ * side (or no connection is trusted yet) and is not older than what's already recorded for it — a departure
+ * reported by a connection that a newer one has already superseded (e.g. the old socket's delayed disconnect
+ * event, arriving after the user already reconnected) must not retroactively pause a session that fresh
+ * presence has already resumed. Duplicate leave/disconnect events for the same connection are no-ops.
  */
-export async function recordDeparture(sessionId: string, role: ChatSenderRole, atMs: number = Date.now()): Promise<void> {
-  const entry = presence.get(sessionId) ?? {};
-  if (role === "USER") entry.userLeftAt = atMs;
-  else entry.astrologerLeftAt = atMs;
-  presence.set(sessionId, entry);
+export async function recordDeparture(sessionId: string, role: ChatSenderRole, atMs: number = Date.now(), conn?: ConnectionIdentity): Promise<void> {
+  const side = sideOf(entryFor(sessionId), role);
+  if (conn) {
+    if (side.connId !== undefined && side.connId !== conn.id) return; // superseded by a newer connection: ignore
+    if (side.seq !== undefined && conn.seq <= side.seq) return; // duplicate or out-of-order for this connection: ignore
+    side.connId = conn.id;
+    side.seq = conn.seq;
+  }
+  side.leftAt = atMs;
 
   const session = await prisma.chatSession.findUnique({ where: { id: sessionId }, select: { status: true } });
   if (session?.status === "ACTIVE") await pauseSession(sessionId, new Date(atMs));
@@ -124,9 +163,9 @@ export async function recordDeparture(sessionId: string, role: ChatSenderRole, a
 
 function isPresent(sessionId: string, role: ChatSenderRole, nowMs: number = Date.now()): boolean {
   const entry = presence.get(sessionId);
-  const last = role === "USER" ? entry?.user : entry?.astrologer;
-  const leftAt = role === "USER" ? entry?.userLeftAt : entry?.astrologerLeftAt;
-  return leftAt === undefined && last !== undefined && nowMs - last <= PRESENCE_TIMEOUT_MS;
+  if (!entry) return false;
+  const side = sideOf(entry, role);
+  return side.leftAt === undefined && side.last !== undefined && nowMs - side.last <= PRESENCE_TIMEOUT_MS;
 }
 
 function bothPresent(sessionId: string, nowMs: number = Date.now()): boolean {
@@ -146,14 +185,15 @@ function bothPresent(sessionId: string, nowMs: number = Date.now()): boolean {
  * `presentRole` marks the side performing the action (an end click is itself proof that side is present).
  */
 function confirmedThroughMs(sessionId: string, nowMs: number, presentRole?: ChatSenderRole): number {
-  const entry = presence.get(sessionId) ?? {};
-  const sideThrough = (role: ChatSenderRole, last: number | undefined, leftAt: number | undefined): number => {
+  const entry = presence.get(sessionId) ?? { user: {}, astrologer: {} };
+  const sideThrough = (role: ChatSenderRole): number => {
     if (presentRole === role) return nowMs;
+    const { last, leftAt } = sideOf(entry, role);
     if (last === undefined) return 0;
     const vouched = last + CONFIRMED_PRESENCE_WINDOW_MS;
     return leftAt === undefined ? vouched : Math.min(leftAt, vouched);
   };
-  return Math.max(0, Math.min(nowMs, sideThrough("USER", entry.user, entry.userLeftAt), sideThrough("ASTROLOGER", entry.astrologer, entry.astrologerLeftAt)));
+  return Math.max(0, Math.min(nowMs, sideThrough("USER"), sideThrough("ASTROLOGER")));
 }
 
 // ============================================================================
