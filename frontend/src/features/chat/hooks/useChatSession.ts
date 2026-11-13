@@ -32,6 +32,9 @@ export function useChatSession({ sessionId, role }: Options) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [status, setStatus] = useState<ChatSessionStatus>("REQUESTED");
   const [endedReason, setEndedReason] = useState<ChatEndReason | null>(null);
+  const [isConnected, setIsConnected] = useState<boolean>(true);
+  const [lowBalanceAlert, setLowBalanceAlert] = useState<boolean>(false);
+  const [freeToPaidAlert, setFreeToPaidAlert] = useState<boolean>(false);
   // The server only pushes chat:timer once per BILLING_TICK_MS (5s) — displaying that number
   // verbatim makes the clock look frozen, then jump, instead of ticking. Keep the server's value
   // (remainingSecondsBase) plus the moment it arrived (remainingSyncedAt), and derive a smoothly
@@ -72,51 +75,101 @@ export function useChatSession({ sessionId, role }: Options) {
   useEffect(() => {
     const socket = connectSocket();
 
-    socket.emit("chat:join", { sessionId }, (err?: string) => {
-      if (err) toast.error(err);
-    });
+    const joinSession = () => {
+      socket.emit("chat:join", { sessionId }, (err?: string) => {
+        if (err) toast.error(err);
+      });
+    };
+
+    // Initial join
+    joinSession();
+    setIsConnected(socket.connected);
+
+    // Resiliency: re-join and resync upon socket reconnection
+    const onConnect = () => {
+      setIsConnected(true);
+      joinSession();
+      qc.invalidateQueries({ queryKey: ["chat", "session", sessionId] });
+      qc.invalidateQueries({ queryKey: ["chat", "messages", sessionId] });
+    };
+
+    const onDisconnect = () => {
+      setIsConnected(false);
+    };
+
+    const onConnectError = (err: Error) => {
+      setIsConnected(false);
+      console.warn("[chat.socket] Connection error:", err.message);
+    };
 
     const onMessage = (message: ChatMessage) => {
       if (message.sessionId !== sessionId) return;
       setMessages((prev) => (prev.some((m) => m.id === message.id) ? prev : [...prev, message]));
     };
+
     const onTimer = (payload: { sessionId: string; remainingSeconds: number | null; balancePaise: number | null; freeSecondsRemaining?: number }) => {
       if (payload.sessionId !== sessionId) return;
       setRemainingSecondsBase(payload.remainingSeconds);
       setRemainingSyncedAt(Date.now());
       setBalancePaise(payload.balancePaise);
-      if (payload.freeSecondsRemaining !== undefined) setFreeSecondsRemaining(payload.freeSecondsRemaining);
+
+      if (payload.freeSecondsRemaining !== undefined) {
+        setFreeSecondsRemaining((prevFree) => {
+          if (prevFree != null && prevFree > 0 && payload.freeSecondsRemaining === 0) {
+            setFreeToPaidAlert(true);
+            toast.info("Free allowance ended. Paid consultation is now active.");
+          }
+          return payload.freeSecondsRemaining;
+        });
+      }
+
+      // Check if low balance (< 3 minutes remaining on a paid chat)
+      if (payload.remainingSeconds != null && payload.remainingSeconds <= 180 && (payload.freeSecondsRemaining ?? 0) <= 0) {
+        setLowBalanceAlert(true);
+      } else {
+        setLowBalanceAlert(false);
+      }
     };
+
     const onWarning = (payload: { sessionId: string; remainingSeconds: number }) => {
       if (payload.sessionId !== sessionId) return;
+      setLowBalanceAlert(true);
       toast.warning(`Less than a minute left — ${payload.remainingSeconds}s remaining.`);
     };
+
     const onAccepted = (payload: { sessionId: string }) => {
       if (payload.sessionId !== sessionId) return;
       setStatus("ACTIVE");
       qc.invalidateQueries({ queryKey: ["chat", "session", sessionId] });
     };
+
     const onPaused = (payload: { sessionId: string; graceEndsAt: string }) => {
       if (payload.sessionId !== sessionId) return;
       setStatus("PAUSED");
       setPauseGraceEndsAt(payload.graceEndsAt);
     };
+
     const onResumed = (payload: { sessionId: string }) => {
       if (payload.sessionId !== sessionId) return;
       setStatus("ACTIVE");
       setPauseGraceEndsAt(null);
     };
+
     const onEnded = (payload: { sessionId: string; reason: ChatEndReason }) => {
       if (payload.sessionId !== sessionId) return;
       setStatus("ENDED");
       setEndedReason(payload.reason);
       qc.invalidateQueries({ queryKey: ["chat", "session", sessionId] });
     };
+
     const onTyping = (payload: { sessionId: string; isTyping: boolean; senderRole: ChatSenderRole }) => {
       if (payload.sessionId !== sessionId || payload.senderRole === role) return;
       setPeerTyping(payload.isTyping);
     };
 
+    socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
+    socket.on("connect_error", onConnectError);
     socket.on("chat:message", onMessage);
     socket.on("chat:timer", onTimer);
     socket.on("chat:low-balance-warning", onWarning);
@@ -126,13 +179,15 @@ export function useChatSession({ sessionId, role }: Options) {
     socket.on("chat:ended", onEnded);
     socket.on("chat:typing", onTyping);
 
-    // Keeps this participant's presence alive server-side (see billing.ts's PRESENCE_TIMEOUT_MS) —
-    // without a recurring heartbeat, a session would be paused ~15s after the join-time heartbeat.
+    // Keeps this participant's presence alive server-side (see billing.ts's PRESENCE_TIMEOUT_MS)
     const heartbeat = setInterval(() => socket.emit("chat:heartbeat", { sessionId }), HEARTBEAT_INTERVAL_MS);
 
     return () => {
       clearInterval(heartbeat);
       socket.emit("chat:leave", { sessionId });
+      socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
+      socket.off("connect_error", onConnectError);
       socket.off("chat:message", onMessage);
       socket.off("chat:timer", onTimer);
       socket.off("chat:low-balance-warning", onWarning);
@@ -149,7 +204,8 @@ export function useChatSession({ sessionId, role }: Options) {
       const trimmed = content.trim();
       if (!trimmed) return;
       const socket = connectSocket();
-      socket.emit("chat:message", { sessionId, content: trimmed }, (err?: string) => {
+      const clientMessageId = crypto.randomUUID();
+      socket.emit("chat:message", { sessionId, content: trimmed, clientMessageId }, (err?: string) => {
         if (err) toast.error(err);
       });
     },
@@ -169,6 +225,13 @@ export function useChatSession({ sessionId, role }: Options) {
       if (err) toast.error(err);
     });
   }, [sessionId]);
+
+  const cancelRequest = useCallback(async () => {
+    await chatApi.cancelSession(sessionId);
+    setStatus("ENDED");
+    setEndedReason("CANCELLED");
+    qc.invalidateQueries({ queryKey: ["chat", "session", sessionId] });
+  }, [sessionId, qc]);
 
   const acceptRequest = useCallback(async () => {
     await astrologerChatApi.acceptSession(sessionId);
@@ -195,9 +258,14 @@ export function useChatSession({ sessionId, role }: Options) {
     freeSecondsRemaining,
     pauseGraceEndsAt,
     peerTyping,
+    isConnected,
+    lowBalanceAlert,
+    freeToPaidAlert,
+    dismissFreeToPaidAlert: () => setFreeToPaidAlert(false),
     sendMessage,
     setTyping,
     endChat,
+    cancelRequest,
     acceptRequest,
     rejectRequest,
   };
