@@ -21,6 +21,15 @@ export function createWalletRouter(): Router {
   const router = Router();
   router.use(noStore, createRateLimiter({ windowMs: 60_000, max: 60 }), auth("USER"));
 
+  // Order creation gets its own tighter brake on top of the router-wide limit: each call creates a
+  // DB row AND a Razorpay order via their API. Nobody legitimately starts 10 checkouts in 15 minutes.
+  const createOrderLimiter = createRateLimiter({
+    windowMs: 15 * 60_000,
+    max: 10,
+    message: "Too many recharge attempts. Please try again in a few minutes.",
+    envelope: true,
+  });
+
   router.get(
     "/",
     wrap(async (req, res) => sendResponse(res, true, await getWalletSummary(req.user!.id))),
@@ -28,6 +37,7 @@ export function createWalletRouter(): Router {
 
   router.post(
     "/recharge/order",
+    createOrderLimiter,
     wrap(async (req, res) => {
       const amountPaise = Number(req.body?.amountPaise);
       const { order, keyId } = await createRechargeOrder(req.user!.id, amountPaise);
