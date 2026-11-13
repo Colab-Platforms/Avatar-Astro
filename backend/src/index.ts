@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from "express";
 import { createServer } from "http";
 import cors from "cors";
+import helmet from "helmet";
 import dotenv from "dotenv";
 import interpretationRoutes from "./routes/interpretationRoutes.js";
 import compatibilityRoutes from "./routes/compatibilityRoutes.js";
@@ -37,21 +38,43 @@ import { resumeAllActiveSessions, stopBillingTimers } from "./modules/chat/billi
 import { initSocketServer, clearPresenceTimers } from "./realtime/socketServer.js";
 import { createShutdownController, installProcessHandlers } from "./utils/lifecycle.js";
 import { isMockPaymentsMisconfigured } from "./modules/payment/mockPayments.js";
+import { startReconciliationJob, stopReconciliationJob } from "./modules/payment/reconciliation.job.js";
 import prisma from "@root/prisma.js";
 import { isOriginAllowed } from "./utils/corsOrigins.js";
 import { getExecutionId, reserveToolExecution, settleToolExecution, releaseToolExecution } from "./modules/payment/toolBilling.service.js";
 import { TOOL_KEYS } from "./modules/payment/toolKeys.js";
 import { ApiError } from "./utils/ApiError.js";
+import * as Sentry from "@sentry/node";
 
 dotenv.config();
+
+// Error tracking — active only when SENTRY_DSN is configured; a missing DSN changes nothing.
+// setupExpressErrorHandler is attached just before our own errorHandler further down.
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV || "development",
+    // Error tracking only — no performance tracing. PII defaults to off in @sentry/node.
+    tracesSampleRate: 0,
+  });
+  console.log("✓ Sentry error tracking enabled");
+}
 
 installAiUsageCapture();
 const app = express();
 
-// Loud (non-fatal) startup report of missing configuration. Names only, never values.
+// Startup configuration report. Names only, never values. In production a missing critical
+// variable ABORTS startup — a deployed API that cannot sign anyone in or reach its database
+// must fail loudly at deploy time, not serve errors to every user.
 {
   const critical = ["DATABASE_URL", "JWT_SECRET"].filter((k) => !process.env[k]);
-  if (critical.length) console.error(`✗ MISSING REQUIRED ENV: ${critical.join(", ")} — sign-in and most features will fail`);
+  if (critical.length) {
+    console.error(`✗ MISSING REQUIRED ENV: ${critical.join(", ")} — sign-in and most features will fail`);
+    if (process.env.NODE_ENV === "production") {
+      console.error("✗ Refusing to start in production without critical configuration.");
+      process.exit(1);
+    }
+  }
   if (process.env.JWT_SECRET && process.env.JWT_SECRET.length < 32) console.warn("! JWT_SECRET is shorter than 32 characters");
   if ((process.env.OTP_HMAC_SECRET ?? "").trim().length < 32) console.error("✗ OTP_HMAC_SECRET is missing or shorter than 32 characters — e-mail OTPs cannot be issued or verified (registration / unverified login will fail closed)");
   const optional = ["OPENROUTER_API_KEY", "GROQ_API_KEY", "RESEND_API_KEY", "SMTP_FROM_EMAIL", "SUPPORT_EMAIL", "YOUTUBE_API_KEY", "CORS_ORIGIN", "CLAMAV_HOST", "CLAMAV_PORT"].filter((k) => !process.env[k]);
@@ -64,6 +87,12 @@ const app = express();
 // so the per-IP rate limits would be shared by all users at once.
 app.set("trust proxy", 1);
 const PORT = process.env.PORT || 5001;
+
+// Security headers. This is a JSON API consumed by a separate frontend origin — CSP and the
+// cross-origin embedding policies are meaningless here and would only break the Socket.IO
+// polling fallback, so they're disabled; everything else (nosniff, frame denial, HSTS behind
+// the TLS proxy, referrer policy, etc.) applies.
+app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false, crossOriginResourcePolicy: false }));
 
 // Middleware — origin allow-list lives in utils/corsOrigins.ts (shared with Socket.IO's CORS config).
 app.use(
@@ -84,12 +113,30 @@ app.use("/api", captureReadings());
 // Mounted before the global 20mb body parser: it applies its own 250kb limit.
 app.use("/api/ai", ...feature("ai-chat"), aiProxyRoutes);
 app.use("/api/tarot", ...feature("tarot"), tarotRoutes);
-app.use(express.json({ limit: "20mb" }));
-app.use(express.urlencoded({ extended: true, limit: "20mb" }));
+// 200kb covers every JSON body this API legitimately receives (the largest are astrology form
+// payloads of a few kb; file uploads go through multer as multipart and are unaffected). The old
+// global 20mb limit was a request-flooding surface. Routes needing more set their own parser
+// BEFORE this line, like /api/ai's 250kb above.
+app.use(express.json({ limit: "200kb" }));
+app.use(express.urlencoded({ extended: true, limit: "200kb" }));
 
-// Health check
+// Liveness: answers as long as the process runs — no dependencies, never flaps.
 app.get("/api/health", (_req: Request, res: Response) => {
   res.json({ success: true, message: "Server is running" });
+});
+
+// Readiness: can this instance actually do work? Checks the database with a bounded timeout, so
+// an orchestrator/uptime monitor can tell "process up, DB unreachable" apart from healthy.
+app.get("/api/ready", async (_req: Request, res: Response) => {
+  try {
+    await Promise.race([
+      prisma.$queryRaw`SELECT 1`,
+      new Promise((_, reject) => setTimeout(() => reject(new Error("database ping timed out")), 3_000).unref()),
+    ]);
+    res.json({ success: true, message: "Ready" });
+  } catch {
+    res.status(503).json({ success: false, message: "Database unreachable" });
+  }
 });
 
 // Zodiac endpoints
@@ -404,6 +451,9 @@ app.post("/api/palm-reading/check", ...feature("palm-reading"), auth("USER"), (_
   res.json({ success: true });
 });
 
+// Reports unexpected (5xx) errors to Sentry when configured, then passes through to ours below.
+if (process.env.SENTRY_DSN) app.use(Sentry.expressErrorHandler());
+
 // Error handling middleware (must be last).
 // ApiError (thrown by the auth module / auth middleware) carries `statusCode`
 // and is answered in the { status, data, message } shape the auth controllers
@@ -438,6 +488,7 @@ installProcessHandlers(
           stopBillingTimers();
           stopDarshanRefreshLoop();
           clearPresenceTimers();
+          stopReconciliationJob();
         },
       },
       {
@@ -462,7 +513,11 @@ installProcessHandlers(
 // Start server
 function startServer() {
   startDarshanRefreshLoop();
+  // SINGLE-INSTANCE RULE: chat presence, billing ticks and the expiry sweep assume exactly ONE
+  // backend process (see resumeAllActiveSessions in modules/chat/billing.ts). Do not scale this
+  // service horizontally without first moving presence to a shared store and electing one scheduler.
   resumeAllActiveSessions().catch((err) => console.error("[chat.billing] failed to resume active sessions:", err));
+  startReconciliationJob(); // daily read-only ledger/stale-hold sweep; first run ~5 min after boot
 
   httpServer.listen(PORT, () => {
     console.log(`✓ Server running on http://localhost:${PORT}`);

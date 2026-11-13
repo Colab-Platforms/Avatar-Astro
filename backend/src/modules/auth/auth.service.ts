@@ -417,13 +417,11 @@ class AuthService {
       include: { userRoleMappings: { include: { role: true } } },
     });
 
-    if (!user)
-      throw new ApiError(
-        "User with this Email doesn't exist",
-        STATUS_CODES.NOT_FOUND,
-      );
-
+    // Unknown email and wrong password answer IDENTICALLY (same message, same 401), so the login
+    // form cannot be used to probe which addresses have accounts. The dummy compare keeps the
+    // unknown-email path from returning measurably faster than a real bcrypt check.
     if (!user || !user.password) {
+      await comparePassword(data.password, "$2b$12$C6UzMDM.H6dfI/f/IKcEeO7ZBpMrDmUzXbSJdPnmvM1KdfyvWrGxW");
       throw new ApiError(
         "Invalid email or password",
         STATUS_CODES.UNAUTHORIZED,
@@ -670,11 +668,9 @@ class AuthService {
       where: { email, isDeleted: false },
     });
 
-    if (!user)
-      throw new ApiError(
-        "Account with this Email doesn't exist",
-        STATUS_CODES.NOT_FOUND,
-      );
+    // Same answer whether or not the account exists — the reset form must not reveal which
+    // emails are registered. When there is no account, no email is sent and nothing else happens.
+    if (!user) return { message: "If this email exists, a reset link has been sent." };
 
     await prisma.passwordResetToken.updateMany({
       where: { userId: user.id, used: false },

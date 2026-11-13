@@ -1,0 +1,41 @@
+# DRAFT — NOT ACTIVE. Rename to render.yaml and connect as a Render Blueprint ONLY after the
+# deployment facts are verified (decision 7: instance count, plan, NODE_ENV, Neon PITR).
+# Deliberately named .draft so pushing this file can never change the live service by itself.
+#
+# Encodes the decisions already made in code:
+#   - exactly ONE instance (chat presence/billing scheduler is single-process — see
+#     backend/src/modules/chat/billing.ts "SINGLE-INSTANCE RULE")
+#   - NODE_ENV=production (locks out mock payments, dev CORS origins, enables fail-fast env checks)
+#   - secrets are set in the Render dashboard, never committed (sync: false)
+services:
+  - type: web
+    name: mybhagya-backend
+    runtime: node
+    plan: starter # VERIFY: free plan sleeps on idle — that would pause live chats and billing
+    numInstances: 1 # REQUIRED: do not raise without shared presence + scheduler leader election
+    rootDir: backend
+    buildCommand: npm ci && npx prisma generate && npm run build
+    startCommand: npm run start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false # Neon pooled URL — set in dashboard
+      - key: JWT_SECRET
+        sync: false
+      - key: OTP_HMAC_SECRET
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false # the production frontend origin
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: SUPPORT_EMAIL
+        sync: false
+      - key: SENTRY_DSN
+        sync: false # optional — error tracking activates only when set
+      # ALLOW_MOCK_PAYMENTS must NEVER be set here (locked out by NODE_ENV anyway).

@@ -45,7 +45,7 @@ async function resolveActor(sessionId: string, userId: string) {
   const session = await prisma.chatSession.findUnique({
     where: { id: sessionId },
     include: {
-      astrologerProfile: { select: { userId: true, displayName: true, profilePhotoUrl: true, slug: true } },
+      astrologerProfile: { select: { userId: true, displayName: true, profilePhotoUrl: true, slug: true, suspendedAt: true } },
       user: { select: { firstName: true, lastName: true, profileImage: true } },
     },
   });
@@ -66,6 +66,7 @@ async function requireAvailableProfile(astrologerProfileId: string) {
       userId: true,
       pricePerMinute: true,
       isPublished: true,
+      isOnline: true,
       suspendedAt: true,
       displayName: true,
       profilePhotoUrl: true,
@@ -92,7 +93,8 @@ export async function getEligibility(userId: string, astrologerProfileId: string
     const freeLimitSeconds = await resolveComplimentaryMaxSeconds(profile);
     return {
       type: "COMPLIMENTARY" as const,
-      canStart: true,
+      canStart: Boolean(activeSession) || profile.isOnline,
+      isOnline: profile.isOnline,
       freeLimitSeconds,
       ratePerMinutePaise: 0,
       walletBalancePaise: null as number | null,
@@ -112,7 +114,8 @@ export async function getEligibility(userId: string, astrologerProfileId: string
   const minimumRequiredPaise = await minimumPaidBalanceRequired(userId, ratePerMinutePaise);
   return {
     type: "PAID" as const,
-    canStart: Boolean(activeSession) || availablePaise >= minimumRequiredPaise,
+    canStart: Boolean(activeSession) || (profile.isOnline && availablePaise >= minimumRequiredPaise),
+    isOnline: profile.isOnline,
     freeLimitSeconds: null as number | null,
     ratePerMinutePaise,
     walletBalancePaise: wallet.balancePaise,
@@ -139,6 +142,13 @@ export async function startSession(userId: string, astrologerProfileId: string) 
   if (existing) return existing;
 
   const profile = await requireAvailableProfile(astrologerProfileId);
+  // Online is a liveness gate, not an availability gate: an offline astrologer's profile stays
+  // browsable (requireAvailableProfile passes), but a NEW consultation request against them would
+  // just sit until the acceptance timeout. isOnline is maintained by the socket layer (true while
+  // they hold at least one authenticated socket, with a short offline grace on disconnect).
+  if (!profile.isOnline) {
+    throw new ApiError("This astrologer is currently offline. Please try again when they are online.", STATUS_CODES.CONFLICT);
+  }
 
   let type: "PAID" | "COMPLIMENTARY";
   let ratePerMinutePaise = 0;
@@ -178,10 +188,49 @@ export async function startSession(userId: string, astrologerProfileId: string) 
     return session;
   } catch (err) {
     if ((err as { code?: string }).code === UNIQUE_VIOLATION) {
+      // Two partial unique indexes can fire here: one live session per USER, one per ASTROLOGER.
+      // Which one tells the user something different — their own duplicate vs. a busy astrologer.
+      // The raw-SQL partial indexes aren't in the Prisma schema, so the index name can surface in
+      // either meta.target or the driver message depending on version — check both.
+      const e = err as { meta?: { target?: unknown }; message?: string };
+      const target = `${String(e.meta?.target ?? "")} ${e.message ?? ""}`;
+      if (target.includes("per_astrologer")) {
+        throw new ApiError("This astrologer is currently in another consultation. Please try again soon.", STATUS_CODES.CONFLICT);
+      }
       throw new ApiError("You already have a pending or active chat.", STATUS_CODES.CONFLICT);
     }
     throw err;
   }
+}
+
+/**
+ * The USER withdraws their own still-REQUESTED consultation (decision 4's CANCELLED reason). Nothing was
+ * reserved or claimed at request time, so there is nothing to release — this is a pure status flip, guarded
+ * by `status = REQUESTED` exactly like rejectSession: it can never cancel a session that was accepted,
+ * rejected or timed out in the meantime. Cancelling a request that is ALREADY cancelled is an idempotent
+ * no-op (the retry case); any other state is a clean 409.
+ */
+export async function cancelSession(sessionId: string, userId: string) {
+  const session = await prisma.chatSession.findUnique({ where: { id: sessionId }, select: { userId: true } });
+  if (!session) throw new ApiError("Chat request not found", STATUS_CODES.NOT_FOUND);
+  if (session.userId !== userId) throw new ApiError("You do not have access to this chat", STATUS_CODES.FORBIDDEN);
+
+  const now = new Date();
+  const result = await prisma.chatSession.updateMany({
+    where: { id: sessionId, status: "REQUESTED" },
+    data: { status: "ENDED", endedAt: now, endedReason: "CANCELLED" },
+  });
+  if (result.count !== 1) {
+    const current = await prisma.chatSession.findUniqueOrThrow({ where: { id: sessionId }, select: { status: true, endedReason: true } });
+    if (current.status === "ENDED" && current.endedReason === "CANCELLED") {
+      return prisma.chatSession.findUniqueOrThrow({ where: { id: sessionId } }); // duplicate cancel: idempotent
+    }
+    throw new ApiError("This request is no longer pending", STATUS_CODES.CONFLICT);
+  }
+  billing.emitToRoom(billing.roomForSession(sessionId), "chat:ended", { sessionId, reason: "CANCELLED" });
+  const cancelled = await prisma.chatSession.findUniqueOrThrow({ where: { id: sessionId } });
+  billing.notifySessionCancelled(cancelled.astrologerProfileId, sessionId);
+  return cancelled;
 }
 
 /** Ownership never changes once a session exists, so it is safe to check before (and outside) a transaction.
@@ -274,6 +323,34 @@ export async function rejectSession(sessionId: string, astrologerUserId: string)
   return prisma.chatSession.findUniqueOrThrow({ where: { id: sessionId } });
 }
 
+/**
+ * Suspension-mid-chat enforcement: terminates every live consultation of a just-suspended astrologer.
+ * Still-REQUESTED sessions are rejected (nothing was reserved, pure flip); ACTIVE/PAUSED ones go through
+ * the normal settlement path (ASTROLOGER_ENDED), so the user is charged exactly for the time delivered and
+ * the hold is released. One failing session must not strand the rest, so failures are logged per session.
+ */
+export async function endLiveSessionsForAstrologer(astrologerProfileId: string): Promise<void> {
+  const live = await prisma.chatSession.findMany({
+    where: { astrologerProfileId, status: { in: PENDING_OR_LIVE_STATUSES } },
+    select: { id: true, status: true },
+  });
+  for (const s of live) {
+    try {
+      if (s.status === "REQUESTED") {
+        const flipped = await prisma.chatSession.updateMany({
+          where: { id: s.id, status: "REQUESTED" },
+          data: { status: "ENDED", endedAt: new Date(), endedReason: "REJECTED" },
+        });
+        if (flipped.count === 1) billing.emitToRoom(billing.roomForSession(s.id), "chat:ended", { sessionId: s.id, reason: "REJECTED" });
+      } else {
+        await billing.endSession(s.id, "ASTROLOGER_ENDED");
+      }
+    } catch (err) {
+      console.error(`[chat.service] failed to end session ${s.id} on suspension:`, err);
+    }
+  }
+}
+
 export async function getActorRole(sessionId: string, userId: string): Promise<ChatSenderRole> {
   const { role } = await resolveActor(sessionId, userId);
   return role;
@@ -298,17 +375,35 @@ async function peerSessionIds(sessionId: string, userId: string): Promise<{ sess
   return { sessionIds: sessions.map((s) => s.id), role };
 }
 
-export async function postMessage(sessionId: string, userId: string, content: string) {
+export async function postMessage(sessionId: string, userId: string, content: string, clientMessageId?: string) {
   const { session, role } = await resolveActor(sessionId, userId);
   if (session.status !== "ACTIVE") throw new ApiError("This chat has ended", STATUS_CODES.CONFLICT);
+
+  // Auth is re-validated per send, not only at socket connect: an account deactivated/deleted —
+  // or an astrologer suspended — MID-chat still holds an authenticated socket, and must not be
+  // able to keep participating through it.
+  const sender = await prisma.user.findFirst({ where: { id: userId, isActive: true, isDeleted: false }, select: { id: true } });
+  if (!sender) throw new ApiError("Your account is no longer active", STATUS_CODES.FORBIDDEN);
+  if (role === "ASTROLOGER" && session.astrologerProfile.suspendedAt) {
+    throw new ApiError("Your astrologer profile is suspended", STATUS_CODES.FORBIDDEN);
+  }
 
   const trimmed = content.trim().slice(0, MAX_MESSAGE_LENGTH);
   if (!trimmed) throw new ApiError("Message cannot be empty", STATUS_CODES.BAD_REQUEST);
 
-  const message = await prisma.chatMessage.create({
-    data: { sessionId, senderRole: role, senderId: userId, content: trimmed },
-  });
-  return message;
+  try {
+    return await prisma.chatMessage.create({
+      data: { sessionId, senderRole: role, senderId: userId, content: trimmed, clientMessageId: clientMessageId || null },
+    });
+  } catch (err) {
+    // A retried send with the same clientMessageId hits the (sessionId, senderId, clientMessageId)
+    // unique index: return the message the FIRST attempt stored — exactly-once from the client's view.
+    if ((err as { code?: string }).code === UNIQUE_VIOLATION && clientMessageId) {
+      const existing = await prisma.chatMessage.findFirst({ where: { sessionId, senderId: userId, clientMessageId } });
+      if (existing) return existing;
+    }
+    throw err;
+  }
 }
 
 export async function markRead(sessionId: string, userId: string) {
@@ -324,7 +419,9 @@ export async function getMessages(sessionId: string, userId: string, cursor?: st
   const { sessionIds } = await peerSessionIds(sessionId, userId);
   const messages = await prisma.chatMessage.findMany({
     where: { sessionId: { in: sessionIds } },
-    orderBy: { createdAt: "desc" },
+    // `id` is the tiebreaker: two messages created in the same millisecond (same createdAt) would
+    // otherwise come back in an unstable order, letting a page refresh reorder a conversation.
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     take,
     ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
   });
@@ -342,7 +439,7 @@ export async function listUserConversations(userId: string) {
     orderBy: { updatedAt: "desc" },
     include: {
       astrologerProfile: { select: { id: true, displayName: true, profilePhotoUrl: true, slug: true } },
-      messages: { orderBy: { createdAt: "desc" }, take: 1 },
+      messages: { orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 1 },
     },
   });
   // One row per astrologer, not one per ChatSession — a new paid consultation with the same
@@ -372,7 +469,7 @@ export async function listAstrologerConversations(astrologerProfileId: string) {
     orderBy: { updatedAt: "desc" },
     include: {
       user: { select: { id: true, firstName: true, lastName: true, profileImage: true } },
-      messages: { orderBy: { createdAt: "desc" }, take: 1 },
+      messages: { orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 1 },
     },
   });
   const unreadCounts = await prisma.chatMessage.groupBy({

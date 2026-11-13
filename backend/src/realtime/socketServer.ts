@@ -44,6 +44,41 @@ const astrologerConnections = new Map<string, number>();
 const offlineTimers = new Map<string, NodeJS.Timeout>();
 const PRESENCE_GRACE_MS = 10_000;
 
+// The biggest legitimate frame is a chat:message: ~2000 chars of content plus ids and envelope.
+// 64 KiB leaves an order-of-magnitude margin while refusing megabyte-scale garbage outright
+// (Socket.IO closes the offending connection; others are unaffected).
+const MAX_SOCKET_FRAME_BYTES = 64 * 1024;
+
+// ---------------------------------------------------------------------------------------------
+// Per-socket, per-event rate limiting — fixed 10s windows, counted BEFORE any validation or DB
+// work so a flood is rejected at the cheapest possible point. Limits are per socket (per
+// connection), deliberately generous for real clients: the heartbeat fires every 10s, typing
+// updates are throttled client-side, and no human sends 20 messages in 10 seconds.
+// ---------------------------------------------------------------------------------------------
+const RATE_WINDOW_MS = 10_000;
+const RATE_LIMITS: Record<string, number> = {
+  "chat:message": 20,
+  "chat:typing": 40,
+  "chat:heartbeat": 20,
+  "chat:join": 20,
+  "chat:leave": 20,
+  "chat:end": 10,
+};
+const DEFAULT_RATE_LIMIT = 60;
+const rateWindows = new WeakMap<Socket, Map<string, { start: number; count: number }>>();
+
+function overRateLimit(socket: Socket, event: string): boolean {
+  let windows = rateWindows.get(socket);
+  if (!windows) rateWindows.set(socket, (windows = new Map()));
+  const now = Date.now();
+  let w = windows.get(event);
+  if (!w || now - w.start >= RATE_WINDOW_MS) {
+    windows.set(event, (w = { start: now, count: 0 }));
+  }
+  w.count += 1;
+  return w.count > (RATE_LIMITS[event] ?? DEFAULT_RATE_LIMIT);
+}
+
 async function setAstrologerOnline(astrologerProfileId: string, isOnline: boolean) {
   await prisma.astrologerProfile.update({
     where: { id: astrologerProfileId },
@@ -83,6 +118,7 @@ function handle(
 ): void {
   socket.on(event, (...args: unknown[]) => {
     const { payload, ack } = splitArgs(args);
+    if (overRateLimit(socket, event)) return ack("Too many requests. Please slow down.", { code: "RATE_LIMITED" });
     const userId = (socket.data as Partial<SocketData> | undefined)?.userId;
     const conn = nextConn(socket); // captured now, synchronously, so later async work can't reorder it
     const run = async () => {
@@ -164,8 +200,8 @@ export function registerChatHandlers(socket: Socket): void {
   });
 
   handle(socket, "chat:message", async (payload, ack, userId, conn) => {
-    const { sessionId, content } = parseMessagePayload(payload);
-    const message = await chatService.postMessage(sessionId, userId, content.slice(0, MAX_MESSAGE_LENGTH));
+    const { sessionId, content, clientMessageId } = parseMessagePayload(payload);
+    const message = await chatService.postMessage(sessionId, userId, content.slice(0, MAX_MESSAGE_LENGTH), clientMessageId);
     recordHeartbeat(sessionId, message.senderRole, undefined, conn); // sending a message is itself proof of presence
     emitToRoom(roomForSession(sessionId), "chat:message", message);
     ack(undefined, message);
@@ -196,6 +232,28 @@ export function registerChatHandlers(socket: Socket): void {
   socket.on("error", (err) => logError("[socket] socket error:", err));
 }
 
+// Kept for suspension enforcement: disconnectUserSockets needs the live server instance.
+let ioRef: SocketIOServer | null = null;
+
+/** Registers the live Socket.IO server with this module AND with billing. Called by initSocketServer;
+ * exported so socket-level tests that build their own bare Server can wire it up the same way. */
+export function attachSocketServer(io: SocketIOServer): void {
+  ioRef = io;
+  attachIo(io);
+}
+
+/**
+ * Forcibly closes every socket belonging to `userId` — called when an account is deactivated or an
+ * astrologer suspended, so a revoked identity cannot keep an already-authenticated connection alive.
+ * Each socket's normal "disconnecting" path still runs, so chat presence/billing sees a clean departure.
+ */
+export function disconnectUserSockets(userId: string): void {
+  if (!ioRef) return;
+  for (const [, socket] of ioRef.of("/").sockets) {
+    if ((socket.data as Partial<SocketData> | undefined)?.userId === userId) socket.disconnect(true);
+  }
+}
+
 export function initSocketServer(httpServer: HttpServer): SocketIOServer {
   const io = new SocketIOServer(httpServer, {
     cors: {
@@ -205,9 +263,10 @@ export function initSocketServer(httpServer: HttpServer): SocketIOServer {
       },
       credentials: true,
     },
+    maxHttpBufferSize: MAX_SOCKET_FRAME_BYTES,
   });
 
-  attachIo(io);
+  attachSocketServer(io);
 
   io.use(async (socket: Socket, next) => {
     try {

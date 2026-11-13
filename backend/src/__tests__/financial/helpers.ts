@@ -71,7 +71,7 @@ export async function makeAstrologer(ctx: Ctx, key: string, rupeesPerMinute: num
   const userId = await makeUser(ctx, `astro-${key}`);
   const application = await ctx.prisma.astrologerApplication.create({ data: { userId, status: "APPROVED" } });
   const profile = await ctx.prisma.astrologerProfile.create({
-    data: { applicationId: application.id, userId, displayName: `Astro ${key}`, slug: `${ctx.SLUG}${key}-${Date.now()}`, pricePerMinute: rupeesPerMinute, isPublished: true },
+    data: { applicationId: application.id, userId, displayName: `Astro ${key}`, slug: `${ctx.SLUG}${key}-${Date.now()}`, pricePerMinute: rupeesPerMinute, isPublished: true, isOnline: true },
   });
   return { profileId: profile.id, userId };
 }

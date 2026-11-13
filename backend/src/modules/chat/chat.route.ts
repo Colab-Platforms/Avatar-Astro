@@ -57,6 +57,14 @@ export function createChatRouter(): Router {
   );
 
   router.post(
+    "/sessions/:id/cancel",
+    wrap(async (req, res) => {
+      const session = await svc.cancelSession(req.params.id, req.user!.id);
+      sendResponse(res, true, session, "Chat request cancelled");
+    }),
+  );
+
+  router.post(
     "/sessions/:id/end",
     wrap(async (req, res) => {
       const session = await svc.endSessionByActor(req.params.id, req.user!.id);

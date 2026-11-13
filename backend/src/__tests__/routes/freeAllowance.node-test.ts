@@ -39,6 +39,7 @@ async function makeAstrologer(key: string, opts: { pricePerMinute?: number | nul
       isComplimentary: opts.isComplimentary ?? false,
       complimentaryMaxSeconds: opts.complimentaryMaxSeconds ?? null,
       isPublished: true,
+      isOnline: true,
     },
   });
   return { userId: user.id, profileId: profile.id };

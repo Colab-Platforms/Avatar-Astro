@@ -320,6 +320,11 @@ export async function endSession(sessionId: string, reason: ChatEndReason, now: 
   }
 }
 
+/** Tells the astrologer's dashboard a pending request was withdrawn by the user, so its popup/list clears. */
+export function notifySessionCancelled(astrologerProfileId: string, sessionId: string): void {
+  emitToRoom(roomForAstrologer(astrologerProfileId), "chat:session-cancelled", { sessionId });
+}
+
 export function notifyNewSession(astrologerProfileId: string, session: { id: string; userId: string; requestedAt: Date; type: string }): void {
   emitToRoom(roomForAstrologer(astrologerProfileId), "chat:new-session", {
     sessionId: session.id,
@@ -364,6 +369,14 @@ function ensureSweepRunning(): void {
 }
 
 /**
+ * SINGLE-INSTANCE RULE (decided for Checkpoint 2, in place of an advisory-lock leader): this process
+ * assumes it is the ONLY backend instance. Presence is in-memory, the billing tick and the expiry sweep
+ * are plain intervals, and resumeAllActiveSessions pauses every ACTIVE session at boot on the premise
+ * that no other process could have been billing it. Running two instances would make a fresh instance's
+ * boot pause sessions a healthy sibling is actively billing, and split presence across processes.
+ * Scaling beyond one instance therefore requires moving presence to a shared store (e.g. Redis) and
+ * electing a single scheduler (pg advisory lock) FIRST — do not simply raise the instance count.
+ *
  * Called once at server startup. Every session the database thinks is ACTIVE survived an
  * unknown amount of downtime — treated exactly like a disconnect (paused, not blindly resumed),
  * because there is no way to know whether anyone was actually present during the outage.

@@ -53,6 +53,7 @@ before(async () => {
       slug: `wallet-reservation-test-${Date.now()}`,
       pricePerMinute: 7, // ₹7/min = 700 paise/min, matches the plan's worked examples
       isPublished: true,
+      isOnline: true,
     },
   });
   ids.profile = profile.id;
