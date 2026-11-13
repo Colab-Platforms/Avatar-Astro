@@ -5,6 +5,7 @@ import { getExecutionId, reserveToolExecution, settleToolExecution, releaseToolE
 import { TOOL_KEYS } from '../modules/payment/toolKeys.js';
 import { ApiError } from '../utils/ApiError.js';
 import { WrongLanguageError, generateInLanguage, languageRule, requestLanguage, tokenBudget } from '../utils/responseLanguage.js';
+import { logError } from '../utils/safeError.js';
 
 const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
 
@@ -94,7 +95,7 @@ Please answer the user's question about their birth chart in a helpful, friendly
     if (userId && billed && !billed.skip) await releaseToolExecution(executionId, "FAILED").catch(() => {});
     if (error instanceof ApiError) return res.status(error.statusCode).json({ success: false, error: error.message });
     if (error instanceof WrongLanguageError) return res.status(502).json({ success: false, error: error.message, code: error.code, language: error.language });
-    console.error('Chart Chat Error:', error);
+    logError('Chart Chat Error:', error);
     res.status(500).json({
       success: false,
       error: error.message || 'Failed to get response'

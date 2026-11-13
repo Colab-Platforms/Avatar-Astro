@@ -112,6 +112,7 @@ const Astrologers = lazy(() => import("./pages/Astrologers"));
 const AstrologerProfile = lazy(() => import("./pages/AstrologerProfile"));
 const BecomeAstrologerPage = lazy(() => import("./features/astrologer/pages/BecomeAstrologerPage"));
 const ApplicationWizardPage = lazy(() => import("./features/astrologer/pages/ApplicationWizardPage"));
+const AstrologerDashboardLayout = lazy(() => import("./features/astrologer/workspace/AstrologerDashboardLayout"));
 const AstrologerDashboardPage = lazy(() => import("./features/astrologer/workspace/pages/AstrologerDashboardPage"));
 const AstrologerChatPage = lazy(() => import("./features/astrologer/workspace/pages/AstrologerChatPage"));
 const UserChatPage = lazy(() => import("./features/chat/pages/UserChatPage"));
@@ -877,6 +878,7 @@ const App = () => {
               <Route index element={<Suspense fallback={<LazyFallback />}><DashboardHome /></Suspense>} />
               <Route path="wallet" element={<Suspense fallback={<LazyFallback />}><WalletPage /></Suspense>} />
               <Route path="chats" element={<Suspense fallback={<LazyFallback />}><UserConversationsPage /></Suspense>} />
+              <Route path="chats/:sessionId" element={<Suspense fallback={<LazyFallback />}><UserConversationsPage /></Suspense>} />
               <Route path="readings" element={<Suspense fallback={<LazyFallback />}><MyReadings /></Suspense>} />
               <Route path="readings/:id" element={<Suspense fallback={<LazyFallback />}><ReadingDetail /></Suspense>} />
               <Route path="activity" element={<Suspense fallback={<LazyFallback />}><MyActivity /></Suspense>} />
@@ -896,16 +898,12 @@ const App = () => {
             />
             <Route
               path="/astrologer-dashboard"
-              element={<Suspense fallback={<LazyFallback />}><AstrologerDashboardPage /></Suspense>}
-            />
-            <Route
-              path="/astrologer-dashboard/chat"
-              element={<Suspense fallback={<LazyFallback />}><AstrologerChatPage /></Suspense>}
-            />
-            <Route
-              path="/astrologer-dashboard/chat/:sessionId"
-              element={<Suspense fallback={<LazyFallback />}><AstrologerChatPage /></Suspense>}
-            />
+              element={<Suspense fallback={<LazyFallback />}><AstrologerDashboardLayout /></Suspense>}
+            >
+              <Route index element={<Suspense fallback={<LazyFallback />}><AstrologerDashboardPage /></Suspense>} />
+              <Route path="chat" element={<Suspense fallback={<LazyFallback />}><AstrologerChatPage /></Suspense>} />
+              <Route path="chat/:sessionId" element={<Suspense fallback={<LazyFallback />}><AstrologerChatPage /></Suspense>} />
+            </Route>
             <Route
               path="/chat/:sessionId"
               element={<Suspense fallback={<LazyFallback />}><UserChatPage /></Suspense>}

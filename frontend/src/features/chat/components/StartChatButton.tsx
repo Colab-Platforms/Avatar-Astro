@@ -60,7 +60,7 @@ export default function StartChatButton({ astrologer, compact, className }: Prop
       }
 
       const session = await chatApi.startSession(astrologer.id);
-      navigate(`/chat/${session.id}`);
+      navigate(`/dashboard/chats/${session.id}`);
     } catch (err) {
       toast.error(err instanceof AuthApiError || err instanceof Error ? err.message : "Could not start chat right now.");
     } finally {
@@ -73,7 +73,7 @@ export default function StartChatButton({ astrologer, compact, className }: Prop
     setLoading(true);
     try {
       const session = await chatApi.startSession(astrologer.id);
-      navigate(`/chat/${session.id}`);
+      navigate(`/dashboard/chats/${session.id}`);
     } catch (err) {
       toast.error(err instanceof AuthApiError || err instanceof Error ? err.message : "Could not start chat right now.");
     } finally {

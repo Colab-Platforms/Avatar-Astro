@@ -29,13 +29,37 @@ function formatRupees(paise: number | null): string {
   return `₹${(paise / 100).toFixed(2)}`;
 }
 
+function isSameDay(a: string, b: string): boolean {
+  return new Date(a).toDateString() === new Date(b).toDateString();
+}
+
+function dateSeparatorLabel(iso: string): string {
+  const d = new Date(iso);
+  const now = new Date();
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (d.toDateString() === now.toDateString()) return "Today";
+  if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
+  return d.toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+    year: d.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
+  });
+}
+
+const GROUP_GAP_MS = 5 * 60 * 1000;
+
 interface Props {
   sessionId: string;
   role: ChatSenderRole;
   onBack?: () => void;
+  /** Route prefix used when navigating to a freshly-started session (e.g. "chat again"). Lets
+   * this component be mounted both at the standalone /chat/:id route and inside the dashboard's
+   * split-pane /dashboard/chats/:id route without hardcoding either. */
+  basePath?: string;
 }
 
-export default function ChatWindow({ sessionId, role, onBack }: Props) {
+export default function ChatWindow({ sessionId, role, onBack, basePath = "/chat" }: Props) {
   const navigate = useNavigate();
   const {
     session,
@@ -85,7 +109,7 @@ export default function ChatWindow({ sessionId, role, onBack }: Props) {
         return;
       }
       const next = await chatApi.startSession(session.astrologerProfileId);
-      navigate(`/chat/${next.id}`, { replace: true });
+      navigate(`${basePath}/${next.id}`, { replace: true });
     } catch (err) {
       toast.error(err instanceof AuthApiError || err instanceof Error ? err.message : "Could not start a new chat right now.");
     } finally {
@@ -137,16 +161,26 @@ export default function ChatWindow({ sessionId, role, onBack }: Props) {
               <ArrowLeft className="h-5 w-5" aria-hidden="true" />
             </button>
           )}
-          {peerPhotoUrl ? (
-            <img src={peerPhotoUrl} alt={peerName} className="h-10 w-10 rounded-full object-cover" />
-          ) : (
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#592209]/10 font-home-serif font-semibold text-[#592209]">
-              {peerName.charAt(0).toUpperCase()}
-            </span>
-          )}
+          <div className="relative shrink-0">
+            {peerPhotoUrl ? (
+              <img src={peerPhotoUrl} alt={peerName} className="h-10 w-10 rounded-full object-cover" />
+            ) : (
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#592209]/10 font-home-serif font-semibold text-[#592209]">
+                {peerName.charAt(0).toUpperCase()}
+              </span>
+            )}
+            {status === "ACTIVE" && (
+              <span
+                className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#F5E9D6] bg-emerald-500"
+                aria-hidden="true"
+              />
+            )}
+          </div>
           <div className="min-w-0">
             <p className="truncate font-home-serif font-semibold text-[#301607]">{peerName}</p>
-            {peerTyping && status === "ACTIVE" && <p className="text-xs text-[#6B4A37]">typing…</p>}
+            <p className="h-4 text-xs text-[#6B4A37]">
+              {peerTyping && status === "ACTIVE" ? "typing…" : status === "ACTIVE" ? "Active now" : ""}
+            </p>
           </div>
         </div>
 
@@ -181,24 +215,56 @@ export default function ChatWindow({ sessionId, role, onBack }: Props) {
           chat.service.ts's peerSessionIds) always renders regardless of status, so starting a
           new request with someone you've chatted with before never hides the old conversation
           behind a waiting screen. */}
-      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+      <div className="flex-1 overflow-y-auto px-4 py-4">
         {messages.length === 0 && status !== "REQUESTED" && (
           <p className="pt-10 text-center text-sm text-[#6B4A37]">No messages yet.</p>
         )}
-        {messages.map((m) => (
-          <div key={m.id} className={`flex ${m.senderRole === role ? "justify-end" : "justify-start"}`}>
-            <div
-              className={`max-w-[75%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed shadow-sm ${
-                m.senderRole === role ? "bg-[#592209] text-[#F5E9D6]" : "border border-[#592209]/15 bg-white text-[#2C1810]"
-              }`}
-            >
-              {m.content}
-              <span className={`mt-1 block text-[10px] ${m.senderRole === role ? "text-[#F5E9D6]/70" : "text-[#6B4A37]"}`}>
-                {new Date(m.createdAt).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
-              </span>
+        {messages.map((m, i) => {
+          const prev = messages[i - 1];
+          const showDateSeparator = !prev || !isSameDay(prev.createdAt, m.createdAt);
+          const isMine = m.senderRole === role;
+          const groupStart =
+            !prev ||
+            showDateSeparator ||
+            prev.senderRole !== m.senderRole ||
+            new Date(m.createdAt).getTime() - new Date(prev.createdAt).getTime() > GROUP_GAP_MS;
+
+          return (
+            <div key={m.id}>
+              {showDateSeparator && (
+                <div className="my-4 flex items-center justify-center">
+                  <span className="rounded-full bg-[#592209]/8 px-3 py-1 text-[11px] font-medium text-[#6B4A37]">
+                    {dateSeparatorLabel(m.createdAt)}
+                  </span>
+                </div>
+              )}
+              <div className={`flex items-end gap-2 ${isMine ? "justify-end" : "justify-start"} ${groupStart ? "mt-3" : "mt-1"}`}>
+                {!isMine && (
+                  <div className="h-6 w-6 shrink-0">
+                    {groupStart &&
+                      (peerPhotoUrl ? (
+                        <img src={peerPhotoUrl} alt="" className="h-6 w-6 rounded-full object-cover" />
+                      ) : (
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#592209]/10 text-[10px] font-semibold text-[#592209]">
+                          {peerName.charAt(0).toUpperCase()}
+                        </span>
+                      ))}
+                  </div>
+                )}
+                <div
+                  className={`max-w-[75%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed shadow-sm ${
+                    isMine ? "bg-[#592209] text-[#F5E9D6]" : "border border-[#592209]/15 bg-white text-[#2C1810]"
+                  }`}
+                >
+                  {m.content}
+                  <span className={`mt-1 block text-[10px] ${isMine ? "text-[#F5E9D6]/70" : "text-[#6B4A37]"}`}>
+                    {new Date(m.createdAt).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
+                  </span>
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         <div ref={bottomRef} />
       </div>
 

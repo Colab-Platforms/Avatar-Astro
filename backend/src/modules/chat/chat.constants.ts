@@ -28,6 +28,13 @@ export const REQUEST_ACCEPT_TIMEOUT_MS = 60_000;
  * socket-connected — NOT to document/tab focus; an unfocused tab must not pause billing. */
 export const HEARTBEAT_INTERVAL_MS = 10_000;
 export const PRESENCE_TIMEOUT_MS = 15_000;
+/** How much time one heartbeat vouches for: the interval it opens. Billing runs only through
+ * min(now, slower side's last confirmed heartbeat + this window), so a participant who vanishes is billed for at
+ * most one confirmed interval after their last heartbeat, and the PRESENCE_TIMEOUT_MS detection wait is never
+ * billed. Setting this to 0 would bill only up to the exact last heartbeat instant, but then billing would lag the
+ * clock by up to a heartbeat period in every healthy chat — letting a user outrun their funds (unpaid seconds)
+ * and under-billing every chat end. */
+export const CONFIRMED_PRESENCE_WINDOW_MS = HEARTBEAT_INTERVAL_MS;
 /** Window after either side's presence lapses during which billing is PAUSED, not ended —
  * reconnecting within this window resumes billing with lastBilledAt reset to the resume moment
  * (the paused interval is never billed). Expiring without reconnect auto-ends the session

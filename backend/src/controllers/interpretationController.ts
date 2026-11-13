@@ -8,6 +8,7 @@ import { getDailyHoroscope, parseSign, toPlainText, HoroscopeUnavailableError } 
 import { getExecutionId, reserveToolExecution, settleToolExecution, releaseToolExecution } from '../modules/payment/toolBilling.service.js';
 import { TOOL_KEYS } from '../modules/payment/toolKeys.js';
 import { ApiError } from '../utils/ApiError.js';
+import { logError } from '../utils/safeError.js';
 
 // Generate human-readable birth chart interpretation
 export const interpretBirthChart = async (req: Request, res: Response) => {
@@ -49,7 +50,7 @@ export const interpretBirthChart = async (req: Request, res: Response) => {
     if (userId && billed && !billed.skip) await releaseToolExecution(executionId, "FAILED").catch(() => {});
     if (error instanceof ApiError) return res.status(error.statusCode).json({ success: false, error: error.message });
     if (error instanceof WrongLanguageError) return res.status(502).json({ success: false, error: error.message, code: error.code, language: error.language });
-    console.error('Interpretation Error:', error);
+    logError('Interpretation Error:', error);
     res.status(500).json({
       success: false,
       error: error.message || 'Failed to generate interpretation'
@@ -113,7 +114,7 @@ export const generateAICompatibility = async (req: Request, res: Response) => {
     if (userId && billed && !billed.skip) await releaseToolExecution(executionId, "FAILED").catch(() => {});
     if (error instanceof ApiError) return res.status(error.statusCode).json({ success: false, error: error.message });
     if (error instanceof WrongLanguageError) return res.status(502).json({ success: false, error: error.message, code: error.code, language: error.language });
-    console.error('Compatibility Analysis Error:', error);
+    logError('Compatibility Analysis Error:', error);
     res.status(500).json({
       success: false,
       error: error.message || 'Failed to generate compatibility analysis'

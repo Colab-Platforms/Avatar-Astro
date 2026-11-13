@@ -15,14 +15,19 @@ type Db = Prisma.TransactionClient | typeof prisma;
 
 /**
  * Every mutating function below accepts an optional `db`, defaulting to the top-level `prisma`
- * client. When a caller is already inside its own `prisma.$transaction` (e.g. a chat billing tick
- * that also needs to touch `ChatSession` in the same transaction) and passes that transaction's
- * client through, we must run inside IT, not open a new sibling transaction — Prisma's transaction
- * clients have no `$transaction` method of their own, which is exactly the signal used here to tell
- * the two cases apart.
+ * client. When a caller is already inside its own `prisma.$transaction` (e.g. a chat settlement that also
+ * touches `ChatSession` and the free allowance in the same transaction) and passes that transaction's
+ * client through, we must run inside IT, not open a new sibling transaction — a sibling would commit
+ * independently of the caller's transaction (breaking atomicity) and would block forever on any row lock the
+ * caller already holds.
+ *
+ * How the two are told apart: a transaction client has NO `$connect` / `$disconnect` / `$on` / `$extends`;
+ * only the top-level client does. (Do NOT test for `$transaction`: Prisma 7's interactive transaction client
+ * still exposes one, so that test misclassified every transaction client as the top-level client and made every
+ * "joined" call silently open a sibling transaction.)
  */
 function isOpenTransaction(db: Db): db is Prisma.TransactionClient {
-  return !("$transaction" in db);
+  return typeof (db as { $connect?: unknown }).$connect !== "function";
 }
 
 async function withTransaction<T>(db: Db, run: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
@@ -78,7 +83,7 @@ export async function getWalletSummary(userId: string) {
  * other) cannot both plan their bucket split off the same stale pre-lock numbers and overspend a
  * bucket. The lock is held until the surrounding `prisma.$transaction` commits or rolls back.
  */
-async function lockWallet(tx: Prisma.TransactionClient, walletId: string): Promise<Wallet> {
+export async function lockWallet(tx: Prisma.TransactionClient, walletId: string): Promise<Wallet> {
   // $queryRaw bypasses Prisma's @map column aliasing entirely — it returns the literal Postgres
   // column names (balance_paise), not the camelCase field names (balancePaise) the rest of this
   // file assumes. Every selected column is aliased to its camelCase name explicitly so the result
@@ -173,7 +178,7 @@ export async function creditToBucket(
 
 /**
  * Debits `amountPaise`, spending promotional coins first (Rule C). Clamped so the wallet can never
- * go negative — throws `409 Insufficient balance` rather than overdrafting, so callers must catch
+ * go negative or dip into coins reserved for another operation — throws `409 Insufficient balance` rather than overdrafting, so callers must catch
  * this and react (end a chat session, reject a tool execution) instead of assuming success.
  * Idempotent via `idempotencyKey`.
  */
@@ -193,7 +198,9 @@ export async function debitWithAllocations(
     }
 
     const wallet = await lockWallet(tx, walletId);
-    if (wallet.balancePaise < amountPaise) {
+    // Only coins NOT held by another operation are spendable: a plain debit must never eat into a running
+    // chat's or tool's reservation (the wallet_reserved_within_balance CHECK would reject it with a raw 500).
+    if (wallet.balancePaise - wallet.reservedBalancePaise < amountPaise) {
       throw new ApiError("Insufficient balance", STATUS_CODES.CONFLICT);
     }
     const allocations = planDebitAllocations(wallet, amountPaise);
@@ -358,12 +365,16 @@ export async function topUpReservation(reservationId: string, targetAmountPaise:
  * much was actually charged, which may be less than requested — `exhausted: true` tells the
  * caller funds ran out at this exact call, so it can stop billing at the precise boundary instead
  * of overshooting and correcting afterward. Idempotent via `idempotencyKey`.
+ *
+ * `finalize: true` marks this the LAST settlement against the reservation (a one-shot tool execution): any
+ * unspent remainder is given back and the reservation is closed as SETTLED with a timestamp, instead of being
+ * left HELD at zero. Rolling reservations (chat lookahead) leave it unset and stay HELD to be topped up.
  */
 export async function settleFromReservation(
   reservationId: string,
   amountPaise: number,
   reason: WalletTransactionReason,
-  opts: { referenceId?: string; idempotencyKey?: string } = {},
+  opts: { referenceId?: string; idempotencyKey?: string; finalize?: boolean } = {},
   db: Db = prisma,
 ): Promise<{ wallet: Wallet; transaction: WalletTransaction | null; charged: number; exhausted: boolean }> {
   const run = async (tx: Prisma.TransactionClient) => {
@@ -395,7 +406,11 @@ export async function settleFromReservation(
     const newBalance = wallet.balancePaise - charged;
     const newPromo = wallet.promotionalBalancePaise - sumBucket(allocations, "PROMOTIONAL");
     const newPurchased = wallet.purchasedBalancePaise - sumBucket(allocations, "PURCHASED");
-    const newReserved = wallet.reservedBalancePaise - fromReservation;
+    const leftover = reservation.amountPaise - fromReservation;
+    const finalize = opts.finalize === true && reservation.status === "HELD";
+    // On finalize the unspent remainder is released in the same statement, so the wallet's reserved total
+    // always equals the sum of its HELD reservations.
+    const newReserved = wallet.reservedBalancePaise - fromReservation - (finalize ? leftover : 0);
 
     await tx.$executeRaw`
       UPDATE wallets
@@ -403,7 +418,10 @@ export async function settleFromReservation(
           reserved_balance_paise = ${newReserved}, updated_at = now()
       WHERE id = ${wallet.id}
     `;
-    await tx.walletReservation.update({ where: { id: reservationId }, data: { amountPaise: reservation.amountPaise - fromReservation } });
+    await tx.walletReservation.update({
+      where: { id: reservationId },
+      data: finalize ? { amountPaise: 0, status: "SETTLED", resolvedAt: new Date() } : { amountPaise: leftover },
+    });
     const transaction = await tx.walletTransaction.create({
       data: {
         walletId: wallet.id,

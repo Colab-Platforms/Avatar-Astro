@@ -5,6 +5,7 @@ import { getExecutionId, reserveToolExecution, settleToolExecution, releaseToolE
 import { TOOL_KEYS } from "../modules/payment/toolKeys.js";
 import { ApiError } from "../utils/ApiError.js";
 import { WrongLanguageError, generateInLanguage, languageRule, requestLanguage, tokenBudget } from "../utils/responseLanguage.js";
+import { logError } from "../utils/safeError.js";
 
 class ProviderDown extends Error {}
 
@@ -172,7 +173,7 @@ Respond ONLY with valid JSON (no markdown, no code fences) in EXACTLY this struc
   } catch (err: any) {
     if (userId && billed && !billed.skip) await releaseToolExecution(executionId, "RELEASED").catch(() => {});
     if (err instanceof ApiError) return res.status(err.statusCode).json({ error: err.message });
-    console.error("Name analysis narrative error:", err);
+    logError("Name analysis narrative error:", err);
     try {
       return res.json(mockNarrative(req.body as NarrativeRequest));
     } catch {

@@ -3,17 +3,18 @@ import { ApiError } from "@/utils/ApiError.js";
 import STATUS_CODES from "@/utils/statusCodes.js";
 import { paymentProvider } from "./payment.provider.js";
 import { getOrCreateWallet, credit } from "./wallet.service.js";
+import { isMockPaymentsEnabled } from "./mockPayments.js";
 
 const MIN_RECHARGE_PAISE = 2000; // ₹20
 const MAX_RECHARGE_PAISE = 10_000_00; // ₹10,000
 
 /**
- * The mock gateway must never be reachable in production — there is no override flag of any kind.
- * A deliberately-flagged staging/QA deploy that needs to exercise the recharge flow must run with a
- * non-"production" NODE_ENV, never by relaxing this check.
+ * The mock gateway fails closed (see ./mockPayments.ts): it is reachable only with
+ * ALLOW_MOCK_PAYMENTS=true AND NODE_ENV of "development" or "test". Public staging and production
+ * cannot mint coins through these endpoints, whatever else is or isn't configured there.
  */
 function assertMockPaymentsAllowed() {
-  if (process.env.NODE_ENV === "production") {
+  if (!isMockPaymentsEnabled()) {
     throw new ApiError("Coin top-ups are not available yet. Please check back soon.", STATUS_CODES.SERVICE_UNAVAILABLE);
   }
 }

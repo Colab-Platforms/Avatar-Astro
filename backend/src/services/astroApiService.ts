@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
+import { logError } from "../utils/safeError.js";
 
 interface BirthData {
   day: number;
@@ -70,7 +71,7 @@ class AstroApiService {
 
       return response.data;
     } catch (error) {
-      console.error('Error generating Vedic Chart:', error);
+      logError('Error generating Vedic Chart:', error);
       throw new Error('Failed to generate Vedic Chart from AstroAPI');
     }
   }
@@ -96,7 +97,7 @@ class AstroApiService {
 
       return response.data.yogas || [];
     } catch (error) {
-      console.error('Error fetching Yogas:', error);
+      logError('Error fetching Yogas:', error);
       throw new Error('Failed to fetch Yogas from AstroAPI');
     }
   }
@@ -111,7 +112,7 @@ class AstroApiService {
 
       return response.data;
     } catch (error) {
-      console.error(`Error fetching horoscope for ${sign}:`, error);
+      logError(`Error fetching horoscope for ${sign}:`, error);
       throw new Error(`Failed to fetch horoscope for ${sign}`);
     }
   }
@@ -126,7 +127,7 @@ class AstroApiService {
 
       return response.data;
     } catch (error) {
-      console.error(`Error fetching weekly horoscope for ${sign}:`, error);
+      logError(`Error fetching weekly horoscope for ${sign}:`, error);
       throw new Error(`Failed to fetch weekly horoscope for ${sign}`);
     }
   }
@@ -141,7 +142,7 @@ class AstroApiService {
 
       return response.data;
     } catch (error) {
-      console.error(`Error fetching monthly horoscope for ${sign}:`, error);
+      logError(`Error fetching monthly horoscope for ${sign}:`, error);
       throw new Error(`Failed to fetch monthly horoscope for ${sign}`);
     }
   }
@@ -162,7 +163,7 @@ class AstroApiService {
 
       return horoscopes;
     } catch (error) {
-      console.error('Error fetching all horoscopes:', error);
+      logError('Error fetching all horoscopes:', error);
       throw new Error('Failed to fetch all horoscopes');
     }
   }
