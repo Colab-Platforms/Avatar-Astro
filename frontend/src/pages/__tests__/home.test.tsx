@@ -8,6 +8,7 @@ import Index from "@/pages/Index";
 import Layout from "@/components/Layout";
 import { NavigationProvider } from "@/context/NavigationContext";
 import { tools } from "@/data/tools";
+import { LUCKY_VEHICLE_FEATURE, MUHURAT_FEATURE } from "@/data/featureCatalog";
 import { homeBlogPosts } from "@/data/homeBlog";
 import { homeFaqs } from "@/data/homeFaqs";
 import { devotionSlides, aiGuruFeature, liveDarshanFeature } from "@/data/features";
@@ -26,6 +27,7 @@ beforeAll(() => {
 
 const css = readFileSync(resolve(process.cwd(), "src/index.css"), "utf8");
 const src = (p: string) => readFileSync(resolve(process.cwd(), "src", p), "utf8");
+const homepageTools = tools.filter((tool) => tool.path !== MUHURAT_FEATURE.path);
 
 const renderAt = (path: string, ui: React.ReactNode = <Index />) =>
   render(
@@ -92,13 +94,22 @@ describe("homepage content and structure", () => {
     const section = sectionOf(/Astrology\s+Seva/);
     expect(screen.getAllByRole("heading", { level: 2, name: /Astrology\s+Seva/ })).toHaveLength(1); // one section only
     const titles = [...section.querySelectorAll(".hl-card h3")].map((h) => h.textContent);
-    expect(titles).toEqual(tools.map((t) => t.title)); // follows tools.ts, whatever it contains
+    expect(titles).toEqual(homepageTools.map((t) => t.title));
+    expect(titles).toHaveLength(8);
+    expect(screen.queryByRole("heading", { level: 3, name: "Muhurat Finder" })).toBeNull();
     expect(titles.slice(0, 4)).toEqual(["Janma Kundali", "Tarot Prediction", "Love Compatibility", "Hasta Rekha (Palmistry)"]);
+    expect(tools[0].image).toBe("/placeholders/birthchart.jpg");
+    expect(tools[1].image).toBe("/placeholders/tarot.jpg");
+    expect(tools[2].image).toBe("/placeholders/lovecompatibility.png");
+    expect(tools[3].image).toBe("/placeholders/palmistry.jpg");
+    expect(tools.find((tool) => tool.path === "/name-destiny-report")?.image).toBe("/placeholders/namankjyotish.jpg");
+    expect(tools.find((tool) => tool.path === "/horoscopes")?.image).toBe("/placeholders/daily-horoscope-custom.png");
+    expect(tools.find((tool) => tool.path === "/baby-name-jyotish")?.image).toBe("/placeholders/baby-name-custom.png");
+    expect(tools.find((tool) => tool.path === LUCKY_VEHICLE_FEATURE.path)?.image).toBe("/placeholders/vehicle-number-custom.png");
     for (const tool of tools.slice(0, 4)) {
-      expect(tool.image).toMatch(/^\/images\/tools\/.+\.(jpg|webp)$/); // the photo cards (Hasta Rekha uses its own labelled palmistry artwork)
-      if (tool.title === "Hasta Rekha (Palmistry)") expect(tool.image).toBe("/images/tools/hasta-rekha-palmistry.webp");
+      expect(tool.image).toMatch(/^\/(?:images\/tools|placeholders)\/.+\.(jpg|webp|png)$/);
     }
-    for (const tool of tools) {
+    for (const tool of homepageTools) {
       const card = within(document.getElementById("astrology-tools")!).getByRole("heading", { level: 3, name: tool.title }).closest(".hl-card") as HTMLElement;
       const img = within(card).getByRole("img", { name: tool.title });
       expect(img.getAttribute("src")).toBe(tool.image);
@@ -108,19 +119,24 @@ describe("homepage content and structure", () => {
     }
   });
 
-  it("tool grid: 1 column, 2 from 768px, 3 from 1280px, inside a 6xl container", () => {
+  it("tool grid: responsive columns with balanced side margins", () => {
     renderAt("/");
-    const grid = sectionOf(/Astrology\s+Seva/).querySelector(".grid")!;
+    const section = sectionOf(/Astrology\s+Seva/);
+    const grid = section.querySelector(".grid")!;
+    const content = section.querySelector(":scope > div")!;
     expect(grid.className).toContain("grid-cols-1");
     expect(grid.className).toContain("md:grid-cols-2");
-    expect(grid.className).toContain("xl:grid-cols-3");
-    expect(grid.className).toContain("max-w-6xl");
-    expect(grid.className).not.toMatch(/grid-cols-4/);
+    expect(grid.className).toContain("xl:grid-cols-4");
+    expect(grid.className).toContain("w-full");
+    expect(content.className).toContain("max-w-[1600px]");
+    expect(content.className).toContain("px-4");
+    expect(content.className).not.toContain("container");
+    expect(grid.className).not.toContain("xl:grid-cols-3");
   });
 
   it("tool cards are plain ivory surfaces: no pastel tone classes anywhere on the homepage", () => {
     const { container } = renderAt("/");
-    for (const t of tools) {
+    for (const t of homepageTools) {
       const card = within(document.getElementById("astrology-tools")!).getByRole("heading", { level: 3, name: t.title }).closest(".hl-card") as HTMLElement;
       expect(card.className).not.toMatch(/hl-tone/);
     }
@@ -162,6 +178,9 @@ describe("homepage content and structure", () => {
   it("Devotion slides keep their copy, photo, checklist and destination", () => {
     const { container } = renderAt("/");
     const slides = [...container.querySelectorAll("[aria-roledescription='slide']")] as HTMLElement[];
+    const showcase = container.querySelector("section[aria-label='Featured experiences']")!;
+    expect(showcase.querySelector(":scope > div")?.className).toContain("max-w-[1520px]");
+    expect(showcase.querySelector("[aria-roledescription='carousel']")?.className).toContain("lg:py-8");
     devotionSlides.forEach((slide, i) => {
       const el = slides[i];
       expect(el.querySelector("h3")).toHaveTextContent(slide.title);
@@ -169,6 +188,7 @@ describe("homepage content and structure", () => {
       expect(el.querySelector(`a[href="${slide.buttonPath}"]`)).toHaveTextContent(slide.buttonLabel);
       expect(el.querySelector("img")!.getAttribute("src")).toBe(slide.image);
       expect(el.querySelector("img")!.getAttribute("alt")).toBe(slide.imageAlt);
+      expect(el.querySelector("img")!.parentElement?.parentElement?.className).toContain("max-w-[264px]");
       expect([...el.querySelectorAll("li")].map((l) => l.textContent)).toEqual(slide.checklist);
     });
   });
@@ -178,10 +198,16 @@ describe("homepage content and structure", () => {
     const live = screen.getByRole("heading", { level: 3, name: "Live Darshan" }).closest(".hl-card") as HTMLElement;
     expect(within(live).getByText("LIVE")).toBeInTheDocument();
     expect(live.querySelectorAll("img")).toHaveLength(1 + liveDarshanFeature.thumbnails.length);
+    expect(live.querySelector(".hl-img-zoom")?.className).toContain("h-40");
+    expect(live.querySelector(".hl-img-zoom")?.className).toContain("sm:h-44");
+    expect(live.querySelector(".hl-img-zoom")?.className).not.toContain("h-[110px]");
     expect(within(live).getByRole("link", { name: /Watch Live/ })).toHaveAttribute("href", "/avatar-live/darshan");
 
     const guru = screen.getByRole("heading", { level: 3, name: "Divya Margdarshak" }).closest(".hl-card") as HTMLElement;
     expect(within(guru).getByRole("img", { name: aiGuruFeature.imageAlt })).toHaveAttribute("src", "/images/tools/ai-guru.jpg");
+    expect(guru.querySelector(".hl-img-zoom")?.className).toContain("h-40");
+    expect(guru.querySelector(".hl-img-zoom")?.className).toContain("sm:h-44");
+    expect(guru.querySelector(".hl-img-zoom")?.className).not.toContain("h-[110px]");
     expect(within(guru).getByText("Ask your question...")).toBeInTheDocument();
     expect(within(guru).getByRole("link", { name: /Talk to Divya Margdarshak/ })).toHaveAttribute("href", "/inner-voice/chat");
   });
@@ -265,7 +291,7 @@ describe("homepage content and structure", () => {
 
   it("every homepage image path points at a file that exists in the repo", () => {
     const paths = [
-      ...tools.map((t) => t.image),
+      ...homepageTools.map((t) => t.image),
       ...devotionSlides.map((s) => s.image),
       aiGuruFeature.image,
       liveDarshanFeature.image,

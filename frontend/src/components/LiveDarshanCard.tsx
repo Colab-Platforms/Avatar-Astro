@@ -14,7 +14,7 @@ const LiveDarshanCard = ({ index }: LiveDarshanCardProps) => (
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true, amount: 0.2 }}
     transition={{ duration: 0.5, delay: index * 0.07, ease: "easeOut" }}
-    className="hl-card group relative flex h-full flex-col overflow-hidden p-4"
+    className="hl-card group relative flex h-full flex-col overflow-hidden p-3.5"
   >
     <div className="mb-1 flex items-center gap-2">
       <h3 className="hl-serif text-xl font-semibold normal-case leading-tight tracking-[0.03em] text-home-ink">
@@ -25,9 +25,9 @@ const LiveDarshanCard = ({ index }: LiveDarshanCardProps) => (
         <Tx k="home.live.badge" def={liveDarshanFeature.liveLabel} />
       </span>
     </div>
-    <p className="mb-2 font-home-sans text-[0.9rem] leading-[1.45] text-home-muted"><Tx k="home.live.description" def={liveDarshanFeature.description} /></p>
+    <p className="mb-1.5 font-home-sans text-[0.9rem] leading-[1.45] text-home-muted"><Tx k="home.live.description" def={liveDarshanFeature.description} /></p>
 
-    <div className="hl-img-zoom mb-2 h-[110px] w-full overflow-hidden rounded-lg">
+    <div className="hl-img-zoom mb-1 h-40 w-full overflow-hidden rounded-lg sm:h-44">
       <img
         src={liveDarshanFeature.image}
         alt={liveDarshanFeature.title}
@@ -36,9 +36,9 @@ const LiveDarshanCard = ({ index }: LiveDarshanCardProps) => (
       />
     </div>
 
-    <div className="mb-3 grid grid-cols-3 gap-2">
+    <div className="mb-2 grid grid-cols-3 gap-2">
       {liveDarshanFeature.thumbnails.map((thumb, i) => (
-        <div key={i} className="h-9 overflow-hidden rounded-md border border-home-line">
+        <div key={i} className="h-7 overflow-hidden rounded-md border border-home-line">
           <img src={thumb} alt="" className="h-full w-full object-cover" loading="lazy" />
         </div>
       ))}
