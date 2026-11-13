@@ -43,6 +43,12 @@ jobs:
       # lockfile) can't be used. Committing the lockfile and switching this to `npm ci` + the
       # setup-node npm cache would make builds faster and reproducible — recommended.
       - run: npm install
+      # tsc needs @prisma/client's generated types to exist — `npm install` alone does not
+      # generate them (only the "prebuild" script does, which typecheck doesn't run through).
+      # Without this step every model/enum import 'has no exported member', cascading into
+      # implicit-any errors across the whole codebase.
+      - name: Generate Prisma client
+        run: npx prisma generate
       - name: Typecheck
         run: npx tsc --noEmit -p .
       - name: Initialise test database (prisma db push + custom SQL)
