@@ -46,7 +46,12 @@ export async function boot(domain: string) {
 export async function cleanup(ctx: Pick<Ctx, "prisma" | "DOM" | "SLUG">) {
   const { prisma } = ctx;
   const ids: string[] = (await prisma.user.findMany({ where: { email: { endsWith: ctx.DOM } }, select: { id: true } })).map((u: any) => u.id);
-  if (ids.length) await prisma.toolExecution.deleteMany({ where: { userId: { in: ids } } });
+  if (ids.length) {
+    await prisma.paymentRefund.deleteMany({ where: { paymentOrder: { userId: { in: ids } } } });
+    await prisma.paymentOrder.deleteMany({ where: { userId: { in: ids } } });
+    await prisma.toolExecution.deleteMany({ where: { userId: { in: ids } } });
+  }
+  await prisma.paymentWebhookEvent.deleteMany({});
   await prisma.chatMessage.deleteMany({ where: { session: { user: { email: { endsWith: ctx.DOM } } } } });
   await prisma.chatSession.deleteMany({ where: { user: { email: { endsWith: ctx.DOM } } } });
   await prisma.astrologerProfile.deleteMany({ where: { slug: { startsWith: ctx.SLUG } } });

@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
-import { ChevronDown, Download, Music } from "lucide-react";
+import { Link } from "react-router-dom";
+import { BookOpen, ChevronDown, Download, Music } from "lucide-react";
 import DevotionLayout from "@/components/DevotionLayout";
 import Loader from "@/components/Loader/Loader";
 import { devotionLibraryApi } from "@/features/devotionLibrary/api";
@@ -24,10 +25,26 @@ export default function MantrasChantsPage() {
           <span className="mb-2 inline-block font-home-sans text-[0.75rem] font-bold uppercase tracking-[0.2em] text-home-gerua">
             Devotion & Spirituality
           </span>
-          <h1 className="hl-serif mb-3 text-3xl font-semibold text-home-ink sm:text-4xl">Mantras & Chants</h1>
+          <h1 className="hl-serif mb-3 text-3xl font-semibold text-home-ink sm:text-4xl">
+            Mantras & Chants
+          </h1>
           <p className="font-home-sans text-home-muted">
-            Discover mantras, chants and verses to bring peace and focus to your day.
+            Discover mantras, chants and verses to bring peace and focus to your
+            day.
           </p>
+
+          {/* Library Switcher */}
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+            <Link
+              to="/devotion/books"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#592209]/20 bg-[#592209]/5 px-4 py-1.5 text-xs font-medium text-[#592209] transition-colors hover:bg-[#592209]/10"
+            >
+              <BookOpen size={13} /> Spiritual Books
+            </Link>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#BC6A4D] px-4 py-1.5 text-xs font-semibold text-[#FFF8F2] shadow-sm">
+              <Music size={13} /> Mantras & Chants
+            </span>
+          </div>
         </div>
 
         {isLoading ? (
@@ -35,22 +52,34 @@ export default function MantrasChantsPage() {
             <Loader />
           </div>
         ) : isError ? (
-          <p className="text-center text-home-muted">Could not load mantras right now. Please try again shortly.</p>
+          <p className="text-center text-home-muted">
+            Could not load mantras right now. Please try again shortly.
+          </p>
         ) : !mantras?.length ? (
           <div className="flex flex-col items-center gap-3 py-20 text-center">
             <Music className="h-10 w-10 text-home-gerua" />
-            <p className="text-home-muted">No mantras have been published yet. Check back soon.</p>
+            <p className="text-home-muted">
+              No mantras have been published yet. Check back soon.
+            </p>
           </div>
         ) : (
           <div className="space-y-4">
             {mantras.map((mantra) => {
               const isOpen = expanded === mantra.id;
               return (
-                <div key={mantra.id} className="hl-card overflow-hidden rounded-xl border border-home-line p-4 sm:p-5">
+                <div
+                  key={mantra.id}
+                  className="hl-card overflow-hidden rounded-xl border border-home-line p-4 sm:p-5"
+                >
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                     <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-home-line bg-home-ivory">
                       {mantra.coverImageUrl ? (
-                        <img src={mantra.coverImageUrl} alt="" className="h-full w-full object-cover" loading="lazy" />
+                        <img
+                          src={mantra.coverImageUrl}
+                          alt=""
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center">
                           <Music className="h-6 w-6 text-home-gerua/50" />
@@ -59,9 +88,17 @@ export default function MantrasChantsPage() {
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <span className="font-home-sans text-xs font-semibold uppercase tracking-wide text-home-gerua">{mantra.category}</span>
-                      <h2 className="hl-serif text-lg font-semibold text-home-ink">{mantra.title}</h2>
-                      {mantra.deity && <p className="text-sm text-home-muted">{mantra.deity}</p>}
+                      <span className="font-home-sans text-xs font-semibold uppercase tracking-wide text-home-gerua">
+                        {mantra.category}
+                      </span>
+                      <h2 className="hl-serif text-lg font-semibold text-home-ink">
+                        {mantra.title}
+                      </h2>
+                      {mantra.deity && (
+                        <p className="text-sm text-home-muted">
+                          {mantra.deity}
+                        </p>
+                      )}
                     </div>
 
                     <div className="flex shrink-0 items-center gap-2">
@@ -82,20 +119,37 @@ export default function MantrasChantsPage() {
                           aria-expanded={isOpen}
                           className="inline-flex items-center gap-1 text-xs font-medium text-home-ink/70 hover:text-home-ink"
                         >
-                          Lyrics <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                          Lyrics{" "}
+                          <ChevronDown
+                            className={`h-3.5 w-3.5 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                          />
                         </button>
                       )}
                     </div>
                   </div>
 
                   {mantra.audioUrl && (
-                    <audio controls preload="none" src={mantra.audioUrl} onPlay={() => handlePlay(mantra.id)} className="mt-3 w-full" />
+                    <audio
+                      controls
+                      preload="none"
+                      src={mantra.audioUrl}
+                      onPlay={() => handlePlay(mantra.id)}
+                      className="mt-3 w-full"
+                    />
                   )}
 
                   {isOpen && (
                     <div className="mt-3 space-y-2 rounded-lg bg-home-ivory/60 p-3 text-sm">
-                      {mantra.lyricsText && <p className="whitespace-pre-line text-home-ink">{mantra.lyricsText}</p>}
-                      {mantra.meaning && <p className="whitespace-pre-line text-home-ink/70">{mantra.meaning}</p>}
+                      {mantra.lyricsText && (
+                        <p className="whitespace-pre-line text-home-ink">
+                          {mantra.lyricsText}
+                        </p>
+                      )}
+                      {mantra.meaning && (
+                        <p className="whitespace-pre-line text-home-ink/70">
+                          {mantra.meaning}
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>

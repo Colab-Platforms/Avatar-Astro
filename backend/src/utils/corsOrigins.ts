@@ -3,7 +3,11 @@
 // call the REST API is also allowed to open a WebSocket.
 
 // Origins allowed in EVERY environment: the deployed frontend, plus CORS_ORIGIN from env.
-const PRODUCTION_ALLOWED_ORIGINS = ["https://avatar-astro.vercel.app"];
+const PRODUCTION_ALLOWED_ORIGINS = [
+  "https://avatar-astro.vercel.app",
+  "https://www.mybhagya.in",
+  "https://mybhagya.in",
+];
 
 // Development conveniences — local Vite/Expo ports and LAN IPs (192.168.x.x / 10.x.x.x /
 // 172.16-31.x.x) so phones on the same WiFi can hit a locally-running backend. These are

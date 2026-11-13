@@ -39,6 +39,8 @@ import { initSocketServer, clearPresenceTimers } from "./realtime/socketServer.j
 import { createShutdownController, installProcessHandlers } from "./utils/lifecycle.js";
 import { isMockPaymentsMisconfigured } from "./modules/payment/mockPayments.js";
 import { startReconciliationJob, stopReconciliationJob } from "./modules/payment/reconciliation.job.js";
+import { razorpayWebhookHandler } from "./modules/payment/payment.webhook.js";
+import { defaultRazorpayProvider } from "./modules/payment/payment.provider.js";
 import prisma from "@root/prisma.js";
 import { isOriginAllowed } from "./utils/corsOrigins.js";
 import { getExecutionId, reserveToolExecution, settleToolExecution, releaseToolExecution } from "./modules/payment/toolBilling.service.js";
@@ -82,6 +84,23 @@ const app = express();
   // The mock payment gateway stays locked outside development/test regardless of this flag; the warning
   // exists so a flag copied into a deployed environment is noticed and removed.
   if (isMockPaymentsMisconfigured()) console.error("✗ ALLOW_MOCK_PAYMENTS=true is set but NODE_ENV is not development/test — mock payments remain DISABLED. Remove the variable from this environment.");
+
+  // Razorpay payment gateway validation
+  const razorpayMissing = ["RAZORPAY_KEY_ID", "RAZORPAY_KEY_SECRET"].filter((k) => !process.env[k]);
+  if (razorpayMissing.length) {
+    if (process.env.NODE_ENV === "production") {
+      console.warn(`! RAZORPAY CONFIGURATION INCOMPLETE: ${razorpayMissing.join(", ")} not set — real recharges will fail`);
+    }
+  } else {
+    defaultRazorpayProvider.reloadConfig(process.env);
+    const keyId = process.env.RAZORPAY_KEY_ID || "";
+    if (process.env.NODE_ENV === "production" && keyId.startsWith("rzp_test_")) {
+      console.warn("! WARNING: RAZORPAY_KEY_ID is in TEST MODE (rzp_test_*) on a production instance!");
+    }
+    if (!process.env.RAZORPAY_WEBHOOK_SECRET) {
+      console.warn("! RAZORPAY_WEBHOOK_SECRET is missing — payment webhook verification will fail closed");
+    }
+  }
 }
 // Render (and most hosts) terminate TLS at one proxy hop. Without this, req.ip is the proxy for every visitor,
 // so the per-IP rate limits would be shared by all users at once.
@@ -113,6 +132,14 @@ app.use("/api", captureReadings());
 // Mounted before the global 20mb body parser: it applies its own 250kb limit.
 app.use("/api/ai", ...feature("ai-chat"), aiProxyRoutes);
 app.use("/api/tarot", ...feature("tarot"), tarotRoutes);
+
+// Razorpay webhook: raw bytes must be parsed for HMAC-SHA256 signature verification BEFORE express.json()
+app.post(
+  "/api/payments/razorpay/webhook",
+  express.raw({ type: "*/*", limit: "100kb" }),
+  razorpayWebhookHandler,
+);
+
 // 200kb covers every JSON body this API legitimately receives (the largest are astrology form
 // payloads of a few kb; file uploads go through multer as multipart and are unaffected). The old
 // global 20mb limit was a request-flooding surface. Routes needing more set their own parser

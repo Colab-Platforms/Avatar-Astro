@@ -35,16 +35,29 @@ export const walletApi = {
   },
 
   createRechargeOrder(amountPaise: number) {
-    return authRequest<{ orderId: string; amountPaise: number; status: string }>(`${BASE}/recharge/order`, {
+    return authRequest<{
+      orderId: string;
+      providerOrderId?: string;
+      amountPaise: number;
+      status: string;
+      provider: string;
+      keyId?: string | null;
+      currency: string;
+    }>(`${BASE}/recharge/order`, {
       method: "POST",
       body: { amountPaise },
     });
   },
 
-  confirmRechargeOrder(orderId: string) {
+  confirmRechargeOrder(params: {
+    orderId: string;
+    razorpayPaymentId?: string;
+    razorpayOrderId?: string;
+    razorpaySignature?: string;
+  }) {
     return authRequest<{ status: string; balancePaise: number }>(`${BASE}/recharge/confirm`, {
       method: "POST",
-      body: { orderId },
+      body: params,
     });
   },
 };

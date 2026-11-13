@@ -30,18 +30,52 @@ export function createWalletRouter(): Router {
     "/recharge/order",
     wrap(async (req, res) => {
       const amountPaise = Number(req.body?.amountPaise);
-      const order = await createRechargeOrder(req.user!.id, amountPaise);
-      sendResponse(res, true, { orderId: order.id, amountPaise: order.amountPaise, status: order.status }, "Recharge order created", STATUS_CODES.CREATED);
+      const { order, keyId } = await createRechargeOrder(req.user!.id, amountPaise);
+      sendResponse(
+        res,
+        true,
+        {
+          orderId: order.id,
+          providerOrderId: order.providerOrderId,
+          amountPaise: order.amountPaise,
+          status: order.status,
+          provider: order.provider,
+          keyId,
+          currency: "INR",
+        },
+        "Recharge order created",
+        STATUS_CODES.CREATED,
+      );
     }),
   );
 
   router.post(
     "/recharge/confirm",
     wrap(async (req, res) => {
-      const orderId = String(req.body?.orderId ?? "");
+      const orderId = String(req.body?.orderId ?? "").trim();
       if (!orderId) throw new ApiError("orderId is required", STATUS_CODES.BAD_REQUEST);
-      const result = await confirmRechargeOrder(req.user!.id, orderId);
-      sendResponse(res, true, { status: result.order.status, balancePaise: result.balancePaise }, "Recharge successful");
+
+      const razorpayPaymentId = req.body?.razorpayPaymentId ? String(req.body.razorpayPaymentId).trim() : undefined;
+      const razorpayOrderId = req.body?.razorpayOrderId ? String(req.body.razorpayOrderId).trim() : undefined;
+      const razorpaySignature = req.body?.razorpaySignature ? String(req.body.razorpaySignature).trim() : undefined;
+
+      const result = await confirmRechargeOrder(req.user!.id, {
+        orderId,
+        razorpayPaymentId,
+        razorpayOrderId,
+        razorpaySignature,
+      });
+
+      sendResponse(
+        res,
+        true,
+        {
+          status: result.order.status,
+          balancePaise: result.balancePaise,
+          providerPaymentId: result.order.providerPaymentId,
+        },
+        "Recharge successful",
+      );
     }),
   );
 

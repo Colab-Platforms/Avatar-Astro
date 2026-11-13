@@ -7,6 +7,7 @@
 // one backend process. First run is delayed a few minutes after boot so it never competes with
 // startup recovery.
 import { reconcileLedger, findStaleReservations } from "./reconciliation.js";
+import { sweepAbandonedOrders } from "./payment.service.js";
 
 const FIRST_RUN_DELAY_MS = 5 * 60_000;
 const INTERVAL_MS = 24 * 60 * 60_000;
@@ -18,7 +19,12 @@ export async function runReconciliationSweep(): Promise<void> {
   const startedAt = Date.now();
   const report = await reconcileLedger();
   const { reservations } = await findStaleReservations();
+  const { sweptCount } = await sweepAbandonedOrders(60);
   const tookMs = Date.now() - startedAt;
+
+  if (sweptCount > 0) {
+    console.log(`[reconciliation] swept ${sweptCount} abandoned recharge order(s)`);
+  }
 
   if (report.issues.length === 0 && reservations.length === 0) {
     console.log(`[reconciliation] clean: ${report.checkedWallets} wallets, ${report.checkedSessions} sessions checked in ${tookMs}ms`);
