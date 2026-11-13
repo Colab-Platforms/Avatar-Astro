@@ -8,7 +8,7 @@ import { intlTag } from "@/features/muhurat/format";
 import { useZodiacText, type ZodiacSign } from "@/data/zodiacData";
 import { MAJOR_ARCANA, shuffleDeck, type TarotCard } from "@/data/tarotData";
 import TarotArt from "@/components/tarot/TarotArt";
-import HoroscopeStreakPanel from "@/features/points/HoroscopeStreakPanel";
+import HoroscopeStreakPanel from "@/features/horoscopeStreak/HoroscopeStreakPanel";
 import { fetchDailyHoroscope, formatDateLabel, HoroscopeError, msUntilNextDay, todayKey, type DailyHoroscope } from "@/lib/dailyHoroscope";
 
 // Daily horoscope experience for one Sun sign, shown at the top of /zodiac/:sign. Order on the page:
@@ -210,7 +210,7 @@ const DailySignExperience = ({ sign }: { sign: ZodiacSign }) => {
   const [picked, setPicked] = useState<number | null>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const reduce = useReducedMotion();
-  // What the visitor has done on this page for this sign. Reported with the daily completion (the server does not verify these).
+  // What the visitor has done on this page for this sign; the Complete button unlocks once all three are done.
   const [steps, setSteps] = useState({ read: false, shuffled: false, revealed: false });
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
   useEffect(() => { setPicked(null); setDeck(drawDeck()); setSteps({ read: false, shuffled: false, revealed: false }); }, [sign.name]);
@@ -293,8 +293,8 @@ const DailySignExperience = ({ sign }: { sign: ZodiacSign }) => {
         </p>
       )}
 
-      {/* 14. streak and rewards (signed-in users; everything shown comes from the server) */}
-      <HoroscopeStreakPanel sign={sign.name} readingDate={load.state === "ready" ? load.data.date : undefined} steps={steps} />
+      {/* 14. daily streak (kept in this browser, like Karma Sankhya) */}
+      <HoroscopeStreakPanel steps={steps} />
     </section>
   );
 };

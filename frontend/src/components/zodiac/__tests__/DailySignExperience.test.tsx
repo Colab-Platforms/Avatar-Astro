@@ -1,14 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import DailySignExperience from "../DailySignExperience";
 import { zodiacSigns } from "@/data/zodiacData";
 import { todayKey } from "@/lib/dailyHoroscope";
 
 const sections = (tag: string) => ({ overview: `Overview ${tag}`, career: `Career ${tag}`, love: `Love ${tag}`, health: `Health ${tag}`, mood: `Mood ${tag}`, opportunities: `Opps ${tag}`, mindful: `Mindful ${tag}`, guidance: `Guidance ${tag}` });
 const ok = (sign: string, extra: object = {}) => ({ ok: true, status: 200, json: async () => ({ success: true, data: { sign, date: todayKey(), weekday: "x", timezone: "Asia/Kolkata", system: "w", cached: false, sections: { ...sections(sign), ...extra } } }) });
-const mount = (name: string) => render(<QueryClientProvider client={new QueryClient()}><MemoryRouter><DailySignExperience sign={zodiacSigns.find((s) => s.name === name)!} /></MemoryRouter></QueryClientProvider>);
+const mount = (name: string) => render(<MemoryRouter><DailySignExperience sign={zodiacSigns.find((s) => s.name === name)!} /></MemoryRouter>);
 let fetchMock: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {

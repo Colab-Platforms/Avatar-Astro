@@ -18,7 +18,6 @@ import {
   UserCog,
   X,
   type LucideIcon,
-  Award,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
@@ -53,7 +52,6 @@ const GROUPS: { label: string; items: Item[] }[] = [
       { to: "/dashboard/readings", label: "My Readings", icon: BookOpenText },
       { to: "/dashboard/activity", label: "My Activity", icon: CalendarHeart },
       { to: "/dashboard/saved", label: "Saved", icon: Bookmark },
-      { to: "/dashboard/rewards", label: "Reward Points", icon: Award },
       { to: "/dashboard/conversations", label: "My Conversations", icon: MessageCircleHeart },
     ],
   },
@@ -77,7 +75,6 @@ const TITLE_BY_PATH: Record<string, string> = {
   "/dashboard/readings": "My Readings",
   "/dashboard/activity": "My Activity",
   "/dashboard/saved": "Saved Items",
-  "/dashboard/rewards": "Reward Points",
   "/dashboard/conversations": "My Conversations",
   "/dashboard/bookings": "My Bookings",
   "/dashboard/orders": "My Orders",

@@ -58,10 +58,6 @@ model User {
   passwordResets   PasswordResetToken[]
   dailyChatUsages  DailyChatUsage[]
 
-  // Shared points wallet and Daily Horoscope streak (additive)
-  horoscopeCompletions HoroscopeCompletion[]
-  horoscopeStreak      HoroscopeStreak?
-  pointsLedger         PointsLedger[]
   // Wallet + astrologer chat — additive, see payment.prisma / chat.prisma.
   wallet              Wallet?
   paymentOrders       PaymentOrder[]
