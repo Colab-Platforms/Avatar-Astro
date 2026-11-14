@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import Tx from "@/i18n/Tx";
 import { Sparkles } from "lucide-react";
+import { MUHURAT_FEATURE } from "@/data/featureCatalog";
 import { tools } from "@/data/tools";
 import { useFeatureFlags } from "@/lib/featureFlags";
 import ToolCard from "./ToolCard";
@@ -8,10 +9,10 @@ import ToolCard from "./ToolCard";
 const AstrologyToolsSection = () => {
   // Tools the admin switched off are not listed (fails open if the config cannot load).
   const { isPathDisabled } = useFeatureFlags();
-  const visibleTools = tools.filter((t) => !isPathDisabled(t.path));
+  const visibleTools = tools.filter((t) => t.path !== MUHURAT_FEATURE.path && !isPathDisabled(t.path));
   return (
   <section id="astrology-tools" tabIndex={-1} className="relative w-full scroll-mt-20 py-10 outline-none md:py-14" aria-labelledby="home-tools-h">
-    <div className="container relative z-10 mx-auto px-4 md:px-6">
+    <div className="relative z-10 mx-auto w-full max-w-[1600px] px-4 sm:px-5 md:px-6 lg:px-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -28,7 +29,7 @@ const AstrologyToolsSection = () => {
         </h2>
       </motion.div>
 
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-5 md:grid-cols-2 md:gap-6 xl:grid-cols-3">
+      <div className="grid w-full grid-cols-1 gap-5 md:grid-cols-2 md:gap-6 xl:grid-cols-4">
         {visibleTools.map((tool, index) => (
           <ToolCard key={tool.title} tool={tool} index={index} />
         ))}

@@ -35,7 +35,7 @@ const FeaturedCarousel = () => {
         role="region"
         aria-roledescription="carousel"
         aria-label="Devotion & Spirituality"
-        className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 px-4 py-4 sm:px-5 lg:gap-x-4 lg:py-6"
+        className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 px-4 py-5 sm:px-5 lg:gap-x-4 lg:py-8"
       >
         <button type="button" aria-label="Previous slide" onClick={() => go(-1)} className={`${arrowCls} order-2 lg:order-1`}>
           <ChevronLeft className="h-4 w-4" />
@@ -52,7 +52,7 @@ const FeaturedCarousel = () => {
                   aria-roledescription="slide"
                   aria-label={`${i + 1} of ${count}`}
                   aria-hidden={!active}
-                  className={`col-start-1 row-start-1 grid grid-cols-1 items-center gap-4 transition-[opacity,visibility] duration-300 motion-reduce:transition-none md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,240px)_minmax(0,1fr)] lg:gap-8 ${
+                  className={`col-start-1 row-start-1 grid grid-cols-1 items-center gap-4 transition-[opacity,visibility] duration-300 motion-reduce:transition-none md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,264px)_minmax(0,1fr)] lg:gap-8 ${
                     active ? "visible opacity-100" : "pointer-events-none invisible opacity-0"
                   }`}
                 >
@@ -69,7 +69,7 @@ const FeaturedCarousel = () => {
                     <FeatureButton to={slide.buttonPath} label={<Tx k={`home.slides.${slideKey(slide.title)}.button`} def={slide.buttonLabel} />} />
                   </div>
 
-                  <div className="mx-auto w-full max-w-[240px] overflow-hidden rounded-xl border border-home-line shadow-[0_8px_22px_rgba(89,34,9,0.16)]">
+                  <div className="mx-auto w-full max-w-[264px] overflow-hidden rounded-xl border border-home-line shadow-[0_8px_22px_rgba(89,34,9,0.16)]">
                     <div className="aspect-[4/3] w-full">
                       <img
                         src={slide.image}
