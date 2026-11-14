@@ -197,16 +197,14 @@ describe("homepage content and structure", () => {
     renderAt("/");
     const live = screen.getByRole("heading", { level: 3, name: "Live Darshan" }).closest(".hl-card") as HTMLElement;
     expect(within(live).getByText("LIVE")).toBeInTheDocument();
-    expect(live.querySelectorAll("img")).toHaveLength(1 + liveDarshanFeature.thumbnails.length);
-    expect(live.querySelector(".hl-img-zoom")?.className).toContain("h-40");
-    expect(live.querySelector(".hl-img-zoom")?.className).toContain("sm:h-44");
-    expect(live.querySelector(".hl-img-zoom")?.className).not.toContain("h-[110px]");
+    expect(live.querySelectorAll("img")).toHaveLength(1);
+    expect(live.querySelector(".hl-img-zoom")?.className).toContain("flex-1");
     expect(within(live).getByRole("link", { name: /Watch Live/ })).toHaveAttribute("href", "/avatar-live/darshan");
 
     const guru = screen.getByRole("heading", { level: 3, name: "Divya Margdarshak" }).closest(".hl-card") as HTMLElement;
     expect(within(guru).getByRole("img", { name: aiGuruFeature.imageAlt })).toHaveAttribute("src", "/images/tools/ai-guru.jpg");
-    expect(guru.querySelector(".hl-img-zoom")?.className).toContain("h-40");
-    expect(guru.querySelector(".hl-img-zoom")?.className).toContain("sm:h-44");
+    expect(guru.querySelector(".hl-img-zoom")?.className).toContain("h-32");
+    expect(guru.querySelector(".hl-img-zoom")?.className).toContain("sm:h-36");
     expect(guru.querySelector(".hl-img-zoom")?.className).not.toContain("h-[110px]");
     expect(within(guru).getByText("Ask your question...")).toBeInTheDocument();
     expect(within(guru).getByRole("link", { name: /Talk to Divya Margdarshak/ })).toHaveAttribute("href", "/inner-voice/chat");
@@ -295,7 +293,6 @@ describe("homepage content and structure", () => {
       ...devotionSlides.map((s) => s.image),
       aiGuruFeature.image,
       liveDarshanFeature.image,
-      ...liveDarshanFeature.thumbnails,
       ...homeBlogPosts.map((p) => p.image),
       "/images/hero/solar-system-poster.jpg",
       "/images/temples/Solar_system.mp4",

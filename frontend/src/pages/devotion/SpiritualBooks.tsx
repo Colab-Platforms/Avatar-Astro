@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { ArrowRight, BookOpen, Download, Music, Search, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import DevotionLayout from "@/components/DevotionLayout";
-import Loader from "@/components/Loader/Loader";
 import { LotusDivider, LotusFlower } from "@/components/devotion/BookshelfArt";
 import { devotionLibraryApi } from "@/features/devotionLibrary/api";
 import { useSpiritualBooks } from "@/features/devotionLibrary/hooks";
@@ -99,7 +98,7 @@ export default function SpiritualBooksPage() {
         </header>
 
         {isLoading ? (
-          <div className="flex justify-center py-20"><Loader /></div>
+          null
         ) : isError ? (
           <p className="py-10 text-home-muted">{t("spiritualBooks.loadError")}</p>
         ) : !books?.length ? (

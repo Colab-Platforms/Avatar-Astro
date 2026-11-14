@@ -86,13 +86,13 @@ export function createAstrologerPublicRouter(): Router {
       const pageSize = Math.min(50, Math.max(1, Number(req.query.pageSize) || 20));
       const [items, total] = await Promise.all([
         prisma.astrologerProfile.findMany({
-          where: { isPublished: true, suspendedAt: null },
+          where: { isPublished: true, isDemo: false, suspendedAt: null },
           select: PUBLIC_SELECT,
           orderBy: { publishedAt: "desc" },
           skip: (page - 1) * pageSize,
           take: pageSize,
         }),
-        prisma.astrologerProfile.count({ where: { isPublished: true, suspendedAt: null } }),
+        prisma.astrologerProfile.count({ where: { isPublished: true, isDemo: false, suspendedAt: null } }),
       ]);
       sendResponse(res, true, { items: items.map(toPublicShape), total, page, pageSize });
     }),
@@ -102,7 +102,7 @@ export function createAstrologerPublicRouter(): Router {
     "/:slug",
     wrap(async (req, res) => {
       const profile = await prisma.astrologerProfile.findFirst({
-        where: { slug: req.params.slug, isPublished: true, suspendedAt: null },
+        where: { slug: req.params.slug, isPublished: true, isDemo: false, suspendedAt: null },
         select: PUBLIC_SELECT,
       });
       if (!profile) throw new ApiError("Astrologer not found", STATUS_CODES.NOT_FOUND);

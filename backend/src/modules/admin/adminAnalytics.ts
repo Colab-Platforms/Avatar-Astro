@@ -56,8 +56,10 @@ export function createAnalyticsRouter(): Router {
       ]);
       // One query for every customer on this page (no N+1).
       const ids = [...new Set(rows.map((r) => r.userId).filter((x): x is string => !!x))];
-      const users = ids.length ? await prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, email: true, firstName: true, lastName: true } }) : [];
+      const users = ids.length ? await prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, email: true, firstName: true, lastName: true, isDeleted: true } }) : [];
       const byId = new Map(users.map((u) => [u.id, u]));
+      // Only live, non-staff accounts have a customer profile page (the profile endpoint answers 404 for deleted and administrator accounts).
+      const profileIds = new Set(ids.length ? (await prisma.user.findMany({ where: { id: { in: ids }, ...kindWhere("customer") }, select: { id: true } })).map((u) => u.id) : []);
 
       sendResponse(res, true, {
         items: rows.map((r) => {
@@ -80,7 +82,7 @@ export function createAnalyticsRouter(): Router {
                 }
               : null,
             servedFromCache: r.servedFromCache,
-            customer: r.userId ? { id: r.userId, email: u?.email ?? null, name: u ? [u.firstName, u.lastName].filter(Boolean).join(" ") || null : null, removed: !u } : null,
+            customer: r.userId ? { id: r.userId, email: u?.email ?? null, name: u ? [u.firstName, u.lastName].filter(Boolean).join(" ") || null : null, removed: !u || u.isDeleted, hasProfile: profileIds.has(r.userId) } : null,
           };
         }),
         page,

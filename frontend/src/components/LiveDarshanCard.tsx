@@ -27,22 +27,15 @@ const LiveDarshanCard = ({ index }: LiveDarshanCardProps) => (
     </div>
     <p className="mb-1.5 font-home-sans text-[0.9rem] leading-[1.45] text-home-muted"><Tx k="home.live.description" def={liveDarshanFeature.description} /></p>
 
-    <div className="hl-img-zoom mb-1 h-40 w-full overflow-hidden rounded-lg sm:h-44">
+    <div className="hl-img-zoom relative mb-3 min-h-32 w-full flex-1 overflow-hidden rounded-lg sm:min-h-36">
       <img
         src={liveDarshanFeature.image}
         alt={liveDarshanFeature.title}
-        className="h-full w-full object-cover object-[50%_42%]"
+        className="absolute inset-0 h-full w-full object-cover object-[50%_52%]"
         loading="lazy"
       />
     </div>
 
-    <div className="mb-2 grid grid-cols-3 gap-2">
-      {liveDarshanFeature.thumbnails.map((thumb, i) => (
-        <div key={i} className="h-7 overflow-hidden rounded-md border border-home-line">
-          <img src={thumb} alt="" className="h-full w-full object-cover" loading="lazy" />
-        </div>
-      ))}
-    </div>
 
     <FeatureButton to={liveDarshanFeature.buttonPath} label={<Tx k="home.live.button" def={liveDarshanFeature.buttonLabel} />} className="mt-auto self-start" />
   </motion.div>

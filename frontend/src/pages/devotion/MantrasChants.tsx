@@ -4,7 +4,6 @@ import type { LucideIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import DevotionLayout from "@/components/DevotionLayout";
-import Loader from "@/components/Loader/Loader";
 import { devotionLibraryApi } from "@/features/devotionLibrary/api";
 import { useMantrasChants } from "@/features/devotionLibrary/hooks";
 import type { PublicMantraChant } from "@/features/devotionLibrary/types";
@@ -106,7 +105,7 @@ export default function MantrasChantsPage() {
         </div>
 
         {isLoading ? (
-          <div className="flex justify-center py-20"><Loader /></div>
+          null
         ) : isError ? (
           <p className="text-center text-home-muted">{t("mantras.loadError")}</p>
         ) : !shown.length ? (

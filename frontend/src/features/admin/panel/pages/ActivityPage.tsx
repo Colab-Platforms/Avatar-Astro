@@ -11,7 +11,7 @@ interface Item {
   metadata: Record<string, unknown> | null;
   ai: { provider: string | null; model: string | null; calls: number; inputTokens: number | null; outputTokens: number | null; totalTokens: number | null; costUsd: number | null; costBasis: "actual" | "estimated" | null } | null;
   servedFromCache: boolean;
-  customer: { id: string; email: string | null; name: string | null; removed: boolean } | null;
+  customer: { id: string; email: string | null; name: string | null; removed: boolean; hasProfile?: boolean } | null;
 }
 interface Data {
   items: Item[]; page: number; pageSize: number; total: number; totalPages: number;
@@ -91,7 +91,7 @@ function DetailDialog({ item, onClose }: { item: Item | null; onClose: () => voi
                     : "No model provider was called for this activity (or it happened before cost tracking began, or on a server that had not yet been updated), so no cost applies."}
               </p>
             )}
-            {item.customer && !item.customer.removed && <Link className="mt-3 inline-block text-sm text-[#803003] hover:underline" to={`/admin/customers/${item.customer.id}`}>Open customer profile</Link>}
+            {item.customer && !item.customer.removed && item.customer.hasProfile !== false && <Link className="mt-3 inline-block text-sm text-[#803003] hover:underline" to={`/admin/customers/${item.customer.id}`}>Open customer profile</Link>}
           </>
         )}
       </DialogContent>
@@ -205,10 +205,17 @@ export default function ActivityPage() {
                     <td className="px-3 py-2">
                       {i.customer ? (
                         i.customer.removed ? <span className="text-xs text-[#756B61]">Removed account</span> : (
+                          i.customer.hasProfile === false ? (
+                            <span className="block" title="Administrator account: it has no customer profile">
+                              <span className="block font-medium">{i.customer.name ?? i.customer.email}</span>
+                              {i.customer.name && <span className="block text-xs text-[#6B6259]">{i.customer.email}</span>}
+                            </span>
+                          ) : (
                           <Link className="block hover:text-[#803003]" to={`/admin/customers/${i.customer.id}`}>
                             <span className="block font-medium">{i.customer.name ?? i.customer.email}</span>
                             {i.customer.name && <span className="block text-xs text-[#6B6259]">{i.customer.email}</span>}
                           </Link>
+                          )
                         )
                       ) : <span className="text-xs text-[#756B61]">Not signed in</span>}
                     </td>
