@@ -45,6 +45,7 @@
     "test:wallet-ledger": "tsx --test --test-timeout=240000 src/__tests__/routes/walletLedger.node-test.ts",
     "test:wallet-reservations": "tsx --test --test-timeout=240000 src/__tests__/routes/walletReservations.node-test.ts",
     "test:chat-state-machine": "tsx --test --test-timeout=240000 src/__tests__/routes/chatStateMachine.node-test.ts",
+    "test:model-fallback": "tsx --test src/__tests__/utils/modelFallback.node-test.ts",
     "test:billing-formula": "tsx --test src/modules/chat/__tests__/billingFormula.test.ts",
     "test:db:up": "node scripts/test-db/up.mjs",
     "test:db:init": "node scripts/test-db/init.mjs",

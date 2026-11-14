@@ -62,7 +62,6 @@ export interface LiveDarshanFeature {
   liveLabel: string;
   description: string;
   image: string;
-  thumbnails: string[];
   buttonLabel: string;
   buttonPath: string;
 }
@@ -72,12 +71,7 @@ export const liveDarshanFeature: LiveDarshanFeature = {
   liveLabel: "LIVE",
   description:
     "Watch live darshan from India's sacred temples and feel divine blessings from anywhere.",
-  image: "/placeholders/golden-temple.webp",
-  thumbnails: [
-    "/placeholders/iskon.webp",
-    "/placeholders/mahalaskhmi-temple.webp",
-    "/placeholders/ram-mandir.webp",
-  ],
+  image: "/placeholders/live-darshan-temples.webp",
   buttonLabel: "Watch Live",
   buttonPath: "/avatar-live/darshan",
 };

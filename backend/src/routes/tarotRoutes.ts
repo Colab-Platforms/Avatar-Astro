@@ -6,6 +6,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { getExecutionId, reserveToolExecution, settleToolExecution, releaseToolExecution } from "../modules/payment/toolBilling.service.js";
 import { TOOL_KEYS } from "../modules/payment/toolKeys.js";
 import { WrongLanguageError, generateInLanguage, languageRule, requestLanguage, tokenBudget } from "../utils/responseLanguage.js";
+import { fallbackModelFor, isRetryableProviderFailure } from "../utils/modelFallback.js";
 
 const HINGLISH_DEFAULT_RULE =
   "\n\nLanguage: write every human-readable text value in natural Hinglish (Roman-script Hindi mixed with English, the way people actually speak). Keep JSON keys, fixed values and any Sanskrit verses or mantras exactly as specified. Only if the person wrote in Devanagari Hindi, answer in Hindi instead.";
@@ -202,9 +203,9 @@ router.post("/reading", async (req: Request, res: Response) => {
   const lang = requestLanguage(req);
 
   try {
-    class TarotProviderDown extends Error {}
+    class TarotProviderDown extends Error { constructor(readonly status: number) { super("provider error " + status); } }
     // One model call. A reply in the wrong language is asked for once more (see generateInLanguage), then refused.
-    const askTarot = async (retryNote: string): Promise<string> => {
+    const askTarotOn = async (model: string, retryNote: string, timeoutMs: number): Promise<string> => {
       const upstream = await fetch(OPENROUTER_URL, {
         method: "POST",
         headers: {
@@ -213,19 +214,30 @@ router.post("/reading", async (req: Request, res: Response) => {
           "X-Title": "Bhagya Astro Tarot",
         },
         body: JSON.stringify({
-          model: MODEL,
+          model,
           max_tokens: tokenBudget(2000, lang),
           messages: [{ role: "user", content: buildPrompt(mode, names, category) + languageRule(lang, HINGLISH_DEFAULT_RULE) + retryNote }],
         }),
-        signal: AbortSignal.timeout(TIMEOUT_MS),
+        signal: AbortSignal.timeout(timeoutMs),
       });
       if (!upstream.ok) {
-        console.error("Tarot provider error status:", upstream.status);
-        throw new TarotProviderDown();
+        console.error("Tarot provider error status:", upstream.status, "model:", model);
+        throw new TarotProviderDown(upstream.status);
       }
       const body = (await upstream.json().catch(() => null)) as any;
       const content: string = body?.choices?.[0]?.message?.content ?? "";
       return content;
+    };
+    // If the model is rate limited, down, or hangs, the same prompt is tried once on a different model before the reader sees an error.
+    const askTarot = async (retryNote: string): Promise<string> => {
+      const alt = fallbackModelFor(MODEL);
+      try {
+        return await askTarotOn(MODEL, retryNote, alt ? 30_000 : TIMEOUT_MS);
+      } catch (err) {
+        if (!alt || !isRetryableProviderFailure(err)) throw err;
+        console.warn(`[tarot] ${MODEL} failed; retrying on ${alt}`);
+        return askTarotOn(alt, retryNote, TIMEOUT_MS);
+      }
     };
     let content: string;
     try {

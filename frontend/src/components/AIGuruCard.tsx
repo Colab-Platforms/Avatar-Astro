@@ -24,7 +24,7 @@ const AIGuruCard = ({ index }: AIGuruCardProps) => (
     </div>
     <p className="mb-1.5 font-home-sans text-[0.9rem] leading-[1.45] text-home-muted"><Tx k="features.ai-guru.subtitle" def={aiGuruFeature.description} /></p>
 
-    <div className="hl-img-zoom mb-1 h-40 w-full overflow-hidden rounded-lg sm:h-44">
+    <div className="hl-img-zoom mb-1 h-32 w-full overflow-hidden rounded-lg sm:h-36">
       <img
         src={aiGuruFeature.image}
         alt={aiGuruFeature.imageAlt}

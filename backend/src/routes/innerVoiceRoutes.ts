@@ -11,6 +11,7 @@ import { getExecutionId, reserveToolExecution, settleToolExecution, releaseToolE
 import { TOOL_KEYS } from "../modules/payment/toolKeys.js";
 import { ApiError } from "../utils/ApiError.js";
 import { WrongLanguageError, generateInLanguage, languageRule, matchesResponseLanguage, namesCalendarTermIn, requestLanguage, tokenBudget, type ResponseLanguage } from "../utils/responseLanguage.js";
+import { fallbackModelFor, isRetryableProviderFailure } from "../utils/modelFallback.js";
 
 const router = Router();
 // Life path readings and TTS are generated per user and spend provider credits.
@@ -101,10 +102,10 @@ export class ProviderError extends Error {
   }
 }
 
-async function callAI(apiKey: string, prompt: string, maxTokens = 1000, model: string = currentModel(), languageRule = HINGLISH_RULE): Promise<string> {
+async function callAIOnce(apiKey: string, prompt: string, maxTokens: number, model: string, languageRule: string, timeoutMs: number): Promise<string> {
   const res = await fetch(OPENROUTER_URL, {
     method: "POST",
-    signal: AbortSignal.timeout(45_000),
+    signal: AbortSignal.timeout(timeoutMs),
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${apiKey}`,
@@ -122,6 +123,21 @@ async function callAI(apiKey: string, prompt: string, maxTokens = 1000, model: s
   if (data?.error) throw new ProviderError(String(data.error.message ?? "Provider error"), Number(data.error.code) || res.status);
   if (!res.ok) throw new ProviderError("Provider returned an error status", res.status);
   return data?.choices?.[0]?.message?.content ?? "";
+}
+
+/**
+ * One AI call. If the model fails in a way another model could avoid (rate limit, 5xx from the provider, a hung request),
+ * the same prompt is tried once on a different model before the error reaches the user.
+ */
+async function callAI(apiKey: string, prompt: string, maxTokens = 1000, model: string = currentModel(), languageRule = HINGLISH_RULE): Promise<string> {
+  const alt = fallbackModelFor(model);
+  try {
+    return await callAIOnce(apiKey, prompt, maxTokens, model, languageRule, alt ? 30_000 : 45_000);
+  } catch (err) {
+    if (!alt || !isRetryableProviderFailure(err)) throw err;
+    console.warn(`[inner-voice] ${model} failed (${(err as { status?: number })?.status ?? (err as Error)?.name}); retrying on ${alt}`);
+    return callAIOnce(apiKey, prompt, maxTokens, alt, languageRule, 45_000);
+  }
 }
 
 /** callAI plus the language check: a reply in the wrong language is asked for once more, then refused (WrongLanguageError). */
