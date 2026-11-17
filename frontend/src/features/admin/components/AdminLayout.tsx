@@ -3,6 +3,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminHeader } from "./AdminHeader";
 import { MainOnly } from "../panel/guards";
+import { ALL_NAV_ITEMS, isNavActive } from "./adminNav";
 
 const TITLE_BY_PATH: Record<string, string> = {
   "/admin": "Overview",
@@ -61,7 +62,11 @@ body.admin-theme-active [role="dialog"] *, body.admin-theme-active [role="alertd
 export function AdminLayout() {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const title = useMemo(() => TITLE_BY_PATH[location.pathname] ?? "Admin", [location.pathname]);
+  // Titles for pages not listed above come from the sidebar config, so a new menu item never shows a bare "Admin".
+  const title = useMemo(
+    () => TITLE_BY_PATH[location.pathname] ?? ALL_NAV_ITEMS.find((i) => isNavActive(i, location.pathname, location.search))?.label ?? "Admin",
+    [location.pathname, location.search],
+  );
 
   // While the admin area is open, switch the shared theme tokens to the admin palette (see ADMIN_CSS), including dialogs.
   useEffect(() => {

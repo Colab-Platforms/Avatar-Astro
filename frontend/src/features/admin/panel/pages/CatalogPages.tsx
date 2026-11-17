@@ -89,12 +89,4 @@ export function ShopAdminPage() {
   );
 }
 
-export function PaymentsAdminPage() {
-  const q = usePanel<{ configured: boolean; reason: string }>("/payments");
-  return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <PageHeader title="Payments & Plans" subtitle="Only real payment and subscription systems are shown here." />
-      <QueryView q={q}>{(d) => <NotConfigured title="Payments and subscriptions" reason={d.reason} />}</QueryView>
-    </div>
-  );
-}
+export { default as PaymentsAdminPage } from "./PaymentsPage";

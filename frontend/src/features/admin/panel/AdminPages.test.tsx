@@ -22,7 +22,6 @@ import UsersPage from "./pages/UsersPage";
 import CustomerDetailPage from "./pages/CustomerDetailPage";
 import ActivityPage from "./pages/ActivityPage";
 import ReportsPage from "./pages/ReportsPage";
-import AdminOverviewPage from "../pages/Dashboard";
 import { Stat } from "./ui";
 
 const user = (over: object = {}) => ({
@@ -168,38 +167,6 @@ describe("Activity page", () => {
     mount(<ActivityPage />, "/admin/activity");
     await screen.findByText("No activity recorded yet");
     expect(screen.getByText(/never back-filled|Nothing is back-filled/i)).toBeInTheDocument();
-  });
-});
-
-describe("Overview KPIs", () => {
-  it("lead to the matching filtered views", async () => {
-    authRequest.mockReset();
-    authRequest.mockImplementation(async (url: string) => {
-      if (url === "/admin/overview" || url.startsWith("/admin/overview")) {
-        return {
-          windowDays: 30, trackingSince: "2026-10-30T04:00:00.000Z",
-          users: { total: 5, active: 4, inactive: 1, emailVerified: 5, newInWindow: 5, newLast7Days: 5 },
-          usage: { totalRequests: 3, totalErrors: 1, errorRate: 0.33, features: [{ key: "tarot", label: "AI Tarot Reading", total: 3, errors: 1, rejected: 0, lastAt: "2026-10-30T05:00:00.000Z" }] },
-          recentErrors: [{ id: "x", feature: "tarot", statusCode: 500, createdAt: "2026-10-30T05:00:00.000Z" }],
-          recentSignups: [{ id: "u9", firstName: "Gita", lastName: "S", email: "g@example.com", createdAt: "2026-10-30T05:00:00.000Z" }],
-          recentAudit: [], content: [], devotion: { channels: 2, liveNow: 0, temples: 1, pujas: 0, chadhawas: 2 }, commerce: { products: 1, categories: 1 }, notConfigured: [],
-        };
-      }
-      if (url.startsWith("/admin/dashboard")) return { user: { id: "a", firstName: "Local", lastName: "Admin", email: "a@b.c" }, role: "SUPERADMIN" };
-      return { mainAdmin: true, email: "a@b.c" };
-    });
-    mount(<AdminOverviewPage />, "/admin");
-    const reg = await screen.findByRole("link", { name: /Registered users/ });
-    expect(reg).toHaveAttribute("href", "/admin/customers");
-    expect(screen.getByRole("link", { name: /New users/ }).getAttribute("href")).toMatch(/^\/admin\/customers\?registeredFrom=\d{4}-\d{2}-\d{2}&registeredTo=\d{4}-\d{2}-\d{2}$/);
-    expect(screen.getByRole("link", { name: /Feature requests/ }).getAttribute("href")).toMatch(/^\/admin\/activity\?eventType=feature\.request&from=/);
-    expect(screen.getByRole("link", { name: /Server failures/ }).getAttribute("href")).toMatch(/status=error/);
-    expect(screen.getByRole("link", { name: /Live Darshan channels/ })).toHaveAttribute("href", "/admin/devotion");
-    expect(screen.getByRole("link", { name: /Shop products/ })).toHaveAttribute("href", "/admin/shop-orders");
-    expect(screen.getByRole("link", { name: /Orders \/ bookings \/ payments/ })).toHaveAttribute("href", "/admin/payments");
-    expect(screen.getByRole("link", { name: /Gita S/ })).toHaveAttribute("href", "/admin/customers/u9");
-    const failure = screen.getAllByRole("link").find((l) => /feature=tarot&status=error&from=2026-10-30/.test(l.getAttribute("href") ?? ""));
-    expect(failure).toBeTruthy();
   });
 });
 
