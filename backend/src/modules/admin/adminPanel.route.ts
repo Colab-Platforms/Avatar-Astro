@@ -18,6 +18,7 @@ import { createAnalyticsRouter } from "./adminAnalytics.js";
 import { createCostsRouter, aiCostCsv } from "./adminCosts.js";
 import { createAccountsRouter, kindWhere } from "./adminAccounts.js";
 import { createChatEscalationsRouter } from "./adminChatEscalations.js";
+import { createDashboardRouter } from "./adminDashboard.js";
 
 const DAY_MS = 86_400_000;
 /** Known ApiErrors pass through; anything else (e.g. Prisma, with file paths and SQL) is logged and replaced. */
@@ -145,7 +146,6 @@ export function createAdminPanelRouter(): Router {
         notConfigured: [
           { key: "orders", label: "Orders", reason: "No order system exists in the database yet." },
           { key: "bookings", label: "Puja / darshan bookings", reason: "No booking records are stored yet." },
-          { key: "payments", label: "Payments & subscriptions", reason: "No payment provider is integrated." },
         ],
       });
     }),
@@ -274,17 +274,6 @@ export function createAdminPanelRouter(): Router {
           { label: "Categories", path: "/admin/shop/categories" },
           { label: "Products", path: "/admin/shop/products" },
         ],
-      });
-    }),
-  );
-
-  // ── Payments & plans ───────────────────────────────────────────────────────
-  router.get(
-    "/payments",
-    wrap(async (_req, res) => {
-      sendResponse(res, true, {
-        configured: false,
-        reason: "No payment provider or subscription plans are integrated. Nothing is simulated here.",
       });
     }),
   );
@@ -511,6 +500,7 @@ export function createAdminPanelRouter(): Router {
   router.use(createAnalyticsRouter());
   router.use(createCostsRouter());
   router.use(createChatEscalationsRouter());
+  router.use(createDashboardRouter()); // Overview dashboard data and the Payments list
 
   return router;
 }

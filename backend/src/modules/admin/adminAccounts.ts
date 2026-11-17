@@ -26,7 +26,7 @@ import { getToolLimit, usedInWindow, WINDOW_MS } from "@/services/toolLimits.js"
  */
 
 const DAY_MS = 86_400_000;
-const ADMIN_ROLE_NAMES = ["ADMIN", "SUPERADMIN", "SUPER_ADMIN"];
+export const ADMIN_ROLE_NAMES = ["ADMIN", "SUPERADMIN", "SUPER_ADMIN"];
 const SUPER_NAMES = ["SUPERADMIN", "SUPER_ADMIN"];
 const ASSIGNABLE_ADMIN_ROLES = ["ADMIN", "SUPERADMIN"] as const;
 type AdminRole = (typeof ASSIGNABLE_ADMIN_ROLES)[number];

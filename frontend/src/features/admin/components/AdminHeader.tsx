@@ -15,7 +15,7 @@ export function AdminHeader({ title, onMenuClick }: AdminHeaderProps) {
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-[#E8E3DC] bg-white/90 px-4 backdrop-blur-sm sm:px-6">
       <div className="flex items-center gap-3">
-        <Button type="button" variant="ghost" size="icon" className="text-[#1F1B16] hover:bg-[#F7F4EF] lg:hidden" onClick={onMenuClick} aria-label="Open menu">
+        <Button type="button" variant="ghost" size="icon" className="text-[#1F1B16] hover:bg-[#F7F4EF] md:hidden" onClick={onMenuClick} aria-label="Open menu">
           <Menu className="h-5 w-5" />
         </Button>
         <h1 className="text-base font-semibold tracking-tight text-[#1F1B16] sm:text-lg">{title}</h1>
