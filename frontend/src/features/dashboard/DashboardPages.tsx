@@ -225,7 +225,7 @@ export function ProfileSettings() {
 
                 <section className="rounded-2xl border border-[#E8CFC4] bg-[#FBF1EC] p-5 sm:p-6" aria-labelledby="del-h">
                   <h2 id="del-h" className="mb-2 flex items-center gap-2 font-home-serif text-base font-semibold text-[#6B2410]"><Trash2 className="h-4 w-4" aria-hidden="true" />Delete my account</h2>
-                  <p className="text-sm leading-relaxed text-[#5A3A30]">There is no self-service deletion yet. To have your account and everything saved in it (readings, conversations, activity) permanently removed, email <a className="font-medium underline" href="mailto:support@avatarindia.com">support@avatarindia.com</a> from your registered address. Deletion cannot be undone.</p>
+                  <p className="text-sm leading-relaxed text-[#5A3A30]">There is no self-service deletion yet. To have your account and everything saved in it (readings, conversations, activity) permanently removed, email <a className="font-medium underline" href="mailto:support@mybhagya.com">support@mybhagya.com</a> from your registered address. Deletion cannot be undone.</p>
                 </section>
               </div>
             </div>

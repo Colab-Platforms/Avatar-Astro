@@ -46,7 +46,7 @@ const Contact = () => {
     }
   };
 
-  const contactInfo = [{ icon: Mail, label: 'Email', value: 'support@avatarindia.com' }];
+  const contactInfo = [{ icon: Mail, label: 'Email', value: 'support@mybhagya.com' }];
 
   return (
     <div ref={pageRef} className="min-h-screen pt-24 pb-12 relative z-10">
