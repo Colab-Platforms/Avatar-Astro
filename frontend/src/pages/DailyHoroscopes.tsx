@@ -6,6 +6,8 @@ import { useTranslation } from 'react-i18next';
 import { zodiacSigns, useZodiacText } from '@/data/zodiacData';
 import { intlTag } from '@/features/muhurat/format';
 import { useAIDailyHoroscope } from '@/hooks/useInterpretation';
+import { usePrefill } from '@/features/profile/usePrefill';
+import { sunSignForDate } from '@/features/profile/sunSign';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -14,6 +16,18 @@ const DailyHoroscopes = () => {
   const z = useZodiacText();
   const [selectedSign, setSelectedSign] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  // Whether the sign on screen came from the saved date of birth (so the page can say so), not from a click.
+  const [fromProfile, setFromProfile] = useState(false);
+  // A saved date of birth selects the user's own sign. Only the date of birth is used; a sign they already chose is kept.
+  usePrefill(['dateOfBirth'], (p) => {
+    const sign = sunSignForDate(p.dateOfBirth)?.toLowerCase();
+    if (!sign) return;
+    setSelectedSign((cur) => {
+      if (cur) return cur;
+      setFromProfile(true);
+      return sign;
+    });
+  });
   const pageRef = useRef<HTMLDivElement>(null);
   const readingRef = useRef<HTMLDivElement>(null);
   
@@ -98,6 +112,7 @@ const DailyHoroscopes = () => {
                     key={sign.name}
                     onClick={() => {
                       setSelectedSign(sign.name.toLowerCase());
+                      setFromProfile(false);
                       setIsDropdownOpen(false);
                     }}
                     className={`w-full p-3 flex items-center gap-3 hover:bg-primary/10 transition-colors ${
@@ -114,6 +129,7 @@ const DailyHoroscopes = () => {
               </div>
             )}
           </div>
+          {fromProfile && selectedSign && <p className="mt-3 text-center text-sm text-muted-foreground" data-testid="sign-from-profile">{t('savedProfile.signFromDob')}</p>}
         </div>
 
         {/* Horoscope Reading */}

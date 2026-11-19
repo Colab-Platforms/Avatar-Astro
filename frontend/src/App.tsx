@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useRemountOnAccountSwitch } from "@/features/profile/accountEpoch";
 import {
   BrowserRouter,
   Routes,
@@ -282,6 +283,8 @@ const forceScrollTop = () => {
 
 export const AnimatedRoutes = () => {
   const location = useLocation();
+  // Changes when someone logs out or another account signs in, so no page keeps the previous person's saved details.
+  const accountEpoch = useRemountOnAccountSwitch();
 
   // Reset scroll to top on every route change, before the browser paints —
   // so the new page always opens at its hero section, never at wherever the
@@ -297,7 +300,7 @@ export const AnimatedRoutes = () => {
   // quick Back/Forward could land on (or briefly mount) a stale route. Keying Routes by pathname swaps
   // pages immediately; PageTransition still fades each new page in.
   return (
-    <Routes location={location} key={location.pathname}>
+    <Routes location={location} key={`${location.pathname}:${accountEpoch}`}>
       <Route
         path="/"
         element={

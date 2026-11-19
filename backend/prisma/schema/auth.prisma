@@ -22,6 +22,19 @@ model User {
   profileImage         String?   @map("profile_image")
   profileImagePublicId String?   @map("profile_image_public_id")
 
+  // Central astrology profile (one copy, reused by every feature). All optional: nothing is assumed when missing.
+  // birthTime is the local clock time at the birthplace as "HH:mm" (24h); it is null when unknown or never given.
+  birthTime             String?   @map("birth_time")
+  birthTimeUnknown      Boolean   @default(false) @map("birth_time_unknown")
+  birthPlaceName        String?   @map("birth_place_name")
+  birthPlaceRegion      String?   @map("birth_place_region")
+  birthPlaceCountry     String?   @map("birth_place_country")
+  birthLatitude         Float?    @map("birth_latitude")
+  birthLongitude        Float?    @map("birth_longitude")
+  birthTimezone         String?   @map("birth_timezone")
+  preferredLanguage     String?   @map("preferred_language")
+  birthDetailsUpdatedAt DateTime? @map("birth_details_updated_at")
+
   email    String  @unique
   password String?
 

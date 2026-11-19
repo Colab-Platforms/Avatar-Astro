@@ -22,6 +22,11 @@ const LocationPicker = ({ value, onSelect, error, disabled }: Props) => {
   const reqId = useRef(0);
   const wrapRef = useRef<HTMLDivElement>(null);
 
+  // A place set from outside (for example the saved profile arriving after this appeared) must show in the box.
+  useEffect(() => {
+    if (value) setText(value.label);
+  }, [value]);
+
   useEffect(() => {
     const q = text.trim();
     if (value || q.length < 2) {

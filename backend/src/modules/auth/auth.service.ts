@@ -63,6 +63,21 @@ const hashToken = (token: string): string =>
   crypto.createHash("sha256").update(token).digest("hex");
 
 // Creates a session, stores hashed refresh token, returns plain token to caller
+/**
+ * The user object sent to the browser: never the password hash, and never the private astrology profile
+ * (birth time/place, coordinates, language). Those are read through the authenticated /me/profile/central
+ * endpoint instead, so they are not copied into login responses or the browser's stored session.
+ */
+const PRIVATE_PROFILE_KEYS = [
+  "password", "birthTime", "birthTimeUnknown", "birthPlaceName", "birthPlaceRegion", "birthPlaceCountry",
+  "birthLatitude", "birthLongitude", "birthTimezone", "preferredLanguage", "birthDetailsUpdatedAt",
+] as const;
+const toSafeUser = <T extends Record<string, unknown>>(user: T): Omit<T, (typeof PRIVATE_PROFILE_KEYS)[number]> => {
+  const copy: Record<string, unknown> = { ...user };
+  for (const k of PRIVATE_PROFILE_KEYS) delete copy[k];
+  return copy as Omit<T, (typeof PRIVATE_PROFILE_KEYS)[number]>;
+};
+
 const createSession = async (
   userId: string,
   device?: string,
@@ -96,7 +111,7 @@ const issueAuthTokens = async (
   const refreshToken = await createSession(user.id, device);
   // Customer activity: a session was really issued. Method only; never credentials.
   recordEvent({ userId: user.id, eventType: EVENT_TYPES.authLogin, feature: AUTH_FEATURE, status: "success", metadata: { method } });
-  const { password: _, ...safeUser } = user;
+  const safeUser = toSafeUser(user);
   return { user: safeUser, accessToken, refreshToken };
 };
 
@@ -794,8 +809,7 @@ class AuthService {
       include: { userRoleMappings: { include: { role: true } } },
     });
 
-    const { password: _, ...safeUser } = updated;
-    return safeUser;
+    return toSafeUser(updated);
   }
 }
 

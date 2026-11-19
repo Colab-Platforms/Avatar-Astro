@@ -13,6 +13,8 @@ import { Compass, Loader2, Sun, Moon, Lightbulb, BookOpen, Sparkles, Info } from
 import { API_BASE_URL } from "@/lib/api";
 import { authedFetch, requireSignIn, SignInRequiredError } from "@/lib/authedFetch";
 import { scriptureForFocus } from "@/lib/lifePathScripture";
+import { usePrefill } from "@/features/profile/usePrefill";
+import { toPlaceResult, type ProfileNeed } from "@/features/profile/profile";
 import LocationPicker from "@/features/ratna/LocationPicker";
 import type { PlaceResult } from "@/features/ratna/types";
 import "@/features/ratna/ratna.css";
@@ -130,6 +132,12 @@ export default function FutureLifePath() {
   const [error, setError] = useState("");
   const [retryable, setRetryable] = useState(false); // true when the request itself failed, so the same details can be sent again
   const [result, setResult] = useState<LifePathResult | null>(null);
+  // Saved birth details fill the empty fields; the user can still change them for this reading.
+  const { saveNew } = usePrefill(["dateOfBirth", "birthTime", "birthPlace"], (p) => {
+    if (p.dateOfBirth) setDob((v) => v || p.dateOfBirth!);
+    if (p.birthTime) setTob((v) => v || p.birthTime!);
+    if (p.birthPlace) setPlace((v) => v ?? toPlaceResult(p.birthPlace));
+  });
 
   const now = new Date();
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
@@ -154,6 +162,7 @@ export default function FutureLifePath() {
     }
     if (!requireSignIn(() => { void generate(); })) return; // signed out: ask first, keep the form
     setError("");
+    saveNew({ fullName: "", gender: "", dateOfBirth: dob, birthTime: tob, birthTimeUnknown: false, birthPlace: place });
     setLoading(true);
     try {
       const res = await authedFetch(`${API_BASE_URL}/inner-voice/life-path`, {

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { BrandMark } from "@/components/BrandMark";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ChevronDown, LogOut, Lock, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -180,7 +181,7 @@ export function AdminSidebar({ mobileOpen = false, onMobileClose }: AdminSidebar
         {/* Brand + collapse toggle */}
         <div className={cn("flex shrink-0 items-center border-b border-[#E3D2B4] py-3", rail ? "flex-col gap-2 px-0" : "justify-between px-3.5")}>
           <Link to="/admin" onClick={onMobileClose} className="flex items-center gap-2 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#803003]" aria-label="Bhagya admin overview">
-            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#803003] text-sm font-bold text-[#FFF6E6]">B</span>
+            <BrandMark size={34} />
             {!rail && (
               <span className="leading-tight">
                 <span className="block text-[15px] font-semibold tracking-tight">Bhagya</span>

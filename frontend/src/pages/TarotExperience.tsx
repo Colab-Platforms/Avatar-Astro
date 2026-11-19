@@ -8,6 +8,7 @@ import gsap from 'gsap';
 import { useTranslation } from 'react-i18next';
 import i18n from '@/i18n';
 import { RotateCcw, Shuffle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import TarotArt from '../components/tarot/TarotArt';
 import { TarotCard, ALL_CARDS, MAJOR_ARCANA, shuffleDeck, getCategoryCardImage, tarotCardName, tarotCardKeywords, tarotCardTopLabel, tarotCategoryLabel } from '../data/tarotData';
 import { TarotLandingScene } from '../components/tarot/TarotLandingScene';
@@ -1277,6 +1278,8 @@ const TarotExperience = () => {
   const [reading, setReading] = useState<AIReading | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [readingError, setReadingError] = useState<string | null>(null);
+  // Why the reading was refused, when retrying right away cannot help: today's free uses are spent, or the wallet is short.
+  const [readingBlock, setReadingBlock] = useState<'limit' | 'balance' | null>(null);
   const isLoadingRef = useRef(false);
 
   const positions = mode === 'timeline' ? TIMELINE_POSITIONS : KARMA_POSITIONS;
@@ -1320,6 +1323,7 @@ const TarotExperience = () => {
     isLoadingRef.current = true;
     setIsLoading(true);
     setReadingError(null);
+    setReadingBlock(null);
     setReading(null);
     try {
       const res = await authedFetch(`${API_BASE_URL}/tarot/reading`, {
@@ -1332,7 +1336,20 @@ const TarotExperience = () => {
       const data = await res.json().catch(() => null);
       if (controller.signal.aborted) return;
       if (res.ok && data?.success && data.data) setReading(data.data);
-      else setReadingError(data?.code === 'wrong_language' ? i18n.t('guru.errors.wrongLanguage') : res.status === 429 ? i18n.t('tarot.page.errors.tooMany') : i18n.t('tarot.page.errors.generic'));
+      else {
+        // Low balance uses the server's own sentence; the daily limit gets a short message built from its numbers.
+        const serverText = [data?.message, data?.error].find((m): m is string => typeof m === 'string' && m.trim().length > 0);
+        if (data?.code === 'TOOL_LIMIT_REACHED') {
+          const retryAt = data?.data?.retryAt ? new Date(data.data.retryAt) : null;
+          const limit = Number(data?.data?.limit);
+          setReadingBlock('limit');
+          setReadingError(retryAt && !Number.isNaN(retryAt.getTime()) && limit > 0
+            ? i18n.t('tarot.page.errors.limitReached', { limit, when: retryAt.toLocaleString(i18n.language, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) })
+            : (serverText ?? i18n.t('tarot.page.errors.tooMany')));
+        }
+        else if (res.status === 403 && serverText) { setReadingBlock('balance'); setReadingError(serverText); }
+        else setReadingError(data?.code === 'wrong_language' ? i18n.t('guru.errors.wrongLanguage') : res.status === 429 ? i18n.t('tarot.page.errors.tooMany') : i18n.t('tarot.page.errors.generic'));
+      }
     } catch (e) {
       if (controller.signal.aborted) return;
       if (e instanceof SignInRequiredError) { setReadingError(i18n.t('tarot.page.errors.signIn')); return; }
@@ -1433,6 +1450,7 @@ const TarotExperience = () => {
           <motion.div key="reading-error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
             <ReadingError
               message={readingError}
+              block={readingBlock}
               cards={selectedCards}
               onRetry={() => mode && fetchReading(selectedCards, mode, question)}
               onReset={handleReset}
@@ -1451,7 +1469,7 @@ const TarotExperience = () => {
 };
 
 // ─── Error state (no made-up reading is ever shown when the service fails) ──────
-const ReadingError = ({ message, cards, onRetry, onReset }: { message: string; cards: TarotCard[]; onRetry: () => void; onReset: () => void }) => {
+const ReadingError = ({ message, block, cards, onRetry, onReset }: { message: string; block: 'limit' | 'balance' | null; cards: TarotCard[]; onRetry: () => void; onReset: () => void }) => {
   const { t } = useTranslation();
   return (
   <div role="alert" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', background: 'transparent', textAlign: 'center' }}>
@@ -1463,7 +1481,11 @@ const ReadingError = ({ message, cards, onRetry, onReset }: { message: string; c
     <h2 style={{ margin: '0 0 12px', color: '#301607', fontFamily: "'Cinzel', Georgia, serif", fontSize: 'clamp(24px,4vw,34px)', letterSpacing: 2 }}>{t('tarot.page.errors.title')}</h2>
     <p style={{ margin: '0 0 32px', maxWidth: 460, color: '#4A2E1F', fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: 17, lineHeight: 1.7 }}>{message}</p>
     <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
-      <button onClick={onRetry} style={{ padding: '14px 32px', background: '#592209', border: 'none', borderRadius: 4, color: '#F5E9D6', fontFamily: "'Cinzel', Georgia, serif", letterSpacing: 3, fontSize: 15, textTransform: 'uppercase', cursor: 'pointer', fontWeight: 700 }}>{t('tarot.page.errors.tryAgain')}</button>
+      {block === 'balance' ? (
+        <Link to="/dashboard/wallet" style={{ padding: '14px 32px', background: '#592209', borderRadius: 4, color: '#F5E9D6', fontFamily: "'Cinzel', Georgia, serif", letterSpacing: 3, fontSize: 15, textTransform: 'uppercase', fontWeight: 700, textDecoration: 'none' }}>{t('tarot.page.errors.addCoins')}</Link>
+      ) : block === 'limit' ? null : (
+        <button onClick={onRetry} style={{ padding: '14px 32px', background: '#592209', border: 'none', borderRadius: 4, color: '#F5E9D6', fontFamily: "'Cinzel', Georgia, serif", letterSpacing: 3, fontSize: 15, textTransform: 'uppercase', cursor: 'pointer', fontWeight: 700 }}>{t('tarot.page.errors.tryAgain')}</button>
+      )}
       <button onClick={onReset} style={{ padding: '14px 32px', background: 'transparent', border: '1px solid rgba(89,34,9,0.5)', borderRadius: 4, color: '#592209', fontFamily: "'Cinzel', Georgia, serif", letterSpacing: 3, fontSize: 15, textTransform: 'uppercase', cursor: 'pointer' }}>{t('tarot.page.errors.startOver')}</button>
     </div>
   </div>

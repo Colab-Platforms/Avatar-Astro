@@ -1,0 +1,5 @@
+ID,Severity,Area,Title,Status,Evidence,Notes
+QA-001,Low,Wallet UI,"Wallet page shows 'AI tool', 'Held in reservations' and 'AI tool usage' wording that the project's own copy test (featureCatalog 'no user-facing Tools wording') forbids",Open,frontend/src/features/wallet/pages/WalletPage.tsx lines 14/46/54; vitest featureCatalog.test.ts fails,Copy decision needed from product; not changed
+QA-002,Low,Tests,"Library Overview unit test expects only /me/overview but the page also calls /astrologer/application",Open,src/features/dashboard/library/pages.test.tsx:51,Test is stale; page behaviour looks intentional
+QA-003,Info,Tests,"Karma dashboard tests time out (5s) when the machine is under load",Not a defect,Passes when run alone,Consider a longer testTimeout for this file
+QA-004,Info,Backend tests,"Backend DB-backed suites (wallet, payments, chat, admin) could not run: no Docker for the disposable test database",Blocked,backend/scripts/test-db/up.mjs requires Docker,Run npm run test:db:up then test:db:run on a machine with Docker

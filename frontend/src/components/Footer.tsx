@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { BrandMark } from "@/components/BrandMark";
 import { Link, useLocation } from 'react-router-dom';
 import { Facebook, Linkedin, Instagram, Twitter, ArrowRight } from 'lucide-react';
 import { FEATURES } from '@/data/featureCatalog';
@@ -147,9 +148,8 @@ const Footer = () => {
         </div>
 
         <div className="pt-8" style={{ borderTop: `1px solid ${rule}` }}>
-          <p
-            aria-hidden="true"
-            className="mb-3 uppercase leading-none"
+          <BrandMark alt="Bhagya Logo" size={84} className="mb-4" />
+          <p aria-hidden="true" className="mb-3 uppercase leading-none"
             style={{
               fontFamily: "'ASTRA', 'DM Sans', system-ui, sans-serif",
               fontSize: 'clamp(40px, 9vw, 90px)',

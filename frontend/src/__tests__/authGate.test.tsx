@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
+// The form tests run without a saved profile; saved-profile behaviour has its own tests (features/profile).
+vi.mock("@/features/profile/useUserProfile", () => ({ useUserProfile: () => ({ profile: null, isLoading: false, error: null, signedIn: true, save: vi.fn(), isSaving: false, saveError: null, missing: () => [], has: () => false, refetch: vi.fn() }) }));
 vi.mock("@/features/auth/api/authApi", () => ({
   authApi: { login: vi.fn(), googleLogin: vi.fn() },
 }));

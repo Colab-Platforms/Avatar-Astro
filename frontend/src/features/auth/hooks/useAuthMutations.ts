@@ -3,6 +3,8 @@ import { toast } from "sonner";
 import { AuthApiError } from "@/lib/authClient";
 import { useAuthStore } from "@/store/authStore";
 import { ADMIN_DASHBOARD_QUERY_KEY } from "@/features/admin/hooks/useAdminDashboard";
+import { PROFILE_QUERY_PREFIX } from "@/features/profile/useUserProfile";
+import { useAccountEpoch } from "@/features/profile/accountEpoch";
 import { authApi } from "../api/authApi";
 import type {
   AuthSession,
@@ -180,12 +182,17 @@ export function useLogoutMutation() {
     onSuccess: () => {
       queryClient.removeQueries({ queryKey: AUTH_USER_QUERY_KEY });
       queryClient.removeQueries({ queryKey: ADMIN_DASHBOARD_QUERY_KEY });
+      // The next person on this browser must not see this account's saved details, cached or already on a form.
+      queryClient.removeQueries({ queryKey: PROFILE_QUERY_PREFIX });
+      useAccountEpoch.getState().bump();
       toast.success("Logged out successfully.");
     },
     onError: () => {
       // Local session is cleared in authApi.logout finally block.
       queryClient.removeQueries({ queryKey: AUTH_USER_QUERY_KEY });
       queryClient.removeQueries({ queryKey: ADMIN_DASHBOARD_QUERY_KEY });
+      queryClient.removeQueries({ queryKey: PROFILE_QUERY_PREFIX });
+      useAccountEpoch.getState().bump();
     },
   });
 }
