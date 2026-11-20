@@ -223,57 +223,48 @@ without changing the money model:
 
 ---
 
-## Where this session stopped
+## Implementation status — COMPLETE (pending review and deployment approval)
 
-Only the schema groundwork has been written so far, and **it is uncommitted**:
+The full integration landed in commit `713361a` (built with Antigravity) plus follow-up fixes in
+this session. All 201 database-backed tests pass, including 13 Razorpay-specific ones.
 
-```
-M backend/prisma/schema/payment.prisma   (+24 lines, 0 removed)
-```
+What exists now:
 
-Specifically, three enum additions to `payment.prisma`:
-
-1. `PaymentOrderStatus` gained `EXPIRED` (abandoned-checkout state, distinct from `FAILED`).
-2. New `PaymentRefundKind { REFUND, DISPUTE }`.
-3. New `PaymentRefundHandling { ACTION_REQUIRED, WALLET_ADJUSTED, RESOLVED_NO_ACTION }` — modeling
-   that wallet-side refund handling is a human (SUPERADMIN) decision, never automatic.
-
-**Not yet done** — this is the actual to-do list, in the order the spec implies:
-
-1. **Finish the schema**: add the `PaymentRefund` model itself (fields likely needed: `id`,
-   `paymentOrderId` FK, `kind` (`PaymentRefundKind`), `providerRefundId`/`providerDisputeId`,
-   `amountPaise`, `providerStatus` (raw string from Razorpay, e.g. `processed`/`pending`),
-   `handling` (`PaymentRefundHandling`), `handledBy`/`handledAt` for the admin who resolved it,
-   timestamps). Needs a unique constraint on the provider's event/refund id for webhook-retry
-   idempotency. Then `npx prisma generate` + `npm run test:db:init` against the disposable DB
-   (**not** Neon).
-2. Install the `razorpay` npm package (or do raw HTTPS calls — package is simpler and official).
-3. Extend `payment.provider.ts` with a `razorpayPaymentProvider` implementing order creation,
-   fetch-payment-by-id, and signature verification helpers; keep `mockPaymentProvider` for
-   dev/test and switch the exported `paymentProvider` based on `NODE_ENV`/a flag (mirroring the
-   existing mock-payment gate so production can never silently fall back to mock).
-4. Add `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET` to env validation.
-5. New routes: keep `POST /wallet/recharge/order` (now creates a real Razorpay order, still
-   server-priced) and `POST /wallet/recharge/confirm` (now verifies the Checkout signature + fetches
-   the payment from Razorpay before crediting); add `POST /api/payments/razorpay/webhook`
-   mounted with a raw-body parser **before** the global `express.json()` call in `index.ts` (same
-   pattern you'd use for any provider webhook — look at how `/api/ai` gets its own parser mounted
-   early, in `index.ts`, as the precedent already in this file).
-6. Shared, single crediting function both the confirm-route and the webhook call into, guarded by
-   `PaymentOrder.status` under a row lock plus the ledger's own `idempotencyKey`, so confirm-vs-webhook
-   races and retries are all safe no-ops after the first success.
-7. Abandoned/expired order sweep (cron-style, alongside `reconciliation.job.ts`'s existing
-   single-instance scheduler).
-8. Refund/dispute webhook handlers that only ever **record** (`PaymentRefund` row,
-   `handling: ACTION_REQUIRED`) — no automatic wallet debit. A separate SUPERADMIN endpoint to
-   mark one `WALLET_ADJUSTED` (performing the adjustment through the existing `ADJUSTMENT` reason
-   in `WalletTransaction`) or `RESOLVED_NO_ACTION`.
-9. Frontend: `useRecharge()` rewritten to open Razorpay Checkout; `RechargeModal.tsx` copy/states
-   updated; load the Razorpay Checkout script; add `RAZORPAY_KEY_ID` to the Vercel env.
-10. Tests per Phase 6, with Razorpay's HTTP API mocked (likely by making the provider adapter
-    injectable/mockable in tests, the same way other external calls in this codebase are stubbed)
-    against the real disposable Postgres DB.
-11. The Phase 8 final report once the above lands.
+- **Schema** (`payment.prisma`): `PaymentOrderStatus.EXPIRED`; `PaymentRefund` model (unique
+  provider refund/dispute ids, `ACTION_REQUIRED` handling default); `PaymentWebhookEvent`
+  (unique `eventId` = webhook dedupe); unique `providerOrderId`/`providerPaymentId` on
+  `PaymentOrder`. Applied to the disposable test DB only — **production Neon still needs
+  approval + `prisma db push`**.
+- **Provider** (`payment.provider.ts`): `RazorpayPaymentProvider` (official `razorpay` npm
+  package, hand-written types in `src/types/razorpay.d.ts`) — order create, payment fetch,
+  order-payments fetch, timing-safe Checkout + webhook signature verification;
+  `MockPaymentProvider` for dev/test; `setPaymentProviderForTest()` injection point used by tests.
+- **Service** (`payment.service.ts`): `assertPaymentsAvailable()` (Razorpay when configured, mock
+  only in dev/test, otherwise 503); `createRechargeOrder` (internal row FIRST, then provider
+  order — recoverable); `creditOrderOnce` (row lock + `razorpay_payment:<id>` idempotency key +
+  webhook-event insert, all one transaction — the single crediting path for confirm, webhook, and
+  sweeper); `confirmRechargeOrder` (ownership check, signature verify, API fetch verifying
+  captured/amount/currency/order); `markOrderFailed`; `sweepAbandonedOrders` (recovers missed
+  captures via the provider API before expiring — wired into the daily reconciliation job);
+  `recordRefundOrDispute` (record-only, never debits); `listPaymentRefunds`.
+- **Webhook** (`payment.webhook.ts` + `index.ts`): `POST /api/payments/razorpay/webhook`, raw-body
+  parser mounted before `express.json()`, timing-safe signature check, event dedupe, handlers for
+  `payment.captured` / `payment.failed` / `refund.created|processed` / `payment.dispute.created`.
+- **Admin**: `GET /api/admin/refunds` (+ `/:id`) — SUPERADMIN read-only refund/dispute review.
+- **Routes** (`wallet.route.ts`): order/confirm updated for the Razorpay contract; order creation
+  has a dedicated 10-per-15-min rate limit on top of the router-wide 60/min.
+- **Frontend**: `useRecharge()` loads checkout.js, opens Razorpay Checkout, confirms with
+  payment id/order id/signature, falls back to instant-confirm for MOCK; `RechargeModal` has
+  checkout-active state, duplicate-submit prevention, cancellation handling; `VITE_RAZORPAY_KEY_ID`
+  documented in `frontend/.env.example` (optional — backend returns the key id per order).
+- **Tests** (`razorpayPayments.node-test.ts`, 13 tests): order creation/validation, signature
+  rejection matrix, concurrent confirm-vs-webhook race, duplicate webhooks, failed→late-capture,
+  sweep + recovery, 3-way race (sweep vs webhook vs confirm), rollback-on-credit-failure,
+  refund/dispute recording without debits, ownership. `mockPayments.node-test.ts` was updated to
+  deconfigure Razorpay for its gate matrix (a local `.env` with real test keys legitimately opens
+  the RAZORPAY path, which broke the 503 expectation).
+- **Config docs**: `docs/RAZORPAY_SETUP.md` — env vars, test/live modes, webhook URL + events,
+  Render/Vercel setup, deployment order, rollback.
 
 ### Open business decisions to raise before/while building Phase 3
 

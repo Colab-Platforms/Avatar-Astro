@@ -9,6 +9,7 @@ export type ChatEndReason =
   | "FREE_LIMIT_REACHED"
   | "TIMEOUT"
   | "REJECTED"
+  | "CANCELLED"
   | "DISCONNECTED";
 export type ChatSenderRole = "USER" | "ASTROLOGER";
 
@@ -88,6 +89,9 @@ export const chatApi = {
   },
   endSession(sessionId: string) {
     return authRequest<ChatSession>(`/chat/sessions/${sessionId}/end`, { method: "POST" });
+  },
+  cancelSession(sessionId: string) {
+    return authRequest<ChatSession>(`/chat/sessions/${sessionId}/cancel`, { method: "POST" });
   },
   listMyConversations() {
     return authRequest<UserConversationSummary[]>("/chat/sessions");

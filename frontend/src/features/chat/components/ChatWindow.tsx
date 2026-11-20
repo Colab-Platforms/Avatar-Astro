@@ -1,11 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Loader2, MessageCircle, PhoneOff, Send, Wallet, WifiOff, Check, X } from "lucide-react";
+import { ArrowLeft, Loader2, MessageCircle, PhoneOff, Send, Wallet, WifiOff, Check, X, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useChatSession } from "../hooks/useChatSession";
 import { chatApi, type ChatSenderRole } from "../api/chatApi";
 import { AuthApiError } from "@/lib/authClient";
 import RechargeModal from "@/features/wallet/components/RechargeModal";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const END_REASON_LABEL: Record<string, string> = {
   USER_ENDED: "You ended this chat.",
@@ -14,6 +24,7 @@ const END_REASON_LABEL: Record<string, string> = {
   FREE_LIMIT_REACHED: "Your free session has ended.",
   TIMEOUT: "This chat timed out.",
   REJECTED: "The astrologer declined this request.",
+  CANCELLED: "This request was cancelled.",
   DISCONNECTED: "This chat ended because the connection was lost for too long.",
 };
 
@@ -71,9 +82,14 @@ export default function ChatWindow({ sessionId, role, onBack, basePath = "/chat"
     balancePaise,
     freeSecondsRemaining,
     peerTyping,
+    isConnected,
+    lowBalanceAlert,
+    freeToPaidAlert,
+    dismissFreeToPaidAlert,
     sendMessage,
     setTyping,
     endChat,
+    cancelRequest,
     acceptRequest,
     rejectRequest,
   } = useChatSession({ sessionId, role });
@@ -82,11 +98,27 @@ export default function ChatWindow({ sessionId, role, onBack, basePath = "/chat"
   const [minimumRupees, setMinimumRupees] = useState<number | undefined>(undefined);
   const [startingNew, setStartingNew] = useState(false);
   const [requestActionPending, setRequestActionPending] = useState(false);
+  const [endConfirmOpen, setEndConfirmOpen] = useState(false);
+  const [requestCountdown, setRequestCountdown] = useState<number | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length]);
+
+  useEffect(() => {
+    if (status !== "REQUESTED" || !session?.requestExpiresAt) {
+      setRequestCountdown(null);
+      return;
+    }
+    const update = () => {
+      const diff = Math.max(0, Math.floor((new Date(session.requestExpiresAt!).getTime() - Date.now()) / 1000));
+      setRequestCountdown(diff);
+    };
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, [status, session?.requestExpiresAt]);
 
   function handleSend() {
     if (!draft.trim() || status !== "ACTIVE") return;
@@ -130,7 +162,7 @@ export default function ChatWindow({ sessionId, role, onBack, basePath = "/chat"
     try {
       await acceptRequest();
     } catch {
-      /* onError below is not wired here — a toast is unnecessary for a tap that simply failed to accept in time */
+      /* Handled in hook */
     } finally {
       setRequestActionPending(false);
     }
@@ -140,6 +172,20 @@ export default function ChatWindow({ sessionId, role, onBack, basePath = "/chat"
     setRequestActionPending(true);
     try {
       await rejectRequest();
+    } catch {
+      /* Handled in hook */
+    } finally {
+      setRequestActionPending(false);
+    }
+  }
+
+  async function handleCancelRequest() {
+    setRequestActionPending(true);
+    try {
+      await cancelRequest();
+      toast.success("Consultation request cancelled");
+    } catch (err) {
+      toast.error(err instanceof AuthApiError || err instanceof Error ? err.message : "Could not cancel request");
     } finally {
       setRequestActionPending(false);
     }
@@ -193,7 +239,10 @@ export default function ChatWindow({ sessionId, role, onBack, basePath = "/chat"
           {status === "ACTIVE" && (
             <span className="rounded-full bg-[#592209]/10 px-3 py-1 text-sm font-semibold text-[#592209]" aria-live="polite">
               {formatTime(remainingSeconds)}
-              {isPaid && balancePaise != null && <span className="ml-1.5 font-normal text-[#6B4A37]">· {formatRupees(balancePaise)}</span>}
+              {/* Privacy Guard: User wallet balance is NEVER shown to astrologers */}
+              {isPaid && role === "USER" && balancePaise != null && (
+                <span className="ml-1.5 font-normal text-[#6B4A37]">· {formatRupees(balancePaise)}</span>
+              )}
               {freeSecondsRemaining != null && freeSecondsRemaining > 0 && (
                 <span className="ml-1.5 font-normal text-emerald-800">· {freeSecondsRemaining}s free left</span>
               )}
@@ -202,7 +251,7 @@ export default function ChatWindow({ sessionId, role, onBack, basePath = "/chat"
           {(status === "ACTIVE" || status === "PAUSED") && (
             <button
               type="button"
-              onClick={endChat}
+              onClick={() => setEndConfirmOpen(true)}
               className="inline-flex items-center gap-1.5 rounded-lg border border-[#592209]/30 px-3 py-1.5 text-sm font-medium text-[#592209] hover:bg-[#592209]/10"
             >
               <PhoneOff className="h-4 w-4" aria-hidden="true" /> End
@@ -211,10 +260,54 @@ export default function ChatWindow({ sessionId, role, onBack, basePath = "/chat"
         </div>
       </header>
 
-      {/* History (this session plus every earlier session with the same peer — see
-          chat.service.ts's peerSessionIds) always renders regardless of status, so starting a
-          new request with someone you've chatted with before never hides the old conversation
-          behind a waiting screen. */}
+      {/* Network reconnecting banner */}
+      {!isConnected && (
+        <div className="flex items-center justify-center gap-2 border-b border-amber-300 bg-amber-100 px-4 py-1.5 text-xs font-medium text-amber-900">
+          <WifiOff className="h-3.5 w-3.5" />
+          <span>Network connection lost. Reconnecting to live consultation…</span>
+        </div>
+      )}
+
+      {/* Free-to-paid transition banner */}
+      {freeToPaidAlert && status === "ACTIVE" && (
+        <div className="flex items-center justify-between border-b border-emerald-200 bg-emerald-50 px-4 py-2 text-xs text-emerald-950">
+          <div className="flex items-center gap-1.5">
+            <Sparkles className="h-4 w-4 text-emerald-700 shrink-0" />
+            <span>
+              Your complimentary minutes have ended. The consultation is now active at ₹
+              {Math.round(session?.ratePerMinutePaise ? session.ratePerMinutePaise / 100 : 0)}/min.
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={dismissFreeToPaidAlert}
+            className="ml-2 font-semibold text-emerald-800 hover:text-emerald-950"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {/* Low balance banner with 1-click in-chat recharge */}
+      {lowBalanceAlert && role === "USER" && status === "ACTIVE" && (
+        <div className="flex items-center justify-between border-b border-[#592209]/20 bg-[#F5E9D6] px-4 py-2 text-xs text-[#301607]">
+          <div className="flex items-center gap-1.5">
+            <Wallet className="h-4 w-4 text-[#592209] shrink-0" />
+            <span>
+              Low balance ({formatTime(remainingSeconds)} remaining). Top up coins to keep chatting without interruption.
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setRechargeOpen(true)}
+            className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-[#592209] px-2.5 py-1 text-xs font-semibold text-[#F5E9D6] transition hover:bg-[#431906]"
+          >
+            Recharge
+          </button>
+        </div>
+      )}
+
+      {/* Messages History */}
       <div className="flex-1 overflow-y-auto px-4 py-4">
         {messages.length === 0 && status !== "REQUESTED" && (
           <p className="pt-10 text-center text-sm text-[#6B4A37]">No messages yet.</p>
@@ -278,25 +371,36 @@ export default function ChatWindow({ sessionId, role, onBack, basePath = "/chat"
         role === "USER" ? (
           <div className="flex items-center justify-between gap-3 border-t border-[#592209]/15 bg-[#F5E9D6] p-3">
             <span className="flex items-center gap-2 text-sm text-[#301607]">
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> Waiting for {peerName} to respond…
+              <Loader2 className="h-4 w-4 animate-spin text-[#592209]" aria-hidden="true" />
+              Waiting for {peerName} to accept…
+              {requestCountdown != null && (
+                <span className="font-semibold text-[#592209]">({formatTime(requestCountdown)} remaining)</span>
+              )}
             </span>
             <button
               type="button"
-              onClick={endChat}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-[#592209]/30 px-3 py-1.5 text-sm font-medium text-[#592209] hover:bg-[#592209]/10"
+              onClick={handleCancelRequest}
+              disabled={requestActionPending}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-[#592209]/30 px-3 py-1.5 text-sm font-medium text-[#592209] transition hover:bg-[#592209]/10 disabled:opacity-50"
             >
-              Cancel
+              Cancel Request
             </button>
           </div>
         ) : (
           <div className="flex items-center justify-between gap-3 border-t border-[#592209]/15 bg-[#F5E9D6] p-3">
-            <span className="text-sm font-medium text-[#301607]">{peerName} wants to chat — nothing is charged until you accept.</span>
+            <span className="text-sm font-medium text-[#301607]">
+              {peerName} wants to chat
+              {requestCountdown != null && (
+                <span className="font-bold text-[#592209]"> ({formatTime(requestCountdown)} left)</span>
+              )}
+              {" "}— nothing is charged until you accept.
+            </span>
             <div className="flex shrink-0 gap-2">
               <button
                 type="button"
                 onClick={handleReject}
                 disabled={requestActionPending}
-                className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#592209]/30 px-3 py-2 text-sm font-medium text-[#592209] hover:bg-[#592209]/10 disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#592209]/30 px-3 py-2 text-sm font-medium text-[#592209] transition hover:bg-[#592209]/10 disabled:opacity-50"
               >
                 <X className="h-4 w-4" aria-hidden="true" /> Decline
               </button>
@@ -304,7 +408,7 @@ export default function ChatWindow({ sessionId, role, onBack, basePath = "/chat"
                 type="button"
                 onClick={handleAccept}
                 disabled={requestActionPending}
-                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#592209] px-3 py-2 text-sm font-semibold text-[#F5E9D6] hover:bg-[#431906] disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#592209] px-3 py-2 text-sm font-semibold text-[#F5E9D6] transition hover:bg-[#431906] disabled:opacity-50"
               >
                 <Check className="h-4 w-4" aria-hidden="true" /> Accept
               </button>
@@ -312,25 +416,61 @@ export default function ChatWindow({ sessionId, role, onBack, basePath = "/chat"
           </div>
         )
       ) : status === "ENDED" ? (
-        <div className="border-t border-[#592209]/15 bg-[#F5E9D6] p-4 text-center">
-          <p className="text-sm font-medium text-[#301607]">{endedReason ? END_REASON_LABEL[endedReason] : "This chat has ended."}</p>
-          {role === "USER" && (
-            <button
-              type="button"
-              onClick={endedReason === "BALANCE_EXHAUSTED" ? () => setRechargeOpen(true) : chatAgain}
-              disabled={startingNew}
-              className="mt-3 inline-flex items-center gap-2 rounded-xl bg-[#592209] px-4 py-2 text-sm font-semibold text-[#F5E9D6] hover:bg-[#431906] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {startingNew ? (
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-              ) : endedReason === "BALANCE_EXHAUSTED" ? (
-                <Wallet className="h-4 w-4" aria-hidden="true" />
-              ) : (
-                <MessageCircle className="h-4 w-4" aria-hidden="true" />
+        <div className="border-t border-[#592209]/15 bg-[#F5E9D6] p-5 text-center">
+          <div className="mx-auto max-w-sm rounded-2xl border border-[#592209]/15 bg-white p-4 text-left shadow-sm">
+            <div className="flex items-center justify-between border-b border-[#592209]/10 pb-3">
+              <div>
+                <p className="text-xs font-medium text-[#7A6658]">Consultation Summary</p>
+                <p className="font-home-serif text-sm font-bold text-[#301607]">{peerName}</p>
+              </div>
+              <span className="rounded-full bg-[#592209]/10 px-2.5 py-1 text-[11px] font-semibold text-[#592209]">
+                {endedReason ? END_REASON_LABEL[endedReason] : "Session Ended"}
+              </span>
+            </div>
+
+            <div className="mt-3 space-y-2 text-xs">
+              <div className="flex items-center justify-between text-[#7A6658]">
+                <span>Duration Billed</span>
+                <span className="font-semibold text-[#301607]">{formatTime(session?.billedSeconds ?? 0)}</span>
+              </div>
+              <div className="flex items-center justify-between text-[#7A6658]">
+                <span>Coins Deducted</span>
+                <span className="font-semibold text-[#301607]">
+                  {session?.amountPaise ? `₹${(session.amountPaise / 100).toFixed(2)}` : "Free"}
+                </span>
+              </div>
+              {role === "USER" && balancePaise != null && (
+                <div className="flex items-center justify-between border-t border-[#592209]/10 pt-2 text-[#7A6658]">
+                  <span>Remaining Wallet Balance</span>
+                  <span className="font-semibold text-[#592209]">₹{(balancePaise / 100).toFixed(2)}</span>
+                </div>
               )}
-              {endedReason === "BALANCE_EXHAUSTED" ? "Recharge & continue" : "Chat again"}
-            </button>
-          )}
+            </div>
+
+            {role === "USER" && (
+              <div className="mt-4 flex gap-2">
+                {endedReason === "BALANCE_EXHAUSTED" ? (
+                  <button
+                    type="button"
+                    onClick={() => setRechargeOpen(true)}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#592209] px-4 py-2.5 text-sm font-semibold text-[#F5E9D6] transition hover:bg-[#431906]"
+                  >
+                    <Wallet className="h-4 w-4" /> Recharge & Continue
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={chatAgain}
+                    disabled={startingNew}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#592209] px-4 py-2.5 text-sm font-semibold text-[#F5E9D6] transition hover:bg-[#431906] disabled:opacity-60"
+                  >
+                    {startingNew ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageCircle className="h-4 w-4" />}
+                    Consult Again
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       ) : (
         <div className="flex items-center gap-2 border-t border-[#592209]/15 bg-[#F5E9D6] p-3">
@@ -361,6 +501,34 @@ export default function ChatWindow({ sessionId, role, onBack, basePath = "/chat"
           </button>
         </div>
       )}
+
+      {/* End Chat Confirmation Alert Dialog */}
+      <AlertDialog open={endConfirmOpen} onOpenChange={setEndConfirmOpen}>
+        <AlertDialogContent className="border-[#592209]/20 bg-[#FBF5EC] text-[#301607] sm:rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-home-serif text-lg font-bold text-[#301607]">
+              End this consultation?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-[#7A6658]">
+              Are you sure you want to end your chat with {peerName}? Unused lookahead reservations will be returned to your wallet immediately.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-4 flex gap-2">
+            <AlertDialogCancel className="border-[#592209]/30 text-[#592209] hover:bg-[#592209]/10">
+              Continue Chatting
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setEndConfirmOpen(false);
+                endChat();
+              }}
+              className="bg-[#592209] text-[#F5E9D6] hover:bg-[#431906]"
+            >
+              End Consultation
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <RechargeModal
         open={rechargeOpen}

@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { connectSocket } from "../lib/socket";
 import { astrologerChatApi } from "../api/chatApi";
 import { AuthApiError } from "@/lib/authClient";
+import { ASTROLOGER_PROFILE_QUERY_KEY } from "@/features/astrologer/workspace/hooks/useAstrologerWorkspace";
 
 export const ASTROLOGER_CONVERSATIONS_QUERY_KEY = ["chat", "conversations", "astrologer"] as const;
 
@@ -39,8 +40,17 @@ export function useAstrologerConversations() {
 }
 
 export function useSetAstrologerOnline() {
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: (isOnline: boolean) => astrologerChatApi.setOnline(isOnline),
-    onError: (err) => toast.error(err instanceof AuthApiError || err instanceof Error ? err.message : "Could not update your status"),
+    onSuccess: (data, isOnline) => {
+      qc.setQueryData(ASTROLOGER_PROFILE_QUERY_KEY, (old: Record<string, unknown> | null | undefined) =>
+        old ? { ...old, isOnline } : old
+      );
+      qc.invalidateQueries({ queryKey: ASTROLOGER_PROFILE_QUERY_KEY });
+      toast.success(isOnline ? "You are now online for chats" : "You are now offline");
+    },
+    onError: (err) =>
+      toast.error(err instanceof AuthApiError || err instanceof Error ? err.message : "Could not update your status"),
   });
 }

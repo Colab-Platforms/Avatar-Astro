@@ -51,6 +51,11 @@ after(async () => {
 test("createRechargeOrder / confirmRechargeOrder throw 503 in every locked environment, before touching the database", async () => {
   prisma = (await import("../../../prisma.js")).default;
   const service = await import("../../modules/payment/payment.service.js");
+  // This test pins the MOCK gate. A developer's local .env may hold real Razorpay test keys
+  // (loaded via prisma.config.ts's dotenv), which would legitimately open the RAZORPAY path and
+  // reach the (dead) database instead of 503ing. Deconfigure Razorpay for the matrix, restore after.
+  const { defaultRazorpayProvider } = await import("../../modules/payment/payment.provider.js");
+  defaultRazorpayProvider.reloadConfig({});
 
   const saved = { NODE_ENV: process.env.NODE_ENV, ALLOW_MOCK_PAYMENTS: process.env.ALLOW_MOCK_PAYMENTS };
   try {
@@ -69,6 +74,7 @@ test("createRechargeOrder / confirmRechargeOrder throw 503 in every locked envir
     for (const [k, v] of Object.entries(saved)) {
       if (v === undefined) delete process.env[k]; else process.env[k] = v;
     }
+    defaultRazorpayProvider.reloadConfig(process.env);
   }
 });
 

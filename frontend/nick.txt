@@ -1,0 +1,3302 @@
+╭─── Claude Code v2.1.212 ─────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting        │
+│             Welcome back VISHWAA REDDY!            │ started                 │
+│                                                    │ Run /init to create a … │
+│                       ▐▛███▜▌                      │ ─────────────────────── │
+│                      ▝▜█████▛▘                     │ What's new              │
+│                        ▘▘ ▝▝                       │ `/fork` now copies you… │
+│ Sonnet 5 · Claude Pro · support@avatarindia.com's  │ Added `claude auto-mod… │
+│ Organization                                       │ Added a session-wide l… │
+│          ~\astro\avatar-astro33\frontend           │ /release-notes for more │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+
+❯ see the @backend/new-feature.txt and understand what we have implemented so   
+  far                                                                           
+  Then continue the remaining part or resume from where it is left              
+
+  Searched for 1 pattern, read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● Good, now let's look at the actual current code for billing.ts and
+  socketServer.ts to understand current presence tracking implementation.
+
+  Read 4 files, ran 1 shell command (ctrl+o to expand)
+
+● Good, this confirms my understanding of the constants. Now let's check how
+  tests are run and confirm the reconciliation/formula tests exist for the "also
+  verify" items.
+
+  Ran 4 shell commands (ctrl+o to expand)
+
+● Confirmed — reconciliation endpoint is SUPERADMIN-gated via requireMainAdmin
+  on the admin router. Now let's implement the fix. First, the billing.ts
+  presence tracking.
+
+● Update(~\astro\avatar-astro33\backend\src\modules\chat\billing.ts)
+  ⎿  Added 64 lines, removed 25 lines
+       81  // what survives a restart; this map is just "has anyone heard
+            from this side in the last
+       82  // PRESENCE_TIMEOUT_MS." Tied to the chat window being mounted
+            and socket-connected, never to
+       83  // document/tab focus — an unfocused tab keeps heartbeating, a
+            dropped socket does not.
+       84 +//                                                            
+       85 +// Every heartbeat/departure the socket layer reports carries 
+          +a ConnectionIdentity: the socket's own id                     
+       86 +// (stable for its lifetime, unique per connection) plus a per
+          +-socket sequence number captured SYNCHRONOUSLY                
+       87 +// the instant the raw event arrives — before any `await` reor
+          +ders things. That sequence is what lets us                    
+       88 +// tell true arrival order apart from resolution order: a hear
+          +tbeat sent a moment before a leave/disconnect                 
+       89 +// can still have its (async) role lookup resolve AFTER that d
+          +eparture has already been applied. Comparing                  
+       90 +// sequence numbers for the SAME connection id rejects that st
+          +ale heartbeat outright, while a heartbeat from a              
+       91 +// DIFFERENT connection id (a genuine reconnect) always takes 
+          +over — it is definitionally newer than whatever               
+       92 +// came before. Callers that don't track connections (direct t
+          +ests, pre-presence-generation call sites) simply              
+       93 +// omit `conn`, which skips staleness checks entirely and beha
+          +ves exactly as before.                                        
+       94  // ===========================================================
+           =================
+       85 -type PresenceEntry = {                                        
+       86 -  /** Last heartbeat per side (ms). */                        
+       87 -  user?: number;                                              
+       88 -  astrologer?: number;                                        
+       89 -  /** Set when the server SAW that side leave (socket disconne
+          -ct / chat:leave); cleared by its next heartbeat. */           
+       90 -  userLeftAt?: number;                                        
+       91 -  astrologerLeftAt?: number;                                  
+       95 +export type ConnectionIdentity = { id: string; seq: number }; 
+       96 +                                                              
+       97 +type SidePresence = {                                         
+       98 +  /** Last heartbeat (ms). */                                 
+       99 +  last?: number;                                              
+      100 +  /** Set when the server SAW this side leave (socket disconne
+          +ct / chat:leave); cleared by a newer heartbeat. */            
+      101 +  leftAt?: number;                                            
+      102 +  /** The connection currently trusted for this side's presenc
+          +e, and the sequence number of the last event                  
+      103 +   * applied from it — used only to reject stale, out-of-order
+          + events from that SAME connection. */                         
+      104 +  connId?: string;                                            
+      105 +  seq?: number;                                               
+      106  };
+      107 +type PresenceEntry = { user: SidePresence; astrologer: SidePre
+          +sence };                                                      
+      108  const presence = new Map<string, PresenceEntry>();
+      109  
+       95 -/** `atMs` defaults to the wall clock; tests pass a simulated 
+          -time. A heartbeat also cancels a recorded departure. */       
+       96 -export function recordHeartbeat(sessionId: string, role: ChatS
+          -enderRole, atMs: number = Date.now()): void {                 
+       97 -  const entry = presence.get(sessionId) ?? {};                
+       98 -  if (role === "USER") {                                      
+       99 -    entry.user = atMs;                                        
+      100 -    delete entry.userLeftAt;                                  
+      101 -  } else {                                                    
+      102 -    entry.astrologer = atMs;                                  
+      103 -    delete entry.astrologerLeftAt;                            
+      110 +function entryFor(sessionId: string): PresenceEntry {         
+      111 +  let entry = presence.get(sessionId);                        
+      112 +  if (!entry) {                                               
+      113 +    entry = { user: {}, astrologer: {} };                     
+      114 +    presence.set(sessionId, entry);                           
+      115    }
+      105 -  presence.set(sessionId, entry);                             
+      116 +  return entry;                                               
+      117 +}                                                             
+      118 +const sideOf = (entry: PresenceEntry, role: ChatSenderRole): S
+          +idePresence => (role === "USER" ? entry.user : entry.astrologe
+          +r);                                                           
+      119 +                                                              
+      120 +/**                                                           
+      121 + * `atMs` defaults to the wall clock; tests pass a simulated t
+          +ime. A heartbeat also cancels a recorded                      
+      122 + * departure — UNLESS `conn` shows this is a stale event from 
+          +a connection that has already been superseded                 
+      123 + * (see the block comment above): same connection id, but a se
+          +quence number no newer than the one already                   
+      124 + * applied for it (that connection's own later departure, or a
+          +n even later heartbeat already landed).                       
+      125 + */                                                           
+      126 +export function recordHeartbeat(sessionId: string, role: ChatS
+          +enderRole, atMs: number = Date.now(), conn?: ConnectionIdentit
+          +y): void {                                                    
+      127 +  const side = sideOf(entryFor(sessionId), role);             
+      128 +  if (conn) {                                                 
+      129 +    if (side.connId === conn.id && side.seq !== undefined && c
+          +onn.seq <= side.seq) return; // stale: ignore                 
+      130 +    side.connId = conn.id;                                    
+      131 +    side.seq = conn.seq;                                      
+      132 +  }                                                           
+      133 +  side.last = atMs;                                           
+      134 +  delete side.leftAt;                                         
+      135    maybeResumeFromPause(sessionId).catch((err) => console.error
+           (`[chat.billing] resume check failed for ${sessionId}:`, err))
+           ;
+      136  }
+      137  
+     ...
+      140   * chat:leave. Unlike a silent network loss there is nothing t
+           o wait for: billing stops at THIS timestamp and the
+      141   * session is paused immediately (settled through the event in
+           stant, in the usual single transaction). The side is
+      142   * treated as absent until its next heartbeat, which also resu
+           mes the chat.
+      143 + *                                                            
+      144 + * When `conn` is given, a departure is applied only if it com
+          +es from the connection currently trusted for this             
+      145 + * side (or no connection is trusted yet) and is not older tha
+          +n what's already recorded for it — a departure                
+      146 + * reported by a connection that a newer one has already super
+          +seded (e.g. the old socket's delayed disconnect               
+      147 + * event, arriving after the user already reconnected) must no
+          +t retroactively pause a session that fresh                    
+      148 + * presence has already resumed. Duplicate leave/disconnect ev
+          +ents for the same connection are no-ops.                      
+      149   */
+      115 -export async function recordDeparture(sessionId: string, role:
+          - ChatSenderRole, atMs: number = Date.now()): Promise<void> {  
+      116 -  const entry = presence.get(sessionId) ?? {};                
+      117 -  if (role === "USER") entry.userLeftAt = atMs;               
+      118 -  else entry.astrologerLeftAt = atMs;                         
+      119 -  presence.set(sessionId, entry);                             
+      150 +export async function recordDeparture(sessionId: string, role:
+          + ChatSenderRole, atMs: number = Date.now(), conn?: ConnectionI
+          +dentity): Promise<void> {                                     
+      151 +  const side = sideOf(entryFor(sessionId), role);             
+      152 +  if (conn) {                                                 
+      153 +    if (side.connId !== undefined && side.connId !== conn.id) 
+          +return; // superseded by a newer connection: ignore           
+      154 +    if (side.seq !== undefined && conn.seq <= side.seq) return
+          +; // duplicate or out-of-order for this connection: ignore    
+      155 +    side.connId = conn.id;                                    
+      156 +    side.seq = conn.seq;                                      
+      157 +  }                                                           
+      158 +  side.leftAt = atMs;                                         
+      159  
+      160    const session = await prisma.chatSession.findUnique({ where:
+            { id: sessionId }, select: { status: true } });
+      161    if (session?.status === "ACTIVE") await pauseSession(session
+           Id, new Date(atMs));
+     ...
+      163  
+      164  function isPresent(sessionId: string, role: ChatSenderRole, no
+           wMs: number = Date.now()): boolean {
+      165    const entry = presence.get(sessionId);
+      127 -  const last = role === "USER" ? entry?.user : entry?.astrolog
+          -er;                                                           
+      128 -  const leftAt = role === "USER" ? entry?.userLeftAt : entry?.
+          -astrologerLeftAt;                                             
+      129 -  return leftAt === undefined && last !== undefined && nowMs -
+          - last <= PRESENCE_TIMEOUT_MS;                                 
+      166 +  if (!entry) return false;                                   
+      167 +  const side = sideOf(entry, role);                           
+      168 +  return side.leftAt === undefined && side.last !== undefined 
+          +&& nowMs - side.last <= PRESENCE_TIMEOUT_MS;                  
+      169  }
+      170  
+      171  function bothPresent(sessionId: string, nowMs: number = Date.n
+           ow()): boolean {
+
+● Now update confirmedThroughMs to use the new nested structure.
+
+● Update(~\astro\avatar-astro33\backend\src\modules\chat\billing.ts)
+  ⎿  Added 4 lines, removed 3 lines
+      185   * `presentRole` marks the side performing the action (an end 
+           click is itself proof that side is present).
+      186   */
+      187  function confirmedThroughMs(sessionId: string, nowMs: number, 
+           presentRole?: ChatSenderRole): number {
+      188 -  const entry = presence.get(sessionId) ?? {};                
+      189 -  const sideThrough = (role: ChatSenderRole, last: number | un
+          -defined, leftAt: number | undefined): number => {             
+      188 +  const entry = presence.get(sessionId) ?? { user: {}, astrolo
+          +ger: {} };                                                    
+      189 +  const sideThrough = (role: ChatSenderRole): number => {     
+      190      if (presentRole === role) return nowMs;
+      191 +    const { last, leftAt } = sideOf(entry, role);             
+      192      if (last === undefined) return 0;
+      193      const vouched = last + CONFIRMED_PRESENCE_WINDOW_MS;
+      194      return leftAt === undefined ? vouched : Math.min(leftAt, v
+           ouched);
+      195    };
+      195 -  return Math.max(0, Math.min(nowMs, sideThrough("USER", entry
+          -.user, entry.userLeftAt), sideThrough("ASTROLOGER", entry.astr
+          -ologer, entry.astrologerLeftAt)));                            
+      196 +  return Math.max(0, Math.min(nowMs, sideThrough("USER"), side
+          +Through("ASTROLOGER")));                                      
+      197  }
+      198  
+      199  // ===========================================================
+           =================
+
+● Now let's update socketServer.ts to capture and propagate connection
+  identity/sequence.
+
+● Update(~\astro\avatar-astro33\backend\src\realtime\socketServer.ts)
+  ⎿  Added 1 line, removed 1 line
+      10  import { logError } from "@/utils/safeError.js";
+      11  import * as chatService from "@/modules/chat/chat.service.js";
+      12  import type { ChatSenderRole } from "@prisma/client";
+      13 -import { attachIo, roomForSession, roomForAstrologer, emitToRoo
+         -m, recordHeartbeat, recordDeparture } from "@/modules/chat/bill
+         -ing.js";                                                       
+      13 +import { attachIo, roomForSession, roomForAstrologer, emitToRoo
+         +m, recordHeartbeat, recordDeparture, type ConnectionIdentity } 
+         +from "@/modules/chat/billing.js";                              
+      14  import { MAX_MESSAGE_LENGTH } from "@/modules/chat/chat.constan
+          ts.js";
+      15  import {
+      16    GENERIC_ERROR_MESSAGE,
+
+● Update(~\astro\avatar-astro33\backend\src\realtime\socketServer.ts)
+  ⎿  Added 13 lines, removed 1 line
+      23    type ChatSocketAck,
+      24  } from "./socketValidation.js";
+      25  
+      26 -type SocketData = { userId: string; role: "USER" | "ADMIN" | "S
+         -UPERADMIN"; astrologerProfileId: string | null };              
+      26 +type SocketData = { userId: string; role: "USER" | "ADMIN" | "S
+         +UPERADMIN"; astrologerProfileId: string | null; connSeq?: numbe
+         +r };                                                           
+      27  
+      28 +/**                                                            
+      29 + * Identifies this socket connection for presence staleness che
+         +cks (see chat/billing.ts): `id` is the                         
+      30 + * socket's own id, stable and unique for its lifetime; `seq` i
+         +s a per-socket counter bumped SYNCHRONOUSLY                    
+      31 + * the instant each raw event is received — before any `await` 
+         +lets a slower event's async work finish                        
+      32 + * first. That capture point is what makes `seq` reflect true a
+         +rrival order, not resolution order.                            
+      33 + */                                                            
+      34 +function nextConn(socket: Socket): ConnectionIdentity {        
+      35 +  const data = socket.data as SocketData;                      
+      36 +  data.connSeq = (data.connSeq ?? 0) + 1;                      
+      37 +  return { id: socket.id, seq: data.connSeq };                 
+      38 +}                                                              
+      39 +                                                               
+      40  // Per-astrologer live connection count — presence is "do they 
+          have an open socket right
+      41  // now", not a manual toggle alone. Cleared on disconnect (with
+           a short grace delay so a
+      42  // page refresh doesn't flicker the astrologer offline for a mo
+          ment).
+
+● Now update handle() to capture conn synchronously and pass it to handlers.
+
+● Update(~\astro\avatar-astro33\backend\src\realtime\socketServer.ts)
+  ⎿  Added 3 lines, removed 2 lines
+      79  function handle(
+      80    socket: Socket,
+      81    event: string,
+      82 -  handler: (payload: unknown, ack: ChatSocketAck, userId: strin
+         -g) => void | Promise<void>,                                    
+      82 +  handler: (payload: unknown, ack: ChatSocketAck, userId: strin
+         +g, conn: ConnectionIdentity) => void | Promise<void>,          
+      83  ): void {
+      84    socket.on(event, (...args: unknown[]) => {
+      85      const { payload, ack } = splitArgs(args);
+      86      const userId = (socket.data as Partial<SocketData> | undefi
+          ned)?.userId;
+      87 +    const conn = nextConn(socket); // captured now, synchronous
+         +ly, so later async work can't reorder it                       
+      88      const run = async () => {
+      89        if (!userId) throw new ApiError("Authentication required"
+          , 401);
+      89 -      await handler(payload, ack, userId);                     
+      90 +      await handler(payload, ack, userId, conn);               
+      91      };
+      92      run().catch((err) => replyWithError(ack, event, err)).catch
+          (() => undefined);
+      93    });
+
+● Now update reportDepartureIfLast and the handlers that call
+  recordHeartbeat/recordDeparture.
+
+● Update(~\astro\avatar-astro33\backend\src\realtime\socketServer.ts)
+  ⎿  Added 2 lines, removed 2 lines
+      107   * Tells billing that a participant has left — but only if thi
+           s was their LAST connection to that chat. A second
+      108   * tab or device of the same person still in the room keeps th
+           em present (multi-tab must not pause a chat).
+      109   */
+      110 -function reportDepartureIfLast(socket: Socket, sessionId: stri
+          -ng, role: ChatSenderRole): void {                             
+      110 +function reportDepartureIfLast(socket: Socket, sessionId: stri
+          +ng, role: ChatSenderRole, conn: ConnectionIdentity): void {   
+      111    try {
+      112      const me = (socket.data as Partial<SocketData> | undefined
+           )?.userId;
+      113      const room = socket.nsp.adapter.rooms.get(roomForSession(s
+           essionId));
+     ...
+      118          if (other && (other.data as Partial<SocketData> | unde
+           fined)?.userId === me) return; // still here on another socket
+      119        }
+      120      }
+      121 -    recordDeparture(sessionId, role).catch((err) => logError("
+          -[socket] failed to record departure:", err));                 
+      121 +    recordDeparture(sessionId, role, undefined, conn).catch((e
+          +rr) => logError("[socket] failed to record departure:", err));
+      122    } catch (err) {
+      123      logError("[socket] departure check failed:", err);
+      124    }
+
+● Update(~\astro\avatar-astro33\backend\src\realtime\socketServer.ts)
+  ⎿  Added 8 lines, removed 8 lines
+      130    // `userId`, or the owner of its `astrologerProfile`?) — nev
+           er assumed from whether
+      131    // this account separately happens to have an astrologer pro
+           file of its own, which
+      132    // would wrongly force every chat onto one side for an astro
+           loger acting as a customer.
+      133 -  handle(socket, "chat:join", async (payload, ack, userId) => 
+          -{                                                             
+      133 +  handle(socket, "chat:join", async (payload, ack, userId, con
+          +n) => {                                                       
+      134      const { sessionId } = parseSessionPayload(payload);
+      135      await chatService.getSession(sessionId, userId);
+      136      socket.join(roomForSession(sessionId));
+     ...
+      140      // first periodic heartbeat arrives.
+      141      const role = await chatService.getActorRole(sessionId, use
+           rId);
+      142      trackJoin(socket, sessionId, role);
+      143 -    recordHeartbeat(sessionId, role);                         
+      143 +    recordHeartbeat(sessionId, role, undefined, conn);        
+      144      ack();
+      145    });
+      146  
+      147 -  handle(socket, "chat:heartbeat", async (payload, _ack, userI
+          -d) => {                                                       
+      147 +  handle(socket, "chat:heartbeat", async (payload, _ack, userI
+          +d, conn) => {                                                 
+      148      const { sessionId } = parseSessionPayload(payload);
+      149      const role = await chatService.getActorRole(sessionId, use
+           rId); // throws unless this user is a participant
+      150      // After an automatic reconnect the client resumes heartbe
+           ating on a NEW socket without re-sending chat:join.
+      151      // Re-establish room membership and tracking here, so that
+            socket's later disconnect is still observed.
+      152      socket.join(roomForSession(sessionId));
+      153      trackJoin(socket, sessionId, role);
+      154 -    recordHeartbeat(sessionId, role);                         
+      154 +    recordHeartbeat(sessionId, role, undefined, conn);        
+      155    });
+      156  
+      157    // An explicit leave is something the server SEES: billing s
+           tops at this moment (not a heartbeat window later).
+      158 -  handle(socket, "chat:leave", (payload) => {                 
+      158 +  handle(socket, "chat:leave", (payload, _ack, _userId, conn) 
+          +=> {                                                          
+      159      const { sessionId } = parseSessionPayload(payload);
+      160      const role = joinedSessions.get(socket)?.get(sessionId);
+      161      joinedSessions.get(socket)?.delete(sessionId);
+      162      socket.leave(roomForSession(sessionId));
+      163 -    if (role) reportDepartureIfLast(socket, sessionId, role); 
+          -// only for a chat this socket had actually joined            
+      163 +    if (role) reportDepartureIfLast(socket, sessionId, role, c
+          +onn); // only for a chat this socket had actually joined      
+      164    });
+      165  
+      166 -  handle(socket, "chat:message", async (payload, ack, userId) 
+          -=> {                                                          
+      166 +  handle(socket, "chat:message", async (payload, ack, userId, 
+          +conn) => {                                                    
+      167      const { sessionId, content } = parseMessagePayload(payload
+           );
+      168      const message = await chatService.postMessage(sessionId, u
+           serId, content.slice(0, MAX_MESSAGE_LENGTH));
+      169 -    recordHeartbeat(sessionId, message.senderRole); // sending
+          - a message is itself proof of presence                        
+      169 +    recordHeartbeat(sessionId, message.senderRole, undefined, 
+          +conn); // sending a message is itself proof of presence       
+      170      emitToRoom(roomForSession(sessionId), "chat:message", mess
+           age);
+      171      ack(undefined, message);
+      172    });
+
+● Now the disconnecting handler:
+● Update(~\astro\avatar-astro33\backend\src\realtime\socketServer.ts)
+  ⎿  Added 2 lines, removed 1 line
+      188    socket.on("disconnecting", () => {
+      189      const joined = joinedSessions.get(socket);
+      190      if (!joined) return;
+      191 -    for (const [sessionId, role] of joined) reportDepartureIfL
+          -ast(socket, sessionId, role);                                 
+      191 +    const conn = nextConn(socket); // captured synchronously, 
+          +before any pending heartbeat's async work resolves            
+      192 +    for (const [sessionId, role] of joined) reportDepartureIfL
+          +ast(socket, sessionId, role, conn);                           
+      193      joined.clear();
+      194    });
+      195  
+
+  Read 1 file (ctrl+o to expand)
+
+● Write(~\astro\avatar-astro33\backend\src\__tests__\financial\presenceStaleness
+       .node-test.ts)
+  ⎿  Wrote 141 lines to
+     ..\backend\src\__tests__\financial\presenceStaleness.node-test.ts
+      1 // Run with: npm run test:db:run -- src/__tests__/financial/prese
+      2 //
+      3 // Checkpoint 1 follow-up: a heartbeat sent on a connection BEFOR
+      4 // disconnect must never be allowed to resurrect presence after t
+        he server has already recorded the
+        sync role lookup can resolve AFTER the
+      6 // departure has been applied. chat/billing.ts guards against thi
+      7 // connection id plus a sequence number the socket layer bumps SY
+        NCHRONOUSLY the instant each raw event
+        der survives 
+     … +188 lines (ctrl+o to expand)
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● Good, those other test files call it conn-less (backward compatible), so no
+  changes needed there. Now let's run TypeScript compilation and the relevant
+  test suites.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Type-checks clean. Now let's check the test DB setup and run the relevant test
+  suites.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Needs Docker for Postgres. Let's check if Docker is available before
+  attempting the test DB spin-up.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Docker is available. Let's spin up the test DB and run the full
+  financial/security suite.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Now let's run the full financial test suite, which exercises all 170+
+  database-backed tests including our new one.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● All 6 new staleness tests pass, plus 160 other tests. The 3 failures are a
+  pre-existing environment issue — socket.io-client isn't installed, unrelated
+  to this change. Let me confirm.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● That's a pre-existing npm install gap, not caused by this fix. Let me sync
+  node_modules to confirm those tests pass too.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● All 16 pass, including every real-socket integration test that exercises
+  multi-tab, reconnect, and heartbeat-only re-tracking — confirming requirement
+  4 ("preserve multi-tab behavior") and the reconnect paths still work with the
+  new connection-identity logic. Let's run the complete suite once more to get a
+  clean final tally, then tear down the disposable DB.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Clean — only the intended files changed; package.json/lockfile untouched (the
+  socket.io-client install was --no-save, just fixing a local environment gap so
+  the existing socket-based test suites could run at all).
+
+  Checkpoint 1 stale-heartbeat fix — done, staged for your approval
+
+  What was wrong: presence was tracked only by role (USER/ASTROLOGER), with no
+  notion of which connection sent an event. A heartbeat sent moments before a
+  leave/disconnect could have its async role lookup resolve after the departure
+  was already applied, silently reviving a chat that should have stayed paused.
+
+  The fix — ConnectionIdentity (socket id + a synchronously-captured per-socket 
+  sequence number):
+  - backend/src/modules/chat/billing.ts: recordHeartbeat/recordDeparture now
+  take an optional conn: {id, seq}. A heartbeat from the same connection with a
+  seq no newer than the last applied event for it is rejected as stale. A
+  departure from a connection that's been superseded by a newer one is ignored.
+  A heartbeat from a different connection id always takes over (legitimate
+  reconnect). Calls without conn (direct test/legacy callers) are unaffected —
+  exact old behavior.
+  - backend/src/realtime/socketServer.ts: added nextConn(socket), which bumps a
+  per-socket counter synchronously at the instant the raw event arrives — before
+  any await — so true arrival order survives even when async resolution order
+  doesn't. Wired into chat:join, chat:heartbeat, chat:message, chat:leave, and
+  disconnecting.
+  - No schema changes, no change to settlement/authoritative billing math,
+  multi-tab departure logic (reportDepartureIfLast) untouched.
+
+  Tests added — backend/src/__tests__/financial/presenceStaleness.node-test.ts
+  (6 tests, simulated clock, direct ConnectionIdentity injection to
+  deterministically force the exact races):
+  1. Heartbeat in flight before chat:leave lands → rejected, chat stays paused.
+  2. Heartbeat racing a disconnect's departure → rejected.
+  3. Legitimate reconnect (new connection id, any seq) → always restores
+  presence.
+  4. Duplicate leave/disconnect on the same connection → idempotent, billed
+  once.
+  5. Departure from a superseded (old) connection → ignored, active session
+  untouched.
+  6. No billing accrues after a departure until a genuinely valid heartbeat
+  restores presence.
+
+  Multi-tab and reconnect behavior over real sockets is already covered by the
+  existing socketPresence.node-test.ts suite, which still passes unchanged.
+
+  Test results — full suite, real disposable PostgreSQL 17:
+  tests 176
+  pass  176
+  fail  0
+  This includes the SUPERADMIN-gated reconciliation endpoint (admin.route.ts →
+  requireMainAdmin), billing arithmetic at ₹7/min and other rates
+  (formula.node-test.ts), and every pre-existing financial/security/route suite.
+
+  Remaining limitations (same ones noted at Checkpoint 1, unchanged by this
+  fix): no explicit pause event, abrupt silent network loss still relies on the
+  10 s heartbeat-window rule, a page refresh still causes a brief pause/resume
+  flash, and presence is still in-memory on a single instance. None of these are
+  made worse or better by the staleness fix — it only closes the specific
+  ordering race you flagged.
+
+  Not deployed, Checkpoint 2 not started. Waiting on your approval before
+  either.
+
+✻ Baked for 14m 48s
+
+❯ /model                                                                        
+  ⎿  Set model to Fable 5 and saved as your default for new sessions
+
+❯ I have commit the changes                                                     
+  Now move and implement the next checkpoint                                    
+  see the file @audit.txt and @backend/new-feature.txt for next checkpoint or   
+  any other valid file if i miss any file.                                      
+
+● I'll locate the checkpoint definitions first.
+
+  Searched for 1 pattern, read 2 files, ran 4 shell commands (ctrl+o to expand)
+● Now let me survey the current code against the Checkpoint 2 item list to see
+  what's already done.
+
+  Searched for 1 pattern, read 1 file, ran 3 shell commands (ctrl+o to expand)
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(~\astro\avatar-astro33\backend\prisma\schema\chat.prisma)
+  ⎿  Added 3 lines
+      31    TIMEOUT
+      32    REJECTED
+      33    DISCONNECTED
+      34 +  /// The USER withdrew their own still-REQUESTED consultation 
+         +before the astrologer answered                                 
+      35 +  /// (approved additive value, decision 4). Nothing was reserv
+         +ed or billed — see cancelSession.                              
+      36 +  CANCELLED                                                    
+      37  }
+      38  
+      39  enum ChatSenderRole {
+
+● Update(~\astro\avatar-astro33\backend\prisma\schema\chat.prisma)
+  ⎿  Added 9 lines
+      121  
+      122    content String
+      123  
+      124 +  /// Client-generated idempotency key for exactly-once sends 
+          +over a flaky socket: a retry of the                           
+      125 +  /// same send carries the same id, and the unique index belo
+          +w makes the second insert fail so the                         
+      126 +  /// server returns the FIRST message instead of storing a du
+          +plicate. Nullable — clients that don't                        
+      127 +  /// send one (old clients, server-generated messages) are un
+          +affected; Postgres unique indexes                             
+      128 +  /// ignore NULLs, so any number of id-less messages coexist.
+          + Scoped to (sessionId, senderId): one                         
+      129 +  /// sender's ids can never collide with the other participan
+          +t's.                                                          
+      130 +  clientMessageId String? @map("client_message_id")           
+      131 +                                                              
+      132    createdAt DateTime  @default(now()) @map("created_at")
+      133    readAt    DateTime? @map("read_at")
+      134  
+      135 +  @@unique([sessionId, senderId, clientMessageId])            
+      136    @@index([sessionId, createdAt])
+      137    @@map("chat_messages")
+      138  }
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● The test DB has existing data from the earlier run; the unique index triggers
+  a data-loss prompt. It's disposable — recreate it fresh.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now the chat.service.ts changes:
+
+● Update(~\astro\avatar-astro33\backend\src\modules\chat\chat.service.ts)
+  ⎿  Added 1 line, removed 1 line
+      45    const session = await prisma.chatSession.findUnique({
+      46      where: { id: sessionId },
+      47      include: {
+      48 -      astrologerProfile: { select: { userId: true, displayName:
+         - true, profilePhotoUrl: true, slug: true } },                  
+      48 +      astrologerProfile: { select: { userId: true, displayName:
+         + true, profilePhotoUrl: true, slug: true, suspendedAt: true } }
+         +,                                                              
+      49        user: { select: { firstName: true, lastName: true, profil
+          eImage: true } },
+      50      },
+      51    });
+
+● Update(~\astro\avatar-astro33\backend\src\modules\chat\chat.service.ts)  ⎿  Added 1 line
+      66        userId: true,
+      67        pricePerMinute: true,
+      68        isPublished: true,
+      69 +      isOnline: true,                                          
+      70        suspendedAt: true,
+      71        displayName: true,
+      72        profilePhotoUrl: true,
+
+● Update(~\astro\avatar-astro33\backend\src\modules\chat\chat.service.ts)
+  ⎿  Added 2 lines, removed 1 line
+       93      const freeLimitSeconds = await resolveComplimentaryMaxSeco
+           nds(profile);
+       94      return {
+       95        type: "COMPLIMENTARY" as const,
+       96 -      canStart: true,                                         
+       96 +      canStart: Boolean(activeSession) || profile.isOnline,   
+       97 +      isOnline: profile.isOnline,                             
+       98        freeLimitSeconds,
+       99        ratePerMinutePaise: 0,
+      100        walletBalancePaise: null as number | null,
+
+● Update(~\astro\avatar-astro33\backend\src\modules\chat\chat.service.ts)
+  ⎿  Added 2 lines, removed 1 line
+      114    const minimumRequiredPaise = await minimumPaidBalanceRequire
+           d(userId, ratePerMinutePaise);
+      115    return {
+      116      type: "PAID" as const,
+      117 -    canStart: Boolean(activeSession) || availablePaise >= mini
+          -mumRequiredPaise,                                             
+      117 +    canStart: Boolean(activeSession) || (profile.isOnline && a
+          +vailablePaise >= minimumRequiredPaise),                       
+      118 +    isOnline: profile.isOnline,                               
+      119      freeLimitSeconds: null as number | null,
+      120      ratePerMinutePaise,
+      121      walletBalancePaise: wallet.balancePaise,
+
+● Now the startSession offline check and busy-conflict message, plus
+  cancelSession:
+
+● Update(~\astro\avatar-astro33\backend\src\modules\chat\chat.service.ts)
+  ⎿  Added 7 lines
+      142    if (existing) return existing;
+      143  
+      144    const profile = await requireAvailableProfile(astrologerProf
+           ileId);
+      145 +  // Online is a liveness gate, not an availability gate: an o
+          +ffline astrologer's profile stays                             
+      146 +  // browsable (requireAvailableProfile passes), but a NEW con
+          +sultation request against them would                          
+      147 +  // just sit until the acceptance timeout. isOnline is mainta
+          +ined by the socket layer (true while                          
+      148 +  // they hold at least one authenticated socket, with a short
+          + offline grace on disconnect).                                
+      149 +  if (!profile.isOnline) {                                    
+      150 +    throw new ApiError("This astrologer is currently offline. 
+          +Please try again when they are online.", STATUS_CODES.CONFLICT
+          +);                                                            
+      151 +  }                                                           
+      152  
+      153    let type: "PAID" | "COMPLIMENTARY";
+      154    let ratePerMinutePaise = 0;
+
+● Update(~\astro\avatar-astro33\backend\src\modules\chat\chat.service.ts)
+  ⎿  Added 36 lines
+      188      return session;
+      189    } catch (err) {
+      190      if ((err as { code?: string }).code === UNIQUE_VIOLATION) 
+           {
+      191 +      // Two partial unique indexes can fire here: one live se
+          +ssion per USER, one per ASTROLOGER.                           
+      192 +      // Which one tells the user something different — their 
+          +own duplicate vs. a busy astrologer.                          
+      193 +      const target = String((err as { meta?: { target?: unknow
+          +n } }).meta?.target ?? "");                                   
+      194 +      if (target.includes("astrologer")) {                    
+      195 +        throw new ApiError("This astrologer is currently in an
+          +other consultation. Please try again soon.", STATUS_CODES.CONF
+          +LICT);                                                        
+      196 +      }                                                       
+      197        throw new ApiError("You already have a pending or active
+            chat.", STATUS_CODES.CONFLICT);
+      198      }
+      199      throw err;
+      200    }
+      201  }
+      202  
+      203 +/**                                                           
+      204 + * The USER withdraws their own still-REQUESTED consultation (
+          +decision 4's CANCELLED reason). Nothing was                   
+      205 + * reserved or claimed at request time, so there is nothing to
+          + release — this is a pure status flip, guarded                
+      206 + * by `status = REQUESTED` exactly like rejectSession: it can 
+          +never cancel a session that was accepted,                     
+      207 + * rejected or timed out in the meantime. Cancelling a request
+          + that is ALREADY cancelled is an idempotent                   
+      208 + * no-op (the retry case); any other state is a clean 409.    
+      209 + */                                                           
+      210 +export async function cancelSession(sessionId: string, userId:
+          + string) {                                                    
+      211 +  const session = await prisma.chatSession.findUnique({ where:
+          + { id: sessionId }, select: { userId: true } });              
+      212 +  if (!session) throw new ApiError("Chat request not found", S
+          +TATUS_CODES.NOT_FOUND);                                       
+      213 +  if (session.userId !== userId) throw new ApiError("You do no
+          +t have access to this chat", STATUS_CODES.FORBIDDEN);         
+      214 +                                                              
+      215 +  const now = new Date();                                     
+      216 +  const result = await prisma.chatSession.updateMany({        
+      217 +    where: { id: sessionId, status: "REQUESTED" },            
+      218 +    data: { status: "ENDED", endedAt: now, endedReason: "CANCE
+          +LLED" },                                                      
+      219 +  });                                                         
+      220 +  if (result.count !== 1) {                                   
+      221 +    const current = await prisma.chatSession.findUniqueOrThrow
+          +({ where: { id: sessionId }, select: { status: true, endedReas
+          +on: true } });                                                
+      222 +    if (current.status === "ENDED" && current.endedReason === 
+          +"CANCELLED") {                                                
+      223 +      return prisma.chatSession.findUniqueOrThrow({ where: { i
+          +d: sessionId } }); // duplicate cancel: idempotent            
+      224 +    }                                                         
+      225 +    throw new ApiError("This request is no longer pending", ST
+          +ATUS_CODES.CONFLICT);                                         
+      226 +  }                                                           
+      227 +  billing.emitToRoom(billing.roomForSession(sessionId), "chat:
+          +ended", { sessionId, reason: "CANCELLED" });                  
+      228 +  const cancelled = await prisma.chatSession.findUniqueOrThrow
+          +({ where: { id: sessionId } });                               
+      229 +  billing.notifySessionCancelled(cancelled.astrologerProfileId
+          +, sessionId);                                                 
+      230 +  return cancelled;                                           
+      231 +}                                                             
+      232 +                                                              
+      233  /** Ownership never changes once a session exists, so it is sa
+           fe to check before (and outside) a transaction.
+      234   * The session's STATE is never trusted from here — it is re-c
+           hecked under a row lock. */
+      235  async function requireOwnedSession(sessionId: string, astrolog
+           erUserId: string) {
+
+● Update(~\astro\avatar-astro33\backend\src\modules\chat\chat.service.ts)
+  ⎿  Added 23 lines, removed 5 lines
+      344    return { sessionIds: sessions.map((s) => s.id), role };
+      345  }
+      346  
+      347 -export async function postMessage(sessionId: string, userId: s
+          -tring, content: string) {                                     
+      347 +export async function postMessage(sessionId: string, userId: s
+          +tring, content: string, clientMessageId?: string) {           
+      348    const { session, role } = await resolveActor(sessionId, user
+           Id);
+      349    if (session.status !== "ACTIVE") throw new ApiError("This ch
+           at has ended", STATUS_CODES.CONFLICT);
+      350  
+      351 +  // Auth is re-validated per send, not only at socket connect
+          +: an account deactivated/deleted —                            
+      352 +  // or an astrologer suspended — MID-chat still holds an auth
+          +enticated socket, and must not be                             
+      353 +  // able to keep participating through it.                   
+      354 +  const sender = await prisma.user.findFirst({ where: { id: us
+          +erId, isActive: true, isDeleted: false }, select: { id: true }
+          + });                                                          
+      355 +  if (!sender) throw new ApiError("Your account is no longer a
+          +ctive", STATUS_CODES.FORBIDDEN);                              
+      356 +  if (role === "ASTROLOGER" && session.astrologerProfile.suspe
+          +ndedAt) {                                                     
+      357 +    throw new ApiError("Your astrologer profile is suspended",
+          + STATUS_CODES.FORBIDDEN);                                     
+      358 +  }                                                           
+      359 +                                                              
+      360    const trimmed = content.trim().slice(0, MAX_MESSAGE_LENGTH);
+      361    if (!trimmed) throw new ApiError("Message cannot be empty", 
+           STATUS_CODES.BAD_REQUEST);
+      362  
+      354 -  const message = await prisma.chatMessage.create({           
+      355 -    data: { sessionId, senderRole: role, senderId: userId, con
+          -tent: trimmed },                                              
+      356 -  });                                                         
+      357 -  return message;                                             
+      363 +  try {                                                       
+      364 +    return await prisma.chatMessage.create({                  
+      365 +      data: { sessionId, senderRole: role, senderId: userId, c
+          +ontent: trimmed, clientMessageId: clientMessageId || null },  
+      366 +    });                                                       
+      367 +  } catch (err) {                                             
+      368 +    // A retried send with the same clientMessageId hits the (
+          +sessionId, senderId, clientMessageId)                         
+      369 +    // unique index: return the message the FIRST attempt stor
+          +ed — exactly-once from the client's view.                     
+      370 +    if ((err as { code?: string }).code === UNIQUE_VIOLATION &
+          +& clientMessageId) {                                          
+      371 +      const existing = await prisma.chatMessage.findFirst({ wh
+          +ere: { sessionId, senderId: userId, clientMessageId } });     
+      372 +      if (existing) return existing;                          
+      373 +    }                                                         
+      374 +    throw err;                                                
+      375 +  }                                                           
+      376  }
+      377  
+      378  export async function markRead(sessionId: string, userId: stri
+           ng) {
+
+● Update(~\astro\avatar-astro33\backend\src\modules\chat\chat.service.ts)
+  ⎿  Added 3 lines, removed 1 line
+      388    const { sessionIds } = await peerSessionIds(sessionId, userI
+           d);
+      389    const messages = await prisma.chatMessage.findMany({
+      390      where: { sessionId: { in: sessionIds } },
+      391 -    orderBy: { createdAt: "desc" },                           
+      391 +    // `id` is the tiebreaker: two messages created in the sam
+          +e millisecond (same createdAt) would                          
+      392 +    // otherwise come back in an unstable order, letting a pag
+          +e refresh reorder a conversation.                             
+      393 +    orderBy: [{ createdAt: "desc" }, { id: "desc" }],         
+      394      take,
+      395      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      396    });
+
+● Also fix the two conversation-list "latest message" lookups with the same
+  tiebreaker, and add notifySessionCancelled to billing.ts:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(~\astro\avatar-astro33\backend\src\modules\chat\chat.service.ts)
+  ⎿  Added 2 lines, removed 2 lines
+      408      orderBy: { updatedAt: "desc" },
+      409      include: {
+      410        astrologerProfile: { select: { id: true, displayName: tr
+           ue, profilePhotoUrl: true, slug: true } },
+      411 -      messages: { orderBy: { createdAt: "desc" }, take: 1 },  
+      411 +      messages: { orderBy: [{ createdAt: "desc" }, { id: "desc
+          +" }], take: 1 },                                              
+      412      },
+      413    });
+      414    // One row per astrologer, not one per ChatSession — a new p
+           aid consultation with the same
+     ...
+      438      orderBy: { updatedAt: "desc" },
+      439      include: {
+      440        user: { select: { id: true, firstName: true, lastName: t
+           rue, profileImage: true } },
+      441 -      messages: { orderBy: { createdAt: "desc" }, take: 1 },  
+      441 +      messages: { orderBy: [{ createdAt: "desc" }, { id: "desc
+          +" }], take: 1 },                                              
+      442      },
+      443    });
+      444    const unreadCounts = await prisma.chatMessage.groupBy({
+
+● Update(~\astro\avatar-astro33\backend\src\modules\chat\billing.ts)
+  ⎿  Added 5 lines
+      320    }
+      321  }
+      322  
+      323 +/** Tells the astrologer's dashboard a pending request was wit
+          +hdrawn by the user, so its popup/list clears. */              
+      324 +export function notifySessionCancelled(astrologerProfileId: st
+          +ring, sessionId: string): void {                              
+      325 +  emitToRoom(roomForAstrologer(astrologerProfileId), "chat:ses
+          +sion-cancelled", { sessionId });                              
+      326 +}                                                             
+      327 +                                                              
+      328  export function notifyNewSession(astrologerProfileId: string, 
+           session: { id: string; userId: string; requestedAt: Date; type
+           : string }): void {
+      329    emitToRoom(roomForAstrologer(astrologerProfileId), "chat:new
+           -session", {
+      330      sessionId: session.id,
+
+● The new offline gate will break existing tests whose astrologers default to
+  isOnline: false. Update the test factories:
+
+● Update(~\astro\avatar-astro33\backend\src\__tests__\financial\helpers.ts)
+  ⎿  Added 1 line, removed 1 line
+      71    const userId = await makeUser(ctx, `astro-${key}`);
+      72    const application = await ctx.prisma.astrologerApplication.cr
+          eate({ data: { userId, status: "APPROVED" } });
+      73    const profile = await ctx.prisma.astrologerProfile.create({
+      74 -    data: { applicationId: application.id, userId, displayName:
+         - `Astro ${key}`, slug: `${ctx.SLUG}${key}-${Date.now()}`, price
+         -PerMinute: rupeesPerMinute, isPublished: true },               
+      74 +    data: { applicationId: application.id, userId, displayName:
+         + `Astro ${key}`, slug: `${ctx.SLUG}${key}-${Date.now()}`, price
+         +PerMinute: rupeesPerMinute, isPublished: true, isOnline: true }
+         +,                                                              
+      75    });
+      76    return { profileId: profile.id, userId };
+      77  }
+
+  Searched for 1 pattern, ran 3 shell commands (ctrl+o to expand)
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(~\astro\avatar-astro33\backend\src\realtime\socketValidation.ts)
+  ⎿  Added 14 lines, removed 2 lines
+      48    return { sessionId: sessionIdOf(asRecord(payload)) };
+      49  }
+      50  
+      51 -export function parseMessagePayload(payload: unknown): { sessio
+         -nId: string; content: string } {                               
+      51 +// Client-generated message ids share the session-id shape: sho
+         +rt, URL-safe, no exotic characters.                            
+      52 +const CLIENT_MESSAGE_ID = /^[A-Za-z0-9_-]{1,64}$/;             
+      53 +                                                               
+      54 +export function parseMessagePayload(payload: unknown): { sessio
+         +nId: string; content: string; clientMessageId?: string } {     
+      55    const record = asRecord(payload);
+      56    const sessionId = sessionIdOf(record);
+      57    if (typeof record.content !== "string") throw new SocketPaylo
+          adError("Message content must be text");
+      55 -  return { sessionId, content: record.content };               
+      58 +  // Optional idempotency key for retries. Absent/undefined is 
+         +fine (old clients); anything present                           
+      59 +  // but malformed is rejected rather than silently ignored, so
+         + a client bug can't disable its own dedupe.                    
+      60 +  let clientMessageId: string | undefined;                     
+      61 +  if (record.clientMessageId !== undefined && record.clientMess
+         +ageId !== null) {                                              
+      62 +    if (typeof record.clientMessageId !== "string" || !CLIENT_M
+         +ESSAGE_ID.test(record.clientMessageId)) {                      
+      63 +      throw new SocketPayloadError("Invalid client message id")
+         +;                                                              
+      64 +    }                                                          
+      65 +    clientMessageId = record.clientMessageId;                  
+      66 +  }                                                            
+      67 +  return { sessionId, content: record.content, clientMessageId 
+         +};                                                             
+      68  }
+      69  
+      70  export function parseTypingPayload(payload: unknown): { session
+          Id: string; isTyping: boolean } {
+
+● Now the socketServer changes — rate limiting, buffer size, clientMessageId,
+  and a suspension hook:
+
+● Update(~\astro\avatar-astro33\backend\src\realtime\socketServer.ts)
+  ⎿  Added 35 lines
+      44  const offlineTimers = new Map<string, NodeJS.Timeout>();
+      45  const PRESENCE_GRACE_MS = 10_000;
+      46  
+      47 +// The biggest legitimate frame is a chat:message: ~2000 chars 
+         +of content plus ids and envelope.                              
+      48 +// 64 KiB leaves an order-of-magnitude margin while refusing me
+         +gabyte-scale garbage outright                                  
+      49 +// (Socket.IO closes the offending connection; others are unaff
+         +ected).                                                        
+      50 +const MAX_SOCKET_FRAME_BYTES = 64 * 1024;                      
+      51 +                                                               
+      52 +// ------------------------------------------------------------
+         +---------------------------------                              
+      53 +// Per-socket, per-event rate limiting — fixed 10s windows, cou
+         +nted BEFORE any validation or DB                               
+      54 +// work so a flood is rejected at the cheapest possible point. 
+         +Limits are per socket (per                                     
+      55 +// connection), deliberately generous for real clients: the hea
+         +rtbeat fires every 10s, typing                                 
+      56 +// updates are throttled client-side, and no human sends 20 mes
+         +sages in 10 seconds.                                           
+      57 +// ------------------------------------------------------------
+         +---------------------------------                              
+      58 +const RATE_WINDOW_MS = 10_000;                                 
+      59 +const RATE_LIMITS: Record<string, number> = {                  
+      60 +  "chat:message": 20,                                          
+      61 +  "chat:typing": 40,                                           
+      62 +  "chat:heartbeat": 20,                                        
+      63 +  "chat:join": 20,                                             
+      64 +  "chat:leave": 20,                                            
+      65 +  "chat:end": 10,                                              
+      66 +};                                                             
+      67 +const DEFAULT_RATE_LIMIT = 60;                                 
+      68 +const rateWindows = new WeakMap<Socket, Map<string, { start: nu
+         +mber; count: number }>>();                                     
+      69 +                                                               
+      70 +function overRateLimit(socket: Socket, event: string): boolean 
+         +{                                                              
+      71 +  let windows = rateWindows.get(socket);                       
+      72 +  if (!windows) rateWindows.set(socket, (windows = new Map()));
+      73 +  const now = Date.now();                                      
+      74 +  let w = windows.get(event);                                  
+      75 +  if (!w || now - w.start >= RATE_WINDOW_MS) {                 
+      76 +    windows.set(event, (w = { start: now, count: 0 }));        
+      77 +  }                                                            
+      78 +  w.count += 1;                                                
+      79 +  return w.count > (RATE_LIMITS[event] ?? DEFAULT_RATE_LIMIT); 
+      80 +}                                                              
+      81 +                                                               
+      82  async function setAstrologerOnline(astrologerProfileId: string,
+           isOnline: boolean) {
+      83    await prisma.astrologerProfile.update({
+      84      where: { id: astrologerProfileId },
+
+● Update(~\astro\avatar-astro33\backend\src\realtime\socketServer.ts)  ⎿  Added 1 line
+      118  ): void {
+      119    socket.on(event, (...args: unknown[]) => {
+      120      const { payload, ack } = splitArgs(args);
+      121 +    if (overRateLimit(socket, event)) return ack("Too many req
+          +uests. Please slow down.", { code: "RATE_LIMITED" });         
+      122      const userId = (socket.data as Partial<SocketData> | undef
+           ined)?.userId;
+      123      const conn = nextConn(socket); // captured now, synchronou
+           sly, so later async work can't reorder it
+      124      const run = async () => {
+
+● Update(~\astro\avatar-astro33\backend\src\realtime\socketServer.ts)
+  ⎿  Added 2 lines, removed 2 lines
+      200    });
+      201  
+      202    handle(socket, "chat:message", async (payload, ack, userId, 
+           conn) => {
+      203 -    const { sessionId, content } = parseMessagePayload(payload
+          -);                                                            
+      204 -    const message = await chatService.postMessage(sessionId, u
+          -serId, content.slice(0, MAX_MESSAGE_LENGTH));                 
+      203 +    const { sessionId, content, clientMessageId } = parseMessa
+          +gePayload(payload);                                           
+      204 +    const message = await chatService.postMessage(sessionId, u
+          +serId, content.slice(0, MAX_MESSAGE_LENGTH), clientMessageId);
+      205      recordHeartbeat(sessionId, message.senderRole, undefined, 
+           conn); // sending a message is itself proof of presence
+      206      emitToRoom(roomForSession(sessionId), "chat:message", mess
+           age);
+      207      ack(undefined, message);
+
+● Update(~\astro\avatar-astro33\backend\src\realtime\socketServer.ts)
+  ⎿  Added 17 lines
+      232    socket.on("error", (err) => logError("[socket] socket error:
+           ", err));
+      233  }
+      234  
+      235 +// Kept for suspension enforcement: disconnectUserSockets need
+          +s the live server instance.                                   
+      236 +let ioRef: SocketIOServer | null = null;                      
+      237 +                                                              
+      238 +/**                                                           
+      239 + * Forcibly closes every socket belonging to `userId` — called
+          + when an account is deactivated or an                         
+      240 + * astrologer suspended, so a revoked identity cannot keep an 
+          +already-authenticated connection alive.                       
+      241 + * Each socket's normal "disconnecting" path still runs, so ch
+          +at presence/billing sees a clean departure.                   
+      242 + */                                                           
+      243 +export function disconnectUserSockets(userId: string): void { 
+      244 +  if (!ioRef) return;                                         
+      245 +  for (const [, socket] of ioRef.of("/").sockets) {           
+      246 +    if ((socket.data as Partial<SocketData> | undefined)?.user
+          +Id === userId) socket.disconnect(true);                       
+      247 +  }                                                           
+      248 +}                                                             
+      249 +                                                              
+      250  export function initSocketServer(httpServer: HttpServer): Sock
+           etIOServer {
+      251    const io = new SocketIOServer(httpServer, {
+      252      cors: {
+     ...
+      256        },
+      257        credentials: true,
+      258      },
+      259 +    maxHttpBufferSize: MAX_SOCKET_FRAME_BYTES,                
+      260    });
+      261  
+      262 +  ioRef = io;                                                 
+      263    attachIo(io);
+      264  
+      265    io.use(async (socket: Socket, next) => {
+
+  Read 1 file (ctrl+o to expand)
+
+● Now add suspension enforcement. First a helper in chat.service.ts, then wire
+  it into suspendAstrologer:
+
+● Update(~\astro\avatar-astro33\backend\src\modules\chat\chat.service.ts)
+  ⎿  Added 28 lines
+      320    return prisma.chatSession.findUniqueOrThrow({ where: { id: s
+           essionId } });
+      321  }
+      322  
+      323 +/**                                                           
+      324 + * Suspension-mid-chat enforcement: terminates every live cons
+          +ultation of a just-suspended astrologer.                      
+      325 + * Still-REQUESTED sessions are rejected (nothing was reserved
+          +, pure flip); ACTIVE/PAUSED ones go through                   
+      326 + * the normal settlement path (ASTROLOGER_ENDED), so the user 
+          +is charged exactly for the time delivered and                 
+      327 + * the hold is released. One failing session must not strand t
+          +he rest, so failures are logged per session.                  
+      328 + */                                                           
+      329 +export async function endLiveSessionsForAstrologer(astrologerP
+          +rofileId: string): Promise<void> {                            
+      330 +  const live = await prisma.chatSession.findMany({            
+      331 +    where: { astrologerProfileId, status: { in: PENDING_OR_LIV
+          +E_STATUSES } },                                               
+      332 +    select: { id: true, status: true },                       
+      333 +  });                                                         
+      334 +  for (const s of live) {                                     
+      335 +    try {                                                     
+      336 +      if (s.status === "REQUESTED") {                         
+      337 +        const flipped = await prisma.chatSession.updateMany({ 
+      338 +          where: { id: s.id, status: "REQUESTED" },           
+      339 +          data: { status: "ENDED", endedAt: new Date(), endedR
+          +eason: "REJECTED" },                                          
+      340 +        });                                                   
+      341 +        if (flipped.count === 1) billing.emitToRoom(billing.ro
+          +omForSession(s.id), "chat:ended", { sessionId: s.id, reason: "
+          +REJECTED" });                                                 
+      342 +      } else {                                                
+      343 +        await billing.endSession(s.id, "ASTROLOGER_ENDED");   
+      344 +      }                                                       
+      345 +    } catch (err) {                                           
+      346 +      console.error(`[chat.service] failed to end session ${s.
+          +id} on suspension:`, err);                                    
+      347 +    }                                                         
+      348 +  }                                                           
+      349 +}                                                             
+      350 +                                                              
+      351  export async function getActorRole(sessionId: string, userId: 
+           string): Promise<ChatSenderRole> {
+      352    const { role } = await resolveActor(sessionId, userId);
+      353    return role;
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(~\astro\avatar-astro33\backend\src\modules\admin\astrologers\astrologer
+        Admin.service.ts)
+  ⎿  Added 2 lines
+      11  import { SCANNING_SETTING_KEY } from "@/services/malwareScan.js
+          ";
+      12  import { sendAstrologerStatusEmail, type AstrologerNotification
+          Status } from "@/utils/mailer.js";
+      13  import { generateUniqueAstrologerSlug } from "@/utils/slug.js";
+      14 +import { endLiveSessionsForAstrologer } from "@/modules/chat/ch
+         +at.service.js";                                                
+      15 +import { disconnectUserSockets } from "@/realtime/socketServer.
+         +js";                                                           
+      16  
+      17  const ASTROLOGER_ROLE_NAME = "ASTROLOGER";
+      18  
+
+● Update(~\astro\avatar-astro33\backend\src\modules\admin\astrologers\astrologer
+        Admin.service.ts)
+  ⎿  Added 13 lines, removed 2 lines
+      362  
+      363      await tx.astrologerApplicationStatusHistory.create({ data:
+            { applicationId, fromStatus: "APPROVED", toStatus: "SUSPENDED
+           ", actorUserId: (req as any).user!.id, reason } });
+      364      await writeAudit(req, { action: "astrologer.application.su
+           spended", entityType: "AstrologerApplication", entityId: appli
+           cationId, summary: `Astrologer suspended: ${reason}` }, tx);
+      365 -    return { alreadySuspended: false as const, userId: app.use
+          -rId, email: app.email };                                      
+      365 +    const profile = await tx.astrologerProfile.findUnique({ wh
+          +ere: { applicationId }, select: { id: true } });              
+      366 +    return { alreadySuspended: false as const, userId: app.use
+          +rId, email: app.email, profileId: profile?.id ?? null };      
+      367    });
+      367 -  if (!result.alreadySuspended) notify(result.userId, result.e
+          -mail, "SUSPENDED", reason);                                   
+      368 +  if (!result.alreadySuspended) {                             
+      369 +    // Suspension must bite mid-consultation, not just at the 
+          +next login: any live chats are settled                        
+      370 +    // and ended (the user pays only for time delivered), and 
+          +the astrologer's open sockets are closed                      
+      371 +    // so the already-authenticated connection cannot keep act
+          +ing. Both AFTER the commit — ending a                         
+      372 +    // session settles wallet money and must never be rolled b
+          +ack with the suspension transaction.                          
+      373 +    if (result.profileId) {                                   
+      374 +      await endLiveSessionsForAstrologer(result.profileId).cat
+          +ch((err) => console.error("[admin] failed to end live sessions
+          + on suspension:", err));                                      
+      375 +    }                                                         
+      376 +    disconnectUserSockets(result.userId);                     
+      377 +    notify(result.userId, result.email, "SUSPENDED", reason); 
+      378 +  }                                                           
+      379    return result;
+      380  }
+      381  
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(~\astro\avatar-astro33\backend\src\modules\chat\chat.route.ts)
+  ⎿  Added 8 lines
+      57    );
+      58  
+      59    router.post(
+      60 +    "/sessions/:id/cancel",                                    
+      61 +    wrap(async (req, res) => {                                 
+      62 +      const session = await svc.cancelSession(req.params.id, re
+         +q.user!.id);                                                   
+      63 +      sendResponse(res, true, session, "Chat request cancelled"
+         +);                                                             
+      64 +    }),                                                        
+      65 +  );                                                           
+      66 +                                                               
+      67 +  router.post(                                                 
+      68      "/sessions/:id/end",
+      69      wrap(async (req, res) => {
+      70        const session = await svc.endSessionByActor(req.params.id
+          , req.user!.id);
+
+● Now document the single-instance rule in billing.ts and index.ts:
+
+● Update(~\astro\avatar-astro33\backend\src\modules\chat\billing.ts)
+  ⎿  Added 8 lines
+      369  }
+      370  
+      371  /**
+      372 + * SINGLE-INSTANCE RULE (decided for Checkpoint 2, in place of
+          + an advisory-lock leader): this process                       
+      373 + * assumes it is the ONLY backend instance. Presence is in-mem
+          +ory, the billing tick and the expiry sweep                    
+      374 + * are plain intervals, and resumeAllActiveSessions pauses eve
+          +ry ACTIVE session at boot on the premise                      
+      375 + * that no other process could have been billing it. Running t
+          +wo instances would make a fresh instance's                    
+      376 + * boot pause sessions a healthy sibling is actively billing, 
+          +and split presence across processes.                          
+      377 + * Scaling beyond one instance therefore requires moving prese
+          +nce to a shared store (e.g. Redis) and                        
+      378 + * electing a single scheduler (pg advisory lock) FIRST — do n
+          +ot simply raise the instance count.                           
+      379 + *                                                            
+      380   * Called once at server startup. Every session the database t
+           hinks is ACTIVE survived an
+      381   * unknown amount of downtime — treated exactly like a disconn
+           ect (paused, not blindly resumed),
+      382   * because there is no way to know whether anyone was actually
+            present during the outage.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(~\astro\avatar-astro33\backend\src\index.ts)
+  ⎿  Added 3 lines
+      462  // Start server
+      463  function startServer() {
+      464    startDarshanRefreshLoop();
+      465 +  // SINGLE-INSTANCE RULE: chat presence, billing ticks and th
+          +e expiry sweep assume exactly ONE                             
+      466 +  // backend process (see resumeAllActiveSessions in modules/c
+          +hat/billing.ts). Do not scale this                            
+      467 +  // service horizontally without first moving presence to a s
+          +hared store and electing one scheduler.                       
+      468    resumeAllActiveSessions().catch((err) => console.error("[cha
+           t.billing] failed to resume active sessions:", err));
+      469  
+      470    httpServer.listen(PORT, () => {
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now the regression tests. First check what run-tests.mjs includes:
+  Read 1 file (ctrl+o to expand)
+
+● Two test suites: one DB-level lifecycle suite, one real-socket suite. First a
+  small refactor so tests can attach their own Socket.IO server to
+  disconnectUserSockets:
+
+● Update(~\astro\avatar-astro33\backend\src\realtime\socketServer.ts)
+  ⎿  Added 7 lines
+      235  // Kept for suspension enforcement: disconnectUserSockets need
+           s the live server instance.
+      236  let ioRef: SocketIOServer | null = null;
+      237  
+      238 +/** Registers the live Socket.IO server with this module AND w
+          +ith billing. Called by initSocketServer;                      
+      239 + * exported so socket-level tests that build their own bare Se
+          +rver can wire it up the same way. */                          
+      240 +export function attachSocketServer(io: SocketIOServer): void {
+      241 +  ioRef = io;                                                 
+      242 +  attachIo(io);                                               
+      243 +}                                                             
+      244 +                                                              
+      245  /**
+      246   * Forcibly closes every socket belonging to `userId` — called
+            when an account is deactivated or an
+      247   * astrologer suspended, so a revoked identity cannot keep an 
+           already-authenticated connection alive.
+
+● Update(~\astro\avatar-astro33\backend\src\realtime\socketServer.ts)
+  ⎿  Added 1 line, removed 2 lines
+      266      maxHttpBufferSize: MAX_SOCKET_FRAME_BYTES,
+      267    });
+      268  
+      269 -  ioRef = io;                                                 
+      270 -  attachIo(io);                                               
+      269 +  attachSocketServer(io);                                     
+      270  
+      271    io.use(async (socket: Socket, next) => {
+      272      try {
+
+● Now the DB-level lifecycle suite:
+
+● Write(~\astro\avatar-astro33\backend\src\__tests__\financial\chatLifecycle.nod
+       e-test.ts)
+  ⎿  Wrote 212 lines to
+     ..\backend\src\__tests__\financial\chatLifecycle.node-test.ts
+       1 // Run with: npm run test:db:run -- src/__tests__/financial/chat
+       2 //
+       3 // Checkpoint 2 — chat lifecycle: the CANCELLED end reason (user
+       4 // consultation), the offline/busy gates on starting a chat, sus
+       5 // per-send auth re-validation, clientMessageId exactly-once sen
+         ds, and deterministic message order.
+       7 import assert from "node:assert/strict";
+       8 import {
+         , activate, at, runTicks,
+         o,
+     … +278 lines (ctrl+o to expand)
+
+● Now the real-socket suite (rate limiting, clientMessageId over the wire,
+  forced disconnect):
+
+● Write(~\astro\avatar-astro33\backend\src\__tests__\financial\socketLifecycle.n
+       ode-test.ts)
+  ⎿  Wrote 118 lines to
+     ..\backend\src\__tests__\financial\socketLifecycle.node-test.ts
+       1 // Run with: npm run test:db:run -- src/__tests__/financial/sock
+       2 //
+       3 // Checkpoint 2 — socket hardening behaviours that need a REAL S
+       4 // rate limiting (typed RATE_LIMITED acks, per-connection isolat
+         ion), the clientMessageId
+         pension enforcement).
+       6 import { test, before, after } from "node:test";
+       8 import { createServer, type Server as HttpServer } from "node:ht
+         tp";
+      10 import { Server as SocketIOServer } from "socket.io";
+     … +154 lines (ctrl+o to expand)
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Socket.IO serializes undefined to null over the wire — success acks arrive
+  with err === null. Fix the assertions:
+
+  Ran 4 shell commands (ctrl+o to expand)
+
+● Prisma puts the index name in the message, not always in meta.target. Broaden
+  the check:
+
+● Update(~\astro\avatar-astro33\backend\src\modules\chat\chat.service.ts)
+  ⎿  Added 5 lines, removed 2 lines
+      190      if ((err as { code?: string }).code === UNIQUE_VIOLATION) 
+           {
+      191        // Two partial unique indexes can fire here: one live se
+           ssion per USER, one per ASTROLOGER.
+      192        // Which one tells the user something different — their 
+           own duplicate vs. a busy astrologer.
+      193 -      const target = String((err as { meta?: { target?: unknow
+          -n } }).meta?.target ?? "");                                   
+      194 -      if (target.includes("astrologer")) {                    
+      193 +      // The raw-SQL partial indexes aren't in the Prisma sche
+          +ma, so the index name can surface in                          
+      194 +      // either meta.target or the driver message depending on
+          + version — check both.                                        
+      195 +      const e = err as { meta?: { target?: unknown }; message?
+          +: string };                                                   
+      196 +      const target = `${String(e.meta?.target ?? "")} ${e.mess
+          +age ?? ""}`;                                                  
+      197 +      if (target.includes("per_astrologer")) {                
+      198          throw new ApiError("This astrologer is currently in an
+           other consultation. Please try again soon.", STATUS_CODES.CONF
+           LICT);
+      199        }
+      200        throw new ApiError("You already have a pending or active
+            chat.", STATUS_CODES.CONFLICT);
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● All 12 new tests pass. Now the full suite to verify nothing regressed
+  (especially the offline gate against existing route suites and the verify
+  script against the schema change):
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● The new clientMessageId: undefined key breaks a strict-deep-equal in an
+  existing test. Only include the key when present:
+
+● Update(~\astro\avatar-astro33\backend\src\realtime\socketValidation.ts)
+  ⎿  Added 2 lines, removed 3 lines
+      57    if (typeof record.content !== "string") throw new SocketPaylo
+          adError("Message content must be text");
+      58    // Optional idempotency key for retries. Absent/undefined is 
+          fine (old clients); anything present
+      59    // but malformed is rejected rather than silently ignored, so
+           a client bug can't disable its own dedupe.
+      60 -  let clientMessageId: string | undefined;                     
+      60    if (record.clientMessageId !== undefined && record.clientMess
+          ageId !== null) {
+      61      if (typeof record.clientMessageId !== "string" || !CLIENT_M
+          ESSAGE_ID.test(record.clientMessageId)) {
+      62        throw new SocketPayloadError("Invalid client message id")
+          ;
+      63      }
+      65 -    clientMessageId = record.clientMessageId;                  
+      64 +    return { sessionId, content: record.content, clientMessageI
+         +d: record.clientMessageId };                                   
+      65    }
+      67 -  return { sessionId, content: record.content, clientMessageId 
+         -};                                                             
+      66 +  return { sessionId, content: record.content };               
+      67  }
+      68  
+      69  export function parseTypingPayload(payload: unknown): { session
+          Id: string; isTyping: boolean } {
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● All 188 tests pass. Final type-check and git status:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Checkpoint 2 — chat lifecycle and Socket.IO security: implemented, 188/188 
+  tests green
+
+  Most of the Checkpoint 2 list was already delivered during Checkpoint 1
+  (payload validation, typed ack codes, graceful shutdown, status-guarded atomic
+  accept/reject/end, DB-enforced concurrent-session prevention, authenticated
+  rooms, multi-tab, restart recovery). I implemented the remaining items:
+
+  Schema (prisma/schema/chat.prisma, additive only — pushed to the disposable 
+  test DB only; production needs your migration approval):
+  - CANCELLED added to ChatEndReason (your approved decision 4).
+  - ChatMessage.clientMessageId (nullable) with a unique index on (sessionId, 
+  senderId, clientMessageId).
+
+  Lifecycle (chat.service.ts, chat.route.ts, billing.ts):
+  - cancelSession + POST /sessions/:id/cancel: a user withdraws their own
+  still-REQUESTED consultation. Status-guarded like reject — in a concurrent
+  cancel/accept race exactly one wins (test-proven); duplicate cancel is
+  idempotent; the astrologer's dashboard gets a chat:session-cancelled event.
+  - Offline gate: startSession refuses an offline astrologer with a clear
+  message; getEligibility now reports isOnline and canStart: false. Busy
+  astrologer (already DB-enforced) now returns "currently in another
+  consultation" instead of the misleading "you already have a pending chat".
+  - Message ordering tiebreaker: all message reads order by (createdAt, id) so
+  same-millisecond messages never reorder between reads.
+
+  Socket security (socketServer.ts, socketValidation.ts):
+  - Explicit maxHttpBufferSize: 64 KiB (largest legitimate frame is a ~2000-char
+  message).
+  - Per-socket, per-event rate limiting in fixed 10s windows (20 messages, 40
+  typing, 20 heartbeats/joins, 10 ends), rejected with the typed RATE_LIMITED
+  ack before any validation or DB work. Per-connection buckets — one tab's flood
+  can't throttle another tab.
+  - chat:message accepts an optional clientMessageId; a retry of an un-acked
+  send returns the identical stored message (exactly-once), malformed ids are
+  rejected as BAD_PAYLOAD. Backward compatible — id-less clients are unaffected.
+  - Auth re-validation per send: a deactivated account or suspended astrologer
+  can no longer post through an already-authenticated socket.
+
+  Suspension mid-chat (astrologerAdmin.service.ts): after the suspension
+  transaction commits, the astrologer's live chats are settled through the
+  confirmed instant and ended ASTROLOGER_ENDED (user pays only for delivered
+  time, hold released), pending requests to them are REJECTED, and
+  disconnectUserSockets force-closes their sockets — which runs the normal
+  departure path, so billing pauses cleanly.
+
+  Scheduler rule: documented the single-instance rule in billing.ts and index.ts
+  (the audit's approved alternative to an advisory-lock leader) — scaling
+  horizontally requires shared presence plus leader election first.
+
+  Tests: 12 new tests in chatLifecycle.node-test.ts (cancel flows and race,
+  offline/busy gates, suspension mid-chat with exact settlement, auth
+  re-validation, dedupe semantics, ordering) and socketLifecycle.node-test.ts
+  (real sockets: flood → typed RATE_LIMITED with per-connection isolation,
+  retry-over-the-wire dedupe, forced disconnect). Full run: 188 tests, 0 
+  failures, TypeScript clean.
+
+  Remaining blockers / notes for you:
+  1. The schema change (enum value + column + unique index) is applied only to
+  the test database. Applying to production (Neon, via prisma db push or SQL)
+  needs your approval; both changes are additive and safe for existing rows.
+  2. test:db:verify will report drift against production until that's applied —
+  expected.
+  3. Frontend follow-ups belong to Checkpoint 4: sending clientMessageId on
+  retries, a cancel button on the request screen, and handling
+  RATE_LIMITED/chat:session-cancelled events.
+
+  Not committed, not deployed, Checkpoint 3 not started — awaiting your review.
+✻ Cooked for 17m 14s
+
+❯ tell me how to review your changes properly ?? Like how and where do i test?  
+  ⎿  ⧉ Selected 2 lines from backend\src\index.ts in Neovim
+
+● Here's a practical review path, ordered from cheapest to most thorough.
+
+  1. Read the diff in this order (~20 min)
+
+  cd C:\Users\USER\astro\avatar-astro33
+  git diff backend/prisma/schema/chat.prisma        # the only schema change — 
+  smallest, highest stakes
+  git diff backend/src/modules/chat/chat.service.ts # cancel, offline gate, 
+  re-validation, dedupe
+  git diff backend/src/realtime/socketServer.ts     # rate limits, buffer size, 
+  forced disconnect
+  git diff backend/src/realtime/socketValidation.ts # clientMessageId parsing
+  git diff backend/src/modules/admin/astrologers/astrologerAdmin.service.ts  # 
+  suspension hook
+  git diff backend/src/modules/chat/chat.route.ts
+  backend/src/modules/chat/billing.ts backend/src/index.ts
+
+  Things worth scrutinizing as you read:
+  - Schema: both changes are additive (new enum value, new nullable column +
+  unique index). Confirm you're comfortable that the unique index is scoped to
+  (sessionId, senderId, clientMessageId) — NULLs are ignored by Postgres, so old
+  clients are unaffected.
+  - cancelSession: the guard is updateMany({ where: { status: "REQUESTED" } }) —
+  same pattern as rejectSession. Convince yourself there's no path where a
+  cancel lands on an ACTIVE session.
+  - Suspension hook: session-ending and socket-disconnect run after the
+  suspension transaction commits, deliberately — money settlement must never
+  roll back with it. Check you agree with that ordering.
+  - Rate limits (top of socketServer.ts): the numbers (20 msgs/10s etc.) are my
+  judgment call — adjust if your product expects different traffic.
+
+  2. Run the automated suite (~5 min, this is the main evidence)
+
+  Needs Docker running. Everything hits a disposable local Postgres 17 — it
+  physically cannot touch Neon/Render (URL allowlist in
+  scripts/test-db/config.mjs).
+
+  cd backend
+  npm run test:db:up      # starts postgres:17-alpine on 127.0.0.1:54329
+  npm run test:db:init    # prisma db push + custom SQL objects
+  npm run test:db:run     # full suite — expect: 188 tests, 0 fail
+  npm run test:db:down    # when done
+
+  To run just the new Checkpoint 2 suites:
+
+  npm run test:db:run -- src/__tests__/financial/chatLifecycle.node-test.ts
+  src/__tests__/financial/socketLifecycle.node-test.ts
+
+  Then open those two test files and read the test names — they're the
+  acceptance criteria. If a behavior you care about isn't pinned there, tell me
+  and I'll add a test for it.
+
+  3. Manual smoke test in the real app (~15 min)
+
+  Run the backend and frontend locally against your dev database. You need two 
+  browser windows — one logged in as a customer, one as an astrologer (use a
+  normal window + an incognito window so sessions don't collide).
+
+  What to try: Customer requests a chat while the astrologer window is closed
+  What you should see: Request refused: "astrologer is currently offline"
+  ────────────────────────────────────────
+  What to try: Astrologer opens dashboard, customer requests, then customer
+  calls
+  POST /api/chat/sessions/:id/cancel (frontend has no button yet — use the
+  browser console or Postman with the user's token)
+  What you should see: Session becomes ENDED / CANCELLED; astrologer gets
+  chat:session-cancelled
+  ────────────────────────────────────────
+  What to try: Second customer requests the same astrologer mid-consultation
+  What you should see: "currently in another consultation"
+  ────────────────────────────────────────
+  What to try: Paste-spam messages as fast as you can
+  What you should see: After ~20 in 10s, sends fail with RATE_LIMITED; chat
+  recovers after 10s
+  ────────────────────────────────────────
+  What to try: Suspend the astrologer from the superadmin panel mid-chat
+  What you should see: Chat ends immediately as ASTROLOGER_ENDED, billed only
+  elapsed time; astrologer's socket drops
+
+  One caveat: your local dev database won't have the new column/enum until you
+  run npx prisma db push against it (that's your local DB, not production —
+  still fine to do without ceremony). Production application stays blocked on
+  your approval.
+
+  4. What NOT to trust yet
+
+  - npm run test:db:verify will report drift against production until the schema
+  change is applied there — expected, not a bug.
+  - The frontend doesn't yet send clientMessageId or expose a cancel button —
+  those are Checkpoint 4 work, so you can only exercise those paths via the
+  API/socket directly (the automated socket tests already do).
+
+  If you want a second opinion beyond your own read, /code-review on this
+  working tree (or push a branch and /code-review ultra <PR#> for the deep
+  multi-agent version) is the right tool.
+
+✻ Churned for 26s
+
+❯ ok done with review, move to next step for now                                
+  ⎿  ⧉ Selected 2 lines from backend\src\index.ts in Neovim
+
+● Next is Checkpoint 3 — payment safeguards, privacy and reliability. Razorpay
+  itself stays blocked until you approve it and provide keys, so I'll implement
+  the reliability items now and end with the Razorpay plan for your approval.
+  Let me survey what already exists.
+
+  Ran 6 shell commands (ctrl+o to expand)
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● No JSON routes need big bodies (uploads use multer/multipart). Install helmet
+  and Sentry:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(~\astro\avatar-astro33\backend\src\index.ts)
+  ⎿  Added 1 line
+      1  import express, { Request, Response, NextFunction } from "expres
+         s";
+      2  import { createServer } from "http";
+      3  import cors from "cors";
+      4 +import helmet from "helmet";                                    
+      5  import dotenv from "dotenv";
+      6  import interpretationRoutes from "./routes/interpretationRoutes.
+         js";
+      7  import compatibilityRoutes from "./routes/compatibilityRoutes.js
+         ";
+
+● Update(~\astro\avatar-astro33\backend\src\index.ts)
+  ⎿  Added 6 lines
+      66  app.set("trust proxy", 1);
+      67  const PORT = process.env.PORT || 5001;
+      68  
+      69 +// Security headers. This is a JSON API consumed by a separate 
+         +frontend origin — CSP and the                                  
+      70 +// cross-origin embedding policies are meaningless here and wou
+         +ld only break the Socket.IO                                    
+      71 +// polling fallback, so they're disabled; everything else (nosn
+         +iff, frame denial, HSTS behind                                 
+      72 +// the TLS proxy, referrer policy, etc.) applies.              
+      73 +app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbed
+         +derPolicy: false, crossOriginResourcePolicy: false }));        
+      74 +                                                               
+      75  // Middleware — origin allow-list lives in utils/corsOrigins.ts
+           (shared with Socket.IO's CORS config).
+      76  app.use(
+      77    cors({
+
+● Update(~\astro\avatar-astro33\backend\src\index.ts)
+  ⎿  Added 6 lines, removed 2 lines
+       91  // Mounted before the global 20mb body parser: it applies its 
+           own 250kb limit.
+       92  app.use("/api/ai", ...feature("ai-chat"), aiProxyRoutes);
+       93  app.use("/api/tarot", ...feature("tarot"), tarotRoutes);
+       94 -app.use(express.json({ limit: "20mb" }));                     
+       95 -app.use(express.urlencoded({ extended: true, limit: "20mb" }))
+          -;                                                             
+       94 +// 200kb covers every JSON body this API legitimately receives
+          + (the largest are astrology form                              
+       95 +// payloads of a few kb; file uploads go through multer as mul
+          +tipart and are unaffected). The old                           
+       96 +// global 20mb limit was a request-flooding surface. Routes ne
+          +eding more set their own parser                               
+       97 +// BEFORE this line, like /api/ai's 250kb above.              
+       98 +app.use(express.json({ limit: "200kb" }));                    
+       99 +app.use(express.urlencoded({ extended: true, limit: "200kb" })
+          +);                                                            
+      100  
+      101  // Health check
+      102  app.get("/api/health", (_req: Request, res: Response) => {
+● Now gate dev CORS origins on NODE_ENV:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Write(~\astro\avatar-astro33\backend\src\utils\corsOrigins.ts)
+  ⎿  Added 18 lines, removed 11 lines
+       1  // Shared by Express's CORS config (index.ts) and Socket.IO's C
+          ORS config
+       2  // (realtime/socketServer.ts) — one allow-list, not two, so a b
+          rowser that's allowed to
+       3  // call the REST API is also allowed to open a WebSocket.
+       4 -const EXPLICIT_ALLOWED_ORIGINS = [                             
+       4 +                                                               
+       5 +// Origins allowed in EVERY environment: the deployed frontend,
+         + plus CORS_ORIGIN from env.                                    
+       6 +const PRODUCTION_ALLOWED_ORIGINS = ["https://avatar-astro.verce
+         +l.app"];                                                       
+       7 +                                                               
+       8 +// Development conveniences — local Vite/Expo ports and LAN IPs
+         + (192.168.x.x / 10.x.x.x /                                     
+       9 +// 172.16-31.x.x) so phones on the same WiFi can hit a locally-
+         +running backend. These are                                     
+      10 +// ONLY honoured outside production: a deployed API must not ac
+         +cept credentialed requests                                     
+      11 +// from any attacker-chosen localhost/LAN origin.              
+      12 +const DEV_ALLOWED_ORIGINS = [                                  
+      13    "http://localhost:5173",
+      14    "http://127.0.0.1:5173",
+      15    "http://localhost:3000",
+      16    "http://127.0.0.1:3000",
+      17    "http://localhost:8081",
+      18    "http://192.168.1.126:8081",
+      11 -  "https://avatar-astro.vercel.app",                           
+      19  ];
+      13 -                                                               
+      14 -// This project's actual Vite dev port (see frontend/vite.confi
+         -g.ts) — kept in addition to                                    
+      15 -// the explicit list above since that's what's really running. 
+         -Also allows LAN IPs                                            
+      16 -// (192.168.x.x / 10.x.x.x / 172.16-31.x.x) so phones and other
+         - devices on the same WiFi                                      
+      17 -// can hit a locally-running backend during dev.               
+      20  const LOCAL_DEV_ORIGIN_REGEX =
+      21    /^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d{1,3}\.\d{1,
+          3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,
+          3}\.\d{1,3})(:\d+)?$/;
+      22  
+      21 -// Optional production origin, set via env — unrelated to local
+         - dev, unchanged.                                               
+      23 +// Optional extra production origin, set via env.              
+      24  const PRODUCTION_ORIGIN = process.env.CORS_ORIGIN;
+      25  
+      26 +const isProduction = () => process.env.NODE_ENV === "production
+         +";                                                             
+      27 +                                                               
+      28  export function isOriginAllowed(origin: string | undefined): bo
+          olean {
+      25 -  if (!origin) return true;                                    
+      26 -  if (EXPLICIT_ALLOWED_ORIGINS.includes(origin)) return true;  
+      27 -  if (LOCAL_DEV_ORIGIN_REGEX.test(origin)) return true;        
+      29 +  if (!origin) return true; // non-browser clients (curl, serve
+         +r-to-server) send no Origin; CORS is a browser control         
+      30 +  if (PRODUCTION_ALLOWED_ORIGINS.includes(origin)) return true;
+      31    if (PRODUCTION_ORIGIN && origin === PRODUCTION_ORIGIN) return
+           true;
+      32 +  if (!isProduction()) {                                       
+      33 +    if (DEV_ALLOWED_ORIGINS.includes(origin)) return true;     
+      34 +    if (LOCAL_DEV_ORIGIN_REGEX.test(origin)) return true;      
+      35 +  }                                                            
+      36    return false;
+      37  }
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(~\astro\avatar-astro33\backend\src\modules\auth\auth.route.ts)
+  ⎿  Added 30 lines, removed 3 lines
+      18    message: "Too many OTP requests. Please try again later.",
+      19    envelope: true,
+      20  });
+      21 +// Credential endpoints: generous enough for a shared office NA
+         +T, far too tight for online                                    
+      22 +// brute force (per-account OTP/attempt caps still apply in the
+         + service underneath).                                          
+      23 +const loginLimiter = createRateLimiter({                       
+      24 +  windowMs: 15 * 60_000,                                       
+      25 +  max: 50,                                                     
+      26 +  message: "Too many sign-in attempts. Please try again in a fe
+         +w minutes.",                                                   
+      27 +  envelope: true,                                              
+      28 +});                                                            
+      29 +const registerLimiter = createRateLimiter({                    
+      30 +  windowMs: 60 * 60_000,                                       
+      31 +  max: 20,                                                     
+      32 +  message: "Too many registration attempts. Please try again la
+         +ter.",                                                         
+      33 +  envelope: true,                                              
+      34 +});                                                            
+      35 +const forgotPasswordLimiter = createRateLimiter({              
+      36 +  windowMs: 60 * 60_000,                                       
+      37 +  max: 10,                                                     
+      38 +  message: "Too many password reset requests. Please try again 
+         +later.",                                                       
+      39 +  envelope: true,                                              
+      40 +});                                                            
+      41 +// Refresh fires on every token expiry for every open tab — the
+         + ceiling only exists to stop floods.                           
+      42 +const refreshLimiter = createRateLimiter({                     
+      43 +  windowMs: 15 * 60_000,                                       
+      44 +  max: 300,                                                    
+      45 +  message: "Too many requests. Please try again shortly.",     
+      46 +  envelope: true,                                              
+      47 +});                                                            
+      48  
+      49  // Registration flow
+      23 -router.post("/register", authController.register);             
+      50 +router.post("/register", registerLimiter, authController.regist
+         +er);                                                           
+      51  router.post("/verify-otp", verifyOtpLimiter, authController.ver
+          ifyOtp);
+      52  router.post("/verify-phone", authController.verifyPhone);
+      53  router.get("/msg91-config", authController.getMsg91Config);
+      54  router.post("/resend-otp", resendOtpLimiter, authController.res
+          endOtp);
+      55  
+      56  // Login
+      30 -router.post("/login", authController.login);                   
+      31 -router.post("/google", authController.googleAuth);             
+      57 +router.post("/login", loginLimiter, authController.login);     
+      58 +router.post("/google", loginLimiter, authController.googleAuth)
+         +;                                                              
+      59  
+      60  // Google / incomplete-profile onboarding (authenticated sessio
+          n continues)
+      61  router.post(
+
+● Update(~\astro\avatar-astro33\backend\src\modules\auth\auth.route.ts)
+  ⎿  Added 1 line, removed 1 line
+      65  );
+      66  
+      67  // Session management
+      68 -router.post("/refresh", authController.refresh);               
+      68 +router.post("/refresh", refreshLimiter, authController.refresh)
+         +;                                                              
+      69  router.post("/logout", authController.logout);
+      70  router.post("/logout-all", auth("USER", "ADMIN", "SUPERADMIN"),
+           authController.logoutAll);
+      71  
+
+● Update(~\astro\avatar-astro33\backend\src\modules\auth\auth.route.ts)
+  ⎿  Added 1 line, removed 1 line
+      70  router.post("/logout-all", auth("USER", "ADMIN", "SUPERADMIN"),
+           authController.logoutAll);
+      71  
+      72  // Password reset
+      73 -router.post("/forgot-password", authController.forgotPassword);
+      73 +router.post("/forgot-password", forgotPasswordLimiter, authCont
+         +roller.forgotPassword);                                        
+      74  router.post("/reset-password", authController.resetPassword);
+      75  
+      76  
+
+● Now the enumeration fix in the login service and bcrypt cost:
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● No dependencies on those messages. Apply the fixes:
+
+● Update(~\astro\avatar-astro33\backend\src\modules\auth\auth.service.ts)
+  ⎿  Added 4 lines, removed 6 lines
+      417        include: { userRoleMappings: { include: { role: true } }
+            },
+      418      });
+      419  
+      420 -    if (!user)                                                
+      421 -      throw new ApiError(                                     
+      422 -        "User with this Email doesn't exist",                 
+      423 -        STATUS_CODES.NOT_FOUND,                               
+      424 -      );                                                      
+      425 -                                                              
+      420 +    // Unknown email and wrong password answer IDENTICALLY (sa
+          +me message, same 401), so the login                           
+      421 +    // form cannot be used to probe which addresses have accou
+          +nts. The dummy compare keeps the                              
+      422 +    // unknown-email path from returning measurably faster tha
+          +n a real bcrypt check.                                        
+      423      if (!user || !user.password) {
+      424 +      await comparePassword(data.password, "$2b$12$C6UzMDM.H6d
+          +fI/f/IKcEeO7ZBpMrDmUzXbSJdPnmvM1KdfyvWrGxW");                 
+      425        throw new ApiError(
+      426          "Invalid email or password",
+      427          STATUS_CODES.UNAUTHORIZED,
+
+● Update(~\astro\avatar-astro33\backend\src\modules\auth\auth.service.ts)
+  ⎿  Added 3 lines, removed 5 lines
+      668        where: { email, isDeleted: false },
+      669      });
+      670  
+      671 -    if (!user)                                                
+      672 -      throw new ApiError(                                     
+      673 -        "Account with this Email doesn't exist",              
+      674 -        STATUS_CODES.NOT_FOUND,                               
+      675 -      );                                                      
+      671 +    // Same answer whether or not the account exists — the res
+          +et form must not reveal which                                 
+      672 +    // emails are registered. When there is no account, no ema
+          +il is sent and nothing else happens.                          
+      673 +    if (!user) return { message: "If an account exists for thi
+          +s email, a password reset link has been sent." };             
+      674  
+      675      await prisma.passwordResetToken.updateMany({
+      676        where: { userId: user.id, used: false },
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● The success path already returns "If this email exists, a reset link has been
+  sent." — make the no-account path return the identical string:
+
+● Update(~\astro\avatar-astro33\backend\src\modules\auth\auth.service.ts)
+  ⎿  Added 1 line, removed 1 line
+      670  
+      671      // Same answer whether or not the account exists — the res
+           et form must not reveal which
+      672      // emails are registered. When there is no account, no ema
+           il is sent and nothing else happens.
+      673 -    if (!user) return { message: "If an account exists for thi
+          -s email, a password reset link has been sent." };             
+      673 +    if (!user) return { message: "If this email exists, a rese
+          +t link has been sent." };                                     
+      674  
+      675      await prisma.passwordResetToken.updateMany({
+      676        where: { userId: user.id, used: false },
+
+● Update(~\astro\avatar-astro33\backend\src\utils\auth.ts)
+  ⎿  Added 3 lines, removed 2 lines
+      1  import bcrypt from 'bcrypt';
+      2  
+      3  export const hashPassword = async (password: string): Promise<st
+         ring> => {
+      4 -    // Use cost directly instead of generating salt separately -
+        - saves ~50-100ms per operation                                  
+      5 -    return await bcrypt.hash(password, 8);                      
+      4 +    // Cost 12 (~250ms) — the accepted floor for password storag
+        +e. Existing cost-8 hashes keep                                  
+      5 +    // verifying (bcrypt reads the cost from the hash itself) an
+        +d are upgraded on password change.                              
+      6 +    return await bcrypt.hash(password, 12);                     
+      7  };
+      8  
+      9  export const comparePassword = async (password: string, hash: st
+         ring): Promise<boolean> => {
+
+● Now fail-fast env validation and dead-file removal:
+
+● Update(~\astro\avatar-astro33\backend\src\index.ts)
+  ⎿  Added 10 lines, removed 2 lines
+      49  installAiUsageCapture();
+      50  const app = express();
+      51  
+      52 -// Loud (non-fatal) startup report of missing configuration. Na
+         -mes only, never values.                                        
+      52 +// Startup configuration report. Names only, never values. In p
+         +roduction a missing critical                                   
+      53 +// variable ABORTS startup — a deployed API that cannot sign an
+         +yone in or reach its database                                  
+      54 +// must fail loudly at deploy time, not serve errors to every u
+         +ser.                                                           
+      55  {
+      56    const critical = ["DATABASE_URL", "JWT_SECRET"].filter((k) =>
+           !process.env[k]);
+      55 -  if (critical.length) console.error(`✗ MISSING REQUIRED ENV: $
+         -{critical.join(", ")} — sign-in and most features will fail`); 
+      57 +  if (critical.length) {                                       
+      58 +    console.error(`✗ MISSING REQUIRED ENV: ${critical.join(", "
+         +)} — sign-in and most features will fail`);                    
+      59 +    if (process.env.NODE_ENV === "production") {               
+      60 +      console.error("✗ Refusing to start in production without 
+         +critical configuration.");                                     
+      61 +      process.exit(1);                                         
+      62 +    }                                                          
+      63 +  }                                                            
+      64    if (process.env.JWT_SECRET && process.env.JWT_SECRET.length <
+           32) console.warn("! JWT_SECRET is shorter than 32 characters")
+          ;
+      65    if ((process.env.OTP_HMAC_SECRET ?? "").trim().length < 32) c
+          onsole.error("✗ OTP_HMAC_SECRET is missing or shorter than 32 c
+          haracters — e-mail OTPs cannot be issued or verified (registrat
+          ion / unverified login will fail closed)");
+      66    const optional = ["OPENROUTER_API_KEY", "GROQ_API_KEY", "RESE
+          ND_API_KEY", "SMTP_FROM_EMAIL", "SUPPORT_EMAIL", "YOUTUBE_API_K
+          EY", "CORS_ORIGIN", "CLAMAV_HOST", "CLAMAV_PORT"].filter((k) =>
+           !process.env[k]);
+
+  Ran 2 shell commands (ctrl+o to expand)
+● horoscopeRoutes.ts is mounted nowhere and imports the deleted middleware —
+  it's dead as well:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● Write(~\astro\avatar-astro33\backend\src\modules\payment\reconciliation.job.ts
+       )
+  ⎿  Wrote 59 lines to ..\backend\src\modules\payment\reconciliation.job.ts
+      1 // In-process daily reconciliation sweep — the automated counterp
+      2 // /admin/billing/reconciliation endpoint. Runs the same READ-ONL
+        Y checks (reconcileLedger,
+        t never mutates money —
+      4 // repairs stay a human decision, made through the admin surface.
+      6 // Single-instance rule applies (see modules/chat/billing.ts): th
+        is is a plain interval in the
+        boot so it never competes with
+      8 // startup recovery.
+        liation.js";
+     … +65 lines (ctrl+o to expand)
+
+● Now wire the job and readiness endpoint into index.ts:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(~\astro\avatar-astro33\backend\src\index.ts)
+  ⎿  Added 1 line
+      457            stopBillingTimers();
+      458            stopDarshanRefreshLoop();
+      459            clearPresenceTimers();
+      460 +          stopReconciliationJob();                            
+      461          },
+      462        },
+      463        {
+
+● Update(~\astro\avatar-astro33\backend\src\index.ts)
+  ⎿  Added 1 line
+      38  import { initSocketServer, clearPresenceTimers } from "./realti
+          me/socketServer.js";
+      39  import { createShutdownController, installProcessHandlers } fro
+          m "./utils/lifecycle.js";
+      40  import { isMockPaymentsMisconfigured } from "./modules/payment/
+          mockPayments.js";
+      41 +import { startReconciliationJob, stopReconciliationJob } from "
+         +./modules/payment/reconciliation.job.js";                      
+      42  import prisma from "@root/prisma.js";
+      43  import { isOriginAllowed } from "./utils/corsOrigins.js";
+      44  import { getExecutionId, reserveToolExecution, settleToolExecut
+          ion, releaseToolExecution } from "./modules/payment/toolBilling
+          .service.js";
+
+● Update(~\astro\avatar-astro33\backend\src\index.ts)
+  ⎿  Added 15 lines, removed 1 line
+      107  app.use(express.json({ limit: "200kb" }));
+      108  app.use(express.urlencoded({ extended: true, limit: "200kb" })
+           );
+      109  
+      110 -// Health check                                               
+      110 +// Liveness: answers as long as the process runs — no dependen
+          +cies, never flaps.                                            
+      111  app.get("/api/health", (_req: Request, res: Response) => {
+      112    res.json({ success: true, message: "Server is running" });
+      113  });
+      114  
+      115 +// Readiness: can this instance actually do work? Checks the d
+          +atabase with a bounded timeout, so                            
+      116 +// an orchestrator/uptime monitor can tell "process up, DB unr
+          +eachable" apart from healthy.                                 
+      117 +app.get("/api/ready", async (_req: Request, res: Response) => 
+          +{                                                             
+      118 +  try {                                                       
+      119 +    await Promise.race([                                      
+      120 +      prisma.$queryRaw`SELECT 1`,                             
+      121 +      new Promise((_, reject) => setTimeout(() => reject(new E
+          +rror("database ping timed out")), 3_000).unref()),            
+      122 +    ]);                                                       
+      123 +    res.json({ success: true, message: "Ready" });            
+      124 +  } catch {                                                   
+      125 +    res.status(503).json({ success: false, message: "Database 
+          +unreachable" });                                              
+      126 +  }                                                           
+      127 +});                                                           
+      128 +                                                              
+      129  // Zodiac endpoints
+      130  app.use("/api/zodiac", ...feature("zodiac"));
+      131  app.get("/api/zodiac/signs", (_req: Request, res: Response) =>
+            {
+
+● Update(~\astro\avatar-astro33\backend\src\index.ts)
+  ⎿  Added 1 line
+      501    // backend process (see resumeAllActiveSessions in modules/c
+           hat/billing.ts). Do not scale this
+      502    // service horizontally without first moving presence to a s
+           hared store and electing one scheduler.
+      503    resumeAllActiveSessions().catch((err) => console.error("[cha
+           t.billing] failed to resume active sessions:", err));
+      504 +  startReconciliationJob(); // daily read-only ledger/stale-ho
+          +ld sweep; first run ~5 min after boot                         
+      505  
+      506    httpServer.listen(PORT, () => {
+      507      console.log(`✓ Server running on http://localhost:${PORT}`
+           );
+
+● Sentry init + express error hook, DSN-gated:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(~\astro\avatar-astro33\backend\src\index.ts)
+  ⎿  Added 14 lines
+      44  import { getExecutionId, reserveToolExecution, settleToolExecut
+          ion, releaseToolExecution } from "./modules/payment/toolBilling
+          .service.js";
+      45  import { TOOL_KEYS } from "./modules/payment/toolKeys.js";
+      46  import { ApiError } from "./utils/ApiError.js";
+      47 +import * as Sentry from "@sentry/node";                        
+      48  
+      49  dotenv.config();
+      50  
+      51 +// Error tracking — active only when SENTRY_DSN is configured; 
+         +a missing DSN changes nothing.                                 
+      52 +// setupExpressErrorHandler is attached just before our own err
+         +orHandler further down.                                        
+      53 +if (process.env.SENTRY_DSN) {                                  
+      54 +  Sentry.init({                                                
+      55 +    dsn: process.env.SENTRY_DSN,                               
+      56 +    environment: process.env.NODE_ENV || "development",        
+      57 +    // Error tracking only — no performance tracing, so no requ
+         +est bodies/PII are shipped.                                    
+      58 +    tracesSampleRate: 0,                                       
+      59 +    sendDefaultPii: false,                                     
+      60 +  });                                                          
+      61 +  console.log("✓ Sentry error tracking enabled");              
+      62 +}                                                              
+      63 +                                                               
+      64  installAiUsageCapture();
+      65  const app = express();
+      66  
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Update(~\astro\avatar-astro33\backend\src\index.ts)
+  ⎿  Added 3 lines
+      452    res.json({ success: true });
+      453  });
+      454  
+      455 +// Reports unexpected (5xx) errors to Sentry when configured, 
+          +then passes through to ours below.                            
+      456 +if (process.env.SENTRY_DSN) Sentry.setupExpressErrorHandler(ap
+          +p);                                                           
+      457 +                                                              
+      458  // Error handling middleware (must be last).
+      459  // ApiError (thrown by the auth module / auth middleware) carr
+           ies `statusCode`
+      460  // and is answered in the { status, data, message } shape the 
+           auth controllers
+
+● Now the CI workflow. Check how init.mjs applies the SQL (docker exec vs psql):
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● init only needs a reachable Postgres on 127.0.0.1:54329 — a GitHub Actions
+  service container works directly:
+● Write(~\astro\avatar-astro33\.github\workflows\backend-ci.yml)
+  ⎿  Wrote 50 lines to ..\.github\workflows\backend-ci.yml
+       1 # Backend CI: typecheck + the full database-backed regression su
+       2 # touches backend/. The suite runs against a throwaway postgres:
+         17 service container wired to
+       3 # look exactly like the local disposable test DB (same host/port
+       4 # assertSafeTestDatabase guard passes and NOTHING here can reach
+          a real database.
+       6 
+       7 on:
+       8   push:
+      10     paths: ["backend/**", ".github/workflows/backend-ci.yml"]
+     … +45 lines (ctrl+o to expand)
+
+● Now the draft Render config — deliberately named render.draft.yaml so nothing
+  can auto-apply it before you verify the deployment facts:
+
+● Write(~\astro\avatar-astro33\render.draft.yaml)
+  ⎿  Wrote 41 lines to ..\render.draft.yaml
+       1 # DRAFT — NOT ACTIVE. Rename to render.yaml and connect as a Ren
+       2 # deployment facts are verified (decision 7: instance count, pla
+       3 # Deliberately named .draft so pushing this file can never chang
+         e the live service by itself.
+       5 # Encodes the decisions already made in code:
+         ingle-process — see
+         )
+       8 #   - NODE_ENV=production (locks out mock payments, dev CORS ori
+       9 #   - secrets are set in the Render dashboard, never committed (
+      10 services:
+     … +41 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Scripts match. Now type-check and run the full suite:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(~\astro\avatar-astro33\backend\src\index.ts)
+  ⎿  Added 1 line, removed 2 lines
+      54    Sentry.init({
+      55      dsn: process.env.SENTRY_DSN,
+      56      environment: process.env.NODE_ENV || "development",
+      57 -    // Error tracking only — no performance tracing, so no requ
+         -est bodies/PII are shipped.                                    
+      57 +    // Error tracking only — no performance tracing. PII defaul
+         +ts to off in @sentry/node.                                     
+      58      tracesSampleRate: 0,
+      59 -    sendDefaultPii: false,                                     
+      59    });
+      60    console.log("✓ Sentry error tracking enabled");
+      61  }
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● All green. Marking done and wrapping up:
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● package-lock.json is gitignored in this repo, so npm ci would fail in CI —
+  adjust the workflow to npm install (and note the lockfile recommendation):
+
+● Update(~\astro\avatar-astro33\.github\workflows\backend-ci.yml)
+  ⎿  Added 4 lines, removed 3 lines
+      39        - uses: actions/setup-node@v4
+      40          with:
+      41            node-version: 22
+      42 -          cache: npm                                           
+      43 -          cache-dependency-path: backend/package-lock.json     
+      44 -      - run: npm ci                                            
+      42 +      # package-lock.json is currently gitignored in this repo,
+         + so `npm ci` (which requires a                                 
+      43 +      # lockfile) can't be used. Committing the lockfile and sw
+         +itching this to `npm ci` + the                                 
+      44 +      # setup-node npm cache would make builds faster and repro
+         +ducible — recommended.                                         
+      45 +      - run: npm install                                       
+      46        - name: Typecheck
+      47          run: npx tsc --noEmit -p .
+      48        - name: Initialise test database (prisma db push + custom
+           SQL)
+
+● Checkpoint 3 (reliability items) — implemented, 188/188 tests green
+
+  Razorpay remains untouched per your gating; everything else from the
+  Checkpoint 3 list is in. What changed:
+
+  Security headers and body limits (index.ts): helmet added (CSP/COEP/CORP
+  disabled — meaningless for a cross-origin JSON API and they'd break Socket.IO
+  polling; everything else active). Global JSON body limit dropped from 20 MB to
+  200 KB — I verified no route parses large JSON bodies (file uploads use
+  multer/multipart and are unaffected; /api/ai keeps its own 250 KB parser).
+
+  CORS (utils/corsOrigins.ts): localhost/LAN-IP origins are now honored only 
+  when NODE_ENV !== "production". Previously a deployed API accepted
+  credentialed requests from any 192.168.x.x/localhost origin. The Vercel origin
+  and CORS_ORIGIN env still work everywhere.
+
+  Auth hardening (auth.route.ts, auth.service.ts, utils/auth.ts):
+  - Rate limiters on /login + /google (50/15 min), /register (20/hr),
+  /forgot-password (10/hr), /refresh (300/15 min — it fires on every token
+  expiry, the cap only stops floods). OTP endpoints already had limits.
+  - Enumeration fixed: unknown email now returns the same 401 "Invalid email or 
+  password" as a wrong password, with a dummy bcrypt compare so timing doesn't
+  leak either. forgot-password returns the identical "If this email exists…"
+  message whether or not the account exists.
+  - bcrypt cost raised 8 → 12. Existing hashes keep verifying (cost is embedded
+  in the hash) and upgrade on the next password change.
+
+  Fail-fast + dead code: in production, a missing DATABASE_URL/JWT_SECRET now
+  aborts startup instead of serving a broken API. Deleted the dead
+  config/environment.ts (hardcoded fallback JWT secret), middleware/auth.ts, its
+  test, and routes/horoscopeRoutes.ts (mounted nowhere, imported the dead
+  middleware).
+
+  Operations:
+  - GET /api/ready — readiness with a 3s-bounded DB ping (503 when unreachable),
+  separate from the dependency-free /api/health liveness check.
+  - reconciliation.job.ts — daily read-only sweep running reconcileLedger +
+  findStaleReservations in-process (first run 5 min after boot), logging loudly
+  but bounded when money doesn't add up. It never mutates — repairs stay human
+  decisions via the SUPERADMIN endpoint. Wired into startup and graceful
+  shutdown.
+  - Sentry: active only when SENTRY_DSN is set (error tracking only, no
+  tracing); a missing DSN changes nothing.
+  - .github/workflows/backend-ci.yml — typecheck + the full 188-test DB-backed
+  suite against a throwaway postgres:17 service container wired to look exactly
+  like the local test DB, so the safety guard passes and CI can't reach a real
+  database. Note: it uses npm install because package-lock.json is gitignored in
+  this repo — I recommend committing the lockfile and switching to npm ci.
+  - render.draft.yaml — deliberately not named render.yaml, so it can't
+  auto-apply. It encodes numInstances: 1 (single-instance rule),
+  NODE_ENV=production, and dashboard-managed secrets. Rename it only after you
+  verify the decision-7 deployment facts (plan, instance count, PITR).
+
+  Verification: TypeScript clean; full suite 188 tests, 0 failures (re-run after
+  all changes). Two new dependencies: helmet, @sentry/node.
+
+  Decisions still open for you:
+  1. Razorpay sub-checkpoint — ready to plan/implement on your approval. It
+  needs from you: test-mode RAZORPAY_KEY_ID/KEY_SECRET, a webhook secret, and
+  confirmation of the Render URL for the webhook endpoint. Design per your spec:
+  backend-generated orders, server-side + webhook signature verification over
+  the raw body, idempotent wallet crediting through the existing ledger,
+  duplicate-callback handling, reconciliation.
+  2. Behavior change to sign off: forgot-password no longer 404s for unknown
+  emails (frontend copy may want updating to the neutral message).
+  3. The decision-7 deployment facts remain unverified — the render draft stays
+  a draft until then.
+
+  Not committed, not deployed. Checkpoint 2's schema change also still awaits
+  production application approval.
+
+✻ Crunched for 11m 22s
+
+❯ why the heck do i need render.draft.yml??                                     
+  ⎿  ⧉ Selected 2 lines from src\index.ts in Neovim
+  ⎿  Found 1 new diagnostic issue in 1 file (ctrl+o to expand)
+
+● Honest answer: you only need it if you ever use Render Blueprints — and you
+  may not.
+
+  Why it exists at all: your approved audit roadmap listed "a version-controlled
+  render.yaml" as a Checkpoint 3 item. The problem it solves: right now your
+  entire deployment config (instance count, NODE_ENV, which env vars exist,
+  health check path) lives only in dashboard clicks. The audit flagged that
+  twice — nobody could confirm NODE_ENV is even set to production on Render, and
+  nothing stops someone scaling to 2 instances, which would silently corrupt
+  chat billing (the single-instance rule). A checked-in config file makes those
+  decisions reviewable and survives the dashboard being misclicked.
+
+  Why it's named .draft: a real render.yaml at the repo root can be picked up by
+  Render as a Blueprint and actually change your live service on push. Since
+  the deployment facts (plan, instance count, PITR) are still unverified and you
+  said not to touch production config, I named it so it's inert —
+  documentation, not automation.
+
+  But — if your workflow is "deploy from the dashboard, never Blueprints," the
+  file does nothing except record intent, and you could reasonably not want it.
+  Say the word and I'll delete it; the two facts that actually matter
+  (NODE_ENV=production, exactly 1 instance) are already documented in code
+  comments in billing.ts/index.ts.
+
+  Meanwhile, fixing the Sentry deprecation warning that just surfaced:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(~\astro\avatar-astro33\backend\src\index.ts)
+  ⎿  Added 1 line, removed 1 line
+      452  });
+      453  
+      454  // Reports unexpected (5xx) errors to Sentry when configured, 
+           then passes through to ours below.
+      455 -if (process.env.SENTRY_DSN) Sentry.setupExpressErrorHandler(ap
+          -p);                                                           
+      455 +if (process.env.SENTRY_DSN) app.use(Sentry.expressErrorHandler
+          +());                                                          
+      456  
+      457  // Error handling middleware (must be last).
+      458  // ApiError (thrown by the auth module / auth middleware) carr
+           ies `statusCode`
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Deprecation fixed (Sentry.expressErrorHandler() middleware instead of the
+  deprecated setupExpressErrorHandler(app) overload), typecheck clean.
+
+  So, your call on the draft file:
+  - Keep it if you want the deployment contract (1 instance,
+  NODE_ENV=production, required env vars, health check) recorded in git — costs
+  nothing, changes nothing while named .draft.
+  - Delete it if you'll always deploy via the dashboard — just tell me and it's
+  gone.
+
+✻ Brewed for 39s
+
+❯ # MyBhagya — Checkpoint 3b: Razorpay Payment Gateway Integration              
+                                                                                
+  Checkpoint 3a is complete locally.                                            
+                                                                                
+  Proceed with Checkpoint 3b — Razorpay integration.                            
+                                                                                
+  We are continuing with Prisma db push for now. Do not repair migration        
+  history.                                                                      
+                                                                                
+  ## Phase 1 — Inspect existing payment architecture                            
+                                                                                
+  Review:                                                                       
+                                                                                
+  - Wallet and transaction ledger.                                              
+  - Existing payment order model.                                               
+  - Recharge order and confirmation endpoints.                                  
+  - Mock-payment restrictions.                                                  
+  - Promotional and purchased coin balances.                                    
+  - Idempotency keys.                                                           
+  - Wallet reservation and settlement logic.                                    
+  - Existing authentication and SUPERADMIN permissions.                         
+  - Existing frontend wallet/recharge pages.                                    
+                                                                                
+  Identify which components can be reused.                                      
+                                                                                
+  Do not create a parallel wallet or ledger.                                    
+                                                                                
+  ## Phase 2 — Design Razorpay integration                                      
+                                                                                
+  Implement Razorpay Standard Checkout for coin purchases.                      
+                                                                                
+  Requirements:                                                                 
+                                                                                
+  1. Backend creates Razorpay orders.                                           
+  2. Server determines the amount and coin quantity.                            
+  3. Never trust frontend-supplied prices.                                      
+  4. Use INR and integer paise.                                                 
+  5. Store the internal payment order before or alongside external order        
+  creation using a recoverable state machine.                                   
+  6. Verify the Razorpay Checkout signature on the backend.                     
+  7. Verify the payment's captured status, order ID, amount and currency with   
+  Razorpay before crediting.                                                    
+  8. Handle payment.captured and relevant order/payment failure events.         
+  9. Verify webhook signatures using the exact raw request body.                
+  10. Mount the webhook raw-body handler before global express.json middleware. 
+  11. Credit purchased coins exactly once through the existing wallet ledger.   
+  12. Make frontend confirmation and webhook delivery safe to execute in any    
+  order.                                                                        
+  13. Prevent duplicate credits from webhook retries, concurrent confirmations  
+  or server restarts.                                                           
+  14. Handle failed, expired and abandoned payment attempts.                    
+  15. Provide read-only payment reconciliation and safe recovery for missed     
+  webhooks.                                                                     
+  16. Do not enable mock recharge in production.                                
+                                                                                
+  ## Phase 3 — Refunds and disputes                                             
+                                                                                
+  Design safe handling for:                                                     
+                                                                                
+  - Full refunds.                                                               
+  - Partial refunds.                                                            
+  - Duplicate refund events.                                                    
+  - Chargebacks and disputes.                                                   
+  - Cases where purchased coins have already been spent.                        
+                                                                                
+  Do not blindly subtract spent coins or allow negative balances.               
+                                                                                
+  If the refund/chargeback policy requires a business decision, report it and   
+  leave the affected action gated rather than inventing financial rules.        
+                                                                                
+  ## Phase 4 — Frontend integration                                             
+                                                                                
+  Implement or update the wallet recharge experience:                           
+                                                                                
+  - Select coin amount or package.                                              
+  - Show INR price and coins received.                                          
+  - Launch Razorpay Checkout.                                                   
+  - Handle success, failure and cancellation.                                   
+  - Refresh wallet balance from the backend.                                    
+  - Show pending verification when appropriate.                                 
+  - Prevent duplicate checkout submissions.                                     
+  - Show transaction history and receipts where supported.                      
+                                                                                
+  Preserve existing wallet UI and features.                                     
+                                                                                
+  ## Phase 5 — Security                                                         
+                                                                                
+  - Razorpay secrets must remain backend-only.                                  
+  - Only the publishable key ID may be exposed to the frontend.                 
+  - Use separate test and live credentials.                                     
+  - Validate all incoming webhook payloads.                                     
+  - Do not log sensitive payment data.                                          
+  - Rate-limit order creation.                                                  
+  - Enforce ownership checks on payment orders.                                 
+  - Avoid floating-point money calculations.                                    
+                                                                                
+  ## Phase 6 — Testing                                                          
+                                                                                
+  Use the disposable PostgreSQL test database.                                  
+                                                                                
+  Add tests for:                                                                
+                                                                                
+  - Order creation.                                                             
+  - Invalid amounts.                                                            
+  - Signature verification.                                                     
+  - Payment capture verification.                                               
+  - Webhook signature validation.                                               
+  - Duplicate webhooks.                                                         
+  - Concurrent confirmation and webhook.                                        
+  - Failed payments.                                                            
+  - Partial transaction failures.                                               
+  - Idempotent wallet crediting.                                                
+  - Refund events.                                                              
+  - Payment reconciliation.                                                     
+  - Unauthorized order access.                                                  
+                                                                                
+  Mock Razorpay's external API in automated tests, but use real PostgreSQL      
+  transactions and constraints.                                                 
+                                                                                
+  Do not call live Razorpay APIs in automated tests.                            
+                                                                                
+  ## Phase 7 — Configuration                                                    
+                                                                                
+  Prepare documentation for:                                                    
+                                                                                
+  - RAZORPAY_KEY_ID                                                             
+  - RAZORPAY_KEY_SECRET                                                         
+  - RAZORPAY_WEBHOOK_SECRET                                                     
+  - Test-mode and live-mode configuration                                       
+  - Webhook URL                                                                 
+  - Required Razorpay dashboard events                                          
+  - Render environment variables                                                
+  - Vercel frontend configuration                                               
+                                                                                
+  Never write real credentials into the repository.                             
+                                                                                
+  ## Phase 8 — Final report                                                     
+                                                                                
+  Provide:                                                                      
+                                                                                
+  1. Architecture summary.                                                      
+  2. Changed files.                                                             
+  3. API endpoints.                                                             
+  4. Prisma schema changes, if required.                                        
+  5. Webhook configuration.                                                     
+  6. Test results.                                                              
+  7. Security review.                                                           
+  8. Refund/chargeback decisions needed.                                        
+  9. Deployment order.                                                          
+  10. Rollback plan.                                                            
+                                                                                
+  Do not deploy, push, modify production Neon schema or process real payments   
+  without my approval.                                                          
+                                                                                
+  Implement and test Checkpoint 3b locally, then stop for review.                 ⎿  Found 1 new diagnostic issue in 1 file (ctrl+o to expand)
+
+  Read 3 files, ran 3 shell commands (ctrl+o to expand)
+
+● Backend picture is clear. Quick look at the frontend wallet/recharge pages:
+
+  Read 1 file, ran 2 shell commands (ctrl+o to expand)
+
+● Update(~\astro\avatar-astro33\backend\prisma\schema\payment.prisma)
+  ⎿  Added 24 lines
+      25  }
+      26  
+      27  enum PaymentOrderStatus {
+      28 +  /// Internal order exists (and, for Razorpay, the provider or
+         +der too); awaiting payment.                                    
+      29    CREATED
+      30 +  /// Verified + credited. Terminal. The ONLY state in which th
+         +e wallet was credited, exactly once.                           
+      31    SUCCESS
+      32 +  /// The provider reported the payment failed. Terminal for th
+         +at attempt's payment, but the order                            
+      33 +  /// stays re-payable on Razorpay until EXPIRED — a later capt
+         +ure webhook can still flip it to SUCCESS.                      
+      34    FAILED
+      35 +  /// Abandoned: never paid within the expiry window; swept by 
+         +markAbandonedOrdersExpired. A capture                          
+      36 +  /// webhook arriving even after this still credits (money was
+         + taken, so money must be honoured).                            
+      37 +  EXPIRED                                                      
+      38  }
+      39  
+      40 +enum PaymentRefundKind {                                       
+      41 +  REFUND                                                       
+      42 +  DISPUTE                                                      
+      43 +}                                                              
+      44 +                                                               
+      45 +/// Internal handling state of a recorded refund/dispute — NOT 
+         +the provider's own status (kept                                
+      46 +/// verbatim in providerStatus). Wallet-side handling of refund
+         +s is deliberately a HUMAN decision                             
+      47 +/// (the coins may already be spent); nothing automatic ever de
+         +bits a wallet from these rows.                                 
+      48 +enum PaymentRefundHandling {                                   
+      49 +  /// Recorded from a verified webhook; awaiting a SUPERADMIN d
+         +ecision.                                                       
+      50 +  ACTION_REQUIRED                                              
+      51 +  /// An admin applied a wallet adjustment for it (via the exis
+         +ting ADJUSTMENT ledger path).                                  
+      52 +  WALLET_ADJUSTED                                              
+      53 +  /// An admin decided no wallet action is needed (e.g. goodwil
+         +l refund, coins honoured).                                     
+      54 +  RESOLVED_NO_ACTION                                           
+      55 +}                                                              
+      56 +                                                               
+      57  /// Which balance a WalletTransaction's money actually moved in
+          to/out of. PURCHASED = ever came from a
+      58  /// real (or mock) recharge; PROMOTIONAL = ever came from a pro
+          motional grant (signup bonus today).
+      59  enum WalletBalanceBucket {
+  ⎿  You've hit your session limit · resets 3pm (Asia/Calcutta)
+     /upgrade or /usage-credits to finish what you’re working on.
+
+✻ Worked for 2m 3s
+
+❯ /model                                                                        
+  ⎿  Set model to Sonnet 5 and saved as your default for new sessions
+
+❯ read the part you planed for this implementation and make one md file so that 
+  i can use antigravity for implementing further thing                          
+  Also add what have you implemented so far in that file                        
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Confirmed: only the schema enum additions exist so far (no PaymentRefund
+  model, no Razorpay provider/routes/webhook/tests, no package installed). Let
+  me check the scratchpad directory and write the handoff doc.
+
+● Write(~\astro\avatar-astro33\CHECKPOINT_3B_RAZORPAY.md)  ⎿  Wrote 304 lines to ..\CHECKPOINT_3B_RAZORPAY.md
+      1 # Checkpoint 3b — Razorpay Payment Gateway Integration
+      3 Handoff doc for continuing this work (e.g. in Antigravity). It ha
+        s two parts: **the original spec**
+      4 (verbatim intent, lightly organized) and **what's actually been d
+      5 fresh tool can pick up exactly where this session left off withou
+        t re-deriving context.
+      7 Branch: `dev-nikhil`. Nothing in this checkpoint has been committ
+        ed, deployed, or applied to
+      8 production/Neon. The disposable local test DB (`npm run test:db:*
+      9 only database anything here has touched.
+     … +465 lines (ctrl+o to expand)
+
+● Created CHECKPOINT_3B_RAZORPAY.md at the repo root. It covers:
+
+  1. The full spec (Phases 1–8, security rules, hard constraints) organized for
+  reference.
+  2. What's reusable — the exact existing files/functions (wallet ledger,
+  idempotency keys, the PaymentProviderAdapter seam, mock-payment gate, frontend
+  wallet hooks) that a fresh tool needs to extend rather than rebuild.
+  3. What's actually done so far: only backend/prisma/schema/payment.prisma has
+  uncommitted changes — three new/extended enums (PaymentOrderStatus.EXPIRED,
+  PaymentRefundKind, PaymentRefundHandling). Nothing else exists yet — no
+  PaymentRefund model, no Razorpay provider code, no routes, no webhook, no
+  tests, no npm package installed.
+  4. An explicit, ordered to-do list (11 steps) picking up exactly where this
+  session stopped.
+  5. Open business decisions (refund-of-spent-coins policy, partial refund
+  bucket handling, account gating during disputes) flagged as blocking Phase 3,
+  per your own instruction not to invent financial rules.
+  6. Resume commands for the disposable test DB.
+
+  Nothing was committed, deployed, or applied to Neon — this is purely the
+  handoff doc you asked for.
+
+✻ Brewed for 1m 54s
+
+❯ ok i made some further implementation using antigravity's agent               
+  So see the file @CHECKPOINT_3B_RAZORPAY.md and then codebase and then         
+  @audit.txt and @backend/new-feature.txt and see how much is implemented and   
+  what is remaining..                                                           
+  Then continue further implementation                                          
+  ⎿  Read CHECKPOINT_3B_RAZORPAY.md (305 lines)
+  ⎿  1 skill available
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Good — Antigravity's agent already committed the Razorpay work in 713361a.
+  Let's see exactly what it did.
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● Now the core provider/service/webhook files:
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● Let's read the full payment.service.ts and payment.webhook.ts to understand
+  the actual state machine and webhook handling.
+
+  Read 1 file (ctrl+o to expand)
+
+● This is quite thorough. Let's review the webhook handler and admin refund
+  route, then the wallet route and index.ts wiring.
+
+  Read 1 file (ctrl+o to expand)
+
+● Solid webhook design. Now check wiring into index.ts, wallet.route.ts, admin
+  refund route, and frontend changes.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Correctly mounted before the JSON parser. Now the admin refund route, wallet
+  route, and reconciliation job diffs:
+
+  Read 1 file, ran 2 shell commands (ctrl+o to expand)
+
+❯ also what is the issue during build as i am getting build error on vercel     
+  So fix that first                                                             
+
+● Let's reproduce the Vercel build error locally first.
+
+  Ran 6 shell commands (ctrl+o to expand)
+
+● Local npm run build and npx tsc --noEmit both pass cleanly on this commit — so
+  I can't reproduce the Vercel failure here. I need the actual error from
+  Vercel to fix it precisely.
+
+● User declined to answer questions
+  ⎿  · Local `vite build` and full TypeScript check both succeed on this exact 
+     commit. To fix the real Vercel error I need to see it. Can you paste the 
+     failing step's error output from the Vercel deployment log (Deployments → 
+     the failed one → Build Logs)? (I'll paste the log now / It's an environment
+     variable error / Not sure / can't access logs right now)
+✻ Brewed for 5m 41s
+
+● Background command "Check if vercel CLI is available/linked to pull logs"
+failed with exit code 2
+  ⎿  Interrupted · What should Claude do instead?
+
+❯ got this errors shown in image @..\err2.png @..\err1.png                      
+  So what's that?                                                               
+  ⎿  Read ..\err2.png (254.4KB)
+  ⎿  Read ..\err1.png (145.9KB)
+
+● The failure is in GitHub Actions CI (the backend-ci / test check), not
+  actually Vercel — Vercel's deployment succeeded (green). The CI typecheck step
+  is failing because @prisma/client has no exported members for any model
+  (PaymentOrder, Wallet, Prisma, etc.) — the Prisma client wasn't regenerated
+  against the new schema before typecheck ran. Let me confirm.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Confirmed — this is a bug in the CI workflow I wrote in Checkpoint 3a: it
+  never runs prisma generate before typechecking, so @prisma/client's generated
+  types don't exist in CI, cascading into exactly these "no exported member" and
+  implicit-any errors across the whole codebase. It's unrelated to Vercel (that
+  deployment succeeded) and unrelated to Antigravity's Razorpay changes. Fixing
+  it:
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(~\astro\avatar-astro33\.github\workflows\backend-ci.yml)
+  ⎿  Added 6 lines
+      43        # lockfile) can't be used. Committing the lockfile and sw
+          itching this to `npm ci` + the
+      44        # setup-node npm cache would make builds faster and repro
+          ducible — recommended.
+      45        - run: npm install
+      46 +      # tsc needs @prisma/client's generated types to exist — `
+         +npm install` alone does not                                    
+      47 +      # generate them (only the "prebuild" script does, which t
+         +ypecheck doesn't run through).                                 
+      48 +      # Without this step every model/enum import 'has no expor
+         +ted member', cascading into                                    
+      49 +      # implicit-any errors across the whole codebase.         
+      50 +      - name: Generate Prisma client                           
+      51 +        run: npx prisma generate                               
+      52        - name: Typecheck
+      53          run: npx tsc --noEmit -p .
+      54        - name: Initialise test database (prisma db push + custom
+           SQL)
+
+● Let's verify this actually reproduces and fixes the issue locally by
+  simulating a clean Prisma client state:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Clean. That's the fix for the CI failure. Let's commit it so the check turns
+  green on the next push.
+
+  Committed bcc08f2, ran 2 shell commands (ctrl+o to expand)
+
+● Root cause found and fixed: the failing check wasn't Vercel (that deployed
+  fine) — it was the backend-ci GitHub Action I wrote in Checkpoint 3a. It ran
+  tsc --noEmit without ever running prisma generate, so none of @prisma/client's
+  generated types existed in CI. That one gap cascaded into the "no exported
+  member" errors for every model and the implicit-any errors across unrelated
+  files you saw in the log.
+
+  Fixed by adding a Generate Prisma client step before typecheck in
+  .github/workflows/backend-ci.yml, verified locally (clean tsc --noEmit after a
+  fresh prisma generate), and committed (bcc08f2) — not pushed yet, since
+  you're one commit ahead of origin/dev-nikhil and I don't push without asking.
+
+  Want me to push now so the CI check goes green, or hold it with the rest of
+  the Checkpoint 3b review?
+
+✻ Crunched for 1m 37s
+
+❯ Ok i have pushed                                                              
+  Now continue the previous remaining work                                      
+
+● Continuing the Checkpoint 3b review. Let me look at the frontend changes and
+  the test suite next.
+
+  Read 2 files (ctrl+o to expand)
+
+● Good — "pending verification" state, duplicate-submission prevention via
+  recharge.isPending, the "simulated" copy replaced. Now let's check
+  walletApi.ts, the Razorpay type declarations, and run the test suite.
+
+  Read 1 file (ctrl+o to expand)
+
+● Good. Now the unrelated-looking frontend files — let's check whether they're
+  real unrelated scope creep or something benign (e.g. a rebase/merge artifact):
+
+  Read 1 file, ran 4 shell commands (ctrl+o to expand)
+
+● Reasonable hand-rolled types since the razorpay package ships without them.
+  Now let's run the full test suite to see where things actually stand.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Already running. Let's push the new schema and run the full suite including
+  the new Razorpay tests.
+
+  Ran 2 shell commands (ctrl+o to expand)
+● All 13 Razorpay-specific tests pass, covering the exact Phase 6 scenarios
+  (concurrent confirm-vs-webhook race, duplicate webhooks, 3-way race with
+  sweeper, rollback-on-failure, refund/dispute never debiting). Let's run the
+  full suite to confirm no regressions elsewhere, then check typecheck.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+❯ continue                                                                      
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● Confirmed — 3 Razorpay lines in your local .env. Fix: the mock-gate test must
+  neutralize Razorpay config for its matrix (that's what it's testing — the mock
+  gate), then restore:
+
+● Update(~\astro\avatar-astro33\backend\src\__tests__\security\mockPayments.node
+        -test.ts)
+  ⎿  Added 5 lines
+      51  test("createRechargeOrder / confirmRechargeOrder throw 503 in e
+          very locked environment, before touching the database", async (
+          ) => {
+      52    prisma = (await import("../../../prisma.js")).default;
+      53    const service = await import("../../modules/payment/payment.s
+          ervice.js");
+      54 +  // This test pins the MOCK gate. A developer's local .env may
+         + hold real Razorpay test keys                                  
+      55 +  // (loaded via prisma.config.ts's dotenv), which would legiti
+         +mately open the RAZORPAY path and                              
+      56 +  // reach the (dead) database instead of 503ing. Deconfigure R
+         +azorpay for the matrix, restore after.                         
+      57 +  const { defaultRazorpayProvider } = await import("../../modul
+         +es/payment/payment.provider.js");                              
+      58 +  defaultRazorpayProvider.reloadConfig({});                    
+      59  
+      60    const saved = { NODE_ENV: process.env.NODE_ENV, ALLOW_MOCK_PA
+          YMENTS: process.env.ALLOW_MOCK_PAYMENTS };
+      61    try {
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● The last test works under either provider path (amount validation 400s before
+  any provider/DB call). Add the restore to the first test's finally for
+  order-independence:
+
+● Update(~\astro\avatar-astro33\backend\src\__tests__\security\mockPayments.node
+        -test.ts)
+  ⎿  Added 1 line
+      74      for (const [k, v] of Object.entries(saved)) {
+      75        if (v === undefined) delete process.env[k]; else process.
+          env[k] = v;
+      76      }
+      77 +    defaultRazorpayProvider.reloadConfig(process.env);         
+      78    }
+      79  });
+      80  
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Fixed. Now the full suite:
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Update(~\astro\avatar-astro33\backend\src\modules\payment\wallet.route.ts)
+  ⎿  Added 9 lines
+      21    const router = Router();
+      22    router.use(noStore, createRateLimiter({ windowMs: 60_000, max
+          : 60 }), auth("USER"));
+      23  
+      24 +  // Order creation gets its own tighter brake on top of the ro
+         +uter-wide limit: each call creates a                           
+      25 +  // DB row AND a Razorpay order via their API. Nobody legitima
+         +tely starts 10 checkouts in 15 minutes.                        
+      26 +  const createOrderLimiter = createRateLimiter({               
+      27 +    windowMs: 15 * 60_000,                                     
+      28 +    max: 10,                                                   
+      29 +    message: "Too many recharge attempts. Please try again in a
+         + few minutes.",                                                
+      30 +    envelope: true,                                            
+      31 +  });                                                          
+      32 +                                                               
+      33    router.get(
+      34      "/",
+      35      wrap(async (req, res) => sendResponse(res, true, await getW
+          alletSummary(req.user!.id))),
+
+● Update(~\astro\avatar-astro33\backend\src\modules\payment\wallet.route.ts)
+  ⎿  Added 1 line
+      37  
+      38    router.post(
+      39      "/recharge/order",
+      40 +    createOrderLimiter,                                        
+      41      wrap(async (req, res) => {
+      42        const amountPaise = Number(req.body?.amountPaise);
+      43        const { order, keyId } = await createRechargeOrder(req.us
+          er!.id, amountPaise);
+
+● Now the frontend env example and the Phase 7 config doc:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(.env.example)
+  ⎿  Added 6 lines
+      18  # backend (/api/ai/chat). The Groq key lives ONLY in backend/.e
+          nv (GROQ_API_KEY) —
+      19  # never add a VITE_GROQ_* variable: anything prefixed VITE_ is 
+          bundled into public JS.
+      20  
+      21 +# Razorpay PUBLISHABLE key id only (rzp_test_* / rzp_live_*) — 
+         +safe to expose, used to open                                   
+      22 +# Checkout. Normally unnecessary: the backend already returns t
+         +he key id with each recharge                                   
+      23 +# order; this is a fallback. The KEY SECRET and WEBHOOK SECRET 
+         +live ONLY in backend/.env —                                    
+      24 +# never add them here: anything prefixed VITE_ is bundled into 
+         +public JS.                                                     
+      25 +VITE_RAZORPAY_KEY_ID=                                          
+      26 +                                                               
+      27  # Footer social links. An icon is shown only when its URL is se
+          t (no placeholder links).
+      28  VITE_SOCIAL_FACEBOOK=
+      29  VITE_SOCIAL_LINKEDIN=
+
+● Write(~\astro\avatar-astro33\docs\RAZORPAY_SETUP.md)
+  ⎿  Wrote 81 lines to ..\docs\RAZORPAY_SETUP.md
+      1 # Razorpay Configuration (Checkpoint 3b)
+      2 
+      3 How to configure the Razorpay wallet-recharge integration in each
+      4 credentials belong in this repo — ever.** Secrets go in the Rende
+        r dashboard (backend) and the
+      5 local `backend/.env` only.
+      6 
+      8 
+      9 ### Backend (Render dashboard → Environment, and local `backend/.
+        env`)
+     … +116 lines (ctrl+o to expand)
+
+● Now update the stale status section in CHECKPOINT_3B_RAZORPAY.md:
+
+● Update(~\astro\avatar-astro33\CHECKPOINT_3B_RAZORPAY.md)
+  ⎿  Added 39 lines, removed 48 lines
+      223  
+      224  ---
+      225  
+      226 -## Where this session stopped                                 
+      226 +## Implementation status — COMPLETE (pending review and deploy
+          +ment approval)                                                
+      227  
+      228 -Only the schema groundwork has been written so far, and **it i
+          -s uncommitted**:                                              
+      228 +The full integration landed in commit `713361a` (built with An
+          +tigravity) plus follow-up fixes in                            
+      229 +this session. All 201 database-backed tests pass, including 13
+          + Razorpay-specific ones.                                      
+      230  
+      230 -```                                                           
+      231 -M backend/prisma/schema/payment.prisma   (+24 lines, 0 removed
+          -)                                                             
+      232 -```                                                           
+      231 +What exists now:                                              
+      232  
+      234 -Specifically, three enum additions to `payment.prisma`:       
+      233 +- **Schema** (`payment.prisma`): `PaymentOrderStatus.EXPIRED`;
+          + `PaymentRefund` model (unique                                
+      234 +  provider refund/dispute ids, `ACTION_REQUIRED` handling defa
+          +ult); `PaymentWebhookEvent`                                   
+      235 +  (unique `eventId` = webhook dedupe); unique `providerOrderId
+          +`/`providerPaymentId` on                                      
+      236 +  `PaymentOrder`. Applied to the disposable test DB only — **p
+          +roduction Neon still needs                                    
+      237 +  approval + `prisma db push`**.                              
+      238 +- **Provider** (`payment.provider.ts`): `RazorpayPaymentProvid
+          +er` (official `razorpay` npm                                  
+      239 +  package, hand-written types in `src/types/razorpay.d.ts`) — 
+          +order create, payment fetch,                                  
+      240 +  order-payments fetch, timing-safe Checkout + webhook signatu
+          +re verification;                                              
+      241 +  `MockPaymentProvider` for dev/test; `setPaymentProviderForTe
+          +st()` injection point used by tests.                          
+      242 +- **Service** (`payment.service.ts`): `assertPaymentsAvailable
+          +()` (Razorpay when configured, mock                           
+      243 +  only in dev/test, otherwise 503); `createRechargeOrder` (int
+          +ernal row FIRST, then provider                                
+      244 +  order — recoverable); `creditOrderOnce` (row lock + `razorpa
+          +y_payment:<id>` idempotency key +                             
+      245 +  webhook-event insert, all one transaction — the single credi
+          +ting path for confirm, webhook, and                           
+      246 +  sweeper); `confirmRechargeOrder` (ownership check, signature
+          + verify, API fetch verifying                                  
+      247 +  captured/amount/currency/order); `markOrderFailed`; `sweepAb
+          +andonedOrders` (recovers missed                               
+      248 +  captures via the provider API before expiring — wired into t
+          +he daily reconciliation job);                                 
+      249 +  `recordRefundOrDispute` (record-only, never debits); `listPa
+          +ymentRefunds`.                                                
+      250 +- **Webhook** (`payment.webhook.ts` + `index.ts`): `POST /api/
+          +payments/razorpay/webhook`, raw-body                          
+      251 +  parser mounted before `express.json()`, timing-safe signatur
+          +e check, event dedupe, handlers for                           
+      252 +  `payment.captured` / `payment.failed` / `refund.created|proc
+          +essed` / `payment.dispute.created`.                           
+      253 +- **Admin**: `GET /api/admin/refunds` (+ `/:id`) — SUPERADMIN 
+          +read-only refund/dispute review.                              
+      254 +- **Routes** (`wallet.route.ts`): order/confirm updated for th
+          +e Razorpay contract; order creation                           
+      255 +  has a dedicated 10-per-15-min rate limit on top of the route
+          +r-wide 60/min.                                                
+      256 +- **Frontend**: `useRecharge()` loads checkout.js, opens Razor
+          +pay Checkout, confirms with                                   
+      257 +  payment id/order id/signature, falls back to instant-confirm
+          + for MOCK; `RechargeModal` has                                
+      258 +  checkout-active state, duplicate-submit prevention, cancella
+          +tion handling; `VITE_RAZORPAY_KEY_ID`                         
+      259 +  documented in `frontend/.env.example` (optional — backend re
+          +turns the key id per order).                                  
+      260 +- **Tests** (`razorpayPayments.node-test.ts`, 13 tests): order
+          + creation/validation, signature                               
+      261 +  rejection matrix, concurrent confirm-vs-webhook race, duplic
+          +ate webhooks, failed→late-capture,                            
+      262 +  sweep + recovery, 3-way race (sweep vs webhook vs confirm), 
+          +rollback-on-credit-failure,                                   
+      263 +  refund/dispute recording without debits, ownership. `mockPay
+          +ments.node-test.ts` was updated to                            
+      264 +  deconfigure Razorpay for its gate matrix (a local `.env` wit
+          +h real test keys legitimately opens                           
+      265 +  the RAZORPAY path, which broke the 503 expectation).        
+      266 +- **Config docs**: `docs/RAZORPAY_SETUP.md` — env vars, test/l
+          +ive modes, webhook URL + events,                              
+      267 +  Render/Vercel setup, deployment order, rollback.            
+      268  
+      236 -1. `PaymentOrderStatus` gained `EXPIRED` (abandoned-checkout s
+          -tate, distinct from `FAILED`).                                
+      237 -2. New `PaymentRefundKind { REFUND, DISPUTE }`.               
+      238 -3. New `PaymentRefundHandling { ACTION_REQUIRED, WALLET_ADJUST
+          -ED, RESOLVED_NO_ACTION }` — modeling                          
+      239 -   that wallet-side refund handling is a human (SUPERADMIN) de
+          -cision, never automatic.                                      
+      240 -                                                              
+      241 -**Not yet done** — this is the actual to-do list, in the order
+          - the spec implies:                                            
+      242 -                                                              
+      243 -1. **Finish the schema**: add the `PaymentRefund` model itself
+          - (fields likely needed: `id`,                                 
+      244 -   `paymentOrderId` FK, `kind` (`PaymentRefundKind`), `provide
+          -rRefundId`/`providerDisputeId`,                               
+      245 -   `amountPaise`, `providerStatus` (raw string from Razorpay, 
+          -e.g. `processed`/`pending`),                                  
+      246 -   `handling` (`PaymentRefundHandling`), `handledBy`/`handledA
+          -t` for the admin who resolved it,                             
+      247 -   timestamps). Needs a unique constraint on the provider's ev
+          -ent/refund id for webhook-retry                               
+      248 -   idempotency. Then `npx prisma generate` + `npm run test:db:
+          -init` against the disposable DB                               
+      249 -   (**not** Neon).                                            
+      250 -2. Install the `razorpay` npm package (or do raw HTTPS calls —
+          - package is simpler and official).                            
+      251 -3. Extend `payment.provider.ts` with a `razorpayPaymentProvide
+          -r` implementing order creation,                               
+      252 -   fetch-payment-by-id, and signature verification helpers; ke
+          -ep `mockPaymentProvider` for                                  
+      253 -   dev/test and switch the exported `paymentProvider` based on
+          - `NODE_ENV`/a flag (mirroring the                             
+      254 -   existing mock-payment gate so production can never silently
+          - fall back to mock).                                          
+      255 -4. Add `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEB
+          -HOOK_SECRET` to env validation.                               
+      256 -5. New routes: keep `POST /wallet/recharge/order` (now creates
+          - a real Razorpay order, still                                 
+      257 -   server-priced) and `POST /wallet/recharge/confirm` (now ver
+          -ifies the Checkout signature + fetches                        
+      258 -   the payment from Razorpay before crediting); add `POST /api
+          -/payments/razorpay/webhook`                                   
+      259 -   mounted with a raw-body parser **before** the global `expre
+          -ss.json()` call in `index.ts` (same                           
+      260 -   pattern you'd use for any provider webhook — look at how `/
+          -api/ai` gets its own parser mounted                           
+      261 -   early, in `index.ts`, as the precedent already in this file
+          -).                                                            
+      262 -6. Shared, single crediting function both the confirm-route an
+          -d the webhook call into, guarded by                           
+      263 -   `PaymentOrder.status` under a row lock plus the ledger's ow
+          -n `idempotencyKey`, so confirm-vs-webhook                     
+      264 -   races and retries are all safe no-ops after the first succe
+          -ss.                                                           
+      265 -7. Abandoned/expired order sweep (cron-style, alongside `recon
+          -ciliation.job.ts`'s existing                                  
+      266 -   single-instance scheduler).                                
+      267 -8. Refund/dispute webhook handlers that only ever **record** (
+          -`PaymentRefund` row,                                          
+      268 -   `handling: ACTION_REQUIRED`) — no automatic wallet debit. A
+          - separate SUPERADMIN endpoint to                              
+      269 -   mark one `WALLET_ADJUSTED` (performing the adjustment throu
+          -gh the existing `ADJUSTMENT` reason                           
+      270 -   in `WalletTransaction`) or `RESOLVED_NO_ACTION`.           
+      271 -9. Frontend: `useRecharge()` rewritten to open Razorpay Checko
+          -ut; `RechargeModal.tsx` copy/states                           
+      272 -   updated; load the Razorpay Checkout script; add `RAZORPAY_K
+          -EY_ID` to the Vercel env.                                     
+      273 -10. Tests per Phase 6, with Razorpay's HTTP API mocked (likely
+          - by making the provider adapter                               
+      274 -    injectable/mockable in tests, the same way other external 
+          -calls in this codebase are stubbed)                           
+      275 -    against the real disposable Postgres DB.                  
+      276 -11. The Phase 8 final report once the above lands.            
+      277 -                                                              
+      269  ### Open business decisions to raise before/while building Pha
+           se 3
+      270  
+      271  Per the spec's own instruction ("report it and leave the actio
+           n gated" rather than invent a rule):
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Checkpoint 3b — Razorpay integration: review complete, gaps closed, 201/201 
+  tests green
+
+  What Antigravity's commit (713361a) already covered — verified, not just 
+  trusted
+
+  I read every payment file and ran the full suite. Phases 1–6 are genuinely
+  implemented and well-built:
+
+  - State machine & exactly-once crediting: internal PaymentOrder row is created
+  before the provider call (recoverable); creditOrderOnce is the single
+  crediting path for confirm, webhook, and sweeper — row lock +
+  razorpay_payment:<id> unique idempotency key + webhook-event insert, all in
+  one transaction. The 13-test suite proves the concurrent confirm-vs-webhook
+  race, duplicate webhooks, and even a 3-way race (sweep vs webhook vs confirm)
+  never double-credit.
+  - Verification: timing-safe Checkout signature check, then a live API fetch
+  verifying captured status/amount/currency/order before crediting; webhook
+  signatures verified over raw bytes, mounted before express.json().
+  - Recovery: daily sweep expires abandoned orders but first polls Razorpay — a
+  captured payment both confirm and webhook missed still gets credited.
+  - Refunds/disputes: record-only (ACTION_REQUIRED), never debit, SUPERADMIN
+  review endpoint. Exactly per spec — no invented financial rules.
+  - Frontend: real Checkout launch, cancellation handling, duplicate-submit
+  prevention, MOCK fallback for dev.
+
+  The large App.tsx/Navbar.tsx diffs in that commit are formatting churn plus an
+  unrelated devotion-library switcher — no payment logic; nothing concerning.
+
+  What I fixed/added this session
+
+  1. Test failure fixed — mockPayments.node-test.ts failed locally because your
+  .env now holds real Razorpay test keys, which legitimately opened the RAZORPAY
+  path and broke the mock-gate 503 matrix. The test now deconfigures Razorpay
+  for its matrix and restores after. (This would have passed in CI but failed on
+  any dev machine with keys.)
+  2. Rate limit on order creation (spec Phase 5): dedicated 10-per-15-min
+  limiter on POST /wallet/recharge/order — each call hits Razorpay's API, so it
+  deserved a tighter brake than the router-wide 60/min.
+  3. docs/RAZORPAY_SETUP.md (Phase 7): env vars, test/live modes, webhook URL +
+  the 5 dashboard events to enable, Render/Vercel setup, deployment order,
+  rollback.
+  4. frontend/.env.example: documented VITE_RAZORPAY_KEY_ID (optional, key id
+  only) with a warning never to put secrets in VITE_ vars.
+  5. CHECKPOINT_3B_RAZORPAY.md status section rewritten from "only enums done"
+  to the real current state.
+  6. (Earlier this session: the CI Prisma-generate fix, already pushed by you.)
+
+  Results: TypeScript clean; full suite 201 tests, 0 failures.
+
+  Still blocked on you (unchanged business decisions)
+
+  - Refund-of-spent-coins policy — nothing debits automatically until you
+  decide: absorb the loss, debit-to-zero with tracked shortfall, or something
+  else.
+  - Production deployment — schema (PaymentRefund, PaymentWebhookEvent, EXPIRED)
+  is applied to the test DB only; Neon db push, Render env vars, and the live
+  webhook all await your approval (sequence is in the setup doc).
+
+  One security note for your review: webhook payloads are stored verbatim in
+  payment_webhook_events.payload for audit — they contain the payer's
+  email/phone. That's in your DB, not logs, and is standard practice, but flag
+  it if your privacy review wants those fields redacted.
+
+  Uncommitted changes ready for your commit: the 4 modified files + the new doc
+  (and your two err*.png screenshots, which you may want to delete rather than
+  commit).
+✻ Cogitated for 9m 15s
+
+❯ ok now move with further checkpoint                                           
+
+● Next up is Checkpoint 4 — customer and astrologer chat UX. The approved scope
+  from the audit: price confirmation (free allowance + balance + affordable
+  minutes), request countdown on both sides, socket-state handling with
+  rejoin/refetch, free-to-paid notice + low-balance banner with recharge button,
+  end confirmation + session receipt, error/send-failure states, astrologer
+  request popup with sound/notification, effective presence/busy state,
+  online-toggle cache fix, accessibility/mobile, suspended-astrologer gating,
+  wallet-balance exposure check — all inside the existing design system. Plus
+  the Checkpoint 2 backend features the frontend doesn't use yet (cancel button,
+  clientMessageId retries, RATE_LIMITED/chat:session-cancelled handling).
+
+  Let me survey the existing frontend chat code first.
+
+  Read 3 files, ran 2 shell commands (ctrl+o to expand)
+
+● A lot of the groundwork already exists. Let me check the astrologer side and
+  socket lib before mapping the gaps.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Starting with the backend exposure fix (task 6) since the frontend builds on
+  its contract:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(~\astro\avatar-astro33\backend\src\modules\chat\billing.ts)
+  ⎿  Added 3 lines
+      34  
+      35  export const roomForSession = (sessionId: string) => `chat:${se
+          ssionId}`;
+      36  export const roomForAstrologer = (astrologerProfileId: string) 
+          => `astrologer:${astrologerProfileId}`;
+      37 +/** Every authenticated socket joins its own user room on conne
+         +ction (socketServer.ts) — the                                  
+      38 + * channel for data only that ONE account may see, e.g. their w
+         +allet balance during a chat. */                                
+      39 +export const roomForUser = (userId: string) => `user:${userId}`
+         +;                                                              
+      40  
+      41  export function emitToRoom(room: string, event: string, payload
+          : unknown): void {
+      42    io?.to(room).emit(event, payload);
+
+● Update(~\astro\avatar-astro33\backend\src\modules\chat\billing.ts)
+  ⎿  Added 5 lines, removed 1 line
+      229      // Still inside the free allowance: nothing paid yet.
+      230      emitToRoom(roomForSession(sessionId), "chat:timer", { sess
+           ionId, remainingSeconds: null, balancePaise: null, freeSeconds
+           Remaining: outcome.freeSecondsRemaining });
+      231    } else {
+      232 -    emitToRoom(roomForSession(sessionId), "chat:timer", { sess
+          -ionId, remainingSeconds: outcome.remainingSeconds, balancePais
+          -e: outcome.balancePaise });                                   
+      232 +    // The user's wallet balance is private to them: the room-
+          +wide timer carries only the shared                            
+      233 +    // countdown, and the balance goes solely to the paying us
+          +er's own sockets. The astrologer                              
+      234 +    // (same chat room) must never see how much money their cu
+          +stomer holds.                                                 
+      235 +    emitToRoom(roomForSession(sessionId), "chat:timer", { sess
+          +ionId, remainingSeconds: outcome.remainingSeconds, balancePais
+          +e: null });                                                   
+      236 +    emitToRoom(roomForUser(session.userId), "chat:balance", { 
+          +sessionId, balancePaise: outcome.balancePaise });             
+      237    }
+      238    armExhaustionGuard(sessionId, outcome);
+      239  }
+
+● Now join the user room on socket connection:
+
+● Update(~\astro\avatar-astro33\backend\src\realtime\socketServer.ts)
+  ⎿  Added 1 line, removed 1 line
+      10  import { logError } from "@/utils/safeError.js";
+      11  import * as chatService from "@/modules/chat/chat.service.js";
+      12  import type { ChatSenderRole } from "@prisma/client";
+      13 -import { attachIo, roomForSession, roomForAstrologer, emitToRoo
+         -m, recordHeartbeat, recordDeparture, type ConnectionIdentity } 
+         -from "@/modules/chat/billing.js";                              
+      13 +import { attachIo, roomForSession, roomForAstrologer, roomForUs
+         +er, emitToRoom, recordHeartbeat, recordDeparture, type Connecti
+         +onIdentity } from "@/modules/chat/billing.js";                 
+      14  import { MAX_MESSAGE_LENGTH } from "@/modules/chat/chat.constan
+          ts.js";
+      15  import {
+      16    GENERIC_ERROR_MESSAGE,
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(~\astro\avatar-astro33\backend\src\realtime\socketServer.ts)
+  ⎿  Added 5 lines, removed 1 line
+      289    });
+      290  
+      291    io.on("connection", (socket: Socket) => {
+      292 -    const { astrologerProfileId } = socket.data as SocketData;
+      292 +    const { userId, astrologerProfileId } = socket.data as Soc
+          +ketData;                                                      
+      293  
+      294 +    // Private per-account channel — carries data only this us
+          +er may see (e.g. their wallet                                 
+      295 +    // balance during a paid chat, via billing.ts's chat:balan
+          +ce).                                                          
+      296 +    socket.join(roomForUser(userId));                         
+      297 +                                                              
+      298      if (astrologerProfileId) {
+      299        socket.join(roomForAstrologer(astrologerProfileId));
+      300        const pendingOffline = offlineTimers.get(astrologerProfi
+           leId);
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Backend half done, typecheck clean, no test asserts the old payload. Now the
+  frontend. First, the astrologer layout's profile source (for the online-toggle
+  cache fix) and routes:
+
+  Ran 2 shell commands (ctrl+o to expand)
+  ⎿  You've hit your session limit · resets 8:20pm (Asia/Calcutta)
+     /upgrade or /usage-credits to finish what you’re working on.
+
+✻ Baked for 4m 3s
