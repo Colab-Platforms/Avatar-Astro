@@ -13,6 +13,7 @@ import { createLibraryRouter, clearPersonalActivity } from "@/modules/library/li
 import { logActivity } from "@/modules/library/library.service.js";
 import { uploadSingleImage } from "@/middleware/upload.js";
 import { uploadImageBufferWithRetry, deleteImageByPublicId } from "@/config/cloudinary.js";
+import { CENTRAL_PROFILE_SELECT, toCentralProfile, validateBirthProfileUpdate } from "./userProfile.js";
 
 const DAY_MS = 86_400_000;
 const PROFILE_IMAGE_FOLDER = "users/profile-images";
@@ -80,6 +81,33 @@ export function createMeRouter(): Router {
         },
         knownFeatures: FEATURES.length,
       });
+    }),
+  );
+
+  // Central profile: the signed-in user's own details, shared by every feature. Never takes an id from the client.
+  router.get(
+    "/profile/central",
+    wrap(async (req, res) => {
+      const row = await prisma.user.findFirst({ where: { id: req.user!.id, isActive: true, isDeleted: false }, select: CENTRAL_PROFILE_SELECT });
+      if (!row) throw new ApiError("Account not found", STATUS_CODES.UNAUTHORIZED);
+      sendResponse(res, true, { profile: toCentralProfile(row) });
+    }),
+  );
+
+  router.patch(
+    "/profile/birth",
+    wrap(async (req, res) => {
+      const result = validateBirthProfileUpdate(req.body);
+      if (!result.ok) throw new ApiError(Object.values(result.errors).join(" "), STATUS_CODES.BAD_REQUEST);
+      const row = await prisma.user.update({
+        where: { id: req.user!.id },
+        data: { ...result.data, birthDetailsUpdatedAt: new Date() },
+        select: CENTRAL_PROFILE_SELECT,
+      });
+      // Field names only: birth details are private and are never written to logs or events.
+      void logActivity({ userId: req.user!.id, kind: "profile.updated", title: "Birth details" });
+      recordEvent({ userId: req.user!.id, eventType: EVENT_TYPES.profileUpdated, feature: PROFILE_FEATURE, status: "success", metadata: { fields: result.fields, source: "central_profile" } });
+      sendResponse(res, true, { profile: toCentralProfile(row) }, "Profile updated");
     }),
   );
 

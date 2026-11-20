@@ -1,10 +1,12 @@
 import { useRef, useState, type ReactNode } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { BadgeCheck, Camera, CircleAlert, History, LockKeyhole, Settings2, ShieldCheck, Trash2, UserRound, X, type LucideIcon } from "lucide-react";
+import { BadgeCheck, Camera, CircleAlert, History, LockKeyhole, MapPin, Settings2, ShieldCheck, Trash2, UserRound, X, type LucideIcon } from "lucide-react";
 import { authRequest, AuthApiError } from "@/lib/authClient";
 import { authApi } from "@/features/auth/api/authApi";
 import { useAuthStore } from "@/store/authStore";
 import { useMyDashboard } from "./useMyDashboard";
+import BirthDetailsForm from "@/features/profile/BirthDetailsForm";
+import { PROFILE_QUERY_PREFIX } from "@/features/profile/useUserProfile";
 import { btn, card, ErrorBox, field, focusRing, ghost, IconChip, labelCls, Loading, PageHeader } from "./library/ui";
 
 function Loaded({ children }: { children: (d: NonNullable<ReturnType<typeof useMyDashboard>["data"]>) => ReactNode }) {
@@ -77,6 +79,7 @@ export function ProfileSettings() {
       setMsg({ ok: true, text: "Profile updated." });
       setEdit(null);
       qc.invalidateQueries({ queryKey: ["my-dashboard"] });
+      qc.invalidateQueries({ queryKey: PROFILE_QUERY_PREFIX });
     },
     onError: (e) => setMsg({ ok: false, text: e instanceof Error ? e.message : "Could not save." }),
   });
@@ -204,6 +207,10 @@ export function ProfileSettings() {
                       <p className="text-xs text-[#6E5D4E]">Email, phone and password changes go through their own verified flows.</p>
                     </div>
                   </form>
+                </Section>
+
+                <Section id="birth-h" icon={MapPin} tone="gold" title="Birth details" desc="Entered once, used by every reading that needs them.">
+                  <BirthDetailsForm />
                 </Section>
               </div>
 

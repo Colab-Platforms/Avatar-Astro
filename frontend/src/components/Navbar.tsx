@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { BrandMark } from "@/components/BrandMark";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, ChevronDown, LogIn, LogOut, User } from "lucide-react";
 import gsap from "gsap";
@@ -398,13 +399,7 @@ const Navbar = () => {
             }}
             className="flex shrink-0 items-center gap-2 group select-none"
           >
-            <svg
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="w-5 h-5 text-[#BC6A4D] transition-transform duration-500 group-hover:rotate-90"
-            >
-              <path d="M12 2L14.8 9.2L22 12L14.8 14.8L12 22L9.2 14.8L2 12L9.2 9.2L12 2Z" />
-            </svg>
+            <BrandMark alt="Bhagya Logo" size={48} className="-my-[5px] transition-transform duration-500 group-hover:scale-105" />
             <span className="font-home-serif text-xl font-semibold tracking-[0.02em] text-[#BC6A4D]">
               Bhagya
             </span>

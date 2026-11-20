@@ -12,6 +12,8 @@ import { requireSignIn } from "@/lib/authedFetch";
 import LocationPicker from "@/features/ratna/LocationPicker";
 import type { PlaceResult } from "@/features/ratna/types";
 import "@/features/ratna/ratna.css";
+import { usePrefill } from "@/features/profile/usePrefill";
+import { toPlaceResult } from "@/features/profile/profile";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from "recharts";
 import { Activity, Bird, BookOpen, Bookmark, CalendarDays, Check, ChevronDown, Flame, HandHeart, Heart, HeartHandshake, Leaf, Lightbulb, MessageCircle, Moon, Music, Scale, Smile, Sparkles, Sun, Sunrise, Target, Timer, TreePine, Users, Utensils, VolumeX, Wind, type LucideIcon } from "lucide-react";
 import { ACTIONS, EXTRA_ACTIONS, MAX_POINTS, bestStreak, computeDailyScore, currentStreak, lastSevenDays, localDateKey, pathToNextLevel, pointsFor, practicedDaysThisWeek, recentAverage, scoreMessage, tierFor, type ScoreEntry } from "@/lib/karmaScore";
@@ -386,6 +388,21 @@ export default function InnerVoiceDashboard() {
   const [profile, setProfile] = useState(()=>{ try{return JSON.parse(localStorage.getItem("iv_profile")||"null")}catch{return null} });
   // `place` is the real place chosen from the searchable list; `pob` keeps its name (and any older typed text).
   const [form, setForm] = useState<{name:string;dob:string;pob:string;place:PlaceResult|null;reason:string;sign:string;nakshatra:string;dasha:string}>({name:"",dob:"",pob:"",place:null,reason:"",sign:"",nakshatra:"",dasha:""});
+  // Name, date of birth and birthplace come from the saved central profile when this form is empty. Moon sign, nakshatra,
+  // dasha and the reason are Inner Voice's own answers and are never taken from, or saved to, the central profile.
+  // These details stay on this device (see "iv_profile"); nothing on this page is sent to the AI.
+  const [prefilled, setPrefilled] = useState(false);
+  const { saveNew } = usePrefill(["name", "dateOfBirth", "birthPlace"], (p) => {
+    let used = false;
+    setForm((f) => {
+      const n = { ...f };
+      if (!f.name && p.fullName && p.fullName.length <= 60) { n.name = p.fullName; used = true; }
+      if (!f.dob && p.dateOfBirth) { n.dob = p.dateOfBirth; used = true; }
+      if (!f.place && !f.pob && p.birthPlace) { n.place = toPlaceResult(p.birthPlace); n.pob = n.place!.label; used = true; }
+      return n;
+    });
+    if (used) setPrefilled(true);
+  });
   const [editing, setEditing] = useState(false); // reopen the profile form after it has been saved once
   const [history, setHistory] = useState<ScoreEntry[]>(()=>{ try{return JSON.parse(localStorage.getItem("iv_karma_v2")||"[]")}catch{return[]} });
   const [today,setToday]=useState(()=>localDateKey());
@@ -402,7 +419,7 @@ export default function InnerVoiceDashboard() {
 
   useEffect(()=>{ const s=document.createElement("style"); s.textContent=CSS; document.head.appendChild(s); return()=>{ document.head.removeChild(s); }; },[]);
 
-  const saveProfile=()=>{ if(!form.name.trim()) return; const p={...form,name:form.name.trim(),pob:(form.place?form.place.label:form.pob).trim(),reason:form.reason.trim()}; try{localStorage.setItem("iv_profile",JSON.stringify(p));}catch{/* storage unavailable */} setProfile(p); setEditing(false); };
+  const saveProfile=()=>{ if(!form.name.trim()) return; saveNew({fullName:form.name,gender:"",dateOfBirth:form.dob,birthTime:"",birthTimeUnknown:false,birthPlace:form.place}); const p={...form,name:form.name.trim(),pob:(form.place?form.place.label:form.pob).trim(),reason:form.reason.trim()}; try{localStorage.setItem("iv_profile",JSON.stringify(p));}catch{/* storage unavailable */} setProfile(p); setEditing(false); };
   const openEditor=()=>{ setForm({name:"",dob:"",pob:"",place:null,reason:"",sign:"",nakshatra:"",dasha:"",...(profile||{})}); setEditing(true); };
 
   const toggleAction=(id:string)=>{ if(!requireSignIn()) return; const key=localDateKey(); const next=done.includes(id)?done.filter(d=>d!==id):[...done,id]; setDone(next); setSaved(false); try{localStorage.setItem(`iv_done_${key}`,JSON.stringify(next));}catch{/* storage unavailable */} };
@@ -464,6 +481,7 @@ export default function InnerVoiceDashboard() {
         <div className="ivd-setup">
           <div className="ivd-setup-title">{t("innerVoice.dashboard.setup.title")}</div>
           <div className="ivd-setup-sub">{t("innerVoice.dashboard.setup.body")}</div>
+          {prefilled && !editing && <p role="status" data-testid="iv-prefilled" style={{fontSize:13,color:"#6B4A37",margin:"0 2px 12px"}}>{t("savedProfile.innerVoiceNote")}</p>}
           <div className="ivd-grid2">
             <div className="ivd-field"><label>{t("innerVoice.dashboard.setup.name")}</label><input className="ivd-input" placeholder={t("innerVoice.dashboard.setup.namePlaceholder")} maxLength={60} value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))}/></div>
             <div className="ivd-field"><label>{t("innerVoice.dashboard.setup.dob")}</label><input className="ivd-input" type="date" value={form.dob} onChange={e=>setForm(f=>({...f,dob:e.target.value}))}/></div>

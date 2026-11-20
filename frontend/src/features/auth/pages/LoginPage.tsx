@@ -33,11 +33,18 @@ export default function LoginPage() {
     defaultValues: { email: "", password: "" },
   });
 
+  // A failed sign-in is already reported to the user by the mutation's toast (with the server's message), so the
+  // rejection is caught here rather than left as an "Uncaught (in promise)" error in the console.
   const onSubmit = handleSubmit(async (values: LoginFormValues) => {
-    const result = await loginMutation.mutateAsync({
-      email: values.email.trim().toLowerCase(),
-      password: values.password,
-    });
+    let result: Awaited<ReturnType<typeof loginMutation.mutateAsync>>;
+    try {
+      result = await loginMutation.mutateAsync({
+        email: values.email.trim().toLowerCase(),
+        password: values.password,
+      });
+    } catch {
+      return;
+    }
 
     if (isAuthSession(result)) {
       navigate(from ?? getPostAuthPath(result.user), { replace: true });
@@ -52,9 +59,15 @@ export default function LoginPage() {
     }
   });
 
+  // Called by Google's script, not by React: nothing would catch a rejection, so failures are handled here
+  // (the mutation's toast already tells the user what went wrong).
   const handleGoogle = async (idToken: string) => {
-    const session = await googleMutation.mutateAsync({ idToken });
-    navigate(from ?? getPostAuthPath(session.user), { replace: true });
+    try {
+      const session = await googleMutation.mutateAsync({ idToken });
+      navigate(from ?? getPostAuthPath(session.user), { replace: true });
+    } catch {
+      /* reported by the mutation's toast */
+    }
   };
 
   const busy = loginMutation.isPending || googleMutation.isPending;

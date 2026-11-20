@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
 import { Car } from "lucide-react";
+import { usePrefill } from "@/features/profile/usePrefill";
+import { toPlaceResult, type ProfileNeed } from "@/features/profile/profile";
 import LocationPicker from "@/features/ratna/LocationPicker";
 import type { PlaceResult } from "@/features/ratna/types";
 import { parseRegistration, SCOPE_LABEL, type Scope } from "./registration";
@@ -69,6 +71,8 @@ export function validateVehicleForm(v: FormState, today = todayIso()): Record<st
   return e;
 }
 
+const PROFILE_NEEDS: readonly ProfileNeed[] = ["name", "dateOfBirth", "birthTime", "birthPlace"];
+
 export default function VehicleForm({ onSubmit, busy, serverError }: { onSubmit: (v: VehicleFormValues) => void; busy: boolean; serverError?: string }) {
   const { t } = useTranslation();
   const [name, setName] = useState("");
@@ -85,12 +89,21 @@ export default function VehicleForm({ onSubmit, busy, serverError }: { onSubmit:
   const [rangeMax, setRangeMax] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Saved details fill the empty fields; anything typed or restored is left alone.
+  const { saveNew } = usePrefill(PROFILE_NEEDS, (p) => {
+    if (p.fullName && p.fullName.length <= 60) setName((v) => v || p.fullName);
+    if (p.dateOfBirth) setDob((v) => v || p.dateOfBirth!);
+    if (p.birthTime) setTime((v) => v || p.birthTime!);
+    if (p.birthPlace) setPlace((v) => v ?? toPlaceResult(p.birthPlace));
+  });
+
   const submit = (ev: React.FormEvent) => {
     ev.preventDefault();
     const e = validateVehicleForm({ name, dateOfBirth, timeOfBirth, place, mode, existing, compare, preferred, rangeMin, rangeMax });
     setErrors(e);
     if (Object.keys(e).length || !place) return;
     const hasRange = rangeMin.trim() && rangeMax.trim();
+    saveNew({ fullName: name, gender: "", dateOfBirth, birthTime: timeOfBirth, birthTimeUnknown: false, birthPlace: place });
     onSubmit({
       name: name.trim(), dateOfBirth, timeOfBirth, place, vehicleType, mode, scope,
       existing: existing.trim(),

@@ -1060,6 +1060,8 @@ import { useFeatureTitle } from "@/hooks/useFeatureTitle";
 import AskDivyaSection from "@/features/guru/AskDivyaSection";
 import { kundaliContext } from "@/features/guru/contexts";
 import LocationPicker from "@/features/ratna/LocationPicker";
+import { usePrefill } from "@/features/profile/usePrefill";
+import { toPlaceResult } from "@/features/profile/profile";
 import "@/features/ratna/ratna.css";
 import { kundaliApi } from "@/features/kundali/api";
 import KundaliPanels from "@/features/kundali/KundaliPanels";
@@ -1773,6 +1775,19 @@ export default function App(){
   );
   const up=(k,v)=>setForm(f=>({...f,[k]:v}));
 
+  // Saved details fill the EMPTY parts of the form (a draft or typed value is never replaced).
+  // The saved 24-hour time is shown as 12-hour hour/minute/AM-PM, exactly, with no rounding.
+  const {saveNew}=usePrefill(["name","dateOfBirth","birthTime","birthPlace"],(p)=>{
+    setForm(f=>{
+      const n={...f};
+      if(!f.firstName&&p.firstName){n.firstName=p.firstName;if(!f.lastName&&p.lastName)n.lastName=p.lastName;}
+      if(!f.day&&!f.month&&!f.year&&p.dateOfBirth){const[y,m,d]=p.dateOfBirth.split("-").map(Number);n.year=String(y);n.month=String(m);n.day=String(d);}
+      if(!f.hour&&!f.min&&p.birthTime){const[hh,mm]=p.birthTime.split(":").map(Number);n.hour=String(hh%12||12).padStart(2,"0");n.min=String(mm).padStart(2,"0");n.ampm=hh>=12?"PM":"AM";}
+      if(!f.place&&p.birthPlace)n.place=toPlaceResult(p.birthPlace);
+      return n;
+    });
+  });
+
   const generate=useCallback(async()=>{
     if(phase!=="form")return; // ignore double submits
     if(!requireSignIn(()=>{void generate();}))return; // signed out: ask, keep the form, then run this once
@@ -1801,6 +1816,7 @@ export default function App(){
       return;
     }
     setPlaceError(undefined);
+    saveNew({fullName:[form.firstName.trim(),form.lastName.trim()].filter(Boolean).join(" "),gender:"",dateOfBirth:`${form.year}-${String(form.month).padStart(2,"0")}-${String(form.day).padStart(2,"0")}`,birthTime:form.hour&&form.min?`${String((+form.hour%12)+(form.ampm==="PM"?12:0)).padStart(2,"0")}:${String(form.min).padStart(2,"0")}`:"",birthTimeUnknown:false,birthPlace:form.place});
     const run=++runRef.current;
     setPhase("loading");
     const name=[form.firstName.trim(),form.lastName.trim()].filter(Boolean).join(" ");
@@ -1905,7 +1921,7 @@ export default function App(){
               <div>
                 <label htmlFor="bc-min" style={{display:"block", color:"#592209", fontWeight:700, fontSize:15, marginBottom:10}}>{t("birthChart.form.minute")}</label>
                 <select id="bc-min" style={bcInputStyle} value={form.min} onChange={e=>up("min",e.target.value)}>
-                  <option value="">{t("birthChart.form.mmPh")}</option>{MINS.map(m=><option key={m} value={m}>{m}</option>)}
+                  <option value="">{t("birthChart.form.mmPh")}</option>{(form.min&&!MINS.includes(form.min)?[...MINS,form.min].sort():MINS).map(m=><option key={m} value={m}>{m}</option>)}
                 </select>
               </div>
               <div>

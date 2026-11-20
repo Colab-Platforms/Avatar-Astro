@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { BrandMark } from "@/components/BrandMark";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   BookOpenText,
@@ -172,15 +173,11 @@ export default function DashboardLayout() {
         >
           {collapsed ? (
             <Link to="/" className="flex items-center justify-center" title="Bhagya - Go to website homepage">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#3A1C0C] text-xs font-semibold text-[#F3E8D4]">
-                MB
-              </span>
+              <BrandMark size={34} />
             </Link>
           ) : (
             <Link to="/" className="flex min-w-0 items-center gap-2.5" title="Go to website homepage">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#3A1C0C] text-xs font-semibold text-[#F3E8D4]">
-                MB
-              </span>
+              <BrandMark size={34} />
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold tracking-tight text-[#2A1A10]">Bhagya</p>
                 <p className="truncate text-[0.68rem] text-[#8C7A6B]">Customer dashboard</p>
@@ -337,9 +334,7 @@ export default function DashboardLayout() {
         >
           <div className="flex h-14 items-center justify-between border-b border-[#E9DDC9] px-4">
             <Link to="/" onClick={() => setMobileOpen(false)} className="flex items-center gap-2.5">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#3A1C0C] text-xs font-semibold text-[#F3E8D4]">
-                MB
-              </span>
+              <BrandMark size={34} />
               <div>
                 <p className="text-sm font-semibold tracking-tight text-[#2A1A10]">Bhagya</p>
                 <p className="text-[0.68rem] text-[#8C7A6B]">Customer dashboard</p>

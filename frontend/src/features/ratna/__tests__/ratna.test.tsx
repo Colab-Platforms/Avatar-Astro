@@ -9,6 +9,8 @@ import { loadResult, saveResult } from "../storage";
 import type { RatnaResult } from "../types";
 import { complete, dateBased, delhi, diamond as stone, emptyShop, fillPersonalAndPanchang, signInForTests } from "./fixtures";
 
+// The form tests run without a saved profile; saved-profile behaviour has its own tests (features/profile).
+vi.mock("@/features/profile/useUserProfile", () => ({ useUserProfile: () => ({ profile: null, isLoading: false, error: null, signedIn: true, save: vi.fn(), isSaving: false, saveError: null, missing: () => [], has: () => false, refetch: vi.fn() }) }));
 vi.mock("../api", () => ({
   ratnaApi: { searchLocations: vi.fn(), calculate: vi.fn(), products: vi.fn() },
 }));

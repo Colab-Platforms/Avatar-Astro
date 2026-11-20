@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import FeatureFaq from "@/components/FeatureFaq";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { FEATURES } from "@/data/featureCatalog";
 import RatnaEmblem from "@/features/ratna/RatnaEmblem";
 import RatnaLoader from "@/features/ratna/RatnaLoader";
@@ -10,6 +11,9 @@ import { MIN_LOADER_MS } from "@/features/ratna/loaderTiming";
 import { requireSignIn } from "@/lib/authedFetch";
 import { clearResult, loadDraft, saveDraft, saveResult } from "@/features/ratna/storage";
 import type { Gender, PlaceResult } from "@/features/ratna/types";
+import { useUserProfile } from "@/features/profile/useUserProfile";
+import { SavedProfileCard, SaveToProfileOption } from "@/features/profile/SavedProfileUI";
+import { buildSavePatch, hasNeed, pendingSave, toPlaceResult, type CentralProfile, type EnteredDetails, type ProfileNeed } from "@/features/profile/profile";
 import "@/features/ratna/ratna.css";
 
 export const RATNA_TITLE = FEATURES.ratna.name;
@@ -20,6 +24,22 @@ export const RATNA_DESCRIPTION =
 const GENDERS: Gender[] = ["Male", "Female", "Other", "Prefer not to say"];
 const NAME_RE = /^[\p{L}\p{M}][\p{L}\p{M} .'’-]*$/u;
 const today = () => new Date().toISOString().slice(0, 10);
+
+// Everything this calculation uses from the saved profile. Weight is specific to this tool and is never part of it.
+const NEEDS: readonly ProfileNeed[] = ["name", "gender", "dateOfBirth", "birthTime", "birthPlace"];
+const asGender = (g: string | null | undefined): Gender | "" => GENDERS.find((x) => x.toLowerCase() === (g ?? "").trim().toLowerCase()) ?? "";
+
+/** Which saved values this form can actually use as they are (a saved gender it has no option for is asked again). */
+function usableFrom(p: CentralProfile | null): Record<ProfileNeed, boolean> {
+  const name = (p?.fullName ?? "").trim().replace(/s+/g, " ");
+  return {
+    name: hasNeed(p, "name") && name.length <= 80 && NAME_RE.test(name),
+    gender: asGender(p?.gender) !== "",
+    dateOfBirth: !!p?.dateOfBirth && p.dateOfBirth <= today() && Number(p.dateOfBirth.slice(0, 4)) >= 1800,
+    birthTime: hasNeed(p, "birthTime"),
+    birthPlace: hasNeed(p, "birthPlace"),
+  };
+}
 
 interface Errors {
   name?: string;
@@ -39,6 +59,7 @@ const FieldError = ({ id, text }: { id: string; text?: string }) =>
 
 
 const RatnaJyotish = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [draft] = useState(loadDraft); // the form as the user left it (Back from the result page)
   const [fullName, setFullName] = useState(draft?.fullName ?? "");
@@ -51,6 +72,12 @@ const RatnaJyotish = () => {
   const [errors, setErrors] = useState<Errors>({});
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const { profile, isLoading: profileLoading, save: saveProfile } = useUserProfile();
+  const usable = useMemo(() => usableFrom(profile), [profile]);
+  // A returning draft shows every field exactly as the user left it; otherwise saved values stay out of the way.
+  const [editing, setEditing] = useState(!!draft);
+  const [saveChoice, setSaveChoice] = useState<boolean | null>(null);
+  const seeded = useRef(false);
   const inFlight = useRef(false);
   const mounted = useRef(true);
   const minTimer = useRef<ReturnType<typeof setTimeout>>();
@@ -62,6 +89,27 @@ const RatnaJyotish = () => {
       clearTimeout(minTimer.current);
     };
   }, []);
+
+  // Fill from the saved profile once it arrives. Only empty fields are filled, so a draft is never overwritten.
+  useEffect(() => {
+    if (seeded.current || !profile) return;
+    seeded.current = true;
+    if (usable.name) setFullName((v) => v || profile.fullName);
+    if (usable.gender) setGender((v) => v || asGender(profile.gender));
+    if (usable.dateOfBirth) setDate((v) => v || (profile.dateOfBirth ?? ""));
+    if (usable.birthTime && !draft) {
+      setTime(profile.birthTime ?? "");
+      setTimeUnknown(profile.birthTimeUnknown);
+    }
+    if (usable.birthPlace) setPlace((v) => v ?? toPlaceResult(profile.birthPlace));
+  }, [profile, usable, draft]);
+
+  const show = (n: ProfileNeed) => editing || !usable[n];
+  const entered: EnteredDetails = { fullName, gender, dateOfBirth: date, birthTime: time, birthTimeUnknown: timeUnknown, birthPlace: place };
+  const pending = pendingSave(profile, entered, NEEDS);
+  const offerSave = !!profile && pending.added.length + pending.changed.length > 0;
+  // Gaps are saved by default; replacing something already saved only happens if the user ticks the box.
+  const doSave = saveChoice ?? pending.changed.length === 0;
 
   useEffect(() => {
     document.title = `${RATNA_TITLE} | Bhagya`;
@@ -102,6 +150,10 @@ const RatnaJyotish = () => {
     if (!requireSignIn(() => { void onSubmit({ preventDefault() {} } as React.FormEvent); })) return;
 
     inFlight.current = true;
+    if (offerSave && doSave) {
+      // Best effort: the calculation never waits on, or fails because of, saving to the profile.
+      void saveProfile(buildSavePatch([...pending.added, ...pending.changed], entered)).catch(() => undefined);
+    }
     clearResult(); // never show an old result for new inputs
     saveDraft({ fullName, gender, weight, date, time, timeUnknown, place });
     const startedAt = Date.now();
@@ -163,7 +215,15 @@ const RatnaJyotish = () => {
         </header>
 
         <form onSubmit={onSubmit} noValidate className="ratna-card mt-8 p-5 sm:p-7" aria-label="Birth details">
-          <div className="grid gap-5 sm:grid-cols-2">
+          {profileLoading ? (
+            <p role="status" className="mb-5 text-base text-[#6B4A37]">{t("savedProfile.loading")}</p>
+          ) : (
+            profile && !editing && NEEDS.some((n) => usable[n]) && (
+              <SavedProfileCard profile={profile} needs={NEEDS.filter((n) => usable[n])} onChange={() => setEditing(true)} className="mb-5" />
+            )
+          )}
+          <div className="grid gap-5 sm:grid-cols-2" hidden={profileLoading}>
+            {show("name") && (
             <div className="sm:col-span-2">
               <label htmlFor="ratna-name" className="mb-1.5 block text-base font-medium text-[#301607]">
                 Full name
@@ -184,7 +244,9 @@ const RatnaJyotish = () => {
               />
               <FieldError id="ratna-name-err" text={errors.name} />
             </div>
+            )}
 
+            {show("gender") && (
             <div>
               <label htmlFor="ratna-gender" className="mb-1.5 block text-base text-[#301607]">
                 Gender
@@ -209,6 +271,7 @@ const RatnaJyotish = () => {
               </select>
               <FieldError id="ratna-gender-err" text={errors.gender} />
             </div>
+            )}
 
             <div>
               <label htmlFor="ratna-weight" className="mb-1.5 block text-base text-[#301607]">
@@ -234,6 +297,7 @@ const RatnaJyotish = () => {
               <FieldError id="ratna-weight-err" text={errors.weight} />
             </div>
 
+            {show("dateOfBirth") && (
             <div>
               <label htmlFor="ratna-dob" className="mb-1.5 block text-base font-medium text-[#301607]">
                 Date of birth
@@ -254,7 +318,9 @@ const RatnaJyotish = () => {
               />
               <FieldError id="ratna-dob-err" text={errors.date} />
             </div>
+            )}
 
+            {show("birthTime") && (
             <div>
               <label htmlFor="ratna-tob" className="mb-1.5 block text-base text-[#301607]">
                 Exact birth time
@@ -292,8 +358,10 @@ const RatnaJyotish = () => {
               )}
               <FieldError id="ratna-tob-err" text={errors.time} />
             </div>
+            )}
           </div>
 
+          {show("birthPlace") && !profileLoading && (
           <div className="mt-5">
             <label className="mb-1.5 block text-base text-[#301607]">Birthplace</label>
             <LocationPicker
@@ -305,6 +373,9 @@ const RatnaJyotish = () => {
               error={errors.place}
             />
           </div>
+          )}
+
+          {offerSave && !profileLoading && <SaveToProfileOption replaces={pending.changed.length > 0} checked={doSave} onChange={setSaveChoice} id="ratna-save-profile" />}
 
           {apiError && (
             <div role="alert" className="mt-5 rounded-lg border border-[#9B2C1D]/40 bg-[#9B2C1D]/10 p-3 text-[#7A2216]">
@@ -312,7 +383,7 @@ const RatnaJyotish = () => {
             </div>
           )}
 
-          <button type="submit" className="ratna-btn mt-6 w-full" disabled={loading}>
+          <button type="submit" className="ratna-btn mt-6 w-full" disabled={loading || profileLoading}>
             CALCULATE MY RATNA
           </button>
         </form>

@@ -1069,6 +1069,8 @@ import zodiacPisces from "@/assets/zodiac-gold/pisces.png";
 import { authedFetch, requireSignIn, SignInRequiredError } from "@/lib/authedFetch";
 import { AUTH_API_BASE_URL } from "@/lib/authClient";
 import GunaMilanPanel from "@/features/kundali/GunaMilanPanel";
+import { usePrefill } from "@/features/profile/usePrefill";
+import { toPlaceResult } from "@/features/profile/profile";
 import LocationPicker from "@/features/ratna/LocationPicker";
 import type { PlaceResult } from "@/features/ratna/types";
 
@@ -1826,6 +1828,18 @@ export default function App() {
   useFeatureTitle(FEATURES.compatibility);
   const [p1,setP1] = useState<Person>(empty());
   const [p2,setP2] = useState<Person>(empty());
+  // The logged-in user is person 1: their saved details fill person 1's EMPTY fields only. Person 2 is someone else and is
+  // never prefilled, and nothing entered for person 2 is ever saved to the user's profile.
+  const { saveNew } = usePrefill(["name", "dateOfBirth", "birthTime", "birthPlace"], (p) => {
+    setP1((cur) => {
+      const n = { ...cur };
+      if (!cur.name && p.firstName) n.name = p.firstName;
+      if (!cur.day && !cur.month && !cur.year && p.dateOfBirth) { const [y, m, d] = p.dateOfBirth.split("-").map(Number); n.year = String(y); n.month = String(m); n.day = String(d); }
+      if (!cur.time && p.birthTime) n.time = p.birthTime;
+      if (!cur.place && p.birthPlace) n.place = toPlaceResult(p.birthPlace);
+      return n;
+    });
+  });
   const [phase,setPhase] = useState("form");
   const [result,setResult] = useState<Result | null>(null);
   const [error,setError] = useState("");
@@ -1846,6 +1860,7 @@ export default function App() {
     setError("");
     const problem = checkPerson(p1, i18n.t("compat.form.person1")) || checkPerson(p2, i18n.t("compat.form.person2"));
     if (problem) { setError(problem); return; }
+    saveNew({ fullName: p1.name.trim(), gender: "", dateOfBirth: `${p1.year}-${String(p1.month).padStart(2, "0")}-${String(p1.day).padStart(2, "0")}`, birthTime: p1.time, birthTimeUnknown: false, birthPlace: p1.place });
     const run = ++runRef.current;
     setPhase("loading");
     try {

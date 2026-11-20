@@ -10,6 +10,8 @@ import type { VehicleProfileResult, VehicleQuery } from "../types";
 
 const delhi = { id: "1", name: "New Delhi", admin1: "Delhi", country: "India", latitude: 28.6139, longitude: 77.209, timezone: "Asia/Kolkata", label: "New Delhi, Delhi, India" };
 
+// These tests run without a saved profile; prefill has its own tests (features/profile/prefill.test.tsx).
+vi.mock("@/features/profile/usePrefill", () => ({ usePrefill: () => ({ profile: null, saveNew: () => undefined }) }));
 vi.mock("@/features/ratna/LocationPicker", () => ({
   default: ({ onSelect }: { onSelect: (p: unknown) => void }) => <button type="button" onClick={() => onSelect(delhi)}>Pick Delhi</button>,
 }));
