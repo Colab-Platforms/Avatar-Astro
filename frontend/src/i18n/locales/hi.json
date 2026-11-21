@@ -2488,7 +2488,19 @@
       "advice": "Advice for the week",
       "luckyColor": "Lucky colour",
       "luckyNumber": "Lucky number",
-      "basis": "General guidance for your Sun sign, written for the week from Monday to Sunday (India time). It is not based on calculated planetary positions."
+      "basis": "General guidance for your Sun sign, written for the week from Monday to Sunday (India time). It is not based on calculated planetary positions.",
+      "errors": {
+        "notReady": "Weekly horoscopes are being set up. Please try again soon.",
+        "providerDown": "This week’s horoscope is not available right now. Please try again later.",
+        "invalid": "This week’s horoscope could not be completed. Please try again.",
+        "auth": "Please sign in again to see this week’s horoscope.",
+        "notDeployed": "Weekly horoscopes are not available on this server yet.",
+        "network": "We could not reach the horoscope service. Check your connection and try again.",
+        "timeout": "The horoscope is taking longer than usual. Please try again in a moment.",
+        "generic": "Something went wrong while loading this week’s horoscope. Please try again."
+      },
+      "heading": "Weekly Horoscope – {{sign}}",
+      "thisWeek": "This week"
     }
   },
   "birthChart": {
@@ -6118,5 +6130,13 @@
     "birthPlace": "जन्म स्थान",
     "signFromDob": "आपकी सहेजी जन्म तिथि से आपकी राशि दिखाई जा रही है। आप कभी भी दूसरी राशि चुन सकते हैं।",
     "innerVoiceNote": "आपकी सहेजी प्रोफ़ाइल से भरा गया है। ये विवरण इसी डिवाइस पर रहते हैं और AI को नहीं भेजे जाते।"
+  },
+  "pwa": {
+    "install": {
+      "title": "Install Bhagya",
+      "body": "Add it to your home screen for quick access.",
+      "action": "Install",
+      "dismiss": "Not now"
+    }
   }
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { AlertTriangle, Briefcase, Clover, HeartHandshake, Leaf, RotateCw, Shuffle, Smile, Sparkles, Sun, Target } from "lucide-react";
@@ -8,7 +8,10 @@ import { intlTag } from "@/features/muhurat/format";
 import { useZodiacText, type ZodiacSign } from "@/data/zodiacData";
 import { MAJOR_ARCANA, shuffleDeck, type TarotCard } from "@/data/tarotData";
 import TarotArt from "@/components/tarot/TarotArt";
+import TarotCardBack from "@/components/tarot/TarotCardBack";
 import HoroscopeStreakPanel from "@/features/horoscopeStreak/HoroscopeStreakPanel";
+import HoroscopeTabs, { type HoroscopeTab } from "@/features/horoscope/HoroscopeTabs";
+import WeeklyHoroscopePanel from "@/features/horoscope/WeeklyHoroscopePanel";
 import { fetchDailyHoroscope, formatDateLabel, HoroscopeError, msUntilNextDay, todayKey, type DailyHoroscope } from "@/lib/dailyHoroscope";
 
 // Daily horoscope experience for one Sun sign, shown at the top of /zodiac/:sign. Order on the page:
@@ -71,15 +74,7 @@ export function useDailyReading(signName: string, today: string): { load: Load; 
 // ─── Deck ────────────────────────────────────────────────────────────────────
 
 const DECK_SIZE = 5;
-const CARD_BACK = "/images/tarot/cards/tarot-card-back.png"; // the same card back the Tarot readings use
 const drawDeck = (): TarotCard[] => shuffleDeck(MAJOR_ARCANA).slice(0, DECK_SIZE);
-
-const CardBack = () => {
-  const [failed, setFailed] = useState(false);
-  return failed
-    ? <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,#5A2208_0%,#2A0F04_75%)]" />
-    : <img src={CARD_BACK} alt="" draggable={false} onError={() => setFailed(true)} className="absolute inset-0 h-full w-full object-cover" />;
-};
 
 const DeckCard = ({ card, slot, flipped, phase, disabled, onFlip }: {
   card: TarotCard; slot: number; flipped: boolean; phase: "idle" | "gather" | "spread"; disabled: boolean; onFlip: () => void;
@@ -90,8 +85,10 @@ const DeckCard = ({ card, slot, flipped, phase, disabled, onFlip }: {
   return (
     <motion.div layout transition={{ type: "spring", stiffness: 260, damping: 26 }} className="shrink-0" style={{ width: "var(--w)" }}>
       <motion.div
-        animate={phase === "gather" && !reduce ? { x: `${(centre - slot) * 92}%`, rotate: (slot - centre) * 7, y: -6 } : { x: 0, rotate: 0, y: 0 }}
-        transition={{ duration: reduce ? 0 : 0.45, ease: "easeInOut" }}
+        animate={phase === "gather" && !reduce
+          ? { x: ["0%", `${(centre - slot) * 92}%`, `${(centre - slot) * 92}%`], rotate: [0, (slot - centre) * 8, (slot - centre) * -5], y: [0, -12, -4], scale: [1, 1.04, 1] }
+          : { x: 0, rotate: 0, y: 0, scale: 1 }}
+        transition={phase === "gather" && !reduce ? { duration: 0.65, ease: "easeInOut", times: [0, 0.55, 1] } : { type: "spring", stiffness: 220, damping: 20 }}
         style={{ perspective: 900 }}
       >
         <motion.button
@@ -106,10 +103,10 @@ const DeckCard = ({ card, slot, flipped, phase, disabled, onFlip }: {
           whileTap={disabled ? {} : { scale: 0.97 }}
           animate={{ rotateY: flipped ? 180 : 0 }}
           transition={{ duration: reduce ? 0.01 : 0.7, ease: "easeInOut" }}
-          className="relative block w-full rounded-xl p-0 shadow-lg disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-[#592209]"
+          className={`group relative block w-full rounded-xl p-0 transition-shadow duration-300 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-[#592209] motion-reduce:transition-none ${flipped ? "shadow-[0_0_0_2px_#E9B872,0_16px_34px_-8px_rgba(193,138,61,0.75)]" : "shadow-[0_8px_18px_-6px_rgba(42,15,4,0.65)] hover:shadow-[0_16px_30px_-8px_rgba(193,138,61,0.6)]"}`}
           style={{ aspectRatio: "2 / 3", transformStyle: "preserve-3d" }}
         >
-          <span className="absolute inset-0 overflow-hidden rounded-xl border-2 border-[#C9873A] bg-[#2A0F04]" style={{ backfaceVisibility: "hidden" }}><CardBack /></span>
+          <span className="absolute inset-0 overflow-hidden rounded-xl border-2 border-[#C9873A] bg-[#2A0F04]" style={{ backfaceVisibility: "hidden" }}><TarotCardBack /></span>
           <span className="absolute inset-0 overflow-hidden rounded-xl border-2 border-[#E9B872] bg-[#2A0F04] ring-2 ring-[#592209]" style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}>
             <TarotArt card={card} />
             <span className="absolute left-0 right-0 top-0 bg-gradient-to-b from-[rgba(18,6,2,.88)] to-transparent px-1 pb-3 pt-1.5 text-center text-[11px] font-bold tracking-[0.14em] text-[#F5E9D6]">{card.number}</span>
@@ -205,6 +202,16 @@ const DailySignExperience = ({ sign }: { sign: ZodiacSign }) => {
   const z = useZodiacText();
   const today = useToday();
   const { load, retry } = useDailyReading(sign.name, today);
+  // Daily is the default. The choice lives in the address (?view=weekly) so a refresh, a shared link or the browser's back button keeps it.
+  const [params, setParams] = useSearchParams();
+  const tab: HoroscopeTab = params.get("view") === "weekly" ? "weekly" : "daily";
+  const setTab = useCallback((next: HoroscopeTab) => {
+    setParams((prev) => {
+      const q = new URLSearchParams(prev);
+      if (next === "weekly") q.set("view", "weekly"); else q.delete("view");
+      return q;
+    }, { replace: true });
+  }, [setParams]);
   const [deck, setDeck] = useState<TarotCard[]>(drawDeck);
   const [phase, setPhase] = useState<"idle" | "gather" | "spread">("idle");
   const [picked, setPicked] = useState<number | null>(null);
@@ -243,10 +250,18 @@ const DailySignExperience = ({ sign }: { sign: ZodiacSign }) => {
 
       {/* 1. header */}
       <div className="mb-6 text-center">
-        <h1 id="daily-h" className="text-3xl font-bold text-foreground md:text-5xl">{t("horoscope.daily.heading", { sign: z.sign(sign.name) })}</h1>
-        <p className="mt-2 text-lg text-muted-foreground" data-testid="reading-date">{dateLabel(date)}</p>
+        <h1 id="daily-h" className="text-3xl font-bold text-foreground md:text-5xl">{tab === "weekly" ? t("horoscope.weekly.heading", { sign: z.sign(sign.name) }) : t("horoscope.daily.heading", { sign: z.sign(sign.name) })}</h1>
+        {tab === "daily" && <p className="mt-2 text-lg text-muted-foreground" data-testid="reading-date">{dateLabel(date)}</p>}
       </div>
 
+      <HoroscopeTabs tab={tab} onChange={setTab} />
+
+      <div id="horoscope-tabpanel" role="tabpanel" aria-labelledby={`horoscope-tab-${tab}`}>
+      {/* Weekly: the shared weekly panel for this page's sign. */}
+      {tab === "weekly" && <WeeklyHoroscopePanel sign={sign.name.toLowerCase()} />}
+
+      {/* Daily: the existing experience, kept mounted while hidden so the card you picked and the deck are still there when you come back. */}
+      <div hidden={tab !== "daily"} data-testid="daily-tab-content">
       {blocked && (
         <div role="alert" className="mx-auto mb-6 max-w-xl rounded-2xl border border-[#592209]/30 bg-[#FBF5EC] p-5 text-center" data-testid={load.state === "unavailable" ? "reading-unavailable" : "reading-error"}>
           <p className="font-semibold text-[#592209]">{load.state === "unavailable" ? t("horoscope.daily.unavailableTitle", { sign: z.sign(sign.name) }) : t("horoscope.daily.errorTitle")}</p>
@@ -295,6 +310,8 @@ const DailySignExperience = ({ sign }: { sign: ZodiacSign }) => {
 
       {/* 14. daily streak (kept in this browser, like Karma Sankhya) */}
       <HoroscopeStreakPanel steps={steps} />
+      </div>
+      </div>
     </section>
   );
 };

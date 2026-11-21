@@ -16,6 +16,7 @@ import { NavigationProvider } from "./context/NavigationContext";
 import PageTransition from "./components/PageTransition";
 import Index from "./pages/Index";
 import DailyHoroscopes from "./pages/DailyHoroscopes";
+import InstallPrompt from "./pwa/InstallPrompt";
 import ZodiacSigns from "./pages/ZodiacSigns";
 import ZodiacDetail from "./pages/ZodiacDetail";
 import CompatibilityChecker from "./pages/CompatibilityChecker";
@@ -692,6 +693,7 @@ const App = () => {
         <BrowserRouter>
           <Toaster />
           <Sonner />
+          <InstallPrompt />
           <SignInPrompt />
           <AnnouncementBar />
           <Routes>

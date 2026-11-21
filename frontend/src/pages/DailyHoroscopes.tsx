@@ -9,6 +9,7 @@ import { useAIDailyHoroscope } from '@/hooks/useInterpretation';
 import { usePrefill } from '@/features/profile/usePrefill';
 import { sunSignForDate } from '@/features/profile/sunSign';
 import WeeklyHoroscopePanel from '@/features/horoscope/WeeklyHoroscopePanel';
+import HoroscopeTabs from '@/features/horoscope/HoroscopeTabs';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -86,22 +87,7 @@ const DailyHoroscopes = () => {
         </div>
 
         {/* Daily / Weekly tabs: same page, same sign selector */}
-        <div role="tablist" aria-label={t('horoscope.tabs.label')} className="mx-auto mb-8 flex w-full max-w-md gap-1 rounded-full border border-[#C18A3D] bg-[#F5E9D6] p-1">
-          {(['daily', 'weekly'] as const).map((k) => (
-            <button
-              key={k}
-              role="tab"
-              type="button"
-              id={`horoscope-tab-${k}`}
-              aria-selected={tab === k}
-              aria-controls="horoscope-tabpanel"
-              onClick={() => setTab(k)}
-              className={`flex-1 rounded-full px-4 py-2.5 text-sm font-semibold transition-colors sm:text-base ${tab === k ? 'bg-[#803003] text-[#F5E9D6] shadow' : 'text-[#54230F] hover:bg-[#D8B47A]/40'}`}
-            >
-              {t(`horoscope.tabs.${k}`)}
-            </button>
-          ))}
-        </div>
+        <HoroscopeTabs tab={tab} onChange={setTab} />
 
         {/* Zodiac Selector */}
         <div className="zodiac-selector max-w-md mx-auto mb-12">

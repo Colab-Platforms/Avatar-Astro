@@ -44,7 +44,9 @@ describe("interactive house chart", () => {
     expect(card.textContent).toMatch(/Rahu/);
     expect(card.textContent).toMatch(/Surya \(Sun\), standing in house 1 \(house-7 aspect\)/);
     expect(card.textContent).toMatch(/Shani \(Saturn\), standing in house 10 \(house-10 aspect\)/);
-    expect(card.textContent).toMatch(/Parashari graha drishti/);
+    // The convention is stated beside the chart, and says Rahu and Ketu are not given aspects.
+    expect(screen.getByTestId("aspect-convention")).toHaveTextContent(/Parashari graha drishti.*Rahu and Ketu.*not given aspects/i);
+    expect(card.closest("body")).toBe(document.body); // floats over the page, so it cannot be clipped by the chart's container
   });
 
   it("an occupant is not shown as an aspect, and a house with none says so", () => {

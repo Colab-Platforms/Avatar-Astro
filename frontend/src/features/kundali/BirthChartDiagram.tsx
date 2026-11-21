@@ -1,4 +1,5 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useGlossary } from "@/i18n/glossary";
@@ -58,8 +59,9 @@ export const BirthChartDiagram = ({ title, lagnaSign, grahas, houses, testId }: 
   const [hover, setHover] = useState<number | null>(null);
   const [pinned, setPinned] = useState<number | null>(null);
   const figureRef = useRef<HTMLElement>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
   const grahaName = (planet: string) => t(`birthChart.graha.${planet}`, { defaultValue: GRAHA_NAME[planet] ?? planet });
-  const grahaFull = (planet: string) => `${grahaName(planet)} (${g("planet", planet)})`;
+  const grahaFull = (planet: string) => (grahaName(planet) === g("planet", planet) ? grahaName(planet) : `${grahaName(planet)} (${g("planet", planet)})`);
   const lagnaIdx = SIGNS.indexOf(lagnaSign);
   const byHouse = new Map<number, string[]>();
   for (const gr of grahas) byHouse.set(gr.house, [...(byHouse.get(gr.house) ?? []), grahaName(gr.planet)]);
@@ -70,7 +72,10 @@ export const BirthChartDiagram = ({ title, lagnaSign, grahas, houses, testId }: 
   // A tap or click elsewhere, or Escape, puts a kept-open card away.
   useEffect(() => {
     if (pinned === null) return;
-    const away = (e: Event) => { if (!figureRef.current?.contains(e.target as Node)) setPinned(null); };
+    const away = (e: Event) => {
+      const el = e.target as Element;
+      if (!figureRef.current?.contains(el) && !el.closest?.("[data-house-card]")) setPinned(null);
+    };
     const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setPinned(null); };
     document.addEventListener("pointerdown", away);
     document.addEventListener("keydown", esc);
@@ -81,7 +86,7 @@ export const BirthChartDiagram = ({ title, lagnaSign, grahas, houses, testId }: 
 
   return (
     <figure ref={figureRef} className="m-0 min-w-0" data-testid={testId}>
-      <div className="relative w-full max-w-[420px]" onMouseLeave={() => setHover(null)}>
+      <div ref={boxRef} className="relative w-full max-w-[420px]" onMouseLeave={() => setHover(null)}>
         <svg viewBox="0 0 400 400" role="group" aria-label={t("birthChart.diagram.aria", { title, lagna: g("rashi", lagnaSign), label })} className="block h-auto w-full">
           <rect x="2" y="2" width="396" height="396" fill="#FBF5EC" stroke="#592209" strokeWidth="2" />
           {/* The clickable areas sit under the lines and labels so the chart looks exactly as before. */}
@@ -137,6 +142,7 @@ export const BirthChartDiagram = ({ title, lagnaSign, grahas, houses, testId }: 
         {active !== null && (
           <HouseCard
             id={`${uid}-card`}
+            anchor={boxRef}
             house={active}
             info={info(active)}
             sign={lagnaIdx >= 0 ? SIGNS[(lagnaIdx + active - 1) % 12] : null}
@@ -150,12 +156,14 @@ export const BirthChartDiagram = ({ title, lagnaSign, grahas, houses, testId }: 
       </div>
       <figcaption className="mt-1 text-center text-sm font-semibold text-[#592209]">{title}</figcaption>
       <p className="mt-1 text-center text-xs text-[#6B4A37]">{t("birthChart.houseTip.hint")}</p>
+      {houses && <p className="mt-1 text-center text-[11px] leading-snug text-[#6B4A37]" data-testid="aspect-convention">{t("birthChart.houseTip.convention")}</p>}
     </figure>
   );
 };
 
 interface CardProps {
   id: string;
+  anchor: React.RefObject<HTMLElement>;
   house: number;
   info: HouseInfo | undefined;
   sign: string | null;
@@ -166,26 +174,45 @@ interface CardProps {
   rashi: (s: string) => string;
 }
 
-// A card laid over the half of the chart away from the house being looked at, so it never leaves the chart's own box
-// (and so is never cut off by the page), and kept inside it on narrow screens.
-const HouseCard = ({ id, house, info, sign, occupants, pinned, onClose, grahaFull, rashi }: CardProps) => {
+// The card floats over the page (fixed, in the body), so it is never clipped by the chart's container or the page: beside the chart
+// on wide screens, and a bottom sheet on phones. A card that is only hovered ignores the pointer, so it cannot flicker.
+const CARD_W = 340;
+const CARD_MAX_H = 620;
+function cardPlacement(box: HTMLElement | null): CSSProperties {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  if (vw < 640 || !box) return { position: "fixed", left: 8, right: 8, bottom: 8, maxHeight: "62vh" };
+  const r = box.getBoundingClientRect();
+  const room = { right: vw - r.right - 12, left: r.left - 12 };
+  const left = room.right >= CARD_W ? r.right + 12 : room.left >= CARD_W ? r.left - 12 - CARD_W : Math.max(8, Math.min(r.left + 24, vw - CARD_W - 8));
+  const top = Math.max(8, Math.min(r.top, vh - Math.min(CARD_MAX_H, vh - 16) - 8));
+  return { position: "fixed", left, top, width: CARD_W, maxHeight: Math.min(CARD_MAX_H, vh - 16) };
+}
+
+const HouseCard = ({ id, anchor, house, info, sign, occupants, pinned, onClose, grahaFull, rashi }: CardProps) => {
   const { t } = useTranslation();
-  const [cx, cy] = CENTRES[house - 1];
-  const inTopHalf = cy < 200;
   const shownSign = info?.sign ?? sign;
   const planets = info?.planets ?? occupants;
   const aspects = info?.aspectedBy ?? null;
-  const left = `clamp(0px, calc(${(cx / 400) * 100}% - min(300px, 100%) / 2), calc(100% - min(300px, 100%)))`;
+  const [place, setPlace] = useState<CSSProperties>({ position: "fixed", visibility: "hidden" });
+  useLayoutEffect(() => {
+    const update = () => setPlace(cardPlacement(anchor.current));
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => { window.removeEventListener("resize", update); window.removeEventListener("scroll", update, true); };
+  }, [anchor, house]);
 
-  return (
+  return createPortal(
     <div
       id={id}
+      data-house-card
       role="dialog"
       aria-label={t("birthChart.houseTip.title", { n: house, name: t(`birthChart.houses.${house}.name`) })}
       data-testid="house-card"
       data-house={house}
-      className={`absolute z-20 overflow-y-auto rounded-xl border border-[#C18A3D] bg-[#FFFBF3] p-3 text-left text-[13px] leading-snug text-[#33251D] shadow-lg ${pinned ? "" : "pointer-events-none"}`}
-      style={{ left, width: "min(300px, 100%)", maxHeight: "96%", ...(inTopHalf ? { bottom: "2%" } : { top: "2%" }) }}
+      className={`z-50 overflow-y-auto rounded-xl border border-[#C18A3D] bg-[#FFFBF3] p-3 text-left text-[13px] leading-snug text-[#33251D] shadow-lg ${pinned ? "" : "pointer-events-none"}`}
+      style={place}
     >
       <div className="mb-1.5 flex items-start justify-between gap-2">
         <h4 className="text-sm font-bold uppercase tracking-wide text-[#54230F]">{t("birthChart.houseTip.title", { n: house, name: t(`birthChart.houses.${house}.name`) })}</h4>
@@ -219,7 +246,6 @@ const HouseCard = ({ id, house, info, sign, occupants, pinned, onClose, grahaFul
               aspects: aspects && aspects.length ? t("birthChart.houseTip.summaryAspected", { planets: aspects.map((a) => grahaFull(a.planet)).join(", ") }) : t("birthChart.houseTip.summaryNoAspects"),
             })}
           </Row>
-          <p className="m-0 mt-2 border-t border-[#E8D9BF] pt-1.5 text-[11px] text-[#6B4A37]">{t("birthChart.houseTip.convention")}</p>
         </>
       ) : (
         <>
@@ -228,7 +254,8 @@ const HouseCard = ({ id, house, info, sign, occupants, pinned, onClose, grahaFul
           <p className="m-0 mt-1 text-[12px] text-[#6B4A37]">{t("birthChart.houseTip.unavailable")}</p>
         </>
       )}
-    </div>
+    </div>,
+    document.body,
   );
 };
 

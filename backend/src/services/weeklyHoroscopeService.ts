@@ -14,6 +14,9 @@ import { HOROSCOPE_TIMEZONE, HoroscopeUnavailableError, todayKey, type Sign } fr
 export { weekRangeOf, sanitizeWeekly, type WeeklySections, type WeeklyHoroscope } from "./weeklyHoroscopeCore.js";
 import { weekRangeOf, sanitizeWeekly, type WeeklySections, type WeeklyHoroscope } from "./weeklyHoroscopeCore.js";
 
+/** The provider answered, but not with a complete weekly reading. Nothing is stored. */
+export class WeeklyInvalidResponseError extends HoroscopeUnavailableError {}
+
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
 function buildPrompt(sign: Sign, start: string, end: string): string {
@@ -31,7 +34,7 @@ Return ONLY valid JSON (no markdown, no fences) with exactly these keys:
 {"overview":"the week's overall theme","career":"work and professional life","love":"love and relationships","finance":"money and spending, general mindset only","health":"general wellbeing tip, no medical claims","family":"family and personal life","advice":"one practical action for the week","lucky":{"color":"a colour name","number":"a single number"}}`;
 }
 
-async function generate(sign: Sign, start: string, end: string): Promise<{ sections: WeeklySections; model: string }> {
+export async function generateWeekly(sign: Sign, start: string, end: string): Promise<{ sections: WeeklySections; model: string }> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new HoroscopeUnavailableError("The horoscope provider is not configured");
   let content = "";
@@ -55,7 +58,7 @@ async function generate(sign: Sign, start: string, end: string): Promise<{ secti
   const sections = sanitizeWeekly(parsed);
   if (!sections) {
     console.error("Weekly horoscope provider returned an unusable reading");
-    throw new HoroscopeUnavailableError("The horoscope provider returned an incomplete reading");
+    throw new WeeklyInvalidResponseError("The horoscope provider returned an incomplete reading");
   }
   return { sections, model: OPENROUTER_MODEL };
 }
@@ -80,7 +83,7 @@ export async function getWeeklyHoroscope(sign: Sign, now: Date = new Date()): Pr
   if (running) return running;
 
   const job = (async () => {
-    const { sections, model } = await generate(sign, start, end);
+    const { sections, model } = await generateWeekly(sign, start, end);
     try {
       await prisma.weeklyHoroscope.create({ data: { sign, weekStart, content: sections as any, model } });
       return view(sign, start, end, sections, false);

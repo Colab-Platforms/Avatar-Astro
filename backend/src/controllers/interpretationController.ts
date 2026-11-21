@@ -4,7 +4,7 @@ import {
   generateCompatibilityAnalysis
 } from '../services/chatgptService.js';
 import { WrongLanguageError, requestLanguage } from '../utils/responseLanguage.js';
-import { getWeeklyHoroscope } from '../services/weeklyHoroscopeService.js';
+import { getWeeklyHoroscope, WeeklyInvalidResponseError } from '../services/weeklyHoroscopeService.js';
 import { getDailyHoroscope, parseSign, toPlainText, HoroscopeUnavailableError } from '../services/dailyHoroscopeService.js';
 import { getExecutionId, reserveToolExecution, settleToolExecution, releaseToolExecution } from '../modules/payment/toolBilling.service.js';
 import { TOOL_KEYS } from '../modules/payment/toolKeys.js';
@@ -91,11 +91,20 @@ export const generateAIWeeklyHoroscope = async (req: Request, res: Response) => 
     res.setHeader('Cache-Control', 'no-store');
     res.json({ success: true, data: h });
   } catch (error: any) {
+    // Each cause gets its own code so the page can say what is actually wrong. Nothing is ever substituted for a missing reading.
+    if (error instanceof WeeklyInvalidResponseError) {
+      return res.status(502).json({ success: false, code: 'HOROSCOPE_INVALID', error: 'The weekly horoscope could not be completed. Please try again.' });
+    }
     if (error instanceof HoroscopeUnavailableError) {
       return res.status(503).json({ success: false, code: 'HOROSCOPE_UNAVAILABLE', error: "This week's horoscope is not available right now. Please try again later." });
     }
+    if (error?.code === 'P2021' || error?.code === 'P2022') {
+      // The weekly_horoscopes table (or a column) is missing: the database migration has not been applied.
+      console.error('Weekly horoscope: the database is missing the weekly_horoscopes table. Apply migration 20261121090000_add_weekly_horoscopes. Prisma code:', error.code);
+      return res.status(503).json({ success: false, code: 'WEEKLY_NOT_READY', error: 'Weekly horoscopes are being set up. Please try again soon.' });
+    }
     console.error('Weekly Horoscope Error:', error?.code ?? error?.message);
-    res.status(500).json({ success: false, error: 'Failed to load the weekly horoscope' });
+    res.status(500).json({ success: false, code: 'WEEKLY_FAILED', error: 'Failed to load the weekly horoscope' });
   }
 };
 
