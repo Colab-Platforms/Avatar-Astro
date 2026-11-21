@@ -4,6 +4,7 @@ import {
   generateCompatibilityAnalysis
 } from '../services/chatgptService.js';
 import { WrongLanguageError, requestLanguage } from '../utils/responseLanguage.js';
+import { getWeeklyHoroscope } from '../services/weeklyHoroscopeService.js';
 import { getDailyHoroscope, parseSign, toPlainText, HoroscopeUnavailableError } from '../services/dailyHoroscopeService.js';
 import { getExecutionId, reserveToolExecution, settleToolExecution, releaseToolExecution } from '../modules/payment/toolBilling.service.js';
 import { TOOL_KEYS } from '../modules/payment/toolKeys.js';
@@ -75,6 +76,26 @@ export const generateAIDailyHoroscope = async (req: Request, res: Response) => {
     }
     console.error('Horoscope Generation Error:', error?.message);
     res.status(500).json({ success: false, error: 'Failed to load the horoscope' });
+  }
+};
+
+// Weekly horoscope for a Sun sign: one stored reading per sign per Monday-Sunday week (Asia/Kolkata).
+export const generateAIWeeklyHoroscope = async (req: Request, res: Response) => {
+  const sign = parseSign(req.params.sign);
+  if (!sign) {
+    return res.status(400).json({ success: false, error: 'Unknown zodiac sign' });
+  }
+  try {
+    const h = await getWeeklyHoroscope(sign);
+    // The week rolls over at midnight IST on Monday, so this must not be cached past that.
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({ success: true, data: h });
+  } catch (error: any) {
+    if (error instanceof HoroscopeUnavailableError) {
+      return res.status(503).json({ success: false, code: 'HOROSCOPE_UNAVAILABLE', error: "This week's horoscope is not available right now. Please try again later." });
+    }
+    console.error('Weekly Horoscope Error:', error?.code ?? error?.message);
+    res.status(500).json({ success: false, error: 'Failed to load the weekly horoscope' });
   }
 };
 

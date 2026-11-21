@@ -22,6 +22,17 @@ export interface LuminaryResult {
   nakshatra: NakshatraRef | null;
 }
 
+/** One house of a chart, calculated by the server (backend/src/modules/gemstone/houses.ts). */
+export interface HouseAspect { planet: string; fromHouse: number; aspect: number }
+export interface HouseInfo {
+  house: number;
+  sign: string;
+  lord: string;
+  lordPlacement: { house: number; sign: string };
+  planets: string[];
+  aspectedBy: HouseAspect[];
+}
+
 export interface KundaliResult {
   birth: {
     dateOfBirth: string;
@@ -48,6 +59,8 @@ export interface KundaliResult {
     | null
     | { planet: string; rashi: RashiRef; degreeInSign: number; house: number; nakshatra: string; pada: number }[];
   navamsa: null | { lagna: RashiRef; planets: { planet: string; rashi: RashiRef; house: number }[] };
+  /** Per-house details for D1 and D9. Absent from older servers and when the birth time is unknown. */
+  houses?: null | { d1: HouseInfo[]; d9: HouseInfo[] };
   stableSigns: { planet: string; rashi: RashiRef }[];
   dasha: null | {
     asOf: string;

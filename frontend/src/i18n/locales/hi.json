@@ -2467,6 +2467,28 @@
       "faceDownCards": "उलटे रखे कार्ड",
       "loading": "आज का राशिफल लोड हो रहा है",
       "systemNote": "<b>इस राशिफल के बारे में:</b> यह पश्चिमी (सायन) सूर्य राशि {{sign}} में जन्मे सभी लोगों के लिए सामान्य मार्गदर्शन है, जो चिंतन के लिए लिखा गया है। यह कोई भविष्यवाणी नहीं है, और यह आपकी वैदिक <i>जन्म राशि</i> (चंद्र राशि) नहीं है, जो आपके सही जन्म विवरण पर निर्भर करती है। अपनी राशि <l>जन्म कुंडली</l> में देखें।"
+    },
+    "tabs": {
+      "label": "Horoscope type",
+      "daily": "Daily Horoscope",
+      "weekly": "Weekly Horoscope"
+    },
+    "weekly": {
+      "weekOf": "Week of {{range}}",
+      "prompt": "Choose your zodiac sign to see this week’s horoscope.",
+      "loading": "Reading this week’s stars…",
+      "error": "This week’s horoscope is not available right now. Please try again later.",
+      "retry": "Try again",
+      "overview": "Overall this week",
+      "career": "Career & professional life",
+      "love": "Love & relationships",
+      "finance": "Finance & money",
+      "health": "Health & wellbeing",
+      "family": "Family & personal life",
+      "advice": "Advice for the week",
+      "luckyColor": "Lucky colour",
+      "luckyNumber": "Lucky number",
+      "basis": "General guidance for your Sun sign, written for the week from Monday to Sunday (India time). It is not based on calculated planetary positions."
     }
   },
   "birthChart": {
@@ -2795,6 +2817,91 @@
       "aria": "{{title}}। लग्न {{lagna}}। {{label}}",
       "d1": "राशि चार्ट (D1)",
       "d9": "नवांश चार्ट (D9)"
+    },
+    "houses": {
+      "1": {
+        "name": "Self",
+        "areas": "Lagna, personality, physical constitution and self.",
+        "meaning": "The first house is the starting point of the whole chart. It describes how you present yourself, your temperament and your body."
+      },
+      "2": {
+        "name": "Wealth & Family",
+        "areas": "Wealth, family, speech and accumulated resources.",
+        "meaning": "The second house shows what you gather and hold: savings, family ties, the way you speak and your values."
+      },
+      "3": {
+        "name": "Courage & Effort",
+        "areas": "Courage, communication, siblings and effort.",
+        "meaning": "The third house shows initiative, skills, short journeys, how you communicate and your relationship with siblings."
+      },
+      "4": {
+        "name": "Home & Heart",
+        "areas": "Mother, home, property, education and emotional foundations.",
+        "meaning": "The fourth house is your inner base: home, mother, property, early schooling and a sense of emotional security."
+      },
+      "5": {
+        "name": "Intelligence & Creativity",
+        "areas": "Intelligence, education, creativity, children and Purva Punya.",
+        "meaning": "The fifth house relates to intellect, learning, creative expression, children and merit carried from the past (Purva Punya)."
+      },
+      "6": {
+        "name": "Health & Service",
+        "areas": "Health challenges, debts, enemies, competition and service.",
+        "meaning": "The sixth house shows daily struggles and effort: health routines, debts, rivals, competition and service to others."
+      },
+      "7": {
+        "name": "Partnerships",
+        "areas": "Marriage, partnerships and business relationships.",
+        "meaning": "The seventh house is about one-to-one relationships: marriage, committed partners and business partnerships."
+      },
+      "8": {
+        "name": "Transformation",
+        "areas": "Longevity, transformation, inheritance and hidden matters.",
+        "meaning": "The eighth house covers deep change: longevity, inheritance, shared resources and what is hidden or sudden."
+      },
+      "9": {
+        "name": "Dharma & Fortune",
+        "areas": "Dharma, fortune, higher education, teachers and spirituality.",
+        "meaning": "The ninth house shows beliefs and good fortune: dharma, higher learning, teachers, long journeys and spirituality."
+      },
+      "10": {
+        "name": "Career & Actions",
+        "areas": "Career, profession, public reputation and actions.",
+        "meaning": "The tenth house shows what you do in the world: career, profession, status and public reputation."
+      },
+      "11": {
+        "name": "Gains & Networks",
+        "areas": "Income, gains, networks and fulfilment of ambitions.",
+        "meaning": "The eleventh house relates to income and gains, friends and networks, and the fulfilment of ambitions."
+      },
+      "12": {
+        "name": "Expenses & Liberation",
+        "areas": "Expenses, foreign connections, isolation, sleep and liberation.",
+        "meaning": "The twelfth house covers what is let go: expenses, foreign lands, solitude, sleep and liberation (moksha)."
+      }
+    },
+    "houseTip": {
+      "title": "House {{n}} – {{name}}",
+      "lifeAreas": "Life areas",
+      "sign": "Zodiac sign",
+      "lord": "House lord",
+      "lordIn": "{{lord}} – in house {{house}} ({{sign}})",
+      "occupants": "Planets in this house",
+      "none": "None",
+      "aspects": "Planetary aspects received",
+      "noAspects": "No planet casts an aspect on this house.",
+      "aspectLine": "{{planet}}, standing in house {{from}} (house-{{n}} aspect)",
+      "meaning": "Meaning",
+      "thisChart": "In this chart",
+      "summary": "House {{n}} is {{sign}}, ruled by {{lord}}, which stands in house {{lordHouse}}. {{occupants}} {{aspects}}",
+      "summaryOccupied": "It holds {{planets}}.",
+      "summaryEmpty": "No planet stands in it.",
+      "summaryAspected": "It receives aspects from {{planets}}.",
+      "summaryNoAspects": "No planet aspects it.",
+      "unavailable": "The house lord and aspects are not available for this chart.",
+      "close": "Close",
+      "hint": "Hover over, or tap, a house to see what it means in this chart.",
+      "convention": "Aspects follow Parashari graha drishti: every planet aspects the 7th house from where it stands; Mars also the 4th and 8th, Jupiter the 5th and 9th, Saturn the 3rd and 10th. Rahu and Ketu are shown in their houses but are not given aspects. Houses are whole-sign, counted from the Lagna."
     }
   },
   "chartAi": {

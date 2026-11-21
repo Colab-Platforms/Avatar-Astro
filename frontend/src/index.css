@@ -520,39 +520,27 @@
 
 /* ── Zodiac Wheel enhancements ─────────────────────────────────────────────── */
 
-/* Base state — brighter, subtle blue-white + bronze glow */
+/* The engravings are blue-grey line art; this recolours them to deep antique brown so they read clearly on cream.
+   Only colour changes: no glow, no blur, no change to size or position. */
 .zodiac-wheel-icon {
-  transition: filter 400ms ease, transform 400ms ease, opacity 400ms ease;
-  filter:
-    brightness(1.12)
-    drop-shadow(0 0 5px rgba(180, 210, 255, 0.28))
-    drop-shadow(0 0 9px rgba(245, 195, 106, 0.22));
+  transition: filter 300ms ease, transform 300ms ease, opacity 300ms ease;
+  filter: grayscale(1) sepia(1) saturate(2.2) hue-rotate(-12deg) brightness(0.46) contrast(1.55);
 }
 
-/* Selected / active state */
+/* Selected / active state: slightly richer and larger, with a gold underlay rather than a glow */
 .zodiac-wheel-icon--selected {
-  filter:
-    brightness(1.38)
-    drop-shadow(0 0 12px rgba(245, 195, 106, 0.90))
-    drop-shadow(0 0 28px rgba(245, 195, 106, 0.48))
-    drop-shadow(0 0 3px rgba(220, 235, 255, 0.55)) !important;
+  filter: grayscale(1) sepia(1) saturate(2.8) hue-rotate(-14deg) brightness(0.38) contrast(1.7) !important;
   transform: scale(1.12);
 }
 
-/* Dimmed state — inactive icons when a sign is highlighted */
+/* Inactive icons stay clearly visible when one sign is highlighted */
 .zodiac-wheel--active .zodiac-wheel-icon:not(.zodiac-wheel-icon--selected) {
-  opacity: 0.60;
-  filter: brightness(0.82) drop-shadow(0 0 3px rgba(89,34,9,0.08));
+  opacity: 0.92;
 }
 
-/* Hover — un-dim and brighten any icon */
 .zodiac-wheel-btn:hover .zodiac-wheel-icon:not(.zodiac-wheel-icon--selected) {
   opacity: 1 !important;
-  filter:
-    brightness(1.22)
-    drop-shadow(0 0 10px rgba(245, 195, 106, 0.68))
-    drop-shadow(0 0 22px rgba(245, 195, 106, 0.30))
-    drop-shadow(0 0 2px rgba(220, 235, 255, 0.50)) !important;
+  filter: grayscale(1) sepia(1) saturate(2.8) hue-rotate(-14deg) brightness(0.36) contrast(1.7) !important;
   transform: scale(1.07);
 }
 
@@ -567,9 +555,9 @@
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(89,34,9,0.26) 0%,
-    rgba(245, 195, 106, 0.14) 38%,
-    transparent 68%
+    rgba(216,180,122,0.55) 0%,
+    rgba(216,180,122,0.28) 50%,
+    transparent 72%
   );
   opacity: 0;
   pointer-events: none;

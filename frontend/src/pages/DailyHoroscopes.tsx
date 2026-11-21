@@ -8,12 +8,14 @@ import { intlTag } from '@/features/muhurat/format';
 import { useAIDailyHoroscope } from '@/hooks/useInterpretation';
 import { usePrefill } from '@/features/profile/usePrefill';
 import { sunSignForDate } from '@/features/profile/sunSign';
+import WeeklyHoroscopePanel from '@/features/horoscope/WeeklyHoroscopePanel';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const DailyHoroscopes = () => {
   const { t, i18n } = useTranslation();
   const z = useZodiacText();
+  const [tab, setTab] = useState<'daily' | 'weekly'>('daily');
   const [selectedSign, setSelectedSign] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   // Whether the sign on screen came from the saved date of birth (so the page can say so), not from a click.
@@ -62,10 +64,11 @@ const DailyHoroscopes = () => {
   }, [selectedSign]);
 
   useEffect(() => {
-    if (selectedSign) {
+    // The daily reading is only requested while the Daily tab is showing.
+    if (selectedSign && tab === 'daily') {
       fetch();
     }
-  }, [selectedSign, fetch]);
+  }, [selectedSign, tab, fetch]);
 
   const selectedZodiac = zodiacSigns.find(s => s.name.toLowerCase() === selectedSign);
 
@@ -80,6 +83,24 @@ const DailyHoroscopes = () => {
           <p className="text-muted-foreground max-w-2xl mx-auto">
             {t('horoscope.page.subtitle')}
           </p>
+        </div>
+
+        {/* Daily / Weekly tabs: same page, same sign selector */}
+        <div role="tablist" aria-label={t('horoscope.tabs.label')} className="mx-auto mb-8 flex w-full max-w-md gap-1 rounded-full border border-[#C18A3D] bg-[#F5E9D6] p-1">
+          {(['daily', 'weekly'] as const).map((k) => (
+            <button
+              key={k}
+              role="tab"
+              type="button"
+              id={`horoscope-tab-${k}`}
+              aria-selected={tab === k}
+              aria-controls="horoscope-tabpanel"
+              onClick={() => setTab(k)}
+              className={`flex-1 rounded-full px-4 py-2.5 text-sm font-semibold transition-colors sm:text-base ${tab === k ? 'bg-[#803003] text-[#F5E9D6] shadow' : 'text-[#54230F] hover:bg-[#D8B47A]/40'}`}
+            >
+              {t(`horoscope.tabs.${k}`)}
+            </button>
+          ))}
         </div>
 
         {/* Zodiac Selector */}
@@ -132,8 +153,17 @@ const DailyHoroscopes = () => {
           {fromProfile && selectedSign && <p className="mt-3 text-center text-sm text-muted-foreground" data-testid="sign-from-profile">{t('savedProfile.signFromDob')}</p>}
         </div>
 
+        <div id="horoscope-tabpanel" role="tabpanel" aria-labelledby={`horoscope-tab-${tab}`}>
+        {tab === 'weekly' && selectedZodiac && (
+          <div className="mx-auto mb-8 text-center">
+            <div className="mb-2 text-6xl" style={{ textShadow: `0 0 30px ${selectedZodiac.color}` }}>{selectedZodiac.symbol}</div>
+            <h2 className="font-display text-3xl text-foreground">{z.sign(selectedZodiac.name)}</h2>
+          </div>
+        )}
+        {tab === 'weekly' && <WeeklyHoroscopePanel sign={selectedSign} />}
+
         {/* Horoscope Reading */}
-        {selectedSign && selectedZodiac && (
+        {tab === 'daily' && selectedSign && selectedZodiac && (
           <div ref={readingRef} className="max-w-4xl mx-auto">
             {/* Sign Header */}
             <div className="text-center mb-10">
@@ -176,12 +206,13 @@ const DailyHoroscopes = () => {
         )}
 
         {/* Prompt to select */}
-        {!selectedSign && (
+        {tab === 'daily' && !selectedSign && (
           <div className="text-center py-20">
             <div className="text-6xl mb-6 opacity-30">✨</div>
             <p className="text-muted-foreground">{t('horoscope.page.prompt')}</p>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

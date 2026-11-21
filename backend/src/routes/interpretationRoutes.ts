@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   interpretBirthChart,
   generateAIDailyHoroscope,
+  generateAIWeeklyHoroscope,
   generateAICompatibility
 } from '../controllers/interpretationController.js';
 import { chartChat } from '../controllers/chartChatController.js';
@@ -13,6 +14,7 @@ const router = Router();
 router.post('/birth-chart', auth('USER'), interpretBirthChart);
 
 // GET /api/interpretation/horoscope/:sign - Generate AI-powered daily horoscope
+router.get('/horoscope/weekly/:sign', generateAIWeeklyHoroscope);
 router.get('/horoscope/:sign', generateAIDailyHoroscope);
 
 // GET /api/interpretation/compatibility - Generate AI-powered compatibility analysis

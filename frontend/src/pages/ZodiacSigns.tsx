@@ -833,13 +833,13 @@ const ZodiacSigns = () => {
                 <div
                   className="absolute inset-[-8%] rounded-full pointer-events-none"
                   style={{
-                    background: 'radial-gradient(ellipse 75% 75% at 50% 50%, rgba(89,34,9,0.08) 0%, rgba(89,34,9,0.05) 55%, transparent 75%)',
+                    background: 'radial-gradient(ellipse 75% 75% at 50% 50%, rgba(245,233,214,0.9) 0%, rgba(216,180,122,0.18) 62%, transparent 76%)',
                   }}
                 />
 
                 {/* Outer static decorative rings */}
-                <div className="absolute inset-0 rounded-full border border-primary/25" style={{ boxShadow: '0 0 18px rgba(89,34,9,0.10) inset' }} />
-                <div className="absolute inset-[5%] rounded-full border border-primary/32" />
+                <div className="absolute inset-0 rounded-full" style={{ border: '2px solid #C18A3D' }} />
+                <div className="absolute inset-[5%] rounded-full" style={{ border: '1.5px solid #803003' }} />
 
                 {/* Rotating wheel container */}
                 <div
@@ -847,16 +847,16 @@ const ZodiacSigns = () => {
                   className="absolute inset-[10%] rounded-full"
                 >
                   {/* Inner circles */}
-                  <div className="absolute inset-0 rounded-full border border-primary/38" style={{ boxShadow: '0 0 12px rgba(89,34,9,0.12) inset' }} />
-                  <div className="absolute inset-[15%] rounded-full border border-primary/28 border-dashed" />
-                  <div className="absolute inset-[35%] rounded-full border border-primary/22" />
+                  <div className="absolute inset-0 rounded-full" style={{ border: '2px solid #C18A3D', background: 'radial-gradient(circle, #F5E9D6 0%, #F5E9D6 40%, rgba(216,180,122,0.22) 100%)' }} />
+                  <div className="absolute inset-[15%] rounded-full" style={{ border: '1.5px dashed #A8743A' }} />
+                  <div className="absolute inset-[35%] rounded-full" style={{ border: '1.5px solid #803003' }} />
 
                   {/* Division lines */}
                   {Array.from({ length: 12 }).map((_, i) => (
                     <div
                       key={`line-${i}`}
-                      className="absolute top-1/2 left-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-primary/30 to-primary/12 origin-left"
-                      style={{ transform: `rotate(${i * 30}deg)` }}
+                      className="absolute top-1/2 left-1/2 w-1/2 origin-left"
+                      style={{ transform: `rotate(${i * 30}deg)`, height: 1.5, marginTop: -0.75, background: 'linear-gradient(to right, #54230F 0%, #803003 55%, rgba(128,48,3,0.7) 100%)' }}
                     />
                   ))}
 
@@ -864,7 +864,7 @@ const ZodiacSigns = () => {
                   <div
                     className="absolute inset-[36%] rounded-full pointer-events-none"
                     style={{
-                      background: 'radial-gradient(circle, rgba(229,138,69,0.28) 0%, rgba(89,34,9,0.08) 45%, transparent 70%)',
+                      background: 'radial-gradient(circle, rgba(216,180,122,0.55) 0%, rgba(193,138,61,0.18) 55%, transparent 72%)',
                     }}
                   />
 
@@ -905,16 +905,16 @@ const ZodiacSigns = () => {
                   <div
                     className="absolute inset-[-50%] rounded-full pointer-events-none"
                     style={{
-                      background: 'radial-gradient(circle, rgba(229,138,69,0.22) 0%, transparent 65%)',
+                      background: 'radial-gradient(circle, rgba(193,138,61,0.28) 0%, transparent 65%)',
                       animation: 'wheel-center-pulse 4s ease-in-out infinite',
                     }}
                   />
                   <div className="relative w-16 h-16 rounded-full flex items-center justify-center"
-                    style={{ background: 'radial-gradient(circle, rgba(89,34,9,0.08) 0%, transparent 70%)' }}
+                    style={{ background: '#54230F', border: '3px solid #C18A3D', boxShadow: '0 0 0 4px #F5E9D6' }}
                   >
                     <span
-                      className="text-3xl text-primary"
-                      style={{ filter: 'drop-shadow(0 0 10px rgba(229,138,69,0.75)) drop-shadow(0 0 22px rgba(229,138,69,0.38))' }}
+                      className="text-3xl"
+                      style={{ color: '#D8B47A' }}
                     >
                       ☉
                     </span>
@@ -927,11 +927,10 @@ const ZodiacSigns = () => {
                   className="absolute font-display text-[11px] font-semibold uppercase tracking-[0.15em] pointer-events-none whitespace-nowrap"
                   style={{
                     transform: 'translate(-50%, -50%)',
-                    color: '#6B4A37',
+                    color: '#54230F',
                     opacity: isAnimating ? 0 : 1,
                     transition: 'opacity 350ms ease',
-                    textShadow:
-                      '0 0 12px rgba(229,138,69,0.90), 0 0 24px rgba(229,138,69,0.40), 0 1px 4px rgba(89,34,9,0.2)',
+                    textShadow: '0 0 3px #F5E9D6, 0 0 6px #F5E9D6',
                     willChange: 'opacity, left, top',
                   }}
                 >
@@ -947,8 +946,8 @@ const ZodiacSigns = () => {
                 ].map((pos, i) => (
                   <div
                     key={`star-${i}`}
-                    className="absolute w-1.5 h-1.5 rounded-full bg-primary/65 animate-pulse"
-                    style={{ ...pos, animationDelay: `${i * 0.5}s`, boxShadow: '0 0 6px rgba(229,138,69,0.5)' }}
+                    className="absolute w-2 h-2 rounded-full animate-pulse"
+                    style={{ ...pos, animationDelay: `${i * 0.5}s`, background: '#803003' }}
                   />
                 ))}
               </div>

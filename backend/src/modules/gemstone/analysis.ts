@@ -160,7 +160,7 @@ export const isCombust = (planet: Planet, chart: BirthChart, retro: boolean): bo
 /* ---------------- Aspects and conjunctions ---------------- */
 
 /** Houses counted from the aspecting planet (7 for all; Mars 4/8, Jupiter 5/9, Saturn 3/10). */
-const ASPECTS: Partial<Record<Planet, number[]>> = {
+export const ASPECTS: Partial<Record<Planet, number[]>> = {
   Sun: [7], Moon: [7], Mercury: [7], Venus: [7],
   Mars: [4, 7, 8], Jupiter: [5, 7, 9], Saturn: [3, 7, 10],
 };

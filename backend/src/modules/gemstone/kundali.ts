@@ -15,6 +15,7 @@
 import { computeBirthChart, computePlanets, wholeSignHouse } from "./chart.engine.js";
 import { nakshatraOf, vimshottari, type DashaResult } from "./analysis.js";
 import { resolveBirthInstant } from "./birth.time.js";
+import { buildHouseInfo, type HouseInfo } from "./houses.js";
 import { computePanchang, type PanchangDetails } from "./panchang.js";
 import { stableSignsForDate } from "./limited.chart.js";
 import { PLANETS, SIGNS, type Planet, type Sign } from "./gemstone.catalogue.js";
@@ -89,6 +90,8 @@ export interface KundaliResult {
       }[];
   /** Navamsa (D9) chart: each graha's sign in the 9th-part chart. Only with an exact birth time. */
   navamsa: null | { lagna: RashiRef; planets: { planet: Planet; rashi: RashiRef; house: number }[] };
+  /** Per-house sign, occupants, lord and received aspects for D1 and D9. Only with an exact birth time. */
+  houses: null | { d1: HouseInfo[]; d9: HouseInfo[] };
   /** Signs that stay fixed across the whole birth date (unknown-time reading only). */
   stableSigns: { planet: Planet; rashi: RashiRef }[];
   dasha: DashaResult | null;
@@ -168,6 +171,10 @@ export const buildKundali = (input: CalculateInput, now: Date = new Date()): Kun
           }),
         };
       })(),
+      houses: {
+        d1: buildHouseInfo(chart.ascendant.signIndex, PLANETS.map((p) => ({ planet: p, signIndex: chart.planets[p].signIndex }))),
+        d9: buildHouseInfo(navamsaSignIndex(chart.ascendant.longitude), PLANETS.map((p) => ({ planet: p, signIndex: navamsaSignIndex(chart.planets[p].longitude) }))),
+      },
       stableSigns: [],
       dasha: vimshottari(moon.longitude, inst.utc, now),
       panchang,
@@ -231,6 +238,7 @@ export const buildKundali = (input: CalculateInput, now: Date = new Date()): Kun
     lagna: null,
     planets: null,
     navamsa: null,
+    houses: null,
     stableSigns: stableSignsForDate(date, timezone).map((s) => ({ planet: s.planet, rashi: rashi(s.sign) })),
     dasha: null,
     panchang: computePanchang({ localDate: input.dateOfBirth, time: null, place: input.place }),
